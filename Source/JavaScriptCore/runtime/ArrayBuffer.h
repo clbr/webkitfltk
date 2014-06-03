@@ -31,6 +31,7 @@
 #include <wtf/PassRefPtr.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
+#include <JSExportMacros.h>
 
 namespace JSC {
 

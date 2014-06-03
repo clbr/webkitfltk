@@ -70,7 +70,7 @@ namespace WebCore {
     typedef NSCursor *PlatformCursor;
 #elif PLATFORM(GTK)
     typedef GRefPtr<GdkCursor> PlatformCursor;
-#elif PLATFORM(EFL)
+#elif PLATFORM(EFL) || PLATFORM(FLTK)
     typedef const char* PlatformCursor;
 #else
     typedef void* PlatformCursor;

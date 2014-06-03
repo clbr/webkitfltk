@@ -29,6 +29,8 @@
 #ifndef InitializeThreading_h
 #define InitializeThreading_h
 
+#include <JSExportMacros.h>
+
 namespace JSC {
 
     // This function must be called from the main thread. It is safe to call it repeatedly.

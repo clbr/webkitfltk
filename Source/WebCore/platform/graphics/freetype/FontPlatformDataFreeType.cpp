@@ -33,7 +33,7 @@
 #include FT_TRUETYPE_TABLES_H
 #include <wtf/text/WTFString.h>
 
-#if !PLATFORM(EFL)
+#if !PLATFORM(EFL) && !PLATFORM(FLTK)
 #include <gdk/gdk.h>
 #endif
 
@@ -343,7 +343,12 @@ bool FontPlatformData::hasCompatibleCharmap()
 PassRefPtr<OpenTypeVerticalData> FontPlatformData::verticalData() const
 {
     ASSERT(hash());
+#if ENABLE(OPENTYPE_VERTICAL)
     return fontCache().getVerticalData(String::number(hash()), *this);
+#else
+    ASSERT(0);
+    //return NULL;
+#endif
 }
 
 PassRefPtr<SharedBuffer> FontPlatformData::openTypeTable(uint32_t table) const

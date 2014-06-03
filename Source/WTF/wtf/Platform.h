@@ -421,6 +421,8 @@
 #define WTF_PLATFORM_EFL 1
 #elif defined(BUILDING_GTK__)
 #define WTF_PLATFORM_GTK 1
+#elif defined(BUILDING_FLTK__)
+#define WTF_PLATFORM_FLTK 1
 #elif OS(MAC_OS_X)
 #define WTF_PLATFORM_MAC 1
 #elif OS(IOS)
@@ -454,6 +456,13 @@
 #define WTF_USE_HARFBUZZ 1
 #define WTF_USE_SOUP 1
 #define WTF_USE_WEBP 1
+#endif
+
+#if PLATFORM(FLTK)
+#define WTF_USE_CAIRO 1
+#define WTF_USE_FREETYPE 1
+#define WTF_USE_HARFBUZZ 1
+#define WTF_USE_CURL 1
 #endif
 
 /* On Windows, use QueryPerformanceCounter by default */
@@ -711,7 +720,7 @@
 #if !defined(ENABLE_LLINT) \
     && ENABLE(JIT) \
     && (OS(DARWIN) || OS(LINUX) || OS(FREEBSD) || OS(WINDOWS)) \
-    && ((OS(DARWIN) && !PLATFORM(EFL)) || PLATFORM(GTK) || PLATFORM(WIN)) \
+    && ((OS(DARWIN) && !PLATFORM(EFL)) || PLATFORM(GTK) || PLATFORM(WIN) || OS(LINUX)) \
     && (CPU(X86) || CPU(X86_64) || CPU(ARM_THUMB2) || CPU(ARM_TRADITIONAL) || CPU(ARM64) || CPU(MIPS) || CPU(SH4))
 #define ENABLE_LLINT 1
 #endif
@@ -853,7 +862,8 @@
 
 /* CSS Selector JIT Compiler */
 #if !defined(ENABLE_CSS_SELECTOR_JIT)
-#if (CPU(X86_64) || CPU(ARM64)) && ENABLE(JIT) && (OS(DARWIN) || PLATFORM(GTK) || PLATFORM(EFL))
+#if (CPU(X86_64) || CPU(ARM64)) && ENABLE(JIT) && \
+	(OS(DARWIN) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(FLTK))
 #define ENABLE_CSS_SELECTOR_JIT 1
 #else
 #define ENABLE_CSS_SELECTOR_JIT 0
@@ -930,7 +940,7 @@
 #define WTF_USE_EXPORT_MACROS_FOR_TESTING 1
 #endif
 
-#if PLATFORM(GTK) || PLATFORM(EFL)
+#if PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(FLTK)
 #define WTF_USE_UNIX_DOMAIN_SOCKETS 1
 #endif
 
@@ -942,7 +952,7 @@
 #define ENABLE_COMPARE_AND_SWAP 1
 #endif
 
-#if !defined(ENABLE_PARALLEL_GC) && (OS(DARWIN) || PLATFORM(EFL) || PLATFORM(GTK)) && ENABLE(COMPARE_AND_SWAP)
+#if !defined(ENABLE_PARALLEL_GC) && (OS(DARWIN) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(FLTK)) && ENABLE(COMPARE_AND_SWAP)
 #define ENABLE_PARALLEL_GC 1
 #endif
 

@@ -38,10 +38,14 @@
 
 using namespace WebCore;
 
-template<> struct CrossThreadCopierBase<false, false, CurlDownload*> : public CrossThreadCopierPassThrough<CurlDownload*> {
-};
+#if OS(LINUX)
+#include <unistd.h>
+#endif
 
 namespace WebCore {
+
+template<> struct CrossThreadCopierBase<false, false, CurlDownload*> : public CrossThreadCopierPassThrough<CurlDownload*> {
+};
 
 // CurlDownloadManager -------------------------------------------------------------------
 
@@ -342,7 +346,21 @@ void CurlDownload::moveFileToDestination()
     if (m_destination.isEmpty())
         return;
 
+#if OS(WINDOWS)
     ::MoveFileEx(m_tempPath.charactersWithNullTermination().data(), m_destination.charactersWithNullTermination().data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
+#elif OS(LINUX)
+    const int ret = rename(m_tempPath.utf8().data(),
+                           m_destination.utf8().data());
+    if (ret) {
+        // Fall back to mv
+        if (fork() == 0) {
+            execlp("mv", m_tempPath.utf8().data(),
+                   m_destination.utf8().data(),
+                   NULL);
+            exit(1);
+        }
+    }
+#endif
 }
 
 void CurlDownload::writeDataToFile(const char* data, int size)

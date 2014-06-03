@@ -108,7 +108,9 @@ unsigned sslCertificateFlag(const unsigned& sslError)
     case X509_V_ERR_CERT_UNTRUSTED : // the root CA is not marked as trusted for the specified purpose.
     case X509_V_ERR_CERT_REJECTED : // the root CA is marked to reject the specified purpose.
     case X509_V_ERR_NO_EXPLICIT_POLICY : // the verification flags were set to require and explicit policy but none was present.
+#ifdef X509_V_ERR_DIFFERENT_CRL_SCOPE
     case X509_V_ERR_DIFFERENT_CRL_SCOPE : // the only CRLs that could be found did not match the scope of the certificate.
+#endif
         return SSL_CERTIFICATE_INSECURE;
     case X509_V_ERR_CERT_NOT_YET_VALID : // the certificate is not yet valid: the notBefore date is after the current time.
     case X509_V_ERR_CRL_NOT_YET_VALID : // the CRL is not yet valid.
@@ -125,13 +127,27 @@ unsigned sslCertificateFlag(const unsigned& sslError)
     case X509_V_ERR_PATH_LENGTH_EXCEEDED : // the basicConstraints pathlength parameter has been exceeded.
     case X509_V_ERR_INVALID_EXTENSION : // a certificate extension had an invalid value (for example an incorrect encoding) or some value inconsistent with other extensions.
     case X509_V_ERR_INVALID_POLICY_EXTENSION : // a certificate policies extension had an invalid value (for example an incorrect encoding) or some value inconsistent with other extensions. This error only occurs if policy processing is enabled.
+#ifdef X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE
     case X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE : // some feature of a certificate extension is not supported. Unused.
+#endif
+#ifdef X509_V_ERR_PERMITTED_VIOLATION
     case X509_V_ERR_PERMITTED_VIOLATION : // a name constraint violation occured in the permitted subtrees.
+#endif
+#ifdef X509_V_ERR_EXCLUDED_VIOLATION
     case X509_V_ERR_EXCLUDED_VIOLATION : // a name constraint violation occured in the excluded subtrees.
+#endif
+#ifdef X509_V_ERR_SUBTREE_MINMAX
     case X509_V_ERR_SUBTREE_MINMAX : // a certificate name constraints extension included a minimum or maximum field: this is not supported.
+#endif
+#ifdef X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE
     case X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE : // an unsupported name constraint type was encountered. OpenSSL currently only supports directory name, DNS name, email and URI types.
+#endif
+#ifdef X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX
     case X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX : // the format of the name constraint is not recognised: for example an email address format of a form not mentioned in RFC3280. This could be caused by a garbage extension or some new feature not currently supported.
+#endif
+#ifdef X509_V_ERR_CRL_PATH_VALIDATION_ERROR
     case X509_V_ERR_CRL_PATH_VALIDATION_ERROR : // an error occured when attempting to verify the CRL path. This error can only happen if extended CRL checking is enabled.
+#endif
     case X509_V_ERR_APPLICATION_VERIFICATION : // an application specific error. This will never be returned unless explicitly set by an application.
         return SSL_CERTIFICATE_GENERIC_ERROR;
     case X509_V_ERR_CERT_REVOKED : // the certificate has been revoked.

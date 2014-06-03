@@ -30,6 +30,7 @@
 
 #include "CodeBlock.h"
 #include "HeapInlines.h"
+#include "JSCellInlines.h"
 #include "JITCode.h"
 #include "JSObject.h"
 #include "LLIntThunks.h"

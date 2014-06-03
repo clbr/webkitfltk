@@ -36,6 +36,8 @@
 #include "ImageBufferData.h"
 #include "PlatformLayer.h"
 #include <runtime/Uint8ClampedArray.h>
+#include <runtime/JSCInlines.h>
+#include <runtime/TypedArrayInlines.h>
 #include <wtf/Forward.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/PassRefPtr.h>

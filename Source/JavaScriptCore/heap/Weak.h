@@ -28,6 +28,7 @@
 
 #include <cstddef>
 #include <wtf/Noncopyable.h>
+#include <JSExportMacros.h>
 
 namespace JSC {
 

@@ -209,7 +209,7 @@ namespace JSC {
         Opcode getOpcode(OpcodeID id)
         {
             ASSERT(m_initialized);
-#if ENABLE(COMPUTED_GOTO_OPCODES)
+#if ENABLE(COMPUTED_GOTO_OPCODES) && ENABLE(LLINT)
             return m_opcodeTable[id];
 #else
             return id;

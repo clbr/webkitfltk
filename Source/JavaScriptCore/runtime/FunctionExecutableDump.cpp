@@ -27,6 +27,7 @@
 #include "FunctionExecutableDump.h"
 
 #include "CodeBlock.h"
+#include "JSCellInlines.h"
 
 namespace JSC {
 

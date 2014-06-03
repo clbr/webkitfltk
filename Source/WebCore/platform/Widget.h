@@ -63,6 +63,11 @@ typedef GtkWidget* PlatformWidget;
 typedef Evas_Object* PlatformWidget;
 #endif
 
+#if PLATFORM(FLTK)
+class Fl_Widget;
+typedef Fl_Widget* PlatformWidget;
+#endif
+
 typedef PlatformWidget PlatformPageClient;
 
 namespace WebCore {

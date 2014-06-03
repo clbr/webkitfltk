@@ -89,7 +89,7 @@ Vector<String> CryptoKey::usages() const
     return result;
 }
 
-#if !OS(DARWIN) || PLATFORM(EFL) || PLATFORM(GTK)
+#if !OS(DARWIN) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(FLTK)
 Vector<uint8_t> CryptoKey::randomData(size_t size)
 {
     Vector<uint8_t> result(size);

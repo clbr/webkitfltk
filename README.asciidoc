@@ -1,0 +1,32 @@
+README
+======
+
+WebkitFLTK is a port of Webkit to FLTK 1.3.
+
+As it's intended for use in the Fifth browser, some of the HTML functionality
+has corresponding changes.
+
+It very likely won't be upstreamed, as the Webkit community has (rightfully)
+some strict requirements for ports that we can't fill (3 full-time people, etc.).
+
+Building
+--------
+
+You can try to build using the upstream Webkit cmake scripts, or the hacked-up
+plain makefiles included herein.
+
+The cmake system did not work for us, which is the reason for the makefiles.
+
+----
+make -C Source/WTF/wtf
+make -C Source/JavaScriptCore gen
+make -C Source/JavaScriptCore
+make -C Source/WebCore
+make -C Source/WebKit/fltk
+----
+
+Notes
+-----
+
+GCC 4.7.3 minimum. 4.7 series is in theory enough, but .0-.2 had a C++11 bug.
+4.8.3 tested.
