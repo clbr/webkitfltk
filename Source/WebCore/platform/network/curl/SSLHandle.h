@@ -42,12 +42,7 @@ typedef enum {
     SSL_CERTIFICATE_GENERIC_ERROR = (1 << 6) // Some other error occurred validating the certificate
 } SSLCertificateFlags;
 
-
-void addAllowedClientCertificate(const String&, const String&, const String&);
-void allowsAnyHTTPSCertificateHosts(const String&);
-bool sslIgnoreHTTPSCertificate(const String&, const String&);
 void setSSLVerifyOptions(ResourceHandle*);
-void setSSLClientCertificate(ResourceHandle*);
 
 }
 

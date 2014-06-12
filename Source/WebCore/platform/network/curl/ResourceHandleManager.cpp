@@ -1021,7 +1021,10 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
     if (getenv("DEBUG_CURL"))
         curl_easy_setopt(d->m_handle, CURLOPT_VERBOSE, 1);
 #endif
-    curl_easy_setopt(d->m_handle, CURLOPT_SSL_VERIFYPEER, 1L);
+
+    // Fifth handles certs differently; ignore CA checks.
+    curl_easy_setopt(d->m_handle, CURLOPT_SSL_VERIFYPEER, 0);
+
     curl_easy_setopt(d->m_handle, CURLOPT_SSL_VERIFYHOST, 2L);
     curl_easy_setopt(d->m_handle, CURLOPT_PRIVATE, job);
     curl_easy_setopt(d->m_handle, CURLOPT_ERRORBUFFER, m_curlErrorBuffer);
@@ -1037,15 +1040,8 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
     curl_easy_setopt(d->m_handle, CURLOPT_DNS_CACHE_TIMEOUT, 60 * 5); // 5 minutes
     curl_easy_setopt(d->m_handle, CURLOPT_PROTOCOLS, allowedProtocols);
     curl_easy_setopt(d->m_handle, CURLOPT_REDIR_PROTOCOLS, allowedProtocols);
-    setSSLClientCertificate(job);
 
-    if (ignoreSSLErrors)
-        curl_easy_setopt(d->m_handle, CURLOPT_SSL_VERIFYPEER, false);
-    else
-        setSSLVerifyOptions(job);
-
-    if (!m_certificatePath.isNull())
-       curl_easy_setopt(d->m_handle, CURLOPT_CAINFO, m_certificatePath.data());
+    setSSLVerifyOptions(job);
 
     // enable gzip and deflate through Accept-Encoding:
     curl_easy_setopt(d->m_handle, CURLOPT_ENCODING, "");

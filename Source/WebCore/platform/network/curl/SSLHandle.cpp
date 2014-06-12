@@ -39,58 +39,7 @@
 
 namespace WebCore {
 
-typedef std::tuple<WTF::String, WTF::String> clientCertificate;
-static HashMap<String, ListHashSet<String>> allowedHosts;
-static HashMap<String, clientCertificate> allowedClientHosts;
-
-void allowsAnyHTTPSCertificateHosts(const String& host)
-{
-    ListHashSet<String> certificates;
-    allowedHosts.set(host, certificates);
-}
-
-void addAllowedClientCertificate(const String& host, const String& certificate, const String& key)
-{
-    clientCertificate clientInfo(certificate, key);
-    allowedClientHosts.set(host.lower(), clientInfo);
-}
-
-void setSSLClientCertificate(ResourceHandle* handle)
-{
-    String host = handle->firstRequest().url().host();
-    HashMap<String, clientCertificate>::iterator it = allowedClientHosts.find(host.lower());
-    if (it == allowedClientHosts.end())
-        return;
-
-    ResourceHandleInternal* d = handle->getInternal();
-    clientCertificate clientInfo = it->value;
-    curl_easy_setopt(d->m_handle, CURLOPT_SSLCERT, std::get<0>(clientInfo).utf8().data());
-    curl_easy_setopt(d->m_handle, CURLOPT_SSLCERTTYPE, "P12");
-    curl_easy_setopt(d->m_handle, CURLOPT_SSLCERTPASSWD, std::get<1>(clientInfo).utf8().data());
-}
-
-bool sslIgnoreHTTPSCertificate(const String& host, const ListHashSet<String>& certificates)
-{
-    HashMap<String, ListHashSet<String>>::iterator it = allowedHosts.find(host);
-    if (it != allowedHosts.end()) {
-        if ((it->value).isEmpty()) {
-            it->value = certificates;
-            return true;
-        }
-        if (certificates.size() != it->value.size())
-            return false;
-        ListHashSet<String>::const_iterator certsIter = certificates.begin();
-        ListHashSet<String>::iterator valueIter = (it->value).begin();
-        for (; valueIter != (it->value).end(); ++valueIter, ++certsIter) {
-            if (*certsIter != *valueIter)
-                return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-unsigned sslCertificateFlag(const unsigned& sslError)
+static unsigned sslCertificateFlag(const unsigned& sslError)
 {
     switch (sslError) {
     case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT : // the issuer certificate could not be found: this occurs if the issuer certificate of an untrusted certificate cannot be found.
@@ -163,39 +112,33 @@ unsigned sslCertificateFlag(const unsigned& sslError)
     }
 }
 
-#if !PLATFORM(WIN)
 // success of certificates extraction
-bool pemData(X509_STORE_CTX* ctx, ListHashSet<String>& certificates)
+static bool pemData(X509_STORE_CTX* ctx, String &out)
 {
-    bool ok = true;
     STACK_OF(X509)* certs = X509_STORE_CTX_get1_chain(ctx);
-    for (int i = 0; i < sk_X509_num(certs); i++) {
-        X509* uCert = sk_X509_value(certs, i);
-        BIO* bio = BIO_new(BIO_s_mem());
-        int res = PEM_write_bio_X509(bio, uCert);
-        if (!res) {
-            ok = false;
-            BIO_free(bio);
-            break;
-        }
 
-        unsigned char* certificateData;
-        long length = BIO_get_mem_data(bio, &certificateData);
-        if (length < 0) {
-            ok = false;
-            BIO_free(bio);
-            break;
-        }
-
-        certificateData[length] = '\0';
-        String certificate = certificateData;
-        certificates.add(certificate);
+    X509* uCert = sk_X509_value(certs, 0);
+    BIO* bio = BIO_new(BIO_s_mem());
+    int res = PEM_write_bio_X509(bio, uCert);
+    if (!res) {
         BIO_free(bio);
+        return false;
     }
-        sk_X509_pop_free(certs, X509_free);
-        return ok;
+
+    unsigned char* certificateData;
+    long length = BIO_get_mem_data(bio, &certificateData);
+    if (length < 0) {
+        BIO_free(bio);
+        return false;
+    }
+
+    certificateData[length] = '\0';
+    out = certificateData;
+    BIO_free(bio);
+
+    sk_X509_pop_free(certs, X509_free);
+    return true;
 }
-#endif
 
 static int certVerifyCallback(int ok, X509_STORE_CTX* ctx)
 {
@@ -213,22 +156,12 @@ static int certVerifyCallback(int ok, X509_STORE_CTX* ctx)
 
     d->m_sslErrors = sslCertificateFlag(err);
 
-#if PLATFORM(WIN)
-    HashMap<String, ListHashSet<String>>::iterator it = allowedHosts.find(host);
-    ok = (it != allowedHosts.end());
-#else
-    ListHashSet<String> certificates;
-    if (!pemData(ctx, certificates))
+    String certdata;
+    if (!pemData(ctx, certdata))
         return 0;
-    ok = sslIgnoreHTTPSCertificate(host.lower(), certificates);
-#endif
+//    FifthFIXME: check if cert is valid
 
-    if (ok) {
-        // if the host and the certificate are stored for the current handle that means is enabled,
-        // so don't need to curl verifies the authenticity of the peer's certificate
-        curl_easy_setopt(d->m_handle, CURLOPT_SSL_VERIFYPEER, false);
-    }
-    return ok;
+    return 1;
 }
 
 static CURLcode sslctxfun(CURL* curl, void* sslctx, void* parm)
