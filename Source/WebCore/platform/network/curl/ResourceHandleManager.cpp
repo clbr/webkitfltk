@@ -74,8 +74,8 @@
 
 namespace WebCore {
 
-const int selectTimeoutMS = 5;
-const double pollTimeSeconds = 0.05;
+// only when waiting on network traffic, poll by this much
+const double pollTimeSeconds = 0.02;
 const int maxRunningJobs = 5;
 
 static const bool ignoreSSLErrors = getenv("WEBKIT_IGNORE_SSL_ERRORS");
@@ -606,8 +606,10 @@ size_t readCallback(void* ptr, size_t size, size_t nmemb, void* data)
     return sent;
 }
 
-void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* /* timer */)
+void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* timer)
 {
+    bool again = false;
+
     startScheduledJobs();
 
     fd_set fdread;
@@ -615,9 +617,10 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
     fd_set fdexcep;
     int maxfd = 0;
 
+    // zero wait in select
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = selectTimeoutMS * 1000;       // select waits microseconds
+    timeout.tv_usec = 0;
 
     // Retry 'select' if it was interrupted by a process signal.
     int rc = 0;
@@ -639,6 +642,9 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
 #endif
         return;
     }
+
+    // on any activity from select immediately try again, until no more activity
+    if (rc) again = true;
 
     int runningHandles = 0;
     while (curl_multi_perform(m_curlMultiHandle, &runningHandles) == CURLM_CALL_MULTI_PERFORM) { }
@@ -706,6 +712,12 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
         }
 
         removeFromCurl(job);
+    }
+
+    // if we had any activity, immediately select again to drain all kernel buffers
+    if (again) {
+        downloadTimerCallback(timer);
+        return;
     }
 
     bool started = startScheduledJobs(); // new jobs might have been added in the meantime
@@ -860,7 +872,7 @@ void ResourceHandleManager::add(ResourceHandle* job)
     job->ref();
     m_resourceHandleList.append(job);
     if (!m_downloadTimer.isActive())
-        m_downloadTimer.startOneShot(pollTimeSeconds);
+        m_downloadTimer.startOneShot(0); // immediately
 }
 
 bool ResourceHandleManager::removeScheduledJob(ResourceHandle* job)
@@ -1152,7 +1164,7 @@ void ResourceHandleManager::cancel(ResourceHandle* job)
     ResourceHandleInternal* d = job->getInternal();
     d->m_cancelled = true;
     if (!m_downloadTimer.isActive())
-        m_downloadTimer.startOneShot(pollTimeSeconds);
+        m_downloadTimer.startOneShot(0); // immediately
 }
 
 } // namespace WebCore
