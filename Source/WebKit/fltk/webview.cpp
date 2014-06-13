@@ -139,7 +139,21 @@ void webview::load(const char *url) {
 
 	MainFrame *f = &priv->page->mainFrame();
 
-	FrameLoadRequest req(f, ResourceRequest(URL(URL(), String::fromUTF8(url))));
+	// Local path?
+	String orig;
+	String str = orig = String::fromUTF8(url);
+	if (url[0] == '/') {
+		str = "file://" + orig;
+	} else if (url[0] == '~') {
+		const char *home = getenv("HOME");
+		if (!home)
+			home = "/tmp";
+		str = "file://";
+		str.append(home);
+		str.append(url + 1);
+	}
+
+	FrameLoadRequest req(f, ResourceRequest(URL(URL(), str)));
 
 	f->loader().load(req);
 }
