@@ -31,6 +31,7 @@
 #include "NotImplemented.h"
 #include "TextBreakIterator.h"
 #include <wtf/MathExtras.h>
+#include <wtf/text/CString.h>
 #include <wtf/unicode/CharacterNames.h>
 
 #if USE(CF)
@@ -65,6 +66,20 @@ static String formatLocalizedString(String format, ...)
 
     va_end(arguments);
     return result.get();
+#elif OS(LINUX)
+    va_list ap;
+    va_start(ap, format);
+
+    char *tmp;
+    const int ret = vasprintf(&tmp, format.utf8().data(), ap);
+    va_end(ap);
+
+    if (ret > 0) {
+        String out(tmp);
+        free(tmp);
+        return out;
+    }
+
 #else
     notImplemented();
     return format;
