@@ -172,7 +172,11 @@ void GIFImageDecoder::clearFrameBufferCache(size_t clearBeforeFrame)
     }
 
     // Now |i| holds the last frame we need to preserve; clear prior frames.
-    for (Vector<ImageFrame>::iterator j(m_frameBufferCache.begin()); j != i; ++j) {
+    // The re-initialized frame we need to preserve.
+    Vector<ImageFrame>::iterator j(m_frameBufferCache.begin());
+    if (m_reader && m_reader->currentFrame() < clearBeforeFrame)
+        j = m_frameBufferCache.begin() + m_reader->currentFrame();
+    for (; j != i; ++j) {
         ASSERT(j->status() != ImageFrame::FramePartial);
         if (j->status() != ImageFrame::FrameEmpty)
             j->clearPixelData();

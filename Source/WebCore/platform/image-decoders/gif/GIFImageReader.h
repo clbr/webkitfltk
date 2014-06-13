@@ -264,6 +264,11 @@ public:
     }
     int loopCount() const { return m_loopCount; }
 
+    size_t currentFrame() const
+    {
+        return m_currentDecodingFrame;
+    }
+
     const unsigned char* globalColormap() const
     {
         return m_isGlobalColormapDefined ? data(m_globalColormapPosition) : 0;
