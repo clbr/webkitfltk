@@ -35,6 +35,8 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
 	priv = new privatewebview;
 	priv->cairodata = NULL;
+	priv->gc = NULL;
+	priv->cairo = NULL;
 
 	Fl_Widget *wid = this;
 	while (wid->parent())
@@ -88,12 +90,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	set.setHiddenPageDOMTimerThrottlingEnabled(true);
 
 	// Cairo
-	cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w, h);
-	priv->cairo = cairo_create(surf);
-	priv->cairosurf = surf;
-	cairo_surface_destroy(surf);
-	priv->gc = new GraphicsContext(priv->cairo);
-	priv->cairodata = (unsigned char *) calloc(w * h * 3, 1);
+	resize();
 }
 
 webview::~webview() {
@@ -159,14 +156,16 @@ void webview::load(const char *url) {
 }
 
 void webview::resize() {
-	cairo_destroy(priv->cairo);
+	if (priv->cairo)
+		cairo_destroy(priv->cairo);
 
 	cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w(), h());
 	priv->cairo = cairo_create(surf);
 	priv->cairosurf = surf;
 	cairo_surface_destroy(surf);
 
-	delete priv->gc;
+	if (priv->gc)
+		delete priv->gc;
 	priv->gc = new GraphicsContext(priv->cairo);
 
 	free(priv->cairodata);
