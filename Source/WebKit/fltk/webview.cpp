@@ -37,6 +37,8 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv = new privatewebview;
 	priv->gc = NULL;
 	priv->cairo = NULL;
+	priv->w = w;
+	priv->h = h;
 
 	Fl_Widget *wid = this;
 	while (wid->parent())
@@ -153,6 +155,8 @@ void webview::load(const char *url) {
 }
 
 void webview::resize() {
+	ASSERT(isMainThread());
+
 	bool old = false;
 
 	if (priv->cairo) {
@@ -163,11 +167,11 @@ void webview::resize() {
 	if (old)
 		XFreePixmap(fl_display, priv->cairopix);
 	priv->cairopix = XCreatePixmap(fl_display, DefaultRootWindow(fl_display),
-					w(), h(), priv->depth);
+					priv->w, priv->h, priv->depth);
 
 	cairo_surface_t *surf = cairo_xlib_surface_create(fl_display, priv->cairopix,
 								fl_visual->visual,
-								w(), h());
+								priv->w, priv->h);
 	priv->cairo = cairo_create(surf);
 	priv->cairosurf = surf;
 	cairo_surface_destroy(surf);

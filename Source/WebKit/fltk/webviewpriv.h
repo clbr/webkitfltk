@@ -42,6 +42,7 @@ public:
 
 	Fl_Window *window;
 	unsigned depth;
+	unsigned w, h;
 };
 
 #endif
