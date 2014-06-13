@@ -37,10 +37,16 @@
 namespace WebCore {
 
 static void (*_timerFunction)();
+static double _interval = 0;
+static bool running = false;
 
 static void callback(void *) {
-	if (_timerFunction)
+	if (_timerFunction) {
 		_timerFunction();
+		if (_interval < 0.005)
+			_interval = 0.005;
+		Fl::repeat_timeout(_interval, callback);
+	}
 }
 
 void setSharedTimerFiredFunction(void (*func)())
@@ -50,12 +56,20 @@ void setSharedTimerFiredFunction(void (*func)())
 
 void stopSharedTimer()
 {
-	Fl::remove_timeout(callback);
+	if (running)
+		Fl::remove_timeout(callback);
+	running = false;
 }
 
 void setSharedTimerFireInterval(double interval)
 {
+	_interval = interval;
+
+	if (running)
+		stopSharedTimer();
 	Fl::add_timeout(interval, callback);
+	Fl::awake();
+	running = true;
 }
 
 }

@@ -49,6 +49,8 @@ void webkitInit() {
 	atomicCanonicalTextEncodingName("UTF-8");
 	cacheStorage().setCacheDirectory("cache");
 	PageGroup::setShouldTrackVisitedLinks(true);
+
+	Fl::lock();
 }
 
 void wk_set_useragent_func(const char * (*func)(const char *)) {
