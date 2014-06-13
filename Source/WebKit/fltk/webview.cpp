@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "webview.h"
 #include "webviewpriv.h"
 
+#include <cairo-xlib.h>
 #include <FL/fl_draw.H>
 #include <MainFrame.h>
 #include <FrameLoadRequest.h>
@@ -34,7 +35,6 @@ using namespace WebCore;
 webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
 	priv = new privatewebview;
-	priv->cairodata = NULL;
 	priv->gc = NULL;
 	priv->cairo = NULL;
 
@@ -42,6 +42,9 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	while (wid->parent())
 		wid = wid->parent();
 	priv->window = wid->as_window();
+
+	fl_open_display();
+	priv->depth = fl_visual->depth;
 
 	Page::PageClients clients;
 	clients.chromeClient = new FlChromeClient(this);
@@ -99,20 +102,24 @@ webview::~webview() {
 }
 
 void webview::draw() {
-	if (!priv->cairodata)
+	if (!priv->cairo)
 		return;
-
 	ASSERT(isMainThread());
+
+	int cx, cy, cw, ch;
+	fl_clip_box(x(), y(), w(), h(), cx, cy, cw, ch);
+	if (!cw) return;
 
 	drawWeb(); // for now here
 
-	fl_draw_image(priv->cairodata, 0, 0, w(), h(), 3);
+	XCopyArea(fl_display, priv->cairopix, fl_window, fl_gc, 0, 0, w(), h(),
+			cx, cy);
 }
 
 void webview::drawWeb() {
 
 	Frame *f = &priv->page->mainFrame();
-	if (!f->contentRenderer() || !f->view() || !priv->cairodata)
+	if (!f->contentRenderer() || !f->view() || !priv->cairo)
 		return;
 
 	f->view()->updateLayoutAndStyleIfNeededRecursive();
@@ -120,16 +127,6 @@ void webview::drawWeb() {
 	priv->gc->applyDeviceScaleFactor(f->page()->deviceScaleFactor());
 	f->view()->paint(priv->gc, IntRect(0, 0, w(), h()));
 	priv->page->inspectorController().drawHighlight(*priv->gc);
-
-	// Convert to FLTK's RGB format. Sucks, but whatcha gonna do.
-	unsigned char * const d = cairo_image_surface_get_data(priv->cairosurf);
-	unsigned p;
-	const unsigned max = w() * h();
-	for (p = 0; p < max; p++) {
-		priv->cairodata[p*3] = d[p*4 + 2];
-		priv->cairodata[p*3 + 1] = d[p*4 + 1];
-		priv->cairodata[p*3 + 2] = d[p*4 + 0];
-	}
 }
 
 void webview::load(const char *url) {
@@ -156,10 +153,21 @@ void webview::load(const char *url) {
 }
 
 void webview::resize() {
-	if (priv->cairo)
-		cairo_destroy(priv->cairo);
+	bool old = false;
 
-	cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w(), h());
+	if (priv->cairo) {
+		cairo_destroy(priv->cairo);
+		old = true;
+	}
+
+	if (old)
+		XFreePixmap(fl_display, priv->cairopix);
+	priv->cairopix = XCreatePixmap(fl_display, DefaultRootWindow(fl_display),
+					w(), h(), priv->depth);
+
+	cairo_surface_t *surf = cairo_xlib_surface_create(fl_display, priv->cairopix,
+								fl_visual->visual,
+								w(), h());
 	priv->cairo = cairo_create(surf);
 	priv->cairosurf = surf;
 	cairo_surface_destroy(surf);
@@ -167,7 +175,4 @@ void webview::resize() {
 	if (priv->gc)
 		delete priv->gc;
 	priv->gc = new GraphicsContext(priv->cairo);
-
-	free(priv->cairodata);
-	priv->cairodata = (unsigned char *) calloc(w() * h() * 3, 1);
 }

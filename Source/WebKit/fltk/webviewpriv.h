@@ -29,15 +29,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GraphicsContext.h>
 #include <Page.h>
 
+typedef unsigned long Pixmap;
+
 class privatewebview {
 public:
 	WebCore::Page *page;
+
 	cairo_t *cairo;
 	cairo_surface_t *cairosurf;
 	WebCore::GraphicsContext *gc;
-	unsigned char *cairodata;
+	Pixmap cairopix;
 
 	Fl_Window *window;
+	unsigned depth;
 };
 
 #endif
