@@ -158,8 +158,11 @@ void FlChromeClient::runJavaScriptAlert(Frame *f, const String &s) {
 			s.utf8().data());
 }
 
-bool FlChromeClient::runJavaScriptConfirm(Frame*, const String&) {
-	notImplemented();
+bool FlChromeClient::runJavaScriptConfirm(Frame *f, const String &s) {
+	fl_message_title("Javascript confirm");
+	return fl_choice("<%s>\n\n%s", fl_cancel, fl_ok, NULL,
+			f->document()->baseURI().string().utf8().data(),
+			s.utf8().data());
 }
 
 bool FlChromeClient::runJavaScriptPrompt(Frame*, const String&,
