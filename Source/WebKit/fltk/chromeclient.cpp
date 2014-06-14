@@ -165,9 +165,17 @@ bool FlChromeClient::runJavaScriptConfirm(Frame *f, const String &s) {
 			s.utf8().data());
 }
 
-bool FlChromeClient::runJavaScriptPrompt(Frame*, const String&,
-		const String&, String&) {
-	notImplemented();
+bool FlChromeClient::runJavaScriptPrompt(Frame *f, const String &s,
+		const String &def, String &out) {
+
+	fl_message_title("Javascript prompt");
+	const char *res = fl_input("<%s>\n\n%s", def.utf8().data(),
+				f->document()->baseURI().string().utf8().data(),
+				s.utf8().data());
+	if (!res)
+		return false;
+	out = res;
+	return true;
 }
 
 void FlChromeClient::setStatusbarText(const String &s) {
