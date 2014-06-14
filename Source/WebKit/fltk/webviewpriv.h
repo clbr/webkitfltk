@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <GraphicsContext.h>
 #include <Page.h>
+#include <wtf/text/CString.h>
 
 #include <time.h>
 
