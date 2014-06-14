@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "chromeclient.h"
 #include "webviewpriv.h"
 
-#include <wtf/text/CString.h>
+#include <FL/fl_ask.H>
+
+#include <Document.h>
+#include <Frame.h>
 #include <NotImplemented.h>
 
 using namespace WTF;
@@ -149,8 +152,10 @@ void FlChromeClient::closeWindowSoon() {
 	notImplemented();
 }
 
-void FlChromeClient::runJavaScriptAlert(Frame*, const String&) {
-	notImplemented();
+void FlChromeClient::runJavaScriptAlert(Frame *f, const String &s) {
+	fl_message_title("Javascript alert");
+	fl_alert("<%s>\n\n%s", f->document()->baseURI().string().utf8().data(),
+			s.utf8().data());
 }
 
 bool FlChromeClient::runJavaScriptConfirm(Frame*, const String&) {
