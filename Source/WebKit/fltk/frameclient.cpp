@@ -149,7 +149,6 @@ void FlFrameLoaderClient::dispatchDidPopStateWithinPage() {
 }
 
 void FlFrameLoaderClient::dispatchWillClose() {
-	notImplemented();
 }
 
 void FlFrameLoaderClient::dispatchDidReceiveIcon() {
@@ -157,7 +156,6 @@ void FlFrameLoaderClient::dispatchDidReceiveIcon() {
 }
 
 void FlFrameLoaderClient::dispatchDidStartProvisionalLoad() {
-	notImplemented();
 }
 
 void FlFrameLoaderClient::dispatchDidReceiveTitle(const StringWithDirection&) {
@@ -180,7 +178,6 @@ void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError&) {
 }
 
 void FlFrameLoaderClient::dispatchDidFinishDocumentLoad() {
-	notImplemented();
 }
 
 void FlFrameLoaderClient::dispatchDidFinishLoad() {
@@ -221,7 +218,6 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 }
 
 void FlFrameLoaderClient::cancelPolicyCheck() {
-	notImplemented();
 }
 
 void FlFrameLoaderClient::dispatchUnableToImplementPolicy(const ResourceError&) {
@@ -357,7 +353,6 @@ String FlFrameLoaderClient::generatedMIMETypeForURLScheme(const String& URLSchem
 }
 
 void FlFrameLoaderClient::frameLoadCompleted() {
-	notImplemented();
 }
 
 void FlFrameLoaderClient::saveViewStateToItem(HistoryItem*) {
@@ -369,11 +364,9 @@ void FlFrameLoaderClient::restoreViewState() {
 }
 
 void FlFrameLoaderClient::provisionalLoadStarted() {
-	notImplemented();
 }
 
 void FlFrameLoaderClient::didFinishLoad() {
-	notImplemented();
 }
 
 void FlFrameLoaderClient::prepareForDataSourceReplacement() {
@@ -486,7 +479,6 @@ ObjectContentType FlFrameLoaderClient::objectContentType(const URL &url,
 }
 
 String FlFrameLoaderClient::overrideMediaType() const {
-	notImplemented();
 	return String();
 }
 
