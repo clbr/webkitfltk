@@ -442,8 +442,8 @@ PassRefPtr<Frame> FlFrameLoaderClient::createFrame(const URL& url,
 
 	Frame *parent = frame;
 	FlFrameLoaderClient *newl = new FlFrameLoaderClient(view);
-	Frame *kid = Frame::create(view->priv->page, ownerElement, newl).get();
-	newl->setFrame(kid);
+	RefPtr<Frame> kid = Frame::create(view->priv->page, ownerElement, newl).get();
+	newl->setFrame(kid.get());
 
 	kid->tree().setName(name);
 	parent->tree().appendChild(kid);
@@ -453,13 +453,13 @@ PassRefPtr<Frame> FlFrameLoaderClient::createFrame(const URL& url,
 	if (!kid->page())
 		return NULL;
 
-	parent->loader().loadURLIntoChildFrame(url, referrer, kid);
+	parent->loader().loadURLIntoChildFrame(url, referrer, kid.get());
 
 	// Bad JS again
 	if (!kid->tree().parent())
 		return NULL;
 
-	return kid;
+	return kid.release();
 }
 
 PassRefPtr<Widget> FlFrameLoaderClient::createPlugin(const IntSize&, HTMLPlugInElement*, const URL&, const Vector<String>&, const Vector<String>&, const String&, bool loadManually) {
