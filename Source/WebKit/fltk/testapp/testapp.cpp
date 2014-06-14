@@ -1,12 +1,12 @@
 #include "webkit.h"
 
-int main() {
+int main(int argc, char **argv) {
 
 	webkitInit();
 	Fl_Window *win = new Fl_Window(800, 600);
 	webview *v = new webview(0, 0, 800, 600);
 	win->end();
-	win->show();
+	win->show(argc, argv);
 
 	v->load("http://google.com");
 
