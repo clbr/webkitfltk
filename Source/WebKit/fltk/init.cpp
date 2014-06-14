@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace WebCore;
 
 const char * (*uafunc)(const char *) = NULL;
+int (*urlblockfunc)(const char *) = NULL;
 
 void webkitInit() {
 	static bool init = false;
@@ -55,4 +56,8 @@ void webkitInit() {
 
 void wk_set_useragent_func(const char * (*func)(const char *)) {
 	uafunc = func;
+}
+
+void wk_set_urlblock_func(int (*func)(const char *)) {
+	urlblockfunc = func;
 }

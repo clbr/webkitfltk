@@ -33,6 +33,7 @@ using namespace WebCore;
 using namespace WTF;
 
 extern const char * (*uafunc)(const char *);
+extern int (*urlblockfunc)(const char *);
 
 FlFrameLoaderClient::FlFrameLoaderClient(webview *inview, Frame *inframe) {
 	view = inview;
@@ -75,8 +76,11 @@ void FlFrameLoaderClient::assignIdentifierToInitialRequest(unsigned long identif
 	notImplemented();
 }
 
-void FlFrameLoaderClient::dispatchWillSendRequest(DocumentLoader*, unsigned long identifier, ResourceRequest&, const ResourceResponse& redirectResponse) {
-	notImplemented();
+void FlFrameLoaderClient::dispatchWillSendRequest(DocumentLoader*, unsigned long identifier,
+		ResourceRequest &req, const ResourceResponse& redirectResponse) {
+
+	if (urlblockfunc && urlblockfunc(req.url().string().utf8().data()))
+		req.setURL(URL(URL(), "about:blank"));
 }
 
 bool FlFrameLoaderClient::shouldUseCredentialStorage(DocumentLoader*, unsigned long identifier) {

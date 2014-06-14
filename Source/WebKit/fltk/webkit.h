@@ -24,8 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "webview.h"
 
+// Init. Call this before show()ing anything.
 void webkitInit();
 
+// Use this for per-page useragents.
 void wk_set_useragent_func(const char * (*func)(const char *));
+
+// Content blocking. Return 0 for ok, 1 for block.
+void wk_set_urlblock_func(int (*func)(const char *));
 
 #endif
