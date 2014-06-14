@@ -144,8 +144,8 @@ bool FlChromeClient::canRunBeforeUnloadConfirmPanel() {
 	return false;
 }
 
-bool FlChromeClient::runBeforeUnloadConfirmPanel(const String&, Frame*) {
-	notImplemented();
+bool FlChromeClient::runBeforeUnloadConfirmPanel(const String &s, Frame *f) {
+	return runJavaScriptConfirm(f, s);
 }
 
 void FlChromeClient::closeWindowSoon() {
