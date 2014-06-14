@@ -95,6 +95,8 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	set.setMinDOMTimerInterval(0.016);
 	set.setHiddenPageDOMTimerAlignmentInterval(10);
 	set.setHiddenPageDOMTimerThrottlingEnabled(true);
+	set.setMinimumFontSize(8);
+	set.setDefaultFontSize(16);
 
 	// Cairo
 	resize();
