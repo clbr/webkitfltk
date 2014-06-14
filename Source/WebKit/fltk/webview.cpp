@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cairo-xlib.h>
 #include <FL/fl_draw.H>
+#include <unistd.h>
+
 #include <MainFrame.h>
 #include <FrameLoadRequest.h>
 #include <FrameView.h>
@@ -96,6 +98,8 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
 	// Cairo
 	resize();
+
+	clock_gettime(CLOCK_MONOTONIC, &priv->lastdraw);
 }
 
 webview::~webview() {
@@ -108,6 +112,15 @@ void webview::draw() {
 		return;
 	ASSERT(isMainThread());
 
+	// Don't draw at over 60 fps. Save power and penguins.
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+
+	unsigned usecs = (now.tv_sec - priv->lastdraw.tv_sec) * 1000 * 1000;
+	usecs += (now.tv_nsec - priv->lastdraw.tv_nsec) / 1000;
+	if (usecs < 16600)
+		usleep(16600 - usecs);
+
 	int cx, cy, cw, ch;
 	fl_clip_box(x(), y(), w(), h(), cx, cy, cw, ch);
 	if (!cw) return;
@@ -116,6 +129,8 @@ void webview::draw() {
 
 	XCopyArea(fl_display, priv->cairopix, fl_window, fl_gc, 0, 0, w(), h(),
 			cx, cy);
+
+	priv->lastdraw = now;
 }
 
 void webview::drawWeb() {

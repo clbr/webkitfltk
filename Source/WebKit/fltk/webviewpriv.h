@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GraphicsContext.h>
 #include <Page.h>
 
+#include <time.h>
+
 typedef unsigned long Pixmap;
 
 class privatewebview {
@@ -43,6 +45,8 @@ public:
 	Fl_Window *window;
 	unsigned depth;
 	unsigned w, h;
+
+	struct timespec lastdraw;
 };
 
 #endif
