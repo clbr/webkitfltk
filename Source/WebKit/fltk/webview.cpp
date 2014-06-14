@@ -129,8 +129,14 @@ void webview::draw() {
 
 	drawWeb(); // for now here
 
-	XCopyArea(fl_display, priv->cairopix, fl_window, fl_gc, 0, 0, w(), h(),
-			cx, cy);
+	const int tgtx = cx, tgty = cy;
+
+	// If the widget is offset somewhere, copy the right parts
+	cx -= x();
+	cy -= y();
+
+	XCopyArea(fl_display, priv->cairopix, fl_window, fl_gc, cx, cy, cw, ch,
+			tgtx, tgty);
 
 	priv->lastdraw = now;
 }
