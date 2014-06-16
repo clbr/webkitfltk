@@ -8,7 +8,10 @@ int main(int argc, char **argv) {
 	win->end();
 	win->show(argc, argv);
 
-	v->load("http://google.com");
+	if (argc > 1)
+		v->load(argv[1]);
+	else
+		v->load("http://google.com");
 
 //  WebCore::Page* page = new WebCore::Page(pageClients);
 //  WebCore::FrameLoaderClient* loaderClient = new WebCore::FrameLoaderClient();
