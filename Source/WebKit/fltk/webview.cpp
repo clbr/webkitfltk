@@ -175,6 +175,12 @@ void webview::load(const char *url) {
 		str.append(url + 1);
 	}
 
+	// No protocol?
+	if (!str.contains("://")) {
+		str = "http://";
+		str.append(orig);
+	}
+
 	FrameLoadRequest req(f, ResourceRequest(URL(URL(), str)));
 
 	f->loader().load(req);
