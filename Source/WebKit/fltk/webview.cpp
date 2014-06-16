@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "webviewpriv.h"
 
 #include <cairo-xlib.h>
+#include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <unistd.h>
 
@@ -30,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <InspectorController.h>
 #include <Settings.h>
 #include <WidgetBackingStoreCairo.h>
+#include <wtf/CurrentTime.h>
 
 using namespace WTF;
 using namespace WebCore;
@@ -84,6 +86,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
 	MainFrame *f = &priv->page->mainFrame();
 	f->init();
+	priv->event = &f->eventHandler();
 
 	// Default settings
 	Settings &set = priv->page->mainFrame().settings();
@@ -202,4 +205,67 @@ void webview::resize() {
 	if (priv->gc)
 		delete priv->gc;
 	priv->gc = new GraphicsContext(priv->cairo);
+}
+
+int webview::handle(int e) {
+
+	switch (e) {
+		case FL_PUSH:
+		case FL_RELEASE:
+		case FL_MOVE:
+			{
+			const IntPoint pos(Fl::event_x() - x(), Fl::event_y() - y());
+			const IntPoint gpos(Fl::event_x_root(), Fl::event_y_root());
+			MouseButton btn;
+			PlatformEvent::Type type;
+			unsigned clicks = 0;
+
+			if (e == FL_PUSH || e == FL_RELEASE) {
+				switch (Fl::event_button()) {
+					case FL_LEFT_MOUSE:
+						btn = LeftButton;
+					break;
+					case FL_MIDDLE_MOUSE:
+						btn = MiddleButton;
+					break;
+					case FL_RIGHT_MOUSE:
+						btn = RightButton;
+					break;
+				}
+				clicks = Fl::event_clicks() ? 2 : 1;
+			}
+
+			if (e == FL_PUSH)
+				type = PlatformEvent::MousePressed;
+			else if (e == FL_RELEASE)
+				type = PlatformEvent::MouseReleased;
+			else
+				type = PlatformEvent::MouseMoved;
+
+
+			PlatformMouseEvent pev(pos, gpos, btn, type, clicks,
+						Fl::event_shift(), Fl::event_ctrl(),
+						Fl::event_alt(),
+						Fl::event_command(),
+						currentTime());
+
+			if (e == FL_PUSH)
+				priv->event->handleMousePressEvent(pev);
+			else if (e == FL_RELEASE)
+				priv->event->handleMouseReleaseEvent(pev);
+			else
+				priv->event->mouseMoved(pev);
+
+			return 1;
+			}
+		break;
+		case FL_MOUSEWHEEL:
+			return 0;
+		break;
+		case FL_ENTER:
+		case FL_LEAVE:
+			return 1;
+		default:
+			return Fl_Widget::handle(e);
+	}
 }

@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "frameclient.h"
 #include "progressclient.h"
 
+#include <EventHandler.h>
 #include <GraphicsContext.h>
 #include <Page.h>
 #include <wtf/text/CString.h>
@@ -37,6 +38,7 @@ typedef unsigned long Pixmap;
 class privatewebview {
 public:
 	WebCore::Page *page;
+	WebCore::EventHandler *event;
 
 	cairo_t *cairo;
 	cairo_surface_t *cairosurf;

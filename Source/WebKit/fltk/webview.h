@@ -30,6 +30,8 @@ public:
 	void draw() override;
 	void drawWeb();
 
+	int handle(int) override;
+
 	void resize();
 
 	void load(const char *);
