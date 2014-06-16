@@ -32,9 +32,11 @@ namespace WebCore {
 
 PassNativeImagePtr ImageFrame::asNewNativeImage() const
 {
-    return adoptRef(cairo_image_surface_create_for_data(
-        reinterpret_cast<unsigned char*>(const_cast<PixelData*>(m_bytes)),
-        CAIRO_FORMAT_ARGB32, width(), height(), width() * sizeof(PixelData)));
+    cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width(), height());
+    unsigned char* data = cairo_image_surface_get_data(surface);
+    memcpy(data, m_bytes, width() * height() * sizeof(PixelData));
+    cairo_surface_mark_dirty(surface);
+    return adoptRef(surface);
 }
 
 } // namespace WebCore

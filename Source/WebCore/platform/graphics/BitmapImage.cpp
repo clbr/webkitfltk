@@ -121,6 +121,8 @@ void BitmapImage::destroyDecodedDataIfNecessary(bool destroyAll)
          return;
 #else
     static const unsigned cLargeAnimationCutoff = 5242880;
+    /* The GIF decoder is too buggy to handle the resize. Just use the memory for now. */
+    return;
 #endif
 
     // If we have decoded frames but there is no encoded data, we shouldn't destroy
