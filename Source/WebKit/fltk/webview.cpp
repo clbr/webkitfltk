@@ -194,6 +194,9 @@ void webview::resize() {
 	if (priv->cairo) {
 		cairo_destroy(priv->cairo);
 		old = true;
+
+		priv->w = w();
+		priv->h = h();
 	}
 
 	if (old)
@@ -211,6 +214,9 @@ void webview::resize() {
 	if (priv->gc)
 		delete priv->gc;
 	priv->gc = new GraphicsContext(priv->cairo);
+
+	if (old)
+		priv->page->mainFrame().view()->resize(priv->w, priv->h);
 }
 
 int webview::handle(int e) {
