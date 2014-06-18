@@ -34,6 +34,7 @@ using namespace WebCore;
 
 const char * (*uafunc)(const char *) = NULL;
 int (*urlblockfunc)(const char *) = NULL;
+const char * (*uploaddirfunc)() = NULL;
 
 void webkitInit() {
 	static bool init = false;
@@ -60,4 +61,8 @@ void wk_set_useragent_func(const char * (*func)(const char *)) {
 
 void wk_set_urlblock_func(int (*func)(const char *)) {
 	urlblockfunc = func;
+}
+
+void wk_set_uploaddir_func(const char * (*func)()) {
+	uploaddirfunc = func;
 }

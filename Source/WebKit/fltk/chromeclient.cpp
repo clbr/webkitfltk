@@ -20,13 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "webviewpriv.h"
 
 #include <FL/fl_ask.H>
+#include <FL/Fl_File_Chooser.H>
 
 #include <Document.h>
+#include <FileChooser.h>
 #include <Frame.h>
 #include <NotImplemented.h>
 
 using namespace WTF;
 using namespace WebCore;
+
+extern const char * (*uploaddirfunc)();
 
 FlChromeClient::FlChromeClient(webview *inview) {
 	view = inview;
@@ -232,7 +236,7 @@ void FlChromeClient::scrollbarsModeDidChange() const {
 	notImplemented();
 }
 
-void FlChromeClient::setCursor(const Cursor&) {
+void FlChromeClient::setCursor(const WebCore::Cursor&) {
 	notImplemented();
 }
 
@@ -265,8 +269,33 @@ void FlChromeClient::reachedApplicationCacheOriginQuota(SecurityOrigin*,
 	notImplemented();
 }
 
-void FlChromeClient::runOpenPanel(Frame*, PassRefPtr<FileChooser>) {
-	notImplemented();
+void FlChromeClient::runOpenPanel(Frame *f, PassRefPtr<FileChooser> chooser) {
+	bool multi = false;
+
+	if (chooser->settings().allowsMultipleFiles)
+		multi = true;
+
+	Fl_File_Chooser c(uploaddirfunc ? uploaddirfunc() : "/tmp", NULL,
+				multi ? Fl_File_Chooser::MULTI : Fl_File_Chooser::SINGLE,
+				"Select file");
+	c.show();
+	while (c.shown())
+		Fl::wait();
+	if (!c.value())
+		return;
+
+	if (multi) {
+		Vector<String> filenames;
+		unsigned i;
+		const unsigned max = c.count();
+		for (i = 1; i <= max; i++) {
+			filenames.append(c.value(i));
+		}
+
+		chooser->chooseFiles(filenames);
+	} else {
+		chooser->chooseFile(c.value());
+	}
 }
 
 void FlChromeClient::loadIconForFiles(const Vector<String>&, FileIconLoader*) {

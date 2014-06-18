@@ -33,4 +33,7 @@ void wk_set_useragent_func(const char * (*func)(const char *));
 // Content blocking. Return 0 for ok, 1 for block.
 void wk_set_urlblock_func(int (*func)(const char *));
 
+// Where to open files for uploading?
+void wk_set_uploaddir_func(const char * (*func)());
+
 #endif
