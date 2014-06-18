@@ -180,6 +180,9 @@ public:
 #endif
     virtual bool shouldShowPlaceholderWhenFocused() const override { return true; }
 
+    virtual bool popsMenuByArrowKeys() const override { return true; }
+    virtual bool popsMenuBySpaceOrReturn() const override { return true; }
+
 protected:
     static float defaultFontSize;
 
