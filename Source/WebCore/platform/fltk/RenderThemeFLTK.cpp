@@ -49,6 +49,12 @@
 #include <wtf/text/StringBuilder.h>
 #include <wtf/text/WTFString.h>
 
+#include <cairo-xlib.h>
+#include <FL/fl_draw.H>
+#include <FL/Fl.H>
+#include <FL/Fl_Button.H>
+#include <FL/x.H>
+
 namespace WebCore {
 
 // Initialize default font size.
@@ -105,29 +111,122 @@ bool RenderThemeFLTK::isControlStyled(const RenderStyle* style, const BorderData
     return RenderTheme::isControlStyled(style, border, background, backgroundColor) || style->appearance() == MenulistButtonPart;
 }
 
-bool RenderThemeFLTK::paintThemePart(const RenderObject& object, FormType type, const PaintInfo& info, const IntRect& rect)
+static Fl_Button *s_button;
+
+bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType type,
+					const PaintInfo& info, const IntRect& rect)
 {
-	notImplemented();
-/*
-    bool haveBackgroundColor = isControlStyled(&object.style(), object.style().border(), *object.style().backgroundLayers(), Color::white);
-    ControlStates states(extractControlStatesForRenderer(object));
-    applyEdjeStateFromForm(entry->edje(), &states, haveBackgroundColor);
+	if (info.context->paintingDisabled())
+		return false;
 
-    applyEdjeRTLState(entry->edje(), object, type, rect);
+	cairo_t* cairo = info.context->platformContext()->cr();
+	ASSERT(cairo);
 
-    edje_object_calc_force(entry->edje());
-    edje_object_message_signal_process(entry->edje());
-    evas_render(ecore_evas_get(entry->canvas()));
+	cairo_surface_t *surf = cairo_get_target(cairo);
+	cairo_surface_flush(surf);
 
-    cairo_t* cairo = info.context->platformContext()->cr();
-    ASSERT(cairo);
+	ASSERT(CAIRO_SURFACE_TYPE_XLIB == cairo_surface_get_type(surf));
+	Drawable d = cairo_xlib_surface_get_drawable(surf);
 
-    cairo_save(cairo);
-    cairo_set_source_surface(cairo, entry->surface(), rect.x(), rect.y());
-    cairo_paint_with_alpha(cairo, 1.0);
-    cairo_restore(cairo);
-*/
-    return false;
+	Fl_Widget *w = NULL;
+
+	switch (type) {
+		case Button:
+			if (!s_button)
+				s_button = new Fl_Button(0, 0, 10, 10);
+			w = s_button;
+		break;
+		case RadioButton:
+		break;
+		case TextField:
+		break;
+		case CheckBox:
+		break;
+		case ComboBox:
+		break;
+#if ENABLE(PROGRESS_ELEMENT)
+		case ProgressBar:
+		break;
+#endif
+		case SearchField:
+		break;
+		case SearchFieldResultsButton:
+		break;
+		case SearchFieldResultsDecoration:
+		break;
+		case SearchFieldCancelButton:
+		break;
+		case SliderVertical:
+		break;
+		case SliderHorizontal:
+		break;
+		case SliderThumbVertical:
+		break;
+		case SliderThumbHorizontal:
+		break;
+		case Spinner:
+		break;
+	}
+
+	if (!w)
+		return true; // We don't support it, please draw for us
+
+	w->resize(rect.x(), rect.y(), rect.width(), rect.height());
+	w->activate();
+	if (!isEnabled(object) || isReadOnlyControl(object))
+		w->deactivate();
+	if (isFocused(object))
+		Fl::focus(w);
+
+	switch (type) {
+		case Button:
+			if (isPressed(object))
+				s_button->value(1);
+			else
+				s_button->value(0);
+		break;
+		case RadioButton:
+		break;
+		case TextField:
+		break;
+		case CheckBox:
+		break;
+		case ComboBox:
+		break;
+#if ENABLE(PROGRESS_ELEMENT)
+		case ProgressBar:
+		break;
+#endif
+		case SearchField:
+		break;
+		case SearchFieldResultsButton:
+		break;
+		case SearchFieldResultsDecoration:
+		break;
+		case SearchFieldCancelButton:
+		break;
+		case SliderVertical:
+		break;
+		case SliderHorizontal:
+		break;
+		case SliderThumbVertical:
+		break;
+		case SliderThumbHorizontal:
+		break;
+		case Spinner:
+		break;
+	}
+
+	fl_begin_offscreen(d);
+	fl_push_clip(rect.x(), rect.y(), rect.width(), rect.height());
+	w->draw();
+	fl_pop_clip();
+	fl_end_offscreen();
+
+	cairo_surface_mark_dirty_rectangle(surf, rect.x(), rect.y(),
+						rect.width(), rect.height());
+
+	return false;
 }
 
 PassRefPtr<RenderTheme> RenderThemeFLTK::create(Page* page)
