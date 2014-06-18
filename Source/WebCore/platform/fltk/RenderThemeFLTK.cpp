@@ -254,6 +254,13 @@ RenderThemeFLTK::RenderThemeFLTK(Page* page)
     , m_sliderThumbColor(Color::darkGray)
     , m_supportsSelectionForegroundColor(false)
 {
+	unsigned i;
+	for (i = 0; i < FormTypeLast; i++) {
+		m_partDescs[i].type = (FormType) i;
+		m_partDescs[i].min = LengthSize(Length(5, Auto), Length(5, Auto));
+		m_partDescs[i].max = LengthSize(Length(0, Auto), Length(0, Auto));
+		m_partDescs[i].padding = LengthBox(4);
+	}
 }
 
 RenderThemeFLTK::~RenderThemeFLTK()
