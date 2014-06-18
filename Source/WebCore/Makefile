@@ -25,6 +25,7 @@ SRC = plugins/PluginPackageNone.cpp \
 	platform/fltk/TemporaryLinkStubs.cpp \
 	platform/fltk/ImageFLTK.cpp \
 	platform/fltk/ContextMenuFLTK.cpp \
+	platform/fltk/PopupMenuFLTK.cpp \
 	platform/fltk/ContextMenuItemFLTK.cpp \
 	plugins/PluginViewNone.cpp \
 	platform/graphics/cairo/GraphicsContextCairo.cpp \

@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FileChooser.h>
 #include <Frame.h>
 #include <NotImplemented.h>
+#include <PopupMenuFLTK.h>
 
 using namespace WTF;
 using namespace WebCore;
@@ -327,8 +328,8 @@ bool FlChromeClient::hasOpenedPopup() const {
 	return false;
 }
 
-PassRefPtr<PopupMenu> FlChromeClient::createPopupMenu(PopupMenuClient*) const {
-	notImplemented();
+PassRefPtr<PopupMenu> FlChromeClient::createPopupMenu(PopupMenuClient *c) const {
+	return adoptRef(new PopupMenuFLTK(c, view->x(), view->y()));
 }
 
 PassRefPtr<SearchPopupMenu>
