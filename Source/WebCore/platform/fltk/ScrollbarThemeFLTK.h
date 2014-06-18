@@ -39,10 +39,19 @@ public:
     void setScrollbarThickness(int thickness) { m_scrollbarThickness = thickness; }
     virtual int scrollbarThickness(ScrollbarControlSize = RegularScrollbar) override { return m_scrollbarThickness; }
 
-    virtual void registerScrollbar(ScrollbarThemeClient*) override { }
-    virtual void unregisterScrollbar(ScrollbarThemeClient*) override { }
+    virtual void registerScrollbar(ScrollbarThemeClient*) override;
+    virtual void unregisterScrollbar(ScrollbarThemeClient*) override;
+
+    virtual bool paint(ScrollbarThemeClient*, GraphicsContext*, const IntRect&) override;
+    virtual ScrollbarPart hitTest(ScrollbarThemeClient*, const IntPoint&) override;
+
+    virtual int thumbPosition(ScrollbarThemeClient*) override;
+    virtual int thumbLength(ScrollbarThemeClient*) override;
+    virtual int trackPosition(ScrollbarThemeClient*) override;
+    virtual int trackLength(ScrollbarThemeClient*) override;
 private:
     int m_scrollbarThickness;
+    HashSet<ScrollbarThemeClient*> m_scrollbars;
 };
 
 }

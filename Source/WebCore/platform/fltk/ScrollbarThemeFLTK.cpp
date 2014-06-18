@@ -27,6 +27,9 @@
  */
 
 #include "config.h"
+
+#include "NotImplemented.h"
+#include "ScrollbarThemeClient.h"
 #include "ScrollbarThemeFLTK.h"
 
 namespace WebCore {
@@ -37,5 +40,56 @@ ScrollbarTheme* ScrollbarTheme::nativeTheme()
     return &theme;
 }
 
+void ScrollbarThemeFLTK::registerScrollbar(ScrollbarThemeClient *bar) {
+	m_scrollbars.add(bar);
 }
 
+void ScrollbarThemeFLTK::unregisterScrollbar(ScrollbarThemeClient *bar) {
+	m_scrollbars.remove(bar);
+}
+
+bool ScrollbarThemeFLTK::paint(ScrollbarThemeClient *bar,
+				GraphicsContext *gc, const IntRect &damage) {
+	// Happens in the widget.
+	return false;
+}
+
+ScrollbarPart ScrollbarThemeFLTK::hitTest(ScrollbarThemeClient *bar,
+		const IntPoint &rect) {
+	// fixme
+	return NoPart;
+}
+
+int ScrollbarThemeFLTK::thumbPosition(ScrollbarThemeClient *bar) {
+
+	if (!bar->enabled())
+		return 0;
+	// fixme
+	return 3;
+}
+
+int ScrollbarThemeFLTK::thumbLength(ScrollbarThemeClient *bar) {
+
+	if (!bar->enabled())
+		return 0;
+	// fixme
+	return 3;
+}
+
+int ScrollbarThemeFLTK::trackPosition(ScrollbarThemeClient *bar) {
+
+	if (!bar->enabled())
+		return 0;
+	// fixme
+	return 3;
+}
+
+int ScrollbarThemeFLTK::trackLength(ScrollbarThemeClient *bar) {
+
+	if (!bar->enabled())
+		return 0;
+	// fixme
+	return 3;
+}
+
+}
