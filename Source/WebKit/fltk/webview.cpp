@@ -228,7 +228,7 @@ int webview::handle(int e) {
 			{
 			const IntPoint pos(Fl::event_x() - x(), Fl::event_y() - y());
 			const IntPoint gpos(Fl::event_x_root(), Fl::event_y_root());
-			MouseButton btn;
+			MouseButton btn = NoButton;
 			PlatformEvent::Type type;
 			unsigned clicks = 0;
 
