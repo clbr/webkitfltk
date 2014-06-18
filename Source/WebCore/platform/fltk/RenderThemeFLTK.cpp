@@ -53,6 +53,7 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/x.H>
 
@@ -114,6 +115,7 @@ bool RenderThemeFLTK::isControlStyled(const RenderStyle* style, const BorderData
 
 static Fl_Button *s_button;
 static Fl_Radio_Round_Button *s_radio;
+static Fl_Check_Button *s_check;
 
 bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType type,
 					const PaintInfo& info, const IntRect& rect)
@@ -146,6 +148,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		case TextField:
 		break;
 		case CheckBox:
+			if (!s_check)
+				s_check = new Fl_Check_Button(0, 0, 10, 10);
+			w = s_check;
 		break;
 		case ComboBox:
 		break;
@@ -200,6 +205,11 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		case TextField:
 		break;
 		case CheckBox:
+			s_check->labelsize(rect.height() - 2);
+			if (isChecked(object))
+				s_check->value(1);
+			else
+				s_check->value(0);
 		break;
 		case ComboBox:
 		break;
@@ -273,6 +283,7 @@ RenderThemeFLTK::RenderThemeFLTK(Page* page)
 	}
 
 	m_partDescs[RadioButton].padding = LengthBox(7);
+	m_partDescs[CheckBox].padding = LengthBox(7);
 }
 
 RenderThemeFLTK::~RenderThemeFLTK()
