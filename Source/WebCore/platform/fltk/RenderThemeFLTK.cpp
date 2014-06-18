@@ -53,6 +53,7 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Radio_Round_Button.H>
 #include <FL/x.H>
 
 namespace WebCore {
@@ -112,6 +113,7 @@ bool RenderThemeFLTK::isControlStyled(const RenderStyle* style, const BorderData
 }
 
 static Fl_Button *s_button;
+static Fl_Radio_Round_Button *s_radio;
 
 bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType type,
 					const PaintInfo& info, const IntRect& rect)
@@ -137,6 +139,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 			w = s_button;
 		break;
 		case RadioButton:
+			if (!s_radio)
+				s_radio = new Fl_Radio_Round_Button(0, 0, 10, 10);
+			w = s_radio;
 		break;
 		case TextField:
 		break;
@@ -186,6 +191,11 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 				s_button->value(0);
 		break;
 		case RadioButton:
+			s_radio->labelsize(rect.height() - 2);
+			if (isChecked(object))
+				s_radio->value(1);
+			else
+				s_radio->value(0);
 		break;
 		case TextField:
 		break;
@@ -261,6 +271,8 @@ RenderThemeFLTK::RenderThemeFLTK(Page* page)
 		m_partDescs[i].max = LengthSize(Length(0, Auto), Length(0, Auto));
 		m_partDescs[i].padding = LengthBox(4);
 	}
+
+	m_partDescs[RadioButton].padding = LengthBox(7);
 }
 
 RenderThemeFLTK::~RenderThemeFLTK()
