@@ -180,9 +180,6 @@ public:
 #endif
     virtual bool shouldShowPlaceholderWhenFocused() const override { return true; }
 
-    void setThemePath(const String&);
-    String themePath() const;
-
 protected:
     static float defaultFontSize;
 
