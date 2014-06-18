@@ -32,6 +32,8 @@
 #include "config.h"
 #include "Widget.h"
 
+#include <FL/Fl_Widget.H>
+
 #include "ChromeClient.h"
 #include "Cursor.h"
 #include "Frame.h"
@@ -83,12 +85,18 @@ void Widget::setCursor(const Cursor& cursor)
 
 void Widget::show()
 {
-    notImplemented();
+    setSelfVisible(true);
+
+    if (isParentVisible() && platformWidget())
+        platformWidget()->show();
 }
 
 void Widget::hide()
 {
-    notImplemented();
+    setSelfVisible(false);
+
+    if (isParentVisible() && platformWidget())
+        platformWidget()->hide();
 }
 
 void Widget::paint(GraphicsContext*, const IntRect&)
