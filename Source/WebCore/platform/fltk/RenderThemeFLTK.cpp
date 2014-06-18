@@ -54,6 +54,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Choice.H>
 #include <FL/Fl_Multiline_Input.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/x.H>
@@ -118,6 +119,7 @@ static Fl_Button *s_button;
 static Fl_Radio_Round_Button *s_radio;
 static Fl_Check_Button *s_check;
 static Fl_Multiline_Input *s_text;
+static Fl_Choice *s_combo;
 
 bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType type,
 					const PaintInfo& info, const IntRect& rect)
@@ -158,6 +160,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 			w = s_check;
 		break;
 		case ComboBox:
+			if (!s_combo)
+				s_combo = new Fl_Choice(0, 0, 10, 10);
+			w = s_combo;
 		break;
 #if ENABLE(PROGRESS_ELEMENT)
 		case ProgressBar:
@@ -289,6 +294,7 @@ RenderThemeFLTK::RenderThemeFLTK(Page* page)
 
 	m_partDescs[RadioButton].padding = LengthBox(7);
 	m_partDescs[CheckBox].padding = LengthBox(7);
+	m_partDescs[ComboBox].padding.m_right.setValue(Fixed, 32);
 }
 
 RenderThemeFLTK::~RenderThemeFLTK()
