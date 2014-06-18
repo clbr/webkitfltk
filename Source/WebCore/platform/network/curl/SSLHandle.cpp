@@ -145,8 +145,6 @@ static int certVerifyCallback(int ok, X509_STORE_CTX* ctx)
     // whether the verification of the certificate in question was passed (preverify_ok=1) or not (preverify_ok=0)
 
     unsigned err = X509_STORE_CTX_get_error(ctx);
-    if (!err)
-        return 1;
 
     SSL* ssl = reinterpret_cast<SSL*>(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
     SSL_CTX* sslctx = SSL_get_SSL_CTX(ssl);
