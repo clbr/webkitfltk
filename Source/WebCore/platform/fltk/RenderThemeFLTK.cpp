@@ -56,6 +56,7 @@
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Multiline_Input.H>
+#include <FL/Fl_Progress.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/x.H>
 
@@ -120,6 +121,7 @@ static Fl_Radio_Round_Button *s_radio;
 static Fl_Check_Button *s_check;
 static Fl_Multiline_Input *s_text;
 static Fl_Choice *s_combo;
+static Fl_Progress *s_progress;
 
 bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType type,
 					const PaintInfo& info, const IntRect& rect)
@@ -166,6 +168,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		break;
 #if ENABLE(PROGRESS_ELEMENT)
 		case ProgressBar:
+			if (!s_progress)
+				s_progress = new Fl_Progress(0, 0, 10, 10);
+			w = s_progress;
 		break;
 #endif
 		case SearchField:
@@ -225,6 +230,10 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		break;
 #if ENABLE(PROGRESS_ELEMENT)
 		case ProgressBar:
+		{
+			const RenderProgress * prog = toRenderProgress(&object);
+			s_progress->value(prog->position() * 100.0f);
+		}
 		break;
 #endif
 		case SearchField:
