@@ -122,6 +122,7 @@ static Fl_Check_Button *s_check;
 static Fl_Multiline_Input *s_text;
 static Fl_Choice *s_combo;
 static Fl_Progress *s_progress;
+static Fl_Button *s_spinner, *s_spinnerdown;
 
 bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType type,
 					const PaintInfo& info, const IntRect& rect)
@@ -190,6 +191,11 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		case SliderThumbHorizontal:
 		break;
 		case Spinner:
+			if (!s_spinner) {
+				s_spinner = new Fl_Button(0, 0, 10, 10, "@-42<");
+				s_spinnerdown = new Fl_Button(0, 0, 10, 10, "@-42>");
+			}
+			w = s_spinner;
 		break;
 	}
 
@@ -253,12 +259,31 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		case SliderThumbHorizontal:
 		break;
 		case Spinner:
+			s_spinner->size(rect.width(), rect.height() / 2);
+			s_spinnerdown->resize(rect.x(), rect.y() + rect.height() / 2,
+						rect.width(), rect.height() / 2);
+			s_spinnerdown->activate();
+			if (!isEnabled(object) || isReadOnlyControl(object))
+				s_spinnerdown->deactivate();
+
+			s_spinner->value(0);
+			s_spinnerdown->value(0);
+			if (isPressed(object)) {
+				if (isSpinUpButtonPartPressed(object))
+					s_spinner->value(1);
+				else
+					s_spinnerdown->value(1);
+			}
 		break;
 	}
 
 	fl_begin_offscreen(d);
 	fl_push_clip(rect.x(), rect.y(), rect.width(), rect.height());
 	w->draw();
+
+	if (type == Spinner)
+		((Fl_Widget *) s_spinnerdown)->draw();
+
 	fl_pop_clip();
 	fl_end_offscreen();
 
@@ -304,6 +329,8 @@ RenderThemeFLTK::RenderThemeFLTK(Page* page)
 	m_partDescs[RadioButton].padding = LengthBox(7);
 	m_partDescs[CheckBox].padding = LengthBox(7);
 	m_partDescs[ComboBox].padding.m_right.setValue(Fixed, 32);
+	m_partDescs[Spinner].padding.m_left =
+		m_partDescs[Spinner].padding.m_right = Length(10, Fixed);
 }
 
 RenderThemeFLTK::~RenderThemeFLTK()
