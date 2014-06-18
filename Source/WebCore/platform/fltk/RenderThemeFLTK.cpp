@@ -107,6 +107,7 @@ bool RenderThemeFLTK::isControlStyled(const RenderStyle* style, const BorderData
 
 bool RenderThemeFLTK::paintThemePart(const RenderObject& object, FormType type, const PaintInfo& info, const IntRect& rect)
 {
+	notImplemented();
 /*
     bool haveBackgroundColor = isControlStyled(&object.style(), object.style().border(), *object.style().backgroundLayers(), Color::white);
     ControlStates states(extractControlStatesForRenderer(object));
