@@ -54,6 +54,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Multiline_Input.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/x.H>
 
@@ -116,6 +117,7 @@ bool RenderThemeFLTK::isControlStyled(const RenderStyle* style, const BorderData
 static Fl_Button *s_button;
 static Fl_Radio_Round_Button *s_radio;
 static Fl_Check_Button *s_check;
+static Fl_Multiline_Input *s_text;
 
 bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType type,
 					const PaintInfo& info, const IntRect& rect)
@@ -146,6 +148,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 			w = s_radio;
 		break;
 		case TextField:
+			if (!s_text)
+				s_text = new Fl_Multiline_Input(0, 0, 10, 10);
+			w = s_text;
 		break;
 		case CheckBox:
 			if (!s_check)
