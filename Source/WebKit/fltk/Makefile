@@ -98,7 +98,7 @@ CXXFLAGS += -I $(JSC)/ForwardingHeaders \
 
 include ../../Makefile.fltk.shared
 
-.PHONY: all clean
+.PHONY: all clean install
 
 NAME = libwebkitfltk.a
 
@@ -137,3 +137,14 @@ clean:
 %.o: %.cpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $<
 	@$(CXX) -MM -MP $(CXXFLAGS) $< -o $*.d
+
+PREFIX ?= /usr
+
+install: all
+	mkdir -p $(DESTDIR)/$(PREFIX)/lib
+	mkdir -p $(DESTDIR)/$(PREFIX)/include/webkitfltk
+	install -m644 $(NAME) $(DESTDIR)/$(PREFIX)/lib
+	insthdr=`grep 'include "' webkit.h | cut -d\" -f2`; \
+	for hdr in $$insthdr webkit.h; do \
+		install -m644 $$hdr $(DESTDIR)/$(PREFIX)/include/webkitfltk; \
+	done
