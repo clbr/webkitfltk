@@ -115,7 +115,7 @@ bool FlEditorClient::shouldMoveRangeAfterDelete(Range*, Range*) {
 }
 
 void FlEditorClient::didBeginEditing() {
-	notImplemented();
+	view->priv->editing = true;
 }
 
 void FlEditorClient::respondToChangedContents() {
@@ -127,7 +127,7 @@ void FlEditorClient::respondToChangedSelection(Frame*) {
 }
 
 void FlEditorClient::didEndEditing() {
-	notImplemented();
+	view->priv->editing = false;
 }
 
 void FlEditorClient::willWriteSelectionToPasteboard(Range*) {

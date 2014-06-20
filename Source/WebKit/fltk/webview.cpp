@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
 
+#include "kbd.h"
 #include "webview.h"
 #include "webviewpriv.h"
 
@@ -29,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FrameLoadRequest.h>
 #include <FrameView.h>
 #include <InspectorController.h>
+#include <PlatformKeyboardEvent.h>
 #include <Settings.h>
 #include <WidgetBackingStoreCairo.h>
 #include <wtf/CurrentTime.h>
@@ -45,6 +47,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv->cairo = NULL;
 	priv->w = w;
 	priv->h = h;
+	priv->editing = false;
 
 	Fl_Widget *wid = this;
 	while (wid->parent())
@@ -310,7 +313,49 @@ int webview::handle(int e) {
 		break;
 		case FL_ENTER:
 		case FL_LEAVE:
+		case FL_FOCUS:
+		case FL_UNFOCUS:
 			return 1;
+		case FL_KEYDOWN:
+		case FL_KEYUP:
+			{
+			PlatformEvent::Type type = PlatformEvent::KeyDown;
+			if (e == FL_KEYUP)
+				type = PlatformEvent::KeyUp;
+
+			String text(Fl::event_text(), Fl::event_length());
+
+			unsigned modifiers = 0;
+			if (Fl::event_shift())
+				modifiers |= PlatformEvent::ShiftKey;
+			if (Fl::event_alt())
+				modifiers |= PlatformEvent::AltKey;
+			if (Fl::event_ctrl())
+				modifiers |= PlatformEvent::CtrlKey;
+			if (Fl::event_command())
+				modifiers |= PlatformEvent::MetaKey;
+
+			bool iskeypad = false;
+			const unsigned key = Fl::event_key();
+			if (key >= FL_KP && key <= FL_KP_Last)
+				iskeypad = true;
+
+			String keyid = keyidfor(Fl::event_key());
+			unsigned win = winkeyfor(Fl::event_key());
+
+			PlatformKeyboardEvent pev(type, text, text,
+						keyid, win, 0, 0,
+						false, iskeypad, false,
+						(PlatformEvent::Modifiers) modifiers,
+						currentTime());
+
+			priv->event->keyEvent(pev);
+
+			if (priv->editing)
+				return 1;
+			else
+				return 0;
+			}
 		default:
 			return Fl_Widget::handle(e);
 	}

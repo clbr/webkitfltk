@@ -50,6 +50,8 @@ public:
 	unsigned w, h;
 
 	struct timespec lastdraw;
+
+	bool editing;
 };
 
 #endif
