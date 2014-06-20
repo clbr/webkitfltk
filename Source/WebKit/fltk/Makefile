@@ -129,7 +129,7 @@ $(NAME): $(OBJ) ../../WTF/wtf/libwtf.a ../../JavaScriptCore/libjsc.a \
 
 testapp/testapp: $(NAME) Makefile $(wildcard testapp/*.cpp)
 	$(CXX) -o testapp/testapp testapp/*.cpp $(CXXFLAGS) $(NAME) \
-		$(LIBS) -Wl,-gc-sections
+		$(LIBS)
 
 clean:
 	rm -f $(OBJ)
