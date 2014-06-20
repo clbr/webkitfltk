@@ -298,3 +298,13 @@ int webview::handle(int e) {
 			return Fl_Widget::handle(e);
 	}
 }
+
+void webview::show() {
+	priv->page->setIsVisible(true);
+	Fl_Widget::show();
+}
+
+void webview::hide() {
+	priv->page->setIsVisible(false);
+	Fl_Widget::hide();
+}

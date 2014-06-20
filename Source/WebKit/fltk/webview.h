@@ -38,6 +38,9 @@ public:
 	void loadString(const char * const str, const char * const mime = NULL,
 			const char * const enc = NULL, const char * const baseurl = NULL);
 
+	void show() override;
+	void hide() override;
+
 	privatewebview *priv;
 };
 
