@@ -289,7 +289,24 @@ int webview::handle(int e) {
 			}
 		break;
 		case FL_MOUSEWHEEL:
-			return 0;
+			{
+			const IntPoint pos(Fl::event_x() - x(), Fl::event_y() - y());
+			const IntPoint gpos(Fl::event_x_root(), Fl::event_y_root());
+
+			const int scrollspeed = 100;
+
+			PlatformWheelEvent pev(pos, gpos,
+						Fl::event_dx() * scrollspeed,
+						-Fl::event_dy() * scrollspeed,
+						1, 1, ScrollByPixelWheelEvent,
+						Fl::event_shift(), Fl::event_ctrl(),
+						Fl::event_alt(),
+						Fl::event_command());
+
+			priv->event->handleWheelEvent(pev);
+
+			return 1;
+			}
 		break;
 		case FL_ENTER:
 		case FL_LEAVE:
