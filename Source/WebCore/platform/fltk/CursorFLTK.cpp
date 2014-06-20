@@ -34,6 +34,7 @@
 #include "config.h"
 #include "Cursor.h"
 
+#include <FL/Enumerations.H>
 #include <wtf/Assertions.h>
 
 namespace WebCore {
@@ -66,62 +67,127 @@ Cursor& Cursor::operator=(const Cursor& other)
     return *this;
 }
 
-static const char* cursorString(Cursor::Type type)
+static Fl_Cursor cursormap(const Cursor::Type type)
 {
-    static const char* cursorStrings[] = {
-        "cursor/pointer",
-        "cursor/cross",
-        "cursor/hand",
-        "cursor/i_beam",
-        "cursor/wait",
-        "cursor/help",
-        "cursor/east_resize",
-        "cursor/north_resize",
-        "cursor/north_east_resize",
-        "cursor/north_west_resize",
-        "cursor/south_resize",
-        "cursor/south_east_resize",
-        "cursor/south_west_resize",
-        "cursor/west_resize",
-        "cursor/north_south_resize",
-        "cursor/east_west_resize",
-        "cursor/north_east_south_west_resize",
-        "cursor/north_west_south_east_resize",
-        "cursor/column_resize",
-        "cursor/row_resize",
-        "cursor/middle_panning",
-        "cursor/east_panning",
-        "cursor/north_panning",
-        "cursor/north_east_panning",
-        "cursor/north_west_panning",
-        "cursor/south_panning",
-        "cursor/south_east_panning",
-        "cursor/south_west_panning",
-        "cursor/west_panning",
-        "cursor/move",
-        "cursor/vertical_text",
-        "cursor/cell",
-        "cursor/context_menu",
-        "cursor/alias",
-        "cursor/progress",
-        "cursor/no_drop",
-        "cursor/copy",
-        "cursor/none",
-        "cursor/not_allowed",
-        "cursor/zoom_in",
-        "cursor/zoom_out",
-        "cursor/grab",
-        "cursor/grabbing",
-        "" // Custom cursor.
-    };
-    return cursorStrings[type];
+	switch (type) {
+		case Cursor::Pointer:
+		break;
+		case Cursor::Cross:
+			return FL_CURSOR_CROSS;
+		break;
+		case Cursor::Hand:
+			return FL_CURSOR_HAND;
+		break;
+		case Cursor::IBeam:
+			return FL_CURSOR_INSERT;
+		break;
+		case Cursor::Wait:
+			return FL_CURSOR_WAIT;
+		break;
+		case Cursor::Help:
+			return FL_CURSOR_HELP;
+		break;
+		case Cursor::EastResize:
+			return FL_CURSOR_E;
+		break;
+		case Cursor::NorthResize:
+			return FL_CURSOR_N;
+		break;
+		case Cursor::NorthEastResize:
+			return FL_CURSOR_NE;
+		break;
+		case Cursor::NorthWestResize:
+			return FL_CURSOR_NW;
+		break;
+		case Cursor::SouthResize:
+			return FL_CURSOR_S;
+		break;
+		case Cursor::SouthEastResize:
+			return FL_CURSOR_SE;
+		break;
+		case Cursor::SouthWestResize:
+			return FL_CURSOR_SW;
+		break;
+		case Cursor::WestResize:
+			return FL_CURSOR_W;
+		break;
+		case Cursor::NorthSouthResize:
+			return FL_CURSOR_NS;
+		break;
+		case Cursor::EastWestResize:
+			return FL_CURSOR_WE;
+		break;
+		case Cursor::NorthEastSouthWestResize:
+			return FL_CURSOR_NESW;
+		break;
+		case Cursor::NorthWestSouthEastResize:
+			return FL_CURSOR_NWSE;
+		break;
+		case Cursor::ColumnResize:
+			return FL_CURSOR_WE;
+		break;
+		case Cursor::RowResize:
+			return FL_CURSOR_NS;
+		break;
+		case Cursor::MiddlePanning:
+		break;
+		case Cursor::EastPanning:
+		break;
+		case Cursor::NorthPanning:
+		break;
+		case Cursor::NorthEastPanning:
+		break;
+		case Cursor::NorthWestPanning:
+		break;
+		case Cursor::SouthPanning:
+		break;
+		case Cursor::SouthEastPanning:
+		break;
+		case Cursor::SouthWestPanning:
+		break;
+		case Cursor::WestPanning:
+		break;
+		case Cursor::Move:
+			return FL_CURSOR_MOVE;
+		break;
+		case Cursor::VerticalText:
+		break;
+		case Cursor::Cell:
+		break;
+		case Cursor::ContextMenu:
+		break;
+		case Cursor::Alias:
+		break;
+		case Cursor::Progress:
+		break;
+		case Cursor::NoDrop:
+		break;
+		case Cursor::Copy:
+		break;
+		case Cursor::None:
+		break;
+		case Cursor::NotAllowed:
+		break;
+		case Cursor::ZoomIn:
+		break;
+		case Cursor::ZoomOut:
+		break;
+		case Cursor::Grab:
+		break;
+		case Cursor::Grabbing:
+		break;
+		case Cursor::Custom:
+			return FL_CURSOR_DEFAULT;
+	}
+
+	return FL_CURSOR_DEFAULT;
 }
 
 void Cursor::ensurePlatformCursor() const
 {
     if (m_platformCursor)
         return;
-    m_platformCursor = cursorString(m_type);
+    m_platformCursor = cursormap(m_type);
 }
 
 }

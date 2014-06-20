@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "webviewpriv.h"
 
 #include <FL/fl_ask.H>
+#include <FL/fl_draw.H>
 #include <FL/Fl_File_Chooser.H>
 
 #include <Document.h>
@@ -237,8 +238,8 @@ void FlChromeClient::scrollbarsModeDidChange() const {
 	notImplemented();
 }
 
-void FlChromeClient::setCursor(const WebCore::Cursor&) {
-	notImplemented();
+void FlChromeClient::setCursor(const WebCore::Cursor &cursor) {
+	fl_cursor((Fl_Cursor) cursor.platformCursor());
 }
 
 void FlChromeClient::setCursorHiddenUntilMouseMoves(bool) {
