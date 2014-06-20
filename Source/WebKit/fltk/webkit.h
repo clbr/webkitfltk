@@ -36,4 +36,7 @@ void wk_set_urlblock_func(int (*func)(const char *));
 // Where to open files for uploading?
 void wk_set_uploaddir_func(const char * (*func)());
 
+// Scrolling speed
+void wk_set_wheel_speed(const int in);
+
 #endif

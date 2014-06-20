@@ -36,6 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace WTF;
 using namespace WebCore;
 
+extern int wheelspeed;
+
 webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
 	priv = new privatewebview;
@@ -293,11 +295,9 @@ int webview::handle(int e) {
 			const IntPoint pos(Fl::event_x() - x(), Fl::event_y() - y());
 			const IntPoint gpos(Fl::event_x_root(), Fl::event_y_root());
 
-			const int scrollspeed = 100;
-
 			PlatformWheelEvent pev(pos, gpos,
-						Fl::event_dx() * scrollspeed,
-						-Fl::event_dy() * scrollspeed,
+						Fl::event_dx() * wheelspeed,
+						-Fl::event_dy() * wheelspeed,
 						1, 1, ScrollByPixelWheelEvent,
 						Fl::event_shift(), Fl::event_ctrl(),
 						Fl::event_alt(),

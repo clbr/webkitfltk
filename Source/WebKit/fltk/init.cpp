@@ -36,6 +36,8 @@ const char * (*uafunc)(const char *) = NULL;
 int (*urlblockfunc)(const char *) = NULL;
 const char * (*uploaddirfunc)() = NULL;
 
+int wheelspeed = 100;
+
 void webkitInit() {
 	static bool init = false;
 	if (init)
@@ -65,4 +67,8 @@ void wk_set_urlblock_func(int (*func)(const char *)) {
 
 void wk_set_uploaddir_func(const char * (*func)()) {
 	uploaddirfunc = func;
+}
+
+void wk_set_wheel_speed(const int in) {
+	wheelspeed = in;
 }
