@@ -186,6 +186,23 @@ void webview::load(const char *url) {
 	f->loader().load(req);
 }
 
+void webview::loadString(const char * const str, const char * const mime,
+				const char * const enc, const char * const baseurl) {
+	MainFrame *f = &priv->page->mainFrame();
+
+	URL base = baseurl ? URL(URL(), String::fromUTF8(baseurl)) : blankURL();
+	ResourceRequest req(base);
+
+	RefPtr<SharedBuffer> sharedBuffer = SharedBuffer::create(str, strlen(str));
+	SubstituteData substituteData(sharedBuffer.release(),
+		mime ? String::fromUTF8(mime) : String::fromUTF8("text/html"),
+		enc ? String::fromUTF8(enc) : String::fromUTF8("UTF-8"),
+		URL(URL(), String::fromUTF8("")),
+		URL(URL(), String::fromUTF8("")));
+
+	f->loader().load(FrameLoadRequest(f, req, substituteData));
+}
+
 void webview::resize() {
 	ASSERT(isMainThread());
 
