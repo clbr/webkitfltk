@@ -178,8 +178,20 @@ void FlFrameLoaderClient::dispatchDidFailProvisionalLoad(const ResourceError &er
 	dispatchDidFailLoad(error);
 }
 
-void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError&) {
-	notImplemented();
+void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
+
+	char *ptr = NULL;
+	asprintf(&ptr, "<html><body><h2>%s%serror %u, %s</h2></body></html>",
+		err.domain().utf8().data(),
+		err.domain().utf8().data() ? ": " : "",
+		err.errorCode(),
+		err.localizedDescription().utf8().data());
+
+	if (!ptr)
+		return;
+
+	view->loadString(ptr);
+	free(ptr);
 }
 
 void FlFrameLoaderClient::dispatchDidFinishDocumentLoad() {
