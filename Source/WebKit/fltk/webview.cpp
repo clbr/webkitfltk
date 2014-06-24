@@ -241,12 +241,13 @@ void webview::resize() {
 		priv->page->mainFrame().view()->resize(priv->w, priv->h);
 }
 
-int webview::handle(int e) {
+int webview::handle(const int e) {
 
 	switch (e) {
 		case FL_PUSH:
 		case FL_RELEASE:
 		case FL_MOVE:
+		case FL_DRAG:
 			{
 			const IntPoint pos(Fl::event_x() - x(), Fl::event_y() - y());
 			const IntPoint gpos(Fl::event_x_root(), Fl::event_y_root());
@@ -254,7 +255,7 @@ int webview::handle(int e) {
 			PlatformEvent::Type type;
 			unsigned clicks = 0;
 
-			if (e == FL_PUSH || e == FL_RELEASE) {
+			if (e == FL_PUSH || e == FL_RELEASE || e == FL_DRAG) {
 				switch (Fl::event_button()) {
 					case FL_LEFT_MOUSE:
 						btn = LeftButton;
