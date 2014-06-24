@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FL/fl_ask.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Tooltip.H>
 
 #include <Document.h>
 #include <FileChooser.h>
@@ -256,8 +257,13 @@ void FlChromeClient::mouseDidMoveOverElement(const HitTestResult&, unsigned int)
 	notImplemented();
 }
 
-void FlChromeClient::setToolTip(const String&, TextDirection) {
-	notImplemented();
+void FlChromeClient::setToolTip(const String &str, TextDirection) {
+	view->copy_tooltip(str.utf8().data());
+
+	if (str.length() > 1)
+		Fl_Tooltip::enter(view);
+	else
+		Fl_Tooltip::enter((Fl_Widget *) 0);
 }
 
 void FlChromeClient::print(Frame*) {
