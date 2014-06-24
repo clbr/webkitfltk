@@ -183,7 +183,7 @@ void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 	char *ptr = NULL;
 	asprintf(&ptr, "<html><body><h2>%s%serror %u, %s</h2></body></html>",
 		err.domain().utf8().data(),
-		err.domain().utf8().data() ? ": " : "",
+		err.domain().length() > 1 ? ": " : "",
 		err.errorCode(),
 		err.localizedDescription().utf8().data());
 
