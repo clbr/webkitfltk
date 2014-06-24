@@ -47,11 +47,31 @@ static int comp(const void *ap, const void *bp) {
 
 const char *gendirlisting(const char * const dir) {
 
+	// Using std::string since wtfstring is horribly inefficient in append.
 	std::string str("<html><head><title>");
 	str.reserve(16384);
 	str += dir;
 	str += "</title>";
 	str += "<style>";
+	str += "html { width: 100%; }\n"
+		"body { background-color: #eee;"
+			"width: 50%;"
+			"margin-left: auto;"
+			"margin-right: auto;"
+			"margin-top: 2em; }\n"
+		"table { width: 100%;"
+			"border-collapse: collapse; }\n"
+		"tr, td, th { border-top: 1px solid green;"
+			"border-bottom: 1px solid green;"
+			"padding: 0.1em; }\n"
+		"th { padding: 0.2em;"
+			"padding-bottom: 0.5em;"
+			"text-align: right;"
+			"background-color: #f0f0f0; }\n"
+		"td { text-align: right; }\n"
+		"th:first-child, td:first-child { text-align: left;"
+			"width: 60%; }\n"
+		"tr:nth-child(even) { background: #e0e0e0; }\n";
 	str += "</style></head><body>\n";
 
 	str += "<h1>Directory listing</h1>\n";
