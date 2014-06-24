@@ -104,12 +104,17 @@ bool ScrollbarThemeFLTK::paint(ScrollbarThemeClient *bar, GraphicsContext *gc,
 	ASSERT(cairo);
 
 	cairo_surface_t *surf = cairo_get_target(cairo);
+	cairo_matrix_t mat;
+	cairo_get_matrix(cairo, &mat);
 	cairo_surface_flush(surf);
 
 	ASSERT(CAIRO_SURFACE_TYPE_XLIB == cairo_surface_get_type(surf));
 	Drawable d = cairo_xlib_surface_get_drawable(surf);
 
-	flbar->resize(bar->x(), bar->y(), bar->width(), bar->height());
+	const unsigned x0 = mat.x0;
+	const unsigned y0 = mat.y0;
+
+	flbar->resize(bar->x() + x0, bar->y() + y0, bar->width(), bar->height());
 	if (bar->orientation() == HorizontalScrollbar) {
 		flbar->type(FL_HORIZONTAL);
 	} else {
@@ -128,12 +133,12 @@ bool ScrollbarThemeFLTK::paint(ScrollbarThemeClient *bar, GraphicsContext *gc,
 	flbar->value(bar->currentPos());
 
 	fl_begin_offscreen(d);
-	fl_push_clip(rect.x(), rect.y(), rect.width(), rect.height());
+	fl_push_clip(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
 	((Fl_Widget *) flbar)->draw();
 
 	fl_pop_clip();
 	fl_end_offscreen();
-	cairo_surface_mark_dirty_rectangle(surf, rect.x(), rect.y(),
+	cairo_surface_mark_dirty_rectangle(surf, rect.x() + x0, rect.y() + y0,
 						rect.width(), rect.height());
 
 	return true;
