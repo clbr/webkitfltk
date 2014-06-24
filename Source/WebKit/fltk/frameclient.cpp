@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config.h"
 #include "frameclient.h"
 #include "webviewpriv.h"
+#include "dirlisting.h"
 
 #include <wtf/text/CString.h>
 #include <DocumentLoader.h>
@@ -28,6 +29,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <NotImplemented.h>
 #include <ResourceError.h>
 #include <ResourceRequest.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace WebCore;
 using namespace WTF;
@@ -212,8 +217,40 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNewWindowAction(const Navigatio
 	policyfunc(PolicyUse);
 }
 
-void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const NavigationAction&, const ResourceRequest&,
+void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const NavigationAction&,
+		const ResourceRequest &req,
 		PassRefPtr<FormState>, FramePolicyFunction policyfunc) {
+
+	if (req.url().string().startsWith("file://")) {
+
+		const char *path = strdup(req.url().string().utf8().data() + 7);
+		struct stat st;
+		static bool byus = false;
+
+		if (stat(path, &st) == 0 && S_ISDIR(st.st_mode) && !byus) {
+			const char *list = gendirlisting(path);
+			policyfunc(PolicyIgnore);
+
+			byus = true;
+			view->loadString(list, "text/html", "UTF-8",
+						req.url().string().utf8().data());
+
+			byus = false;
+
+			free((char *) list);
+			free((char *) path);
+
+			return;
+		}
+		free((char *) path);
+	} else if (req.url().string().startsWith("about://")) {
+
+		// TODO: custom pages
+
+		policyfunc(PolicyIgnore);
+		return;
+	}
+
 	policyfunc(PolicyUse);
 }
 
