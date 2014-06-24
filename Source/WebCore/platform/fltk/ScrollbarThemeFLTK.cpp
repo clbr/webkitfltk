@@ -28,9 +28,17 @@
 
 #include "config.h"
 
+#include "myscroll.h"
 #include "NotImplemented.h"
 #include "ScrollbarThemeClient.h"
 #include "ScrollbarThemeFLTK.h"
+#include <PlatformContextCairo.h>
+
+#include <cairo-xlib.h>
+#include <FL/fl_draw.H>
+#include <FL/x.H>
+
+static myscroll *flbar;
 
 namespace WebCore {
 
@@ -40,56 +48,99 @@ ScrollbarTheme* ScrollbarTheme::nativeTheme()
     return &theme;
 }
 
-void ScrollbarThemeFLTK::registerScrollbar(ScrollbarThemeClient *bar) {
-	m_scrollbars.add(bar);
+ScrollbarThemeFLTK::ScrollbarThemeFLTK() {
+	if (!flbar)
+		flbar = new myscroll(0, 0, 10, 10);
 }
 
-void ScrollbarThemeFLTK::unregisterScrollbar(ScrollbarThemeClient *bar) {
-	m_scrollbars.remove(bar);
+bool ScrollbarThemeFLTK::hasThumb(ScrollbarThemeClient *bar) {
+	return thumbLength(bar) > 0;
 }
 
-bool ScrollbarThemeFLTK::paint(ScrollbarThemeClient *bar,
-				GraphicsContext *gc, const IntRect &damage) {
-	// Happens in the widget.
-	return false;
+IntRect ScrollbarThemeFLTK::backButtonRect(ScrollbarThemeClient *bar,
+		const ScrollbarPart part, const bool painting) {
+
+	// Just single arrows
+	if (part == BackButtonEndPart)
+		return IntRect();
+
+	const unsigned thick = scrollbarThickness();
+
+	return IntRect(bar->x(), bar->y(), thick, thick);
 }
 
-ScrollbarPart ScrollbarThemeFLTK::hitTest(ScrollbarThemeClient *bar,
-		const IntPoint &rect) {
-	// fixme
-	return NoPart;
+IntRect ScrollbarThemeFLTK::forwardButtonRect(ScrollbarThemeClient *bar,
+		const ScrollbarPart part, const bool painting) {
+
+	// Just single arrows
+	if (part == ForwardButtonStartPart)
+		return IntRect();
+
+	const unsigned thick = scrollbarThickness();
+
+	if (bar->orientation() == HorizontalScrollbar)
+		return IntRect(bar->x() + bar->width() - thick, bar->y(), thick, thick);
+	else
+		return IntRect(bar->x(), bar->y() + bar->height() - thick, thick, thick);
 }
 
-int ScrollbarThemeFLTK::thumbPosition(ScrollbarThemeClient *bar) {
+IntRect ScrollbarThemeFLTK::trackRect(ScrollbarThemeClient *bar, bool painting) {
+	const unsigned thick = scrollbarThickness();
 
-	if (!bar->enabled())
-		return 0;
-	// fixme
-	return 3;
+	if (bar->orientation() == HorizontalScrollbar) {
+		return IntRect(bar->x() + thick, bar->y(), bar->width() - 2*thick, thick);
+	}
+
+	return IntRect(bar->x(), bar->y() + thick, thick, bar->height() - 2*thick);
 }
 
-int ScrollbarThemeFLTK::thumbLength(ScrollbarThemeClient *bar) {
+bool ScrollbarThemeFLTK::paint(ScrollbarThemeClient *bar, GraphicsContext *gc,
+				const IntRect& rect) {
 
-	if (!bar->enabled())
-		return 0;
-	// fixme
-	return 3;
+	if (gc->paintingDisabled())
+		return false;
+
+	cairo_t* cairo = gc->platformContext()->cr();
+	ASSERT(cairo);
+
+	cairo_surface_t *surf = cairo_get_target(cairo);
+	cairo_surface_flush(surf);
+
+	ASSERT(CAIRO_SURFACE_TYPE_XLIB == cairo_surface_get_type(surf));
+	Drawable d = cairo_xlib_surface_get_drawable(surf);
+
+	flbar->resize(bar->x(), bar->y(), bar->width(), bar->height());
+	if (bar->orientation() == HorizontalScrollbar) {
+		flbar->type(FL_HORIZONTAL);
+	} else {
+		flbar->type(FL_VERTICAL);
+	}
+
+	flbar->slider_size(thumbLength(bar) / (float) bar->visibleSize());
+
+	flbar->button1 = flbar->button2 = false;
+	if (bar->pressedPart() == BackButtonStartPart)
+		flbar->button1 = true;
+	else if (bar->pressedPart() == ForwardButtonEndPart)
+		flbar->button2 = true;
+
+	flbar->maximum(bar->maximum());
+	flbar->value(bar->currentPos());
+
+	fl_begin_offscreen(d);
+	fl_push_clip(rect.x(), rect.y(), rect.width(), rect.height());
+	((Fl_Widget *) flbar)->draw();
+
+	fl_pop_clip();
+	fl_end_offscreen();
+	cairo_surface_mark_dirty_rectangle(surf, rect.x(), rect.y(),
+						rect.width(), rect.height());
+
+	return true;
 }
 
-int ScrollbarThemeFLTK::trackPosition(ScrollbarThemeClient *bar) {
-
-	if (!bar->enabled())
-		return 0;
-	// fixme
-	return 3;
-}
-
-int ScrollbarThemeFLTK::trackLength(ScrollbarThemeClient *bar) {
-
-	if (!bar->enabled())
-		return 0;
-	// fixme
-	return 3;
+int ScrollbarThemeFLTK::scrollbarThickness(ScrollbarControlSize) {
+	return 16;
 }
 
 }

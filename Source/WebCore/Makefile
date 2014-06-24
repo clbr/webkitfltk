@@ -18,6 +18,7 @@ SRC = plugins/PluginPackageNone.cpp \
 	platform/fltk/LoggingFLTK.cpp \
 	platform/fltk/IconFLTK.cpp \
 	platform/fltk/ErrorsFLTK.cpp \
+	platform/fltk/myscroll.cpp \
 	platform/fltk/PlatformScreenFLTK.cpp \
 	platform/fltk/MIMETypeRegistryFLTK.cpp \
 	platform/fltk/ScrollbarThemeFLTK.cpp \

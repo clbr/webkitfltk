@@ -217,9 +217,9 @@ void FlChromeClient::invalidateContentsForSlowScroll(const IntRect &rect) {
 	invalidateRootView(rect);
 }
 
-void FlChromeClient::scroll(const IntSize&, const IntRect&,
+void FlChromeClient::scroll(const IntSize&, const IntRect &rect,
 		const IntRect&) {
-	notImplemented();
+	invalidateRootView(rect);
 }
 
 IntPoint FlChromeClient::screenToRootView(const IntPoint &p) const {

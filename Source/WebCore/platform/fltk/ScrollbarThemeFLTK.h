@@ -29,29 +29,26 @@
 #ifndef ScrollbarThemeFLTK_h
 #define ScrollbarThemeFLTK_h
 
-#include "ScrollbarTheme.h"
+#include "ScrollbarThemeComposite.h"
 
 namespace WebCore {
 
-class ScrollbarThemeFLTK final : public ScrollbarTheme {
+class ScrollbarThemeFLTK final : public ScrollbarThemeComposite {
 public:
-    ScrollbarThemeFLTK() : m_scrollbarThickness(0) { }
-    void setScrollbarThickness(int thickness) { m_scrollbarThickness = thickness; }
-    virtual int scrollbarThickness(ScrollbarControlSize = RegularScrollbar) override { return m_scrollbarThickness; }
+	ScrollbarThemeFLTK();
 
-    virtual void registerScrollbar(ScrollbarThemeClient*) override;
-    virtual void unregisterScrollbar(ScrollbarThemeClient*) override;
+	bool hasButtons(ScrollbarThemeClient*) override { return true; }
+	bool hasThumb(ScrollbarThemeClient*) override;
 
-    virtual bool paint(ScrollbarThemeClient*, GraphicsContext*, const IntRect&) override;
-    virtual ScrollbarPart hitTest(ScrollbarThemeClient*, const IntPoint&) override;
+	IntRect backButtonRect(ScrollbarThemeClient*, ScrollbarPart,
+				bool painting = false) override;
+	IntRect forwardButtonRect(ScrollbarThemeClient*, ScrollbarPart,
+				bool painting = false) override;
+	IntRect trackRect(ScrollbarThemeClient*, bool painting = false) override;
 
-    virtual int thumbPosition(ScrollbarThemeClient*) override;
-    virtual int thumbLength(ScrollbarThemeClient*) override;
-    virtual int trackPosition(ScrollbarThemeClient*) override;
-    virtual int trackLength(ScrollbarThemeClient*) override;
-private:
-    int m_scrollbarThickness;
-    HashSet<ScrollbarThemeClient*> m_scrollbars;
+	bool paint(ScrollbarThemeClient*, GraphicsContext*, const IntRect& damageRect) override;
+
+	int scrollbarThickness(ScrollbarControlSize = RegularScrollbar) override;
 };
 
 }
