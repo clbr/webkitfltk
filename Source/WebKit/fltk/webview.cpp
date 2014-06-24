@@ -288,7 +288,7 @@ int webview::handle(int e) {
 			else if (e == FL_RELEASE)
 				priv->event->handleMouseReleaseEvent(pev);
 			else
-				priv->event->mouseMoved(pev);
+				priv->event->handleMouseMoveEvent(pev);
 
 			return 1;
 			}
