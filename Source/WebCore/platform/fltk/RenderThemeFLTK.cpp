@@ -134,6 +134,8 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	ASSERT(cairo);
 
 	cairo_surface_t *surf = cairo_get_target(cairo);
+	cairo_matrix_t mat;
+	cairo_get_matrix(cairo, &mat);
 	cairo_surface_flush(surf);
 
 	ASSERT(CAIRO_SURFACE_TYPE_XLIB == cairo_surface_get_type(surf));
@@ -202,7 +204,10 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	if (!w)
 		return true; // We don't support it, please draw for us
 
-	w->resize(rect.x(), rect.y(), rect.width(), rect.height());
+	const unsigned x0 = mat.x0;
+	const unsigned y0 = mat.y0;
+
+	w->resize(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
 	w->activate();
 	if (!isEnabled(object) || isReadOnlyControl(object))
 		w->deactivate();
@@ -260,7 +265,7 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		break;
 		case Spinner:
 			s_spinner->size(rect.width(), rect.height() / 2);
-			s_spinnerdown->resize(rect.x(), rect.y() + rect.height() / 2,
+			s_spinnerdown->resize(rect.x() + x0, rect.y() + y0 + rect.height() / 2,
 						rect.width(), rect.height() / 2);
 			s_spinnerdown->activate();
 			if (!isEnabled(object) || isReadOnlyControl(object))
@@ -278,7 +283,7 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	}
 
 	fl_begin_offscreen(d);
-	fl_push_clip(rect.x(), rect.y(), rect.width(), rect.height());
+	fl_push_clip(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
 	w->draw();
 
 	if (type == Spinner)
@@ -287,7 +292,7 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	fl_pop_clip();
 	fl_end_offscreen();
 
-	cairo_surface_mark_dirty_rectangle(surf, rect.x(), rect.y(),
+	cairo_surface_mark_dirty_rectangle(surf, rect.x() + x0, rect.y() + y0,
 						rect.width(), rect.height());
 
 	return false;
