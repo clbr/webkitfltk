@@ -29,12 +29,13 @@
 
 #include "NotImplemented.h"
 #include "Pasteboard.h"
+#include <wtf/text/CString.h>
 
 namespace WebCore {
 
-void Editor::writeSelectionToPasteboard(Pasteboard&)
+void Editor::writeSelectionToPasteboard(Pasteboard &board)
 {
-    notImplemented();
+    board.writeString("", selectedRange()->text());
 }
 
 void Editor::writeImageToPasteboard(Pasteboard&, Element&, const URL&, const String&)

@@ -25,6 +25,11 @@
 
 #include "NotImplemented.h"
 #include <wtf/PassOwnPtr.h>
+#include <wtf/text/CString.h>
+
+#include <FL/Fl.H>
+#include <FL/x.H>
+#include <X11/Xlib.h>
 
 namespace WebCore {
 
@@ -32,9 +37,9 @@ Pasteboard::Pasteboard()
 {
 }
 
-void Pasteboard::writePlainText(const String&, SmartReplaceOption)
+void Pasteboard::writePlainText(const String &str, SmartReplaceOption)
 {
-    notImplemented();
+    Fl::copy(str.utf8().data(), str.length());
 }
 
 void Pasteboard::clear()
@@ -72,46 +77,76 @@ PassOwnPtr<Pasteboard> Pasteboard::createForDragAndDrop(const DragData&)
 
 bool Pasteboard::hasData()
 {
-    notImplemented();
     return false;
 }
 
 void Pasteboard::clear(const String&)
 {
-    notImplemented();
+    clear();
 }
 
-void Pasteboard::read(PasteboardPlainText&)
+void Pasteboard::read(PasteboardPlainText &text)
 {
-    notImplemented();
+    Window owner = XGetSelectionOwner(fl_display, XA_PRIMARY);
+    if (owner == None) {
+        text.text = "";
+        return;
+    }
+
+    XConvertSelection(fl_display, XA_PRIMARY, XA_STRING, None, owner, CurrentTime);
+    XFlush(fl_display);
+
+    Atom type;
+    int fmt;
+    unsigned long num, bytes, dummy;
+    unsigned char *data;
+    XGetWindowProperty(fl_display, owner, XA_STRING, 0, 0, 0, AnyPropertyType,
+                       &type, &fmt, &num, &bytes, &data);
+    if (bytes) {
+        int res = XGetWindowProperty(fl_display, owner, XA_STRING, 0, bytes, 0,
+                                     AnyPropertyType, &type, &fmt, &num, &dummy, &data);
+        if (res == Success) {
+            text.text = data;
+            free(data);
+        }
+    }
 }
 
 String Pasteboard::readString(const String&)
 {
-    notImplemented();
-    return String();
+    PasteboardPlainText t;
+    read(t);
+    return t.text;
 }
 
-void Pasteboard::write(const PasteboardURL&)
+void Pasteboard::write(const PasteboardURL &url)
 {
-    notImplemented();
+    writePlainText(url.url.string(), CanSmartReplace);
 }
 
-void Pasteboard::writeString(const String&, const String&)
+void Pasteboard::writeString(const String &type, const String &data)
 {
-    notImplemented();
+    writePlainText(data, CanSmartReplace);
 }
 
 Vector<String> Pasteboard::types()
 {
-    notImplemented();
-    return Vector<String>();
+    Vector<String> types;
+
+    types.append(ASCIILiteral("text/plain"));
+    types.append(ASCIILiteral("Text"));
+    types.append(ASCIILiteral("text"));
+
+    return types;
 }
 
 Vector<String> Pasteboard::readFilenames()
 {
-    notImplemented();
-    return Vector<String>();
+    Vector<String> names;
+
+    names.append(readString(""));
+
+    return names;
 }
 
 #if ENABLE(DRAG_SUPPORT)

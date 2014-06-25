@@ -19,8 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "editorclient.h"
 #include "webviewpriv.h"
 
+#include <Frame.h>
+#include <FrameSelection.h>
 #include "NotImplemented.h"
-#include "Settings.h"
+#include <Settings.h>
+
+#include <FL/Fl.H>
 
 using namespace WebCore;
 using namespace WTF;
@@ -122,8 +126,11 @@ void FlEditorClient::respondToChangedContents() {
 	notImplemented();
 }
 
-void FlEditorClient::respondToChangedSelection(Frame*) {
-	notImplemented();
+void FlEditorClient::respondToChangedSelection(Frame *f) {
+	if (!f || !f->selection().isRange())
+		return;
+	String str = f->selection().toNormalizedRange()->text();
+	Fl::copy(str.utf8().data(), str.length());
 }
 
 void FlEditorClient::didEndEditing() {
