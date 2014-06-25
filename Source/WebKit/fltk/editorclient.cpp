@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FrameSelection.h>
 #include <KeyboardEvent.h>
 #include <NotImplemented.h>
+#include <Pasteboard.h>
 #include <PlatformKeyboardEvent.h>
 #include <Settings.h>
 #include <WindowsKeyboardCodes.h>
@@ -134,7 +135,8 @@ void FlEditorClient::respondToChangedSelection(Frame *f) {
 	if (!f || !f->selection().isRange())
 		return;
 	String str = f->selection().toNormalizedRange()->text();
-	Fl::copy(str.utf8().data(), str.length());
+
+	Pasteboard::createForCopyAndPaste()->writeString("", str);
 }
 
 void FlEditorClient::didEndEditing() {
