@@ -211,8 +211,8 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	w->activate();
 	if (!isEnabled(object) || isReadOnlyControl(object))
 		w->deactivate();
-	if (isFocused(object))
-		Fl::focus(w);
+//	if (isFocused(object))
+//		Fl::focus(w);
 
 	switch (type) {
 		case Button:
