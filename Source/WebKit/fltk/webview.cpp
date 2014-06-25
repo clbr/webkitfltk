@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ContextMenuController.h>
 #include <FocusController.h>
 #include <FrameLoadRequest.h>
+#include <FrameSelection.h>
 #include <FrameView.h>
 #include <InspectorController.h>
 #include <MainFrame.h>
@@ -369,8 +370,18 @@ int webview::handle(const int e) {
 		break;
 		case FL_ENTER:
 		case FL_LEAVE:
+			return 1;
 		case FL_FOCUS:
+			if (!priv->page->mainFrame().view()->isPainting()) {
+				priv->page->focusController().setActive(true);
+				priv->page->mainFrame().selection().setFocused(true);
+			}
+			return 1;
 		case FL_UNFOCUS:
+			if (!priv->page->mainFrame().view()->isPainting()) {
+				priv->page->focusController().setActive(false);
+				priv->page->mainFrame().selection().setFocused(false);
+			}
 			return 1;
 		case FL_KEYDOWN:
 		case FL_KEYUP:
