@@ -390,7 +390,7 @@ int webview::handle(const int e) {
 			if (e == FL_KEYUP)
 				type = PlatformEvent::KeyUp;
 
-			String text(Fl::event_text(), Fl::event_length());
+			String text = String::fromUTF8(Fl::event_text(), Fl::event_length());
 
 			unsigned modifiers = 0;
 			if (Fl::event_shift())
