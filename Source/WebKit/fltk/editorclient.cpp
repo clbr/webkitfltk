@@ -327,6 +327,8 @@ void FlEditorClient::handleKeyboardEvent(KeyboardEvent *ev) {
 			ev->setDefaultHandled();
 		return;
 	}
+	if (!frame->editor().canEdit())
+		return;
 
 	command.execute(ev);
 
