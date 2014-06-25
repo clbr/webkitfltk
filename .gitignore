@@ -13,6 +13,8 @@ xcuserdata
 *.a
 *.lut.h
 *.d
+cookies.dat
+*.html
 
 # Ignore auto-generated files by VS2005 and VS2010.
 *.vcproj.*.user
