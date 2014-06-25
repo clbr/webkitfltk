@@ -28,12 +28,13 @@ FlInspectorClient::FlInspectorClient(webview *inview) {
 }
 
 void FlInspectorClient::inspectorDestroyed() {
-	notImplemented();
+	delete this;
 }
 
 InspectorFrontendChannel*
 	FlInspectorClient::openInspectorFrontend(InspectorController*) {
 	notImplemented();
+	return NULL;
 }
 
 void FlInspectorClient::closeInspectorFrontend() {
