@@ -31,7 +31,11 @@
 #include <FL/x.H>
 #include <X11/Xlib.h>
 
+extern Window fl_message_window;
+
 namespace WebCore {
+
+static String internalclip;
 
 Pasteboard::Pasteboard()
 {
@@ -40,6 +44,7 @@ Pasteboard::Pasteboard()
 void Pasteboard::writePlainText(const String &str, SmartReplaceOption)
 {
     Fl::copy(str.utf8().data(), str.length());
+    internalclip = str;
 }
 
 void Pasteboard::clear()
@@ -87,9 +92,12 @@ void Pasteboard::clear(const String&)
 
 void Pasteboard::read(PasteboardPlainText &text)
 {
-    Window owner = XGetSelectionOwner(fl_display, XA_PRIMARY);
+    const Window owner = XGetSelectionOwner(fl_display, XA_PRIMARY);
     if (owner == None) {
         text.text = "";
+        return;
+    } else if (owner == fl_message_window) {
+        text.text = internalclip;
         return;
     }
 
@@ -98,7 +106,7 @@ void Pasteboard::read(PasteboardPlainText &text)
 
     Atom type;
     int fmt;
-    unsigned long num, bytes, dummy;
+    unsigned long num, bytes = 0, dummy;
     unsigned char *data;
     XGetWindowProperty(fl_display, owner, XA_STRING, 0, 0, 0, AnyPropertyType,
                        &type, &fmt, &num, &bytes, &data);
