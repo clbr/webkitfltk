@@ -73,6 +73,10 @@ void PopupMenuFLTK::show(const IntRect &rect, FrameView *view, int index) {
 		m_client->valueChanged((unsigned long) ptr->user_data_);
 
 	m_client->popupDidHide();
+
+	for (i = 0; i < max; i++) {
+		free((char *) items[i].text);
+	}
 }
 
 void PopupMenuFLTK::hide() {
