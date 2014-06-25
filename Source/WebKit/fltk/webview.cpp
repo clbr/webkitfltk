@@ -378,6 +378,37 @@ void webview::hide() {
 	Fl_Widget::hide();
 }
 
+static void additem(Vector<Fl_Menu_Item> &items, const ContextMenuItem &cur) {
+
+	const ContextMenuItemType type = cur.type();
+	//const ContextMenuAction action = cur.action();
+	const char * const title = strdup(cur.title().utf8().data());
+	const bool enabled = cur.enabled();
+	const bool checked = cur.checked();
+
+	Fl_Menu_Item it = {
+		title, 0, 0, (void *) &cur,
+		0,
+		FL_NORMAL_LABEL, FL_HELVETICA,
+		FL_NORMAL_SIZE, FL_FOREGROUND_COLOR
+	};
+
+	if (!enabled)
+		it.flags |= FL_MENU_INACTIVE;
+	if (type == CheckableActionType) {
+		it.flags |= FL_MENU_TOGGLE;
+		if (checked)
+			it.flags |= FL_MENU_VALUE;
+	} else if (type == SeparatorType) {
+		items[items.size() - 1].flags |= FL_MENU_DIVIDER;
+		return;
+	} else if (type == SubmenuType) {
+		it.flags |= FL_SUBMENU;
+	}
+
+	items.append(it);
+}
+
 void webview::handlecontextmenu(void *ptr) {
 	const PlatformMouseEvent * const pev = (PlatformMouseEvent *) ptr;
 
@@ -395,31 +426,24 @@ void webview::handlecontextmenu(void *ptr) {
 	unsigned i;
 	for (i = 0; i < max; i++) {
 		const ContextMenuItem &cur = m->items()[i];
-		const ContextMenuItemType type = cur.type();
-		//const ContextMenuAction action = cur.action();
-		const char * const title = strdup(cur.title().utf8().data());
-		const bool enabled = cur.enabled();
-		const bool checked = cur.checked();
 
-		Fl_Menu_Item it = {
-			title, 0, 0, (void *) (unsigned long) i,
-			0,
-			FL_NORMAL_LABEL, FL_HELVETICA,
-			FL_NORMAL_SIZE, FL_FOREGROUND_COLOR
-		};
+		additem(items, cur);
 
-		if (!enabled)
-			it.flags |= FL_MENU_INACTIVE;
-		if (type == CheckableActionType) {
-			it.flags |= FL_MENU_TOGGLE;
-			if (checked)
-				it.flags |= FL_MENU_VALUE;
-		} else if (type == SeparatorType) {
-			items[items.size() - 1].flags |= FL_MENU_DIVIDER;
-			continue;
+		// Just one level of recursion for now.
+		if (cur.type() == SubmenuType) {
+			unsigned k;
+			unsigned kmax = cur.subMenuItems().size();
+			for (k = 0; k < kmax; k++) {
+				const ContextMenuItem &kcur = cur.subMenuItems()[k];
+
+				additem(items, kcur);
+
+				ASSERT(kcur.type() != SubmenuType);
+			}
+			Fl_Menu_Item end;
+			memset(&end, 0, sizeof(Fl_Menu_Item));
+			items.append(end);
 		}
-
-		items.append(it);
 	}
 	Fl_Menu_Item end;
 	memset(&end, 0, sizeof(Fl_Menu_Item));
@@ -434,8 +458,8 @@ void webview::handlecontextmenu(void *ptr) {
 	}
 
 	if (res) {
-		i = (unsigned long) res->user_data_;
-		ContextMenuItem sel(m->items()[i]);
+		ContextMenuItem sel(*(ContextMenuItem *) res->user_data_);
+		if (sel.type() == SubmenuType) return;
 		priv->page->contextMenuController().contextMenuItemSelected(&sel);
 	}
 }
