@@ -700,11 +700,12 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
         } else {
             char* url = 0;
             curl_easy_getinfo(d->m_handle, CURLINFO_EFFECTIVE_URL, &url);
+            URL tmpurl(URL(), url);
 #ifndef NDEBUG
             fprintf(stderr, "Curl ERROR for url='%s', error: '%s'\n", url, curl_easy_strerror(msg->data.result));
 #endif
             if (d->client()) {
-                ResourceError resourceError(String(), msg->data.result, String(url), String(curl_easy_strerror(msg->data.result)));
+                ResourceError resourceError(tmpurl.host(), msg->data.result, String(url), String(curl_easy_strerror(msg->data.result)));
                 resourceError.setSSLErrors(d->m_sslErrors);
                 d->client()->didFail(job, resourceError);
                 CurlCacheManager::getInstance().didFail(*job);
@@ -924,7 +925,8 @@ void ResourceHandleManager::dispatchSynchronousJob(ResourceHandle* job)
     CURLcode ret =  curl_easy_perform(handle->m_handle);
 
     if (ret != CURLE_OK) {
-        ResourceError error(String(handle->m_url), ret, String(handle->m_url), String(curl_easy_strerror(ret)));
+        URL tmpurl(URL(), handle->m_url);
+        ResourceError error(tmpurl.host(), ret, String(handle->m_url), String(curl_easy_strerror(ret)));
         error.setSSLErrors(handle->m_sslErrors);
         handle->client()->didFail(job, error);
     } else {
