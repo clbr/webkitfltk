@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Document.h>
 #include <FileChooser.h>
 #include <Frame.h>
+#include <HitTestResult.h>
 #include <NotImplemented.h>
 #include <PopupMenuFLTK.h>
 
@@ -253,8 +254,17 @@ void FlChromeClient::contentsSizeChanged(Frame*, const IntSize&) const {
 	notImplemented();
 }
 
-void FlChromeClient::mouseDidMoveOverElement(const HitTestResult&, unsigned int) {
-	notImplemented();
+void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned int flags) {
+	// TODO: link url in statusbar
+	if (hit.isLiveLink()) {
+		const URL &url = hit.absoluteLinkURL();
+		if (!url.isEmpty()) {
+			TextDirection dir;
+			printf("Link hover, title '%s', url '%s'\n",
+				hit.title(dir).utf8().data(),
+				url.string().utf8().data());
+		}
+	}
 }
 
 void FlChromeClient::setToolTip(const String &str, TextDirection) {
