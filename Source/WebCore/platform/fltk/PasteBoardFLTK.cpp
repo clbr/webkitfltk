@@ -101,17 +101,29 @@ void Pasteboard::read(PasteboardPlainText &text)
         return;
     }
 
-    XConvertSelection(fl_display, XA_PRIMARY, XA_STRING, None, owner, CurrentTime);
+    XConvertSelection(fl_display, XA_PRIMARY, XA_STRING, XA_STRING, fl_window, CurrentTime);
     XFlush(fl_display);
+
+    unsigned i;
+    Atom target = None;
+    for (i = 0; i < 10; i++) {
+        XEvent ev;
+        XNextEvent(fl_display, &ev);
+        if (ev.type == SelectionNotify) {
+            target = ev.xselection.property;
+            if (target == None) return;
+            break;
+        }
+    }
 
     Atom type;
     int fmt;
     unsigned long num, bytes = 0, dummy;
     unsigned char *data;
-    XGetWindowProperty(fl_display, owner, XA_STRING, 0, 0, 0, AnyPropertyType,
+    XGetWindowProperty(fl_display, fl_window, XA_STRING, 0, 0, 0, AnyPropertyType,
                        &type, &fmt, &num, &bytes, &data);
     if (bytes) {
-        int res = XGetWindowProperty(fl_display, owner, XA_STRING, 0, bytes, 0,
+        int res = XGetWindowProperty(fl_display, fl_window, XA_STRING, 0, bytes, 0,
                                      AnyPropertyType, &type, &fmt, &num, &dummy, &data);
         if (res == Success) {
             text.text = data;
