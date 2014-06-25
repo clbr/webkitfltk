@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <PlatformKeyboardEvent.h>
 #include <Settings.h>
 #include <WidgetBackingStoreCairo.h>
+#include <WindowsKeyboardCodes.h>
 #include <wtf/CurrentTime.h>
 
 using namespace WTF;
@@ -244,6 +245,54 @@ void webview::resize() {
 		priv->page->mainFrame().view()->resize(priv->w, priv->h);
 }
 
+static void keyscroll(Frame &f, const unsigned key, const bool shift) {
+
+	ScrollDirection dir;
+	ScrollGranularity gran;
+
+	switch (key) {
+		case VK_SPACE:
+		case VK_NEXT:
+		case VK_PRIOR:
+			gran = ScrollByPage;
+			if (shift || key == VK_PRIOR)
+				dir = ScrollUp;
+			else
+				dir = ScrollDown;
+		break;
+		case VK_HOME:
+			gran = ScrollByDocument;
+			dir = ScrollUp;
+		break;
+		case VK_END:
+			gran = ScrollByDocument;
+			dir = ScrollDown;
+		break;
+		case VK_LEFT:
+			gran = ScrollByLine;
+			dir = ScrollLeft;
+		break;
+		case VK_RIGHT:
+			gran = ScrollByLine;
+			dir = ScrollRight;
+		break;
+		case VK_UP:
+			gran = ScrollByLine;
+			dir = ScrollUp;
+		break;
+		case VK_DOWN:
+			gran = ScrollByLine;
+			dir = ScrollDown;
+		break;
+		default:
+			return;
+	}
+
+	if (f.eventHandler().scrollOverflow(dir, gran))
+		return;
+	f.view()->scroll(dir, gran);
+}
+
 int webview::handle(const int e) {
 
 	switch (e) {
@@ -356,7 +405,10 @@ int webview::handle(const int e) {
 						(PlatformEvent::Modifiers) modifiers,
 						currentTime());
 
-			priv->event->keyEvent(pev);
+			bool ret = priv->event->keyEvent(pev);
+
+			if (e == FL_KEYDOWN && !ret)
+				keyscroll(priv->page->mainFrame(), win, Fl::event_shift());
 
 			if (priv->editing)
 				return 1;
