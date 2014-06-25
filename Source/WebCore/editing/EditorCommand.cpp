@@ -929,7 +929,7 @@ static bool executePaste(Frame& frame, Event*, EditorCommandSource source, const
     return true;
 }
 
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(FLTK)
 
 static bool executePasteGlobalSelection(Frame& frame, Event*, EditorCommandSource source, const String&)
 {
@@ -939,7 +939,11 @@ static bool executePasteGlobalSelection(Frame& frame, Event*, EditorCommandSourc
 
     ASSERT_UNUSED(source, source == CommandFromMenuOrKeyBinding);
     UserTypingGestureIndicator typingGestureIndicator(frame);
+#if PLATFORM(GTK)
     frame.editor().paste(*Pasteboard::createForGlobalSelection());
+#elif PLATFORM(FLTK)
+    frame.editor().paste(*Pasteboard::createForCopyAndPaste());
+#endif
     return true;
 }
 
@@ -1624,7 +1628,7 @@ static const CommandMap& createCommandMap()
         { "Yank", { executeYank, supportedFromMenuOrKeyBinding, enabledInEditableText, stateNone, valueNull, notTextInsertion, doNotAllowExecutionWhenDisabled } },
         { "YankAndSelect", { executeYankAndSelect, supportedFromMenuOrKeyBinding, enabledInEditableText, stateNone, valueNull, notTextInsertion, doNotAllowExecutionWhenDisabled } },
 
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(FLTK)
         { "PasteGlobalSelection", { executePasteGlobalSelection, supportedFromMenuOrKeyBinding, enabledPaste, stateNone, valueNull, notTextInsertion, allowExecutionWhenDisabled } },
 #endif
 
