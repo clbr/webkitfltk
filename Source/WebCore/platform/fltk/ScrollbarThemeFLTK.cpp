@@ -115,13 +115,16 @@ bool ScrollbarThemeFLTK::paint(ScrollbarThemeClient *bar, GraphicsContext *gc,
 	const unsigned y0 = mat.y0;
 
 	flbar->resize(bar->x() + x0, bar->y() + y0, bar->width(), bar->height());
+	float div;
 	if (bar->orientation() == HorizontalScrollbar) {
 		flbar->type(FL_HORIZONTAL);
+		div = trackRect(bar).width();
 	} else {
 		flbar->type(FL_VERTICAL);
+		div = trackRect(bar).height();
 	}
 
-	flbar->slider_size(thumbLength(bar) / (float) bar->visibleSize());
+	flbar->slider_size(thumbLength(bar) / div);
 
 	flbar->button1 = flbar->button2 = false;
 	if (bar->pressedPart() == BackButtonStartPart)
