@@ -42,6 +42,9 @@ public:
 	void hide() override;
 
 	privatewebview *priv;
+
+private:
+	void handlecontextmenu(void *);
 };
 
 #endif

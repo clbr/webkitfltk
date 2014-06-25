@@ -26,8 +26,6 @@ public:
 	FlContextMenuClient(webview *);
 
 	void contextMenuDestroyed() override;
-	WebCore::PlatformMenuDescription
-		getCustomMenuFromDefaultItems(WebCore::ContextMenu*) override;
 	void contextMenuItemSelected(WebCore::ContextMenuItem*, const WebCore::ContextMenu*)
 		override;
 	void downloadURL(const WebCore::URL&) override;
@@ -37,6 +35,7 @@ public:
 	void speak(const WTF::String&) override;
 	void stopSpeaking() override;
 
+	PassOwnPtr<WebCore::ContextMenu> customizeMenu(PassOwnPtr<WebCore::ContextMenu>) override;
 private:
 	webview *view;
 };

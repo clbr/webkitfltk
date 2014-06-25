@@ -24,12 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cairo-xlib.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
+#include <FL/Fl_Menu_Item.H>
 #include <unistd.h>
 
-#include <MainFrame.h>
+#include <ContextMenuController.h>
+#include <FocusController.h>
 #include <FrameLoadRequest.h>
 #include <FrameView.h>
 #include <InspectorController.h>
+#include <MainFrame.h>
 #include <PlatformKeyboardEvent.h>
 #include <Settings.h>
 #include <WidgetBackingStoreCairo.h>
@@ -284,12 +287,15 @@ int webview::handle(const int e) {
 						Fl::event_command(),
 						currentTime());
 
-			if (e == FL_PUSH)
+			if (e == FL_PUSH) {
 				priv->event->handleMousePressEvent(pev);
-			else if (e == FL_RELEASE)
+				if (btn == RightButton)
+					handlecontextmenu(&pev);
+			} else if (e == FL_RELEASE) {
 				priv->event->handleMouseReleaseEvent(pev);
-			else
+			} else {
 				priv->event->handleMouseMoveEvent(pev);
+			}
 
 			return 1;
 			}
@@ -370,4 +376,66 @@ void webview::show() {
 void webview::hide() {
 	priv->page->setIsVisible(false);
 	Fl_Widget::hide();
+}
+
+void webview::handlecontextmenu(void *ptr) {
+	const PlatformMouseEvent * const pev = (PlatformMouseEvent *) ptr;
+
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	focused->eventHandler().sendContextMenuEvent(*pev);
+
+	ContextMenu *m = priv->page->contextMenuController().contextMenu();
+	if (!m)
+		return;
+
+	Vector<Fl_Menu_Item> items;
+	const unsigned max = m->items().size();
+	items.reserveCapacity(max);
+
+	unsigned i;
+	for (i = 0; i < max; i++) {
+		const ContextMenuItem &cur = m->items()[i];
+		const ContextMenuItemType type = cur.type();
+		//const ContextMenuAction action = cur.action();
+		const char * const title = strdup(cur.title().utf8().data());
+		const bool enabled = cur.enabled();
+		const bool checked = cur.checked();
+
+		Fl_Menu_Item it = {
+			title, 0, 0, (void *) (unsigned long) i,
+			0,
+			FL_NORMAL_LABEL, FL_HELVETICA,
+			FL_NORMAL_SIZE, FL_FOREGROUND_COLOR
+		};
+
+		if (!enabled)
+			it.flags |= FL_MENU_INACTIVE;
+		if (type == CheckableActionType) {
+			it.flags |= FL_MENU_TOGGLE;
+			if (checked)
+				it.flags |= FL_MENU_VALUE;
+		} else if (type == SeparatorType) {
+			items[items.size() - 1].flags |= FL_MENU_DIVIDER;
+			continue;
+		}
+
+		items.append(it);
+	}
+	Fl_Menu_Item end;
+	memset(&end, 0, sizeof(Fl_Menu_Item));
+	items.append(end);
+
+	// Show
+	const Fl_Menu_Item *res = items[0].popup(Fl::event_x(), Fl::event_y());
+
+	const unsigned newmax = items.size();
+	for (i = 0; i < newmax; i++) {
+		free((char *) items[i].text);
+	}
+
+	if (res) {
+		i = (unsigned long) res->user_data_;
+		ContextMenuItem sel(m->items()[i]);
+		priv->page->contextMenuController().contextMenuItemSelected(&sel);
+	}
 }

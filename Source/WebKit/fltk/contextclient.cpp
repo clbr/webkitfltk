@@ -28,11 +28,7 @@ FlContextMenuClient::FlContextMenuClient(webview *inview) {
 }
 
 void FlContextMenuClient::contextMenuDestroyed() {
-	notImplemented();
-}
-
-PlatformMenuDescription FlContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu*) {
-	notImplemented();
+	delete this;
 }
 
 void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem*, const ContextMenu*) {
@@ -53,6 +49,7 @@ void FlContextMenuClient::lookUpInDictionary(Frame*) {
 
 bool FlContextMenuClient::isSpeaking() {
 	notImplemented();
+	return false;
 }
 
 void FlContextMenuClient::speak(const WTF::String&) {
@@ -61,4 +58,8 @@ void FlContextMenuClient::speak(const WTF::String&) {
 
 void FlContextMenuClient::stopSpeaking() {
 	notImplemented();
+}
+
+PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMenu> menu) {
+	return menu;
 }
