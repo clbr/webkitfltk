@@ -74,7 +74,8 @@ void PopupMenuFLTK::show(const IntRect &rect, FrameView *view, int index) {
 
 	m_client->popupDidHide();
 
-	for (i = 0; i < max; i++) {
+	const unsigned newmax = items.size();
+	for (i = 0; i < newmax; i++) {
 		free((char *) items[i].text);
 	}
 }
