@@ -180,18 +180,32 @@ void FlFrameLoaderClient::dispatchDidFailProvisionalLoad(const ResourceError &er
 
 void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 
+	char *instructions = NULL;
+	if (err.errorCode() == CURLE_COULDNT_RESOLVE_HOST ||
+		err.errorCode() == CURLE_COULDNT_CONNECT ||
+		err.errorCode() == CURLE_REMOTE_ACCESS_DENIED ||
+		err.errorCode() == CURLE_OPERATION_TIMEDOUT) {
+		asprintf(&instructions,
+			"This issue could be caused by either end. "
+			"<a href=\"http://isup.me/%s\">"
+			"Check with DownForEveryoneOrJustMe</a>?",
+			err.domain().utf8().data());
+	}
+
 	char *ptr = NULL;
-	asprintf(&ptr, "<html><body><h2>%s%serror %u, %s</h2></body></html>",
-		err.domain().utf8().data(),
-		err.domain().length() > 1 ? ": " : "",
+	asprintf(&ptr, "<html><body><h2>%s%serror %u, %s</h2>%s</body></html>",
+		err.failingURL().utf8().data(),
+		err.failingURL().length() > 1 ? ": " : "",
 		err.errorCode(),
-		err.localizedDescription().utf8().data());
+		err.localizedDescription().utf8().data(),
+		instructions ? instructions : "");
 
 	if (!ptr)
 		return;
 
 	view->loadString(ptr);
 	free(ptr);
+	free(instructions);
 }
 
 void FlFrameLoaderClient::dispatchDidFinishDocumentLoad() {
