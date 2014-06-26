@@ -35,8 +35,9 @@ void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem*, const Contex
 	notImplemented();
 }
 
-void FlContextMenuClient::downloadURL(const URL&) {
-	notImplemented();
+void FlContextMenuClient::downloadURL(const URL &url) {
+	view->download(url.string().utf8().data(),
+			url.lastPathComponent().utf8().data());
 }
 
 void FlContextMenuClient::searchWithGoogle(const Frame*) {

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cairo-xlib.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
+#include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Menu_Item.H>
 #include <unistd.h>
 
@@ -44,6 +45,7 @@ using namespace WTF;
 using namespace WebCore;
 
 extern int wheelspeed;
+extern const char * (*downloaddirfunc)();
 
 webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
@@ -525,4 +527,59 @@ void webview::handlecontextmenu(void *ptr) {
 		if (sel.type() == SubmenuType) return;
 		priv->page->contextMenuController().contextMenuItemSelected(&sel);
 	}
+}
+
+void webview::download(const char * const url, const char * const suggestedname) {
+
+	const char * const dir = downloaddirfunc ? downloaddirfunc() : "/tmp";
+	char *fullpath = (char *) dir;
+
+	if (suggestedname) {
+		asprintf(&fullpath, "%s/%s", dir, suggestedname);
+	}
+
+	Fl_File_Chooser c(fullpath, NULL,
+				Fl_File_Chooser::CREATE, "Save as");
+	c.show();
+	while (c.shown())
+		Fl::wait();
+
+	if (fullpath != dir)
+		free(fullpath);
+
+	if (!c.value())
+		return;
+
+	// Must not exist, or if exists, be a file
+	struct stat st;
+	if (stat(c.value(), &st) == 0) {
+		if (!S_ISREG(st.st_mode)) {
+			fl_alert("Selected path exists, and is not a file");
+			return;
+		}
+
+		fl_message_title("Overwrite?");
+		int ret = fl_choice("File '%s' exists, overwrite?", fl_no, fl_yes, NULL,
+			c.value());
+		if (ret == 0)
+			return;
+	}
+
+	printf("Saving to %s\n", c.value());
+}
+
+unsigned webview::numDownloads() const {
+	return priv->downloads.size();
+}
+
+void webview::stopDownload(const unsigned i) {
+	if (i >= priv->downloads.size())
+		return;
+	// TODO
+}
+
+void webview::removeDownload(const unsigned i) {
+	if (i >= priv->downloads.size())
+		return;
+	// TODO
 }

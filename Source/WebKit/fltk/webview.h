@@ -41,6 +41,13 @@ public:
 	void show() override;
 	void hide() override;
 
+	void download(const char *url, const char *suggestedname = NULL);
+
+	// Download handling
+	unsigned numDownloads() const;
+	void stopDownload(const unsigned);
+	void removeDownload(const unsigned);
+
 	privatewebview *priv;
 
 private:

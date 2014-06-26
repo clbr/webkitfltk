@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "chromeclient.h"
 #include "contextclient.h"
+#include "download.h"
 #include "dragclient.h"
 #include "editorclient.h"
 #include "inspectorclient.h"
@@ -32,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <wtf/text/CString.h>
 
 #include <time.h>
+#include <vector>
 
 typedef unsigned long Pixmap;
 
@@ -52,6 +54,8 @@ public:
 	struct timespec lastdraw;
 
 	bool editing;
+
+	std::vector<download *> downloads;
 };
 
 #endif

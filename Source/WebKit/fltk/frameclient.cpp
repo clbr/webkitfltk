@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <MIMETypeRegistry.h>
 #include <NotImplemented.h>
 #include <ResourceError.h>
+#include <ResourceLoader.h>
 #include <ResourceRequest.h>
 
 #include <sys/types.h>
@@ -180,6 +181,12 @@ void FlFrameLoaderClient::dispatchDidFailProvisionalLoad(const ResourceError &er
 
 void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 
+	// The download conversion dispatches an error for some reason. Ignore and back.
+	if (err.domain() == "WebKitPolicyError" &&
+		err.errorCode() == PolicyErrorFrameLoadInterruptedByPolicyChange) {
+		return;
+	}
+
 	char *instructions = NULL;
 	if (err.errorCode() == CURLE_COULDNT_RESOLVE_HOST ||
 		err.errorCode() == CURLE_COULDNT_CONNECT ||
@@ -311,8 +318,10 @@ void FlFrameLoaderClient::setMainFrameDocumentReady(bool) {
 	notImplemented();
 }
 
-void FlFrameLoaderClient::startDownload(const ResourceRequest&, const String& suggestedName) {
-	notImplemented();
+void FlFrameLoaderClient::startDownload(const ResourceRequest &req,
+					const String& suggestedName) {
+	view->download(req.url().string().utf8().data(),
+			suggestedName.utf8().data());
 }
 
 void FlFrameLoaderClient::willChangeTitle(DocumentLoader*) {
@@ -491,8 +500,11 @@ Frame *FlFrameLoaderClient::getFrame() const {
 	return frame;
 }
 
-void FlFrameLoaderClient::convertMainResourceLoadToDownload(DocumentLoader*, const ResourceRequest&, const ResourceResponse&) {
-	notImplemented();
+void FlFrameLoaderClient::convertMainResourceLoadToDownload(DocumentLoader *dl,
+		const ResourceRequest &req, const ResourceResponse&) {
+	dl->mainResourceLoader()->handle()->setDefersLoading(true);
+	view->download(req.url().string().utf8().data(),
+			req.url().lastPathComponent().utf8().data());
 }
 
 PassRefPtr<Frame> FlFrameLoaderClient::createFrame(const URL& url,
