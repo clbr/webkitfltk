@@ -374,6 +374,8 @@ void FTPDirectoryDocumentParser::append(PassRefPtr<StringImpl> inputSource)
                 *m_dest++ = c;
             else
                 m_skipLF = false;
+            // Curl listings come in ASCII format, ie may not contain \r.
+            foundNewLine = true;
         } else {
             *m_dest++ = c;
             m_skipLF = false;
