@@ -460,6 +460,26 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
 
     String header = String::fromUTF8WithLatin1Fallback(static_cast<const char*>(ptr), totalSize);
 
+    CURL* h = d->m_handle;
+    const char* effectiveURL;
+    curl_easy_getinfo(h, CURLINFO_EFFECTIVE_URL, &effectiveURL);
+    const URL url(ParsedURLString, effectiveURL);
+
+    if (url.protocol() == "ftp") {
+        static bool prevSetAscii = false;
+        // Curl uses binary mode for downloads, ascii for listings. Bit of a hack.
+        if (ptr[0] == '2' && ptr[1] == '0' && ptr[2] == '0' &&
+            header.contains("ascii", false)) {
+            prevSetAscii = true;
+        } else if (ptr[0] == '1' && ptr[1] == '5' && ptr[2] == '0' && prevSetAscii) {
+            d->m_response.setMimeType("application/x-ftp-directory");
+        } else {
+            prevSetAscii = false;
+        }
+
+        return totalSize;
+    }
+
     /*
      * a) We can finish and send the ResourceResponse
      * b) We will add the current header to the HTTPHeaderMap of the ResourceResponse
@@ -468,8 +488,6 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
      * accept also \n.
      */
     if (header == String("\r\n") || header == String("\n")) {
-        CURL* h = d->m_handle;
-
         long httpCode = 0;
         curl_easy_getinfo(h, CURLINFO_RESPONSE_CODE, &httpCode);
 
@@ -483,9 +501,7 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
         curl_easy_getinfo(h, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength);
         d->m_response.setExpectedContentLength(static_cast<long long int>(contentLength));
 
-        const char* hdr;
-        curl_easy_getinfo(h, CURLINFO_EFFECTIVE_URL, &hdr);
-        d->m_response.setURL(URL(ParsedURLString, hdr));
+        d->m_response.setURL(url);
 
         d->m_response.setHTTPStatusCode(httpCode);
         d->m_response.setMimeType(extractMIMETypeFromMediaType(d->m_response.httpHeaderField("Content-Type")).lower());
