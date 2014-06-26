@@ -43,6 +43,8 @@ public:
 
 	void download(const char *url, const char *suggestedname = NULL);
 
+	const char *statusbar() const;
+
 	// Download handling
 	unsigned numDownloads() const;
 	void stopDownload(const unsigned);

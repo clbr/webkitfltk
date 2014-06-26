@@ -255,14 +255,15 @@ void FlChromeClient::contentsSizeChanged(Frame*, const IntSize&) const {
 }
 
 void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned int flags) {
-	// TODO: link url in statusbar
+
+	if (view->priv->statusbartext)
+		free((char *) view->priv->statusbartext);
+	view->priv->statusbartext = NULL;
+
 	if (hit.isLiveLink()) {
 		const URL &url = hit.absoluteLinkURL();
 		if (!url.isEmpty()) {
-			TextDirection dir;
-			printf("Link hover, title '%s', url '%s'\n",
-				hit.title(dir).utf8().data(),
-				url.string().utf8().data());
+			view->priv->statusbartext = strdup(url.string().utf8().data());
 		}
 	}
 }
