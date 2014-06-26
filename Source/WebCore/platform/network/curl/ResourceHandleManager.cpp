@@ -466,15 +466,16 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
     const URL url(ParsedURLString, effectiveURL);
 
     if (url.protocol() == "ftp") {
-        static bool prevSetAscii = false;
+        static bool modeAscii = false;
         // Curl uses binary mode for downloads, ascii for listings. Bit of a hack.
         if (ptr[0] == '2' && ptr[1] == '0' && ptr[2] == '0' &&
             header.contains("ascii", false)) {
-            prevSetAscii = true;
-        } else if (ptr[0] == '1' && ptr[1] == '5' && ptr[2] == '0' && prevSetAscii) {
+            modeAscii = true;
+        } else if (ptr[0] == '2' && ptr[1] == '0' && ptr[2] == '0' &&
+            header.contains("binary", false)) {
+            modeAscii = false;
+        } else if (ptr[0] == '1' && ptr[1] == '5' && ptr[2] == '0' && modeAscii) {
             d->m_response.setMimeType("application/x-ftp-directory");
-        } else {
-            prevSetAscii = false;
         }
 
         return totalSize;
