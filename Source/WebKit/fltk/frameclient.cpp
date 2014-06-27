@@ -518,7 +518,8 @@ void FlFrameLoaderClient::convertMainResourceLoadToDownload(DocumentLoader *dl,
 		const ResourceRequest &req, const ResourceResponse&) {
 	dl->mainResourceLoader()->handle()->setDefersLoading(true);
 	view->download(req.url().string().utf8().data(),
-			req.url().lastPathComponent().utf8().data());
+			req.url().lastPathComponent().utf8().data(),
+			&req);
 }
 
 PassRefPtr<Frame> FlFrameLoaderClient::createFrame(const URL& url,

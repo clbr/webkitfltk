@@ -41,7 +41,8 @@ public:
 	void show() override;
 	void hide() override;
 
-	void download(const char *url, const char *suggestedname = NULL);
+	void download(const char *url, const char *suggestedname = NULL,
+			const void *req = NULL);
 
 	const char *statusbar() const;
 

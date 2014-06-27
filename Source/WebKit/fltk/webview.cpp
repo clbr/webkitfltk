@@ -125,6 +125,12 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 }
 
 webview::~webview() {
+	// If any downloads exist, nuke them here.
+	const unsigned downs = priv->downloads.size();
+	for (unsigned i = 0; i < downs; i++) {
+		delete priv->downloads[i];
+	}
+
 	delete priv->page;
 	delete priv;
 }
@@ -535,7 +541,8 @@ void webview::handlecontextmenu(void *ptr) {
 	}
 }
 
-void webview::download(const char * const url, const char * const suggestedname) {
+void webview::download(const char * const url, const char * const suggestedname,
+			const void *preq) {
 
 	static const char *prevdir = NULL;
 	const char *dir = prevdir;
@@ -584,6 +591,11 @@ void webview::download(const char * const url, const char * const suggestedname)
 		return;
 	}
 	close(fd);
+
+	const ResourceRequest *req = (const ResourceRequest *) preq;
+
+	// All good.
+	priv->downloads.push_back(new ::download(url, c.value(), req));
 }
 
 unsigned webview::numDownloads() const {
@@ -593,13 +605,14 @@ unsigned webview::numDownloads() const {
 void webview::stopDownload(const unsigned i) {
 	if (i >= priv->downloads.size())
 		return;
-	// TODO
+	priv->downloads[i]->stop();
 }
 
 void webview::removeDownload(const unsigned i) {
 	if (i >= priv->downloads.size())
 		return;
-	// TODO
+	delete priv->downloads[i];
+	priv->downloads.erase(priv->downloads.begin() + i);
 }
 
 const char *webview::statusbar() const {

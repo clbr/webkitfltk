@@ -19,9 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define download_h
 
 #include <CurlDownload.h>
+#include <ResourceRequest.h>
 
 class download: public WebCore::CurlDownloadListener {
 public:
+	download(const char *url, const char *file,
+			const WebCore::ResourceRequest *req = NULL);
+	virtual ~download();
+
+	void stop();
+
+	void didReceiveResponse() override;
+	void didReceiveDataOfLength(int size) override;
+	void didFinish() override;
+	void didFail() override;
+
+	const char *url, *file;
+private:
+	WebCore::CurlDownload curl;
 };
 
 #endif
