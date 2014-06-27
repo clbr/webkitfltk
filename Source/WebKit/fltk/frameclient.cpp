@@ -40,6 +40,7 @@ using namespace WTF;
 
 extern const char * (*uafunc)(const char *);
 extern int (*urlblockfunc)(const char *);
+extern const char * (*aboutpagefunc)(const char*);
 
 FlFrameLoaderClient::FlFrameLoaderClient(webview *inview, Frame *inframe) {
 	view = inview;
@@ -283,7 +284,14 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 		free((char *) path);
 	} else if (req.url().string().startsWith("about://")) {
 
-		// TODO: custom pages
+		if (aboutpagefunc) {
+			const char * const page =
+				aboutpagefunc(req.url().string().utf8().data() + 8);
+			if (page) {
+				view->loadString(page);
+				free((char *) page);
+			}
+		}
 
 		policyfunc(PolicyIgnore);
 		return;

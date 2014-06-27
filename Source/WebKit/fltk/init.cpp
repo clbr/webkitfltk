@@ -36,6 +36,7 @@ const char * (*uafunc)(const char *) = NULL;
 int (*urlblockfunc)(const char *) = NULL;
 const char * (*uploaddirfunc)() = NULL;
 const char * (*downloaddirfunc)() = NULL;
+const char * (*aboutpagefunc)(const char *) = NULL;
 
 int wheelspeed = 100;
 
@@ -76,4 +77,8 @@ void wk_set_downloaddir_func(const char * (*func)()) {
 
 void wk_set_wheel_speed(const int in) {
 	wheelspeed = in;
+}
+
+void wk_set_aboutpage_func(const char * (*func)(const char*)) {
+	aboutpagefunc = func;
 }

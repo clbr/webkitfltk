@@ -42,4 +42,7 @@ void wk_set_downloaddir_func(const char * (*func)());
 // Scrolling speed
 void wk_set_wheel_speed(const int in);
 
+// about:// pages. Return a malloced array (will be freed), NULL if no such page.
+void wk_set_aboutpage_func(const char * (*func)(const char *));
+
 #endif
