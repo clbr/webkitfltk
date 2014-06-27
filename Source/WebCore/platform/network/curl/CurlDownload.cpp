@@ -239,6 +239,7 @@ CurlDownload::CurlDownload()
 , m_tempHandle(invalidPlatformFileHandle)
 , m_deletesFileUponFailure(false)
 , m_listener(0)
+, m_finished(false)
 {
 }
 
@@ -252,8 +253,10 @@ CurlDownload::~CurlDownload()
     if (m_customHeaders)
         curl_slist_free_all(m_customHeaders);
 
-    closeFile();
-    moveFileToDestination();
+    if (!m_finished) {
+        closeFile();
+        moveFileToDestination();
+    }
 }
 
 void CurlDownload::init(CurlDownloadListener* listener, const URL& url)
@@ -452,6 +455,7 @@ void CurlDownload::didFinish()
 
     closeFile();
     moveFileToDestination();
+    m_finished = true;
 
     if (m_listener)
         m_listener->didFinish();

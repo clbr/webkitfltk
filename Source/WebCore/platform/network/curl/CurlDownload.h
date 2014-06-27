@@ -140,6 +140,7 @@ private:
     bool m_deletesFileUponFailure;
     mutable Mutex m_mutex;
     CurlDownloadListener *m_listener;
+    bool m_finished;
 
     static CurlDownloadManager m_downloadManager;
 
