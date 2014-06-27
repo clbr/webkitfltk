@@ -465,9 +465,10 @@ PassRefPtr<DocumentLoader> FlFrameLoaderClient::createDocumentLoader(const Resou
 }
 
 void FlFrameLoaderClient::setTitle(const StringWithDirection &title, const URL &url) {
-	printf("Title set to '%s' URL '%s'\n",
-		title.string().utf8().data(), url.string().utf8().data());
-	notImplemented();
+	free((char *) view->priv->title);
+	free((char *) view->priv->url);
+	view->priv->title = strdup(title.string().utf8().data());
+	view->priv->url = strdup(url.string().utf8().data());
 }
 
 String FlFrameLoaderClient::userAgent(const URL &url) {

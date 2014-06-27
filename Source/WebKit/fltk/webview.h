@@ -45,6 +45,9 @@ public:
 
 	const char *statusbar() const;
 
+	const char *title() const;
+	const char *url() const;
+
 	// Download handling
 	unsigned numDownloads() const;
 	void stopDownload(const unsigned);

@@ -58,7 +58,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv->w = w;
 	priv->h = h;
 	priv->editing = false;
-	priv->statusbartext = NULL;
+	priv->statusbartext = priv->title = priv->url = NULL;
 
 	Fl_Widget *wid = this;
 	while (wid->parent())
@@ -603,4 +603,12 @@ void webview::removeDownload(const unsigned i) {
 
 const char *webview::statusbar() const {
 	return priv->statusbartext;
+}
+
+const char *webview::title() const {
+	return priv->title;
+}
+
+const char *webview::url() const {
+	return priv->url;
 }

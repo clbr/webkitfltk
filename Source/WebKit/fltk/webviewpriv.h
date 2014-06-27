@@ -56,6 +56,8 @@ public:
 	bool editing;
 
 	const char *statusbartext;
+	const char *title;
+	const char *url;
 
 	std::vector<download *> downloads;
 };
