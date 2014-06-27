@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "webview.h"
 
+extern "C" {
+
 // Init. Call this before show()ing anything.
 void webkitInit();
 
@@ -47,5 +49,7 @@ void wk_set_aboutpage_func(const char * (*func)(const char *));
 
 // Callback for finished downloads
 void wk_set_download_func(void (*func)(const char *url, const char *file));
+
+} // extern C
 
 #endif
