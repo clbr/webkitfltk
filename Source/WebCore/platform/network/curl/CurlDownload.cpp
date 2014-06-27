@@ -120,7 +120,7 @@ void CurlDownloadManager::stopThreadIfIdle()
 {
     MutexLocker locker(m_mutex);
 
-    if (!getActiveDownloadCount() && !getPendingDownloadCount())
+    if (!m_activeHandleList.size() && !m_activeHandleList.size())
         setRunThread(false);
 }
 
@@ -333,8 +333,6 @@ ResourceResponse CurlDownload::getResponse() const
 
 void CurlDownload::closeFile()
 {
-    MutexLocker locker(m_mutex);
-
     if (m_tempHandle != invalidPlatformFileHandle) {
         WebCore::closeFile(m_tempHandle);
         m_tempHandle = invalidPlatformFileHandle;
@@ -450,6 +448,8 @@ void CurlDownload::didReceiveDataOfLength(int size)
 
 void CurlDownload::didFinish()
 {
+    MutexLocker locker(m_mutex);
+
     closeFile();
     moveFileToDestination();
 
