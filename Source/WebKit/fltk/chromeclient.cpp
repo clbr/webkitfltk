@@ -292,11 +292,16 @@ void FlChromeClient::reachedApplicationCacheOriginQuota(SecurityOrigin*,
 
 void FlChromeClient::runOpenPanel(Frame *f, PassRefPtr<FileChooser> chooser) {
 	bool multi = false;
+	static const char *prevdir = NULL;
+	const char *dir = prevdir;
+	if (!dir) {
+		dir = uploaddirfunc ? uploaddirfunc() : "/tmp";
+	}
 
 	if (chooser->settings().allowsMultipleFiles)
 		multi = true;
 
-	Fl_File_Chooser c(uploaddirfunc ? uploaddirfunc() : "/tmp", NULL,
+	Fl_File_Chooser c(dir, NULL,
 				multi ? Fl_File_Chooser::MULTI : Fl_File_Chooser::SINGLE,
 				"Select file");
 	c.show();
@@ -304,6 +309,9 @@ void FlChromeClient::runOpenPanel(Frame *f, PassRefPtr<FileChooser> chooser) {
 		Fl::wait();
 	if (!c.value())
 		return;
+
+	free((char *) prevdir);
+	prevdir = strdup(c.directory());
 
 	if (multi) {
 		Vector<String> filenames;

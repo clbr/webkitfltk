@@ -532,7 +532,10 @@ void webview::handlecontextmenu(void *ptr) {
 
 void webview::download(const char * const url, const char * const suggestedname) {
 
-	const char * const dir = downloaddirfunc ? downloaddirfunc() : "/tmp";
+	static const char *prevdir = NULL;
+	const char *dir = prevdir;
+	if (!dir)
+		dir = downloaddirfunc ? downloaddirfunc() : "/tmp";
 	char *fullpath = (char *) dir;
 
 	if (suggestedname) {
@@ -550,6 +553,9 @@ void webview::download(const char * const url, const char * const suggestedname)
 
 	if (!c.value())
 		return;
+
+	free((char *) prevdir);
+	prevdir = strdup(c.directory());
 
 	// Must not exist, or if exists, be a file
 	struct stat st;
