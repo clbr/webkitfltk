@@ -42,12 +42,12 @@ void FlDragClient::willPerformDragSourceAction(DragSourceAction,
 }
 
 DragDestinationAction FlDragClient::actionMaskForDrag(DragData&) {
-	notImplemented();
+	return DragDestinationActionAny;
 }
 
 DragSourceAction FlDragClient::dragSourceActionMaskForPoint(
 		const IntPoint&) {
-	notImplemented();
+	return DragSourceActionAny;
 }
 
 void FlDragClient::startDrag(DragImageRef, const IntPoint&,
