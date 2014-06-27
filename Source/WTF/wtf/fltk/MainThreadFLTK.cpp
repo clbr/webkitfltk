@@ -30,19 +30,30 @@
 #include "config.h"
 #include "MainThread.h"
 
+#include <FL/Fl.H>
+#include <unistd.h>
+
 namespace WTF {
+
+static int pipefd[2];
+
+static void handler(FL_SOCKET fd, void *) {
+	dispatchFunctionsFromMainThread();
+	char a;
+	read(fd, &a, 1);
+}
 
 void initializeMainThreadPlatform()
 {
+	if (pipe(pipefd) == -1)
+		exit(1);
+	Fl::add_fd(pipefd[0], FL_READ, handler);
 }
 
 void scheduleDispatchFunctionsOnMainThread()
 {
-	puts(__PRETTY_FUNCTION__);
-/* FIXME
-    GMainLoopSource::createAndDeleteOnDestroy().
-    schedule("[WebKit] dispatchFunctionsFromMainThread",
-    std::function<void()>(dispatchFunctionsFromMainThread)); */
+	char a = 0;
+	write(pipefd[1], &a, 1);
 }
 
 } // namespace WTF
