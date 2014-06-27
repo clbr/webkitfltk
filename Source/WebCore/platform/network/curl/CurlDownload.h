@@ -105,12 +105,12 @@ public:
 
     void setDestination(const String& destination) { m_destination = destination; }
 
+    void addHeaders(const ResourceRequest&);
+
 private:
     void closeFile();
     void moveFileToDestination();
     void writeDataToFile(const char* data, int size);
-
-    void addHeaders(const ResourceRequest&);
 
     // Called on download thread.
     void didReceiveHeader(const String& header);
