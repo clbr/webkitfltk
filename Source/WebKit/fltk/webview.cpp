@@ -467,6 +467,7 @@ static void additem(Vector<Fl_Menu_Item> &items, const ContextMenuItem &cur) {
 			it.flags |= FL_MENU_VALUE;
 	} else if (type == SeparatorType) {
 		items[items.size() - 1].flags |= FL_MENU_DIVIDER;
+		free((char *) title);
 		return;
 	} else if (type == SubmenuType) {
 		it.flags |= FL_SUBMENU;

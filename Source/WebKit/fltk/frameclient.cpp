@@ -197,6 +197,9 @@ void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 			"<a href=\"http://isup.me/%s\">"
 			"Check with DownForEveryoneOrJustMe</a>?",
 			err.domain().utf8().data());
+
+		if (!instructions)
+			return;
 	}
 
 	char *ptr = NULL;
@@ -207,8 +210,10 @@ void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 		err.localizedDescription().utf8().data(),
 		instructions ? instructions : "");
 
-	if (!ptr)
+	if (!ptr) {
+		free(instructions);
 		return;
+	}
 
 	view->loadString(ptr);
 	free(ptr);
