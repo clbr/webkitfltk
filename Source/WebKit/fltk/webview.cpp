@@ -22,10 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "webviewpriv.h"
 
 #include <cairo-xlib.h>
+#include <fcntl.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Menu_Item.H>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <ContextMenuController.h>
@@ -573,7 +576,13 @@ void webview::download(const char * const url, const char * const suggestedname)
 			return;
 	}
 
-	printf("Saving to %s\n", c.value());
+	// Perms check
+	int fd = open(c.value(), O_CREAT | O_WRONLY, 0644);
+	if (fd < 0) {
+		fl_alert("Failed to create file (insufficient permissions?)");
+		return;
+	}
+	close(fd);
 }
 
 unsigned webview::numDownloads() const {
