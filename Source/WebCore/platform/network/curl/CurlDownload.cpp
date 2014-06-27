@@ -354,7 +354,7 @@ void CurlDownload::moveFileToDestination()
     if (ret) {
         // Fall back to mv
         if (fork() == 0) {
-            execlp("mv", m_tempPath.utf8().data(),
+            execlp("mv", "mv", m_tempPath.utf8().data(),
                    m_destination.utf8().data(),
                    NULL);
             exit(1);
