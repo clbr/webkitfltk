@@ -57,7 +57,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv->cairo = NULL;
 	priv->w = w;
 	priv->h = h;
-	priv->editing = false;
+	priv->editing = priv->hoveringlink = false;
 	priv->statusbartext = priv->title = priv->url = NULL;
 
 	Fl_Widget *wid = this;

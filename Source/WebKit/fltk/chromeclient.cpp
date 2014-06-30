@@ -189,8 +189,16 @@ bool FlChromeClient::runJavaScriptPrompt(Frame *f, const String &s,
 }
 
 void FlChromeClient::setStatusbarText(const String &s) {
-	printf("Statusbar '%s'\n", s.utf8().data());
-	notImplemented();
+
+	// JS may never override the link url.
+	if (view->priv->hoveringlink)
+		return;
+
+	if (view->priv->statusbartext)
+		free((char *) view->priv->statusbartext);
+	view->priv->statusbartext = NULL;
+
+	view->priv->statusbartext = strdup(s.utf8().data());
 }
 
 bool FlChromeClient::shouldInterruptJavaScript() {
@@ -259,11 +267,13 @@ void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned 
 	if (view->priv->statusbartext)
 		free((char *) view->priv->statusbartext);
 	view->priv->statusbartext = NULL;
+	view->priv->hoveringlink = false;
 
 	if (hit.isLiveLink()) {
 		const URL &url = hit.absoluteLinkURL();
 		if (!url.isEmpty()) {
-			view->priv->statusbartext = strdup(url.string().utf8().data());
+			setStatusbarText(url.string());
+			view->priv->hoveringlink = true;
 		}
 	}
 }

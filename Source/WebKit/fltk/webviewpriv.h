@@ -58,6 +58,7 @@ public:
 	const char *statusbartext;
 	const char *title;
 	const char *url;
+	bool hoveringlink;
 
 	std::vector<download *> downloads;
 };
