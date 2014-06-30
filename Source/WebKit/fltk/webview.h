@@ -33,6 +33,7 @@ public:
 	int handle(int) override;
 
 	void resize();
+	void resize(int x, int y, int w, int h) override;
 
 	void load(const char *);
 	void loadString(const char * const str, const char * const mime = NULL,

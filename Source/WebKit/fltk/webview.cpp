@@ -626,3 +626,8 @@ const char *webview::title() const {
 const char *webview::url() const {
 	return priv->url;
 }
+
+void webview::resize(int x, int y, int w, int h) {
+	Fl_Widget::resize(x, y, w, h);
+	resize();
+}
