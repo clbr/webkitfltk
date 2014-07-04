@@ -19,3 +19,4 @@ CXXFLAGS += -DENABLE_NETSCAPE_PLUGIN_API=0 -DENABLE_SQL_DATABASE=0 \
 		-DENABLE_DATE_AND_TIME_INPUT_TYPES=0
 
 CXXFLAGS += -ffunction-sections -fdata-sections
+CXXFLAGS += -fno-rtti -fno-exceptions
