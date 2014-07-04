@@ -516,7 +516,7 @@ all: $(OBJ)
 	ranlib $(NAME)
 	$(CXX) -o jsc jsc.cpp $(CXXFLAGS) $(NAME) ../WTF/wtf/libwtf.a -pthread \
 		$(shell icu-config --ldflags) -ldl -DSTATICALLY_LINKED_WITH_JavaScriptCore \
-		-static-libstdc++
+		-static-libstdc++ `fltk-config13 --ldflags`
 
 gen: $(OUTLUTS) Lexer.lut.h RegExpJitTables.h KeywordLookup.h \
 		InspectorJS.json LLIntDesiredOffsets.h LLIntOffsetsExtractor
