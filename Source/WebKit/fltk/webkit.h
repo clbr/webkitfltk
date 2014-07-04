@@ -26,6 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 extern "C" {
 
+#define WK_FLTK_MAJOR 0
+#define WK_FLTK_MINOR 0
+#define WK_FLTK_PATCH 0
+
 // Init. Call this before show()ing anything.
 void webkitInit();
 
