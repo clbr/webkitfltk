@@ -383,6 +383,7 @@ int webview::handle(const int e) {
 		break;
 		case FL_ENTER:
 		case FL_LEAVE:
+			fl_cursor(FL_CURSOR_DEFAULT);
 			return 1;
 		case FL_FOCUS:
 			if (!priv->page->mainFrame().view()->isPainting()) {
