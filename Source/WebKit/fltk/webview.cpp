@@ -131,6 +131,9 @@ webview::~webview() {
 		delete priv->downloads[i];
 	}
 
+	if (priv->gc)
+		delete priv->gc;
+
 	delete priv->page;
 	delete priv;
 }
