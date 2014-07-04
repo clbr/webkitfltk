@@ -341,7 +341,6 @@ void FlFrameLoaderClient::willChangeTitle(DocumentLoader*) {
 }
 
 void FlFrameLoaderClient::didChangeTitle(DocumentLoader *documentLoader) {
-	setTitle(documentLoader->title(), documentLoader->url());
 }
 
 void FlFrameLoaderClient::committedLoad(DocumentLoader *loader, const char *data, int len) {
@@ -465,6 +464,11 @@ PassRefPtr<DocumentLoader> FlFrameLoaderClient::createDocumentLoader(const Resou
 }
 
 void FlFrameLoaderClient::setTitle(const StringWithDirection &title, const URL &url) {
+
+	// We don't care about iframe titles.
+	if (frame != &view->priv->page->mainFrame())
+		return;
+
 	free((char *) view->priv->title);
 	free((char *) view->priv->url);
 	view->priv->title = strdup(title.string().utf8().data());
