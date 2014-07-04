@@ -59,6 +59,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv->h = h;
 	priv->editing = priv->hoveringlink = false;
 	priv->statusbartext = priv->title = priv->url = NULL;
+	priv->m_titleChanged = NULL;
 
 	Fl_Widget *wid = this;
 	while (wid->parent())
@@ -634,4 +635,8 @@ const char *webview::url() const {
 void webview::resize(int x, int y, int w, int h) {
 	Fl_Widget::resize(x, y, w, h);
 	resize();
+}
+
+void webview::titleChangedCB(void (*func)()) {
+	priv->m_titleChanged = func;
 }

@@ -57,6 +57,9 @@ public:
 
 	privatewebview *priv;
 
+	// Callbacks
+	void titleChangedCB(void (*func)());
+
 private:
 	void handlecontextmenu(void *);
 };

@@ -61,6 +61,9 @@ public:
 	bool hoveringlink;
 
 	std::vector<download *> downloads;
+
+	// Callbacks
+	void (*m_titleChanged)();
 };
 
 #endif

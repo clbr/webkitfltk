@@ -469,6 +469,9 @@ void FlFrameLoaderClient::setTitle(const StringWithDirection &title, const URL &
 	free((char *) view->priv->url);
 	view->priv->title = strdup(title.string().utf8().data());
 	view->priv->url = strdup(url.string().utf8().data());
+
+	if (view->priv->m_titleChanged)
+		view->priv->m_titleChanged();
 }
 
 String FlFrameLoaderClient::userAgent(const URL &url) {
