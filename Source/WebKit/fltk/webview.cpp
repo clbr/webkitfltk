@@ -325,6 +325,11 @@ int webview::handle(const int e) {
 			PlatformEvent::Type type;
 			unsigned clicks = 0;
 
+			if (Fl::focus() != this && e == FL_PUSH) {
+				Fl::focus(this);
+				handle(FL_FOCUS);
+			}
+
 			if (e == FL_PUSH || e == FL_RELEASE || e == FL_DRAG) {
 				switch (Fl::event_button()) {
 					case FL_LEFT_MOUSE:
