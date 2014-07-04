@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
 
 	// Give everything the chance to cleanup
 	delete win;
+	wk_drop_caches();
 
 	return 0;
 }

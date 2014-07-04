@@ -17,12 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
 
-#include "ApplicationCacheStorage.h"
-#include "Logging.h"
-#include "Page.h"
-#include "PageGroup.h"
-#include "ResourceHandle.h"
-#include "TextEncodingRegistry.h"
+#include <ApplicationCacheStorage.h>
+#include <CrossOriginPreflightResultCache.h>
+#include <FontCache.h>
+#include <GCController.h>
+#include <Logging.h>
+#include <MemoryCache.h>
+#include <Page.h>
+#include <PageCache.h>
+#include <PageGroup.h>
+#include <ResourceHandle.h>
+#include <TextEncodingRegistry.h>
 #include "webkit.h"
 
 #include "platformstrategy.h"
@@ -86,4 +91,29 @@ void wk_set_aboutpage_func(const char * (*func)(const char*)) {
 
 void wk_set_download_func(void (*func)(const char *url, const char *file)) {
 	downloadfunc = func;
+}
+
+void wk_drop_caches() {
+
+	// Turn the cache on and off.  Disabling the object cache will remove all
+	// resources from the cache.  They may still live on if they are referenced
+	// by some Web page though.
+	if (!WebCore::memoryCache()->disabled()) {
+		WebCore::memoryCache()->setDisabled(true);
+		WebCore::memoryCache()->setDisabled(false);
+	}
+
+	WebCore::pageCache()->pruneToCapacityNow(0);
+
+	// Invalidating the font cache and freeing all inactive font data.
+	WebCore::fontCache().invalidate();
+
+	// Empty the Cross-Origin Preflight cache
+	WebCore::CrossOriginPreflightResultCache::shared().empty();
+
+	// Drop JIT compiled code from ExecutableAllocator.
+	WebCore::gcController().discardAllCompiledCode();
+
+	// Run GC
+	WebCore::gcController().garbageCollectNow();
 }

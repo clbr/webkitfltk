@@ -54,6 +54,9 @@ void wk_set_aboutpage_func(const char * (*func)(const char *));
 // Callback for finished downloads
 void wk_set_download_func(void (*func)(const char *url, const char *file));
 
+// Drop RAM caches
+void wk_drop_caches();
+
 } // extern C
 
 #endif
