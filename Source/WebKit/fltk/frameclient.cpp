@@ -536,7 +536,7 @@ PassRefPtr<Frame> FlFrameLoaderClient::createFrame(const URL& url,
 
 	Frame *parent = frame;
 	FlFrameLoaderClient *newl = new FlFrameLoaderClient(view);
-	RefPtr<Frame> kid = Frame::create(view->priv->page, ownerElement, newl).get();
+	RefPtr<Frame> kid = Frame::create(view->priv->page, ownerElement, newl);
 	newl->setFrame(kid.get());
 
 	kid->tree().setName(name);
