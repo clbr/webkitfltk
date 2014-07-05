@@ -37,7 +37,8 @@ public:
 
 	void load(const char *);
 	void loadString(const char * const str, const char * const mime = NULL,
-			const char * const enc = NULL, const char * const baseurl = NULL);
+			const char * const enc = NULL, const char * const baseurl = NULL,
+			const void * const frame = NULL);
 
 	void show() override;
 	void hide() override;

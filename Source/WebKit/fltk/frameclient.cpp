@@ -216,7 +216,7 @@ void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 		return;
 	}
 
-	view->loadString(ptr);
+	view->loadString(ptr, NULL, NULL, NULL, frame);
 	free(ptr);
 	free(instructions);
 }

@@ -214,8 +214,9 @@ void webview::load(const char *url) {
 }
 
 void webview::loadString(const char * const str, const char * const mime,
-				const char * const enc, const char * const baseurl) {
-	MainFrame *f = &priv->page->mainFrame();
+				const char * const enc, const char * const baseurl,
+				const void * const frame) {
+	Frame *f = frame ? (Frame *) frame : &priv->page->mainFrame();
 
 	URL base = baseurl ? URL(URL(), String::fromUTF8(baseurl)) : blankURL();
 	ResourceRequest req(base);
