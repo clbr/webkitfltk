@@ -1311,8 +1311,11 @@ OptionalCursor EventHandler::selectCursor(const HitTestResult& result, bool shif
 #endif
 
     Node* node = result.targetNode();
-    if (!node)
+    if (!node) {
+        if (result.scrollbar())
+            return pointerCursor();
         return NoCursorChange;
+    }
 
     auto renderer = node->renderer();
     RenderStyle* style = renderer ? &renderer->style() : nullptr;
