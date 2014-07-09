@@ -57,6 +57,9 @@ void wk_set_download_func(void (*func)(const char *url, const char *file));
 // Drop RAM caches
 void wk_drop_caches();
 
+// Returns a malloced, url-encoded string
+char *wk_urlencode(const char *in);
+
 } // extern C
 
 #endif

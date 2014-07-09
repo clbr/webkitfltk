@@ -117,3 +117,9 @@ void wk_drop_caches() {
 	// Run GC
 	WebCore::gcController().garbageCollectNow();
 }
+
+char *wk_urlencode(const char *in) {
+
+	String s = encodeWithURLEscapeSequences(in);
+	return strdup(s.utf8().data());
+}
