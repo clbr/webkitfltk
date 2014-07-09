@@ -9,7 +9,6 @@ CXXFLAGS += -DBUILDING_FLTK__
 CXXFLAGS += -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
 CXXFLAGS += $(shell icu-config --cppflags)
 CXXFLAGS += $(shell pkg-config --cflags cairo libxml-2.0 harfbuzz)
-CXXFLAGS += $(shell fltk-config13 --cxxflags)
 
 WEBC = ../../WebCore
 JSC = ../../JavaScriptCore
@@ -97,16 +96,17 @@ CXXFLAGS += -I $(JSC)/ForwardingHeaders \
 
 
 include ../../Makefile.fltk.shared
+CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)
 
 .PHONY: all clean install
 
-NAME = libwebkitfltk.a
+NAME = /tmp/libwebkitfltk.a
 
 LIBS = -lz -pthread -lxslt -lxml2 -ldl -lsqlite3 \
 	-Wl,-Bstatic `icu-config --ldflags` -lharfbuzz -lharfbuzz-icu -Wl,-Bdynamic \
 	-lfreetype -lfontconfig -lcairo \
 	-lpng -ljpeg -lrt -lcurl -lssl -lcrypto -lglib-2.0 \
-	`fltk-config13 --ldflags --use-images` \
+	`$(FLTKCONFIG) --ldflags --use-images` \
 	-static-libgcc -static-libstdc++
 
 all: $(NAME) testapp/testapp

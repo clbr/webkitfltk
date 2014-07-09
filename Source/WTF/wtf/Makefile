@@ -70,8 +70,10 @@ CXXFLAGS += -I dtoa -I threads -I unicode -I .. -I .
 CXXFLAGS += -std=gnu++11
 CXXFLAGS += -DBUILDING_FLTK__
 CXXFLAGS += $(shell icu-config --cppflags)
-CXXFLAGS += $(shell fltk-config13 --cxxflags)
 CXXFLAGS += -fno-rtti -fno-exceptions
+
+include ../../Makefile.fltk.shared
+CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)
 
 .PHONY: all clean
 

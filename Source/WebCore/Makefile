@@ -2545,7 +2545,6 @@ CXXFLAGS += -DBUILDING_FLTK__
 CXXFLAGS += -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
 CXXFLAGS += $(shell icu-config --cppflags)
 CXXFLAGS += $(shell pkg-config --cflags cairo libxml-2.0 harfbuzz)
-CXXFLAGS += $(shell fltk-config13 --cxxflags)
 CXXFLAGS += -I Modules/battery \
 	-I Modules/encryptedmedia \
 	-I Modules/gamepad \
@@ -3263,6 +3262,7 @@ IDLS = Modules/battery/BatteryManager.idl \
     InternalSettingsGenerated.idl
 
 include ../Makefile.fltk.shared
+CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)
 
 InspectorWeb.json: JSAbstractWorker.h
 	$(PYTHON) ../JavaScriptCore/inspector/scripts/generate-combined-inspector-json.py \
