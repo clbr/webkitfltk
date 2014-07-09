@@ -120,6 +120,6 @@ void wk_drop_caches() {
 
 char *wk_urlencode(const char *in) {
 
-	String s = encodeWithURLEscapeSequences(in);
+	String s = encodeWithURLEscapeSequences(String::fromUTF8(in));
 	return strdup(s.utf8().data());
 }
