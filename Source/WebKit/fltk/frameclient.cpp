@@ -226,6 +226,8 @@ void FlFrameLoaderClient::dispatchDidFinishDocumentLoad() {
 
 void FlFrameLoaderClient::dispatchDidFinishLoad() {
 	view->redraw();
+	if (view->priv->loadStateChanged)
+		view->priv->loadStateChanged(view);
 }
 
 Frame* FlFrameLoaderClient::dispatchCreatePage(const NavigationAction&) {
@@ -245,6 +247,9 @@ void FlFrameLoaderClient::dispatchDecidePolicyForResponse(const ResourceResponse
 		return;
 	}
 
+	if (view->priv->loadStateChanged)
+		view->priv->loadStateChanged(view);
+
 	if (canShowMIMEType(resp.mimeType()))
 		policyfunc(PolicyUse);
 	else
@@ -259,6 +264,9 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNewWindowAction(const Navigatio
 void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const NavigationAction&,
 		const ResourceRequest &req,
 		PassRefPtr<FormState>, FramePolicyFunction policyfunc) {
+
+	if (view->priv->loadStateChanged)
+		view->priv->loadStateChanged(view);
 
 	if (req.url().string().startsWith("file://")) {
 
@@ -474,8 +482,8 @@ void FlFrameLoaderClient::setTitle(const StringWithDirection &title, const URL &
 	view->priv->title = strdup(title.string().utf8().data());
 	view->priv->url = strdup(url.string().utf8().data());
 
-	if (view->priv->m_titleChanged)
-		view->priv->m_titleChanged();
+	if (view->priv->titleChanged)
+		view->priv->titleChanged();
 }
 
 String FlFrameLoaderClient::userAgent(const URL &url) {

@@ -72,6 +72,7 @@ public:
 
 	// Callbacks
 	void titleChangedCB(void (*func)());
+	void loadStateChangedCB(void (*func)(webview *));
 
 private:
 	void handlecontextmenu(void *);
