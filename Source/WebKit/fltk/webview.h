@@ -58,6 +58,18 @@ public:
 
 	privatewebview *priv;
 
+	// History
+	void back();
+	void fwd();
+	bool canBack() const;
+	bool canFwd() const;
+	void prev(); // All the way back
+	void next(); // Next page, if any (find the link called "next")
+
+	void stop();
+	void refresh();
+	bool isLoading() const;
+
 	// Callbacks
 	void titleChangedCB(void (*func)());
 

@@ -31,13 +31,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <BackForwardController.h>
 #include <ContextMenuController.h>
 #include <FocusController.h>
 #include <FrameLoadRequest.h>
 #include <FrameSelection.h>
 #include <FrameView.h>
+#include <HTMLAnchorElement.h>
 #include <InspectorController.h>
 #include <MainFrame.h>
+#include <NodeList.h>
 #include <PlatformKeyboardEvent.h>
 #include <Settings.h>
 #include <WidgetBackingStoreCairo.h>
@@ -645,4 +648,84 @@ void webview::resize(int x, int y, int w, int h) {
 
 void webview::titleChangedCB(void (*func)()) {
 	priv->m_titleChanged = func;
+}
+
+void webview::back() {
+	if (!canBack())
+		return;
+	priv->page->backForward().goBackOrForward(-1);
+}
+
+void webview::fwd() {
+	if (!canFwd())
+		return;
+	priv->page->backForward().goBackOrForward(1);
+}
+
+void webview::prev() {
+	if (!canBack())
+		return;
+	const unsigned backpages = priv->page->backForward().backCount();
+	priv->page->backForward().goBackOrForward(-backpages);
+}
+
+void webview::next() {
+	RefPtr<NodeList> links = priv->page->mainFrame().document()->getElementsByTagName("a");
+	unsigned max = links->length();
+	unsigned i, t;
+
+	const char targets[][10] = {
+		"thread",
+		"page"
+	};
+	const unsigned targetcount = sizeof(targets) / sizeof(targets[0]);
+
+	std::vector<HTMLAnchorElement *> candidates;
+	candidates.reserve(100);
+	for (i = 0; i < max; i++) {
+		HTMLAnchorElement * const e = toHTMLAnchorElement(links->item(i));
+		if (!e->isLiveLink())
+			continue;
+
+		const String &text = e->text();
+		if (!text.contains("next", false))
+			continue;
+
+		candidates.push_back(e);
+	}
+
+	max = candidates.size();
+	for (t = 0; t < targetcount; t++) {
+		for (i = 0; i < max; i++) {
+			const String &text = candidates[i]->text();
+			if (text.contains(targets[t], false)) {
+				load(candidates[i]->href().string().utf8().data());
+				return;
+			}
+		}
+	}
+
+	load(candidates[0]->href().string().utf8().data());
+}
+
+void webview::stop() {
+	priv->page->mainFrame().loader().stopAllLoaders();
+}
+
+void webview::refresh() {
+	priv->page->mainFrame().loader().reload();
+}
+
+bool webview::canBack() const {
+	return priv->page->backForward().canGoBackOrForward(-1);
+}
+
+bool webview::canFwd() const {
+	return priv->page->backForward().canGoBackOrForward(1);
+}
+
+bool webview::isLoading() const {
+	const FrameLoader &l = priv->page->mainFrame().loader();
+
+	return l.isLoading() || l.subframeIsLoading();
 }
