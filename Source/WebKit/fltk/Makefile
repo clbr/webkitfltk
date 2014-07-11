@@ -100,6 +100,7 @@ CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)
 
 .PHONY: all clean install
 
+# /tmp tends to be in RAM. When building on a HD, this saves several seconds.
 NAME = /tmp/libwebkitfltk.a
 
 LIBS = -lz -pthread -lxslt -lxml2 -ldl -lsqlite3 \
