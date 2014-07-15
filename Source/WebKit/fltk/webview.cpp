@@ -710,6 +710,9 @@ void webview::next() {
 		}
 	}
 
+	if (candidates.size() == 0)
+		return;
+
 	load(candidates[0]->href().string().utf8().data());
 }
 
