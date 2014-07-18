@@ -764,3 +764,12 @@ void webview::copy() {
 	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
 	focused->editor().command("Copy").execute();
 }
+
+bool webview::find(const char *what, bool caseSensitive, bool forward) {
+	if (!what)
+		return false;
+
+	const FindOptions opts = (caseSensitive ? 0 : CaseInsensitive) |
+				(forward ? 0 : Backwards) | WrapAround;
+	return priv->page->findString(String::fromUTF8(what), opts);
+}
