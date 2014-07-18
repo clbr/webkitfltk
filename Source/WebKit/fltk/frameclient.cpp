@@ -290,11 +290,11 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 			return;
 		}
 		free((char *) path);
-	} else if (req.url().string().startsWith("about://")) {
+	} else if (req.url().string().startsWith("about:")) {
 
 		if (aboutpagefunc) {
 			const char * const page =
-				aboutpagefunc(req.url().string().utf8().data() + 8);
+				aboutpagefunc(req.url().string().utf8().data() + 6);
 			if (page) {
 				view->loadString(page);
 				free((char *) page);
