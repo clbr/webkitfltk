@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define editorclient_h
 
 #include <EditorClient.h>
+#include <wtf/Deque.h>
 #include "webview.h"
 
 class FlEditorClient: public WebCore::EditorClient {
@@ -97,6 +98,10 @@ public:
 
 private:
 	webview *view;
+
+	WTF::Deque<WTF::RefPtr<WebCore::UndoStep> > undoStack;
+	WTF::Deque<WTF::RefPtr<WebCore::UndoStep> > redoStack;
+	bool m_isInRedo;
 };
 
 #endif

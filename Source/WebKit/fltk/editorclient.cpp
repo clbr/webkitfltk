@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace WebCore;
 using namespace WTF;
 
-FlEditorClient::FlEditorClient(webview *inview) {
+FlEditorClient::FlEditorClient(webview *inview): m_isInRedo(false) {
 	view = inview;
 }
 
@@ -157,44 +157,53 @@ void FlEditorClient::getClientPasteboardDataForRange(Range*,
 	notImplemented();
 }
 
-void FlEditorClient::registerUndoStep(PassRefPtr<UndoStep>) {
-	notImplemented();
+void FlEditorClient::registerUndoStep(PassRefPtr<UndoStep> step) {
+	if (!m_isInRedo)
+		redoStack.clear();
+
+	undoStack.prepend(step);
 }
 
-void FlEditorClient::registerRedoStep(PassRefPtr<UndoStep>) {
-	notImplemented();
+void FlEditorClient::registerRedoStep(PassRefPtr<UndoStep> step) {
+	redoStack.prepend(step);
 }
 
 void FlEditorClient::clearUndoRedoOperations() {
-	notImplemented();
+	undoStack.clear();
+	redoStack.clear();
 }
 
 bool FlEditorClient::canCopyCut(Frame*, bool defaultValue) const {
-	notImplemented();
 	return defaultValue;
 }
 
 bool FlEditorClient::canPaste(Frame*, bool defaultValue) const {
-	notImplemented();
 	return defaultValue;
 }
 
 bool FlEditorClient::canUndo() const {
-	notImplemented();
-	return false;
+	return !undoStack.isEmpty();
 }
 
 bool FlEditorClient::canRedo() const {
-	notImplemented();
-	return false;
+	return !redoStack.isEmpty();
 }
 
 void FlEditorClient::undo() {
-	notImplemented();
+	if (canUndo()) {
+		RefPtr<UndoStep> step = undoStack.takeFirst();
+		step->unapply();
+	}
 }
 
 void FlEditorClient::redo() {
-	notImplemented();
+	if (canRedo()) {
+		RefPtr<UndoStep> step = redoStack.takeFirst();
+		ASSERT(!m_isInRedo);
+		m_isInRedo = true;
+		step->reapply();
+		m_isInRedo = false;
+	}
 }
 
 static const unsigned CtrlKey = 1 << 0;
