@@ -44,6 +44,7 @@ const char * (*downloaddirfunc)() = NULL;
 const char * (*aboutpagefunc)(const char *) = NULL;
 void (*downloadfunc)(const char *url, const char *file) = NULL;
 int (*sslfunc)(const char *, const char *) = NULL;
+void (*sslerrfunc)(webview *, const char *) = NULL;
 
 int wheelspeed = 100;
 
@@ -127,6 +128,10 @@ char *wk_urlencode(const char *in) {
 
 void wk_set_ssl_func(int (*func)(const char *, const char *)) {
 	sslfunc = func;
+}
+
+void wk_set_ssl_err_func(void (*func)(webview *, const char *)) {
+	sslerrfunc = func;
 }
 
 // Return 1 if ok, 0 to abort SSL connection

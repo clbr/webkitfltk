@@ -41,6 +41,7 @@ using namespace WTF;
 extern const char * (*uafunc)(const char *);
 extern int (*urlblockfunc)(const char *);
 extern const char * (*aboutpagefunc)(const char*);
+extern void (*sslerrfunc)(webview *, const char *);
 
 FlFrameLoaderClient::FlFrameLoaderClient(webview *inview, Frame *inframe) {
 	view = inview;
@@ -331,8 +332,9 @@ void FlFrameLoaderClient::revertToProvisionalState(DocumentLoader*) {
 	notImplemented();
 }
 
-void FlFrameLoaderClient::setMainDocumentError(DocumentLoader*, const ResourceError&) {
-	notImplemented();
+void FlFrameLoaderClient::setMainDocumentError(DocumentLoader*, const ResourceError &err) {
+	if (err.errorCode() == CURLE_SSL_CACERT && sslerrfunc)
+		sslerrfunc(view, err.domain().utf8().data());
 }
 
 void FlFrameLoaderClient::setMainFrameDocumentReady(bool) {
