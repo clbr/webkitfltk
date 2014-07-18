@@ -373,6 +373,7 @@ PassRefPtr<PopupMenu> FlChromeClient::createPopupMenu(PopupMenuClient *c) const 
 PassRefPtr<SearchPopupMenu>
 	FlChromeClient::createSearchPopupMenu(PopupMenuClient*) const {
 	notImplemented();
+	return NULL;
 }
 
 void FlChromeClient::numWheelEventHandlersChanged(unsigned) {
