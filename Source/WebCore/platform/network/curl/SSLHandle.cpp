@@ -37,7 +37,7 @@
 #include <wtf/ListHashSet.h>
 #include <wtf/text/CString.h>
 
-int fl_check_cert(const String &str);
+int fl_check_cert(const String &str, const String &host);
 
 namespace WebCore {
 
@@ -160,7 +160,7 @@ static int certVerifyCallback(int ok, X509_STORE_CTX* ctx)
     if (!pemData(ctx, certdata))
         return 0;
 
-    return fl_check_cert(certdata);
+    return fl_check_cert(certdata, host);
 }
 
 static CURLcode sslctxfun(CURL* curl, void* sslctx, void* parm)
