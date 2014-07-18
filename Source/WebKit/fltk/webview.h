@@ -76,6 +76,7 @@ public:
 	void selectAll();
 	void copy();
 	void cut();
+	void paste();
 	bool find(const char *what, bool caseSensitive = false, bool forward = true);
 
 	// Callbacks

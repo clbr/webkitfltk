@@ -765,6 +765,11 @@ void webview::copy() {
 	focused->editor().command("Copy").execute();
 }
 
+void webview::paste() {
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	focused->editor().command("Paste").execute();
+}
+
 bool webview::find(const char *what, bool caseSensitive, bool forward) {
 	if (!what)
 		return false;
