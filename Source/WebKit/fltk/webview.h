@@ -78,6 +78,7 @@ public:
 	void cut();
 	void paste();
 	bool find(const char *what, bool caseSensitive = false, bool forward = true);
+	unsigned countFound(const char *what, bool caseSensitive = false);
 
 	// Callbacks
 	void titleChangedCB(void (*func)());

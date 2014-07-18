@@ -778,3 +778,11 @@ bool webview::find(const char *what, bool caseSensitive, bool forward) {
 				(forward ? 0 : Backwards) | WrapAround;
 	return priv->page->findString(String::fromUTF8(what), opts);
 }
+
+unsigned webview::countFound(const char *what, bool caseSensitive) {
+	if (!what)
+		return false;
+
+	const FindOptions opts = caseSensitive ? 0 : CaseInsensitive;
+	return priv->page->countFindMatches(String::fromUTF8(what), opts, UINT_MAX);
+}
