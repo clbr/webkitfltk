@@ -37,6 +37,8 @@
 #include <wtf/ListHashSet.h>
 #include <wtf/text/CString.h>
 
+int fl_check_cert(const String &str);
+
 namespace WebCore {
 
 static unsigned sslCertificateFlag(const unsigned& sslError)
@@ -157,9 +159,8 @@ static int certVerifyCallback(int ok, X509_STORE_CTX* ctx)
     String certdata;
     if (!pemData(ctx, certdata))
         return 0;
-//    FifthFIXME: check if cert is valid
 
-    return 1;
+    return fl_check_cert(certdata);
 }
 
 static CURLcode sslctxfun(CURL* curl, void* sslctx, void* parm)

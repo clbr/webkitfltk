@@ -43,6 +43,7 @@ const char * (*uploaddirfunc)() = NULL;
 const char * (*downloaddirfunc)() = NULL;
 const char * (*aboutpagefunc)(const char *) = NULL;
 void (*downloadfunc)(const char *url, const char *file) = NULL;
+int (*sslfunc)(const char *) = NULL;
 
 int wheelspeed = 100;
 
@@ -122,4 +123,15 @@ char *wk_urlencode(const char *in) {
 
 	String s = encodeWithURLEscapeSequences(String::fromUTF8(in));
 	return strdup(s.utf8().data());
+}
+
+void wk_set_ssl_func(int (*func)(const char *)) {
+	sslfunc = func;
+}
+
+// Return 1 if ok, 0 to abort SSL connection
+int fl_check_cert(const String &str) {
+	if (sslfunc)
+		return sslfunc(str.utf8().data());
+	return 1;
 }
