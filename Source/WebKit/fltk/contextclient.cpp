@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "contextclient.h"
 #include "webviewpriv.h"
 
-#include "NotImplemented.h"
+#include <ContextMenu.h>
+#include <NotImplemented.h>
 
 using namespace WebCore;
 
@@ -62,5 +63,24 @@ void FlContextMenuClient::stopSpeaking() {
 }
 
 PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMenu> menu) {
-	return menu;
+
+	OwnPtr<ContextMenu> m = menu;
+	Vector<ContextMenuItem> newitems;
+
+	unsigned i;
+	for (i = 0; i < m->items().size(); i++) {
+		const ContextMenuItem &cur = m->items()[i];
+
+		switch (cur.action()) {
+			// Remove some unsupported menu items
+			case ContextMenuItemTagSpellingMenu:
+			break;
+			default:
+				newitems.append(cur);
+			break;
+		}
+	}
+
+	m->setItems(newitems);
+	return m.release();
 }
