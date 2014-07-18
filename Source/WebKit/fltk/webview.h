@@ -70,6 +70,13 @@ public:
 	void refresh();
 	bool isLoading() const;
 
+	// Editing
+	void undo();
+	void redo();
+	void selectAll();
+	void copy();
+	void cut();
+
 	// Callbacks
 	void titleChangedCB(void (*func)());
 	void loadStateChangedCB(void (*func)(webview *));

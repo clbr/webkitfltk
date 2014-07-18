@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <BackForwardController.h>
 #include <ContextMenuController.h>
+#include <Editor.h>
 #include <FocusController.h>
 #include <FrameLoadRequest.h>
 #include <FrameSelection.h>
@@ -736,4 +737,30 @@ bool webview::isLoading() const {
 	const FrameLoader &l = priv->page->mainFrame().loader();
 
 	return l.isLoading() || l.subframeIsLoading();
+}
+
+void webview::undo() {
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	focused->editor().command("Undo").execute();
+
+}
+
+void webview::redo() {
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	focused->editor().command("Redo").execute();
+}
+
+void webview::selectAll() {
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	focused->editor().command("SelectAll").execute();
+}
+
+void webview::cut() {
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	focused->editor().command("Cut").execute();
+}
+
+void webview::copy() {
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	focused->editor().command("Copy").execute();
 }
