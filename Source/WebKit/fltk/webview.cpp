@@ -786,3 +786,32 @@ unsigned webview::countFound(const char *what, bool caseSensitive) {
 	const FindOptions opts = caseSensitive ? 0 : CaseInsensitive;
 	return priv->page->countFindMatches(String::fromUTF8(what), opts, UINT_MAX);
 }
+
+void webview::snapshot(const char *where) {
+
+	Frame * const f = &priv->page->mainFrame();
+	const unsigned cw = f->view()->contentsSize().width();
+	const unsigned ch = f->view()->contentsSize().height();
+
+	const unsigned oldw = w();
+	const unsigned oldh = h();
+	// Need to fool windowRect
+	size(cw, ch);
+
+	cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cw, ch);
+	cairo_t *cc = cairo_create(surf);
+	cairo_surface_destroy(surf);
+	GraphicsContext *gc = new GraphicsContext(cc);
+
+	f->view()->updateLayoutAndStyleIfNeededRecursive();
+	f->view()->paint(gc, IntRect(0, 0, cw, ch));
+
+	const cairo_status_t ret = cairo_surface_write_to_png(surf, where);
+	cairo_destroy(cc);
+	delete gc;
+	size(oldw, oldh);
+	if (ret == CAIRO_STATUS_SUCCESS)
+		return;
+
+	fl_alert("%s", cairo_status_to_string(ret));
+}

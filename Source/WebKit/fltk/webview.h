@@ -51,6 +51,8 @@ public:
 	const char *title() const;
 	const char *url() const;
 
+	void snapshot(const char *);
+
 	// Download handling
 	unsigned numDownloads() const;
 	void stopDownload(const unsigned);
