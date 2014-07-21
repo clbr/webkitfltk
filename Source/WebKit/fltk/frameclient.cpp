@@ -90,7 +90,7 @@ void FlFrameLoaderClient::dispatchWillSendRequest(DocumentLoader*, unsigned long
 		ResourceRequest &req, const ResourceResponse& redirectResponse) {
 
 	if (urlblockfunc && urlblockfunc(req.url().string().utf8().data()))
-		req.setURL(URL(URL(), "about:blank"));
+		req.setURL(blankURL());
 }
 
 bool FlFrameLoaderClient::shouldUseCredentialStorage(DocumentLoader*, unsigned long identifier) {
