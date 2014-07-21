@@ -158,7 +158,7 @@ String copyImageUnknownFileLabel()
 #if ENABLE(CONTEXT_MENUS)
 String contextMenuItemTagOpenLinkInNewWindow()
 {
-    return WEB_UI_STRING("Open Link in New Window", "Open in New Window context menu item");
+    return WEB_UI_STRING("Open Link in New Tab", "Open in New Window context menu item");
 }
 
 String contextMenuItemTagDownloadLinkToDisk()
@@ -173,7 +173,7 @@ String contextMenuItemTagCopyLinkToClipboard()
 
 String contextMenuItemTagOpenImageInNewWindow()
 {
-    return WEB_UI_STRING("Open Image in New Window", "Open Image in New Window context menu item");
+    return WEB_UI_STRING("Open Image in New Tab", "Open Image in New Window context menu item");
 }
 
 String contextMenuItemTagDownloadImageToDisk()
@@ -188,7 +188,7 @@ String contextMenuItemTagCopyImageToClipboard()
 
 String contextMenuItemTagOpenFrameInNewWindow()
 {
-    return WEB_UI_STRING("Open Frame in New Window", "Open Frame in New Window context menu item");
+    return WEB_UI_STRING("Open Frame in New Tab", "Open Frame in New Window context menu item");
 }
 
 String contextMenuItemTagCopy()
