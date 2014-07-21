@@ -51,6 +51,8 @@ public:
     int getActiveDownloadCount() const;
     int getPendingDownloadCount() const;
 
+    bool isActive(CURL* curlHandle) const;
+
 private:
     void startThreadIfNeeded();
     void stopThread();

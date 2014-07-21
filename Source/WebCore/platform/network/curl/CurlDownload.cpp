@@ -84,6 +84,16 @@ bool CurlDownloadManager::remove(CURL* curlHandle)
     return true;
 }
 
+bool CurlDownloadManager::isActive(CURL* curlHandle) const {
+    MutexLocker locker(m_mutex);
+
+    int handlePos = m_activeHandleList.find(curlHandle);
+
+    if (handlePos < 0)
+        return false;
+    return true;
+}
+
 int CurlDownloadManager::getActiveDownloadCount() const
 {
     MutexLocker locker(m_mutex);
@@ -245,6 +255,16 @@ CurlDownload::CurlDownload()
 
 CurlDownload::~CurlDownload()
 {
+    if (m_downloadManager.isActive(m_curlHandle))
+        cancel();
+
+    // We have to wait for the download thread to release us.
+    // Otherwise the memory for this object could be freed while
+    // the thread still tries to access it. It has to be done outside
+    // this object's mutex to avoid a deadlock.
+    while (m_downloadManager.isActive(m_curlHandle))
+        usleep(500);
+
     MutexLocker locker(m_mutex);
 
     if (m_url)
