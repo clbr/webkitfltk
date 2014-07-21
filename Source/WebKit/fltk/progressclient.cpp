@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progressclient.h"
 #include "webviewpriv.h"
 
-#include "NotImplemented.h"
+#include <Frame.h>
+#include <NotImplemented.h>
+#include <ProgressTracker.h>
 
 using namespace WebCore;
 
@@ -27,15 +29,24 @@ FlProgressTrackerClient::FlProgressTrackerClient(webview *inview) {
 	view = inview;
 }
 
-void FlProgressTrackerClient::progressStarted(Frame&) {
-	notImplemented();
+void FlProgressTrackerClient::progressTrackerDestroyed() {
+	delete this;
 }
 
-void FlProgressTrackerClient::progressEstimateChanged(Frame&) {
-	notImplemented();
+void FlProgressTrackerClient::progressStarted(Frame &f) {
+	progressEstimateChanged(f);
 }
 
-void FlProgressTrackerClient::progressFinished(Frame&) {
-	notImplemented();
+void FlProgressTrackerClient::progressEstimateChanged(Frame &f) {
+	// Ignore non-main frames.
+	if (&f != (Frame*) &view->priv->page->mainFrame())
+		return;
+
+	const float progress = f.page()->progress().estimatedProgress();
+	if (view->priv->progressChanged)
+		view->priv->progressChanged(view, progress);
+}
+
+void FlProgressTrackerClient::progressFinished(Frame &f) {
 }
 

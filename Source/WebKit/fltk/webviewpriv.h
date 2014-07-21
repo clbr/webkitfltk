@@ -65,6 +65,7 @@ public:
 	// Callbacks
 	void (*titleChanged)();
 	void (*loadStateChanged)(webview *);
+	void (*progressChanged)(webview *, float);
 };
 
 #endif

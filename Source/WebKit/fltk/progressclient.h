@@ -25,6 +25,8 @@ class FlProgressTrackerClient: public WebCore::ProgressTrackerClient {
 public:
 	FlProgressTrackerClient(webview *);
 
+	void progressTrackerDestroyed() override;
+
 	void progressStarted(WebCore::Frame&) override;
 	void progressEstimateChanged(WebCore::Frame&) override;
 	void progressFinished(WebCore::Frame&) override;

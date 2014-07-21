@@ -85,6 +85,7 @@ public:
 	// Callbacks
 	void titleChangedCB(void (*func)());
 	void loadStateChangedCB(void (*func)(webview *));
+	void progressChangedCB(void (*func)(webview *, float));
 
 private:
 	void handlecontextmenu(void *);
