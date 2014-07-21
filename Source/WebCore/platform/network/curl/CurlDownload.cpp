@@ -120,7 +120,7 @@ void CurlDownloadManager::stopThreadIfIdle()
 {
     MutexLocker locker(m_mutex);
 
-    if (!m_activeHandleList.size() && !m_activeHandleList.size())
+    if (!m_activeHandleList.size() && !m_pendingHandleList.size())
         setRunThread(false);
 }
 
