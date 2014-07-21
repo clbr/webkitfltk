@@ -57,6 +57,10 @@ public:
 	unsigned numDownloads() const;
 	void stopDownload(const unsigned);
 	void removeDownload(const unsigned);
+	bool downloadFinished(const unsigned) const;
+	bool downloadFailed(const unsigned) const;
+	void downloadStats(const unsigned, time_t *start, long long *size,
+				long long *received) const;
 
 	privatewebview *priv;
 

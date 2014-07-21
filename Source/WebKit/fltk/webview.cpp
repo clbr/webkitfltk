@@ -632,6 +632,26 @@ void webview::removeDownload(const unsigned i) {
 	priv->downloads.erase(priv->downloads.begin() + i);
 }
 
+bool webview::downloadFinished(const unsigned i) const {
+	if (i >= priv->downloads.size())
+		return false;
+	return priv->downloads[i]->isFinished();
+}
+
+bool webview::downloadFailed(const unsigned i) const {
+	if (i >= priv->downloads.size())
+		return false;
+	return priv->downloads[i]->isFailed();
+}
+
+void webview::downloadStats(const unsigned i, time_t *start, long long *size,
+			long long *received) const {
+	if (i >= priv->downloads.size())
+		return;
+
+	priv->downloads[i]->getStats(start, size, received);
+}
+
 const char *webview::statusbar() const {
 	return priv->statusbartext;
 }
