@@ -251,6 +251,7 @@ CurlDownload::CurlDownload()
 , m_listener(0)
 , m_finished(false)
 {
+    m_response = new ResourceResponse;
 }
 
 CurlDownload::~CurlDownload()
@@ -351,7 +352,7 @@ String CurlDownload::getUrl() const
 ResourceResponse CurlDownload::getResponse() const
 {
     MutexLocker locker(m_mutex);
-    return m_response;
+    return *m_response;
 }
 
 void CurlDownload::closeFile()
@@ -433,27 +434,27 @@ void CurlDownload::didReceiveHeader(const String& header)
         if (httpCode >= 200 && httpCode < 300) {
             const char* url = 0;
             err = curl_easy_getinfo(m_curlHandle, CURLINFO_EFFECTIVE_URL, &url);
-            m_response.setURL(URL(ParsedURLString, url));
+            m_response->setURL(URL(ParsedURLString, url));
 
             long long contentLength = -1;
-            if (!m_response.httpHeaderField("Content-Length").isNull()) {
+            if (!m_response->httpHeaderField("Content-Length").isNull()) {
                 bool success = false;
-                long long parsedContentLength = m_response.httpHeaderField("Content-Length").toInt64(&success);
+                long long parsedContentLength = m_response->httpHeaderField("Content-Length").toInt64(&success);
                 if (success)
                     contentLength = parsedContentLength;
             }
-            m_response.setExpectedContentLength(contentLength); // -1 on parse error or null
+            m_response->setExpectedContentLength(contentLength); // -1 on parse error or null
 
-            m_response.setMimeType(extractMIMETypeFromMediaType(m_response.httpHeaderField("Content-Type")));
-            m_response.setTextEncodingName(extractCharsetFromMediaType(m_response.httpHeaderField("Content-Type")));
-            m_response.setSuggestedFilename(filenameFromHTTPContentDisposition(m_response.httpHeaderField("Content-Disposition")));
+            m_response->setMimeType(extractMIMETypeFromMediaType(m_response->httpHeaderField("Content-Type")));
+            m_response->setTextEncodingName(extractCharsetFromMediaType(m_response->httpHeaderField("Content-Type")));
+            m_response->setSuggestedFilename(filenameFromHTTPContentDisposition(m_response->httpHeaderField("Content-Disposition")));
 
             callOnMainThread(MainThreadTask(receivedResponseCallback, this));
         }
     } else {
         int splitPos = header.find(":");
         if (splitPos != -1)
-            m_response.setHTTPHeaderField(header.left(splitPos), header.substring(splitPos+1).stripWhiteSpace());
+            m_response->setHTTPHeaderField(header.left(splitPos), header.substring(splitPos+1).stripWhiteSpace());
     }
 }
 

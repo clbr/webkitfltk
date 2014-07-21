@@ -138,7 +138,7 @@ private:
     String m_tempPath;
     String m_destination;
     WebCore::PlatformFileHandle m_tempHandle;
-    WebCore::ResourceResponse m_response;
+    WebCore::ResourceResponse *m_response;
     bool m_deletesFileUponFailure;
     mutable Mutex m_mutex;
     CurlDownloadListener *m_listener;
