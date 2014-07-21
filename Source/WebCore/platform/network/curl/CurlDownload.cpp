@@ -415,6 +415,15 @@ void CurlDownload::didReceiveHeader(const String& header)
             err = curl_easy_getinfo(m_curlHandle, CURLINFO_EFFECTIVE_URL, &url);
             m_response.setURL(URL(ParsedURLString, url));
 
+            long long contentLength = -1;
+            if (!m_response.httpHeaderField("Content-Length").isNull()) {
+                bool success = false;
+                long long parsedContentLength = m_response.httpHeaderField("Content-Length").toInt64(&success);
+                if (success)
+                    contentLength = parsedContentLength;
+            }
+            m_response.setExpectedContentLength(contentLength); // -1 on parse error or null
+
             m_response.setMimeType(extractMIMETypeFromMediaType(m_response.httpHeaderField("Content-Type")));
             m_response.setTextEncodingName(extractCharsetFromMediaType(m_response.httpHeaderField("Content-Type")));
             m_response.setSuggestedFilename(filenameFromHTTPContentDisposition(m_response.httpHeaderField("Content-Disposition")));
