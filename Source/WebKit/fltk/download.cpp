@@ -30,6 +30,10 @@ download::download(const char *url, const char *file,
 			const ResourceRequest *req) {
 	this->url = strdup(url);
 	this->file = strdup(file);
+	time = ::time(NULL);
+	received = 0;
+	size = -1;
+	failed = finished = false;
 
 	curl.init(this, URL(ParsedURLString, this->url));
 
@@ -47,22 +51,40 @@ download::~download() {
 }
 
 void download::didReceiveResponse() {
-
+	const ResourceResponse &res = curl.getResponse();
+	size = res.expectedContentLength();
 }
 
 void download::didReceiveDataOfLength(int size) {
 
+	received += size;
 }
 
 void download::didFinish() {
 	if (downloadfunc)
 		downloadfunc(url, file);
+	finished = true;
 }
 
 void download::didFail() {
-
+	failed = true;
 }
 
 void download::stop() {
 	curl.cancel();
+}
+
+bool download::isFailed() const {
+	return failed;
+}
+
+bool download::isFinished() const {
+	return finished;
+}
+
+void download::getStats(time_t *start, long long *size, long long *received) const {
+
+	*start = time;
+	*size = this->size;
+	*received = this->received;
 }

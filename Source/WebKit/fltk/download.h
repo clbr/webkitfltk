@@ -34,9 +34,16 @@ public:
 	void didFinish() override;
 	void didFail() override;
 
+	void getStats(time_t *start, long long *size, long long *received) const;
+	bool isFailed() const;
+	bool isFinished() const;
+
 	const char *url, *file;
 private:
 	WebCore::CurlDownload curl;
+	time_t time;
+	long long size, received;
+	bool failed, finished;
 };
 
 #endif
