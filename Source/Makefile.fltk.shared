@@ -22,3 +22,7 @@ CXXFLAGS += -ffunction-sections -fdata-sections
 CXXFLAGS += -fno-rtti -fno-exceptions
 
 FLTKCONFIG = $(shell which fltk-config13 || which fltk-config)
+
+PERL ?= $(shell which perl)
+PYTHON ?= $(shell which python)
+RUBY ?= $(shell which ruby)
