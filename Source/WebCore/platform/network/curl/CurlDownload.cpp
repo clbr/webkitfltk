@@ -398,7 +398,7 @@ void CurlDownload::addHeaders(const ResourceRequest& request)
     if (request.httpHeaderFields().size() > 0) {
         struct curl_slist* headers = 0;
 
-        HTTPHeaderMap customHeaders = request.httpHeaderFields();
+        const HTTPHeaderMap &customHeaders = request.httpHeaderFields();
         HTTPHeaderMap::const_iterator end = customHeaders.end();
         for (HTTPHeaderMap::const_iterator it = customHeaders.begin(); it != end; ++it) {
             const String& value = it->value;
