@@ -60,7 +60,8 @@ public:
 	bool downloadFinished(const unsigned) const;
 	bool downloadFailed(const unsigned) const;
 	void downloadStats(const unsigned, time_t *start, long long *size,
-				long long *received) const;
+				long long *received,
+				const char **name, const char **url) const;
 
 	privatewebview *priv;
 

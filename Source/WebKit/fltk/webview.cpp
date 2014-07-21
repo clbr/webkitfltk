@@ -645,11 +645,14 @@ bool webview::downloadFailed(const unsigned i) const {
 }
 
 void webview::downloadStats(const unsigned i, time_t *start, long long *size,
-			long long *received) const {
+			long long *received, const char **name,
+			const char **url) const {
 	if (i >= priv->downloads.size())
 		return;
 
 	priv->downloads[i]->getStats(start, size, received);
+	*name = priv->downloads[i]->file;
+	*url = priv->downloads[i]->url;
 }
 
 const char *webview::statusbar() const {
