@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FileChooser.h>
 #include <Frame.h>
 #include <HitTestResult.h>
+#include <NavigationAction.h>
 #include <NotImplemented.h>
 #include <PopupMenuFLTK.h>
 
@@ -35,6 +36,7 @@ using namespace WTF;
 using namespace WebCore;
 
 extern const char * (*uploaddirfunc)();
+extern webview *(*popupfunc)(const char *);
 
 FlChromeClient::FlChromeClient(webview *inview) {
 	view = inview;
@@ -81,11 +83,21 @@ void FlChromeClient::focusedFrameChanged(Frame*) {
 	notImplemented();
 }
 
-Page* FlChromeClient::createWindow(Frame*,
+Page* FlChromeClient::createWindow(Frame *frame,
 		const FrameLoadRequest&, const WindowFeatures&,
-		const NavigationAction&) {
+		const NavigationAction &act) {
 
-	notImplemented();
+#if ENABLE(FULLSCREEN_API)
+	if (frame->document() && frame->document()->webkitCurrentFullScreenElement())
+		frame->document()->webkitCancelFullScreen();
+#endif
+
+	if (popupfunc) {
+		webview *newview = popupfunc(act.url().string().utf8().data());
+		if (newview)
+			return newview->priv->page;
+	}
+
 	return NULL;
 }
 

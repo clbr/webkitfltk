@@ -60,6 +60,9 @@ void wk_set_aboutpage_func(const char * (*func)(const char *));
 // Callback for finished downloads
 void wk_set_download_func(void (*func)(const char *url, const char *file));
 
+// Page requests a popup to this address
+void wk_set_popup_func(webview *(*func)(const char*));
+
 // Drop RAM caches
 void wk_drop_caches();
 

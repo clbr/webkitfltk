@@ -45,6 +45,7 @@ const char * (*aboutpagefunc)(const char *) = NULL;
 void (*downloadfunc)(const char *url, const char *file) = NULL;
 int (*sslfunc)(const char *, const char *) = NULL;
 void (*sslerrfunc)(webview *, const char *) = NULL;
+webview *(*popupfunc)(const char *) = NULL;
 
 int wheelspeed = 100;
 
@@ -139,4 +140,8 @@ int fl_check_cert(const String &str, const String &host) {
 	if (sslfunc)
 		return sslfunc(str.utf8().data(), host.utf8().data());
 	return 1;
+}
+
+void wk_set_popup_func(webview *(*func)(const char*)) {
+	popupfunc = func;
 }

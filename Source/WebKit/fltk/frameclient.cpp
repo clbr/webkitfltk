@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ErrorsFLTK.h>
 #include <MainFrame.h>
 #include <MIMETypeRegistry.h>
+#include <NavigationAction.h>
 #include <NotImplemented.h>
 #include <ResourceError.h>
 #include <ResourceLoader.h>
@@ -42,6 +43,7 @@ extern const char * (*uafunc)(const char *);
 extern int (*urlblockfunc)(const char *);
 extern const char * (*aboutpagefunc)(const char*);
 extern void (*sslerrfunc)(webview *, const char *);
+extern webview *(*popupfunc)(const char *);
 
 FlFrameLoaderClient::FlFrameLoaderClient(webview *inview, Frame *inframe) {
 	view = inview;
@@ -231,7 +233,14 @@ void FlFrameLoaderClient::dispatchDidFinishLoad() {
 		view->priv->loadStateChanged(view);
 }
 
-Frame* FlFrameLoaderClient::dispatchCreatePage(const NavigationAction&) {
+Frame* FlFrameLoaderClient::dispatchCreatePage(const NavigationAction &act) {
+
+	if (popupfunc) {
+		webview *newview = popupfunc(act.url().string().utf8().data());
+		if (newview)
+			return &newview->priv->page->mainFrame();
+	}
+
 	return 0;
 }
 
