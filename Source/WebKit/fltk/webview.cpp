@@ -599,6 +599,7 @@ void webview::download(const char * const url, const char * const suggestedname,
 			c.value());
 		if (ret == 0)
 			return;
+		unlink(c.value());
 	}
 
 	// Perms check
