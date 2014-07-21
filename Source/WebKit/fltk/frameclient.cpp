@@ -143,7 +143,14 @@ void FlFrameLoaderClient::dispatchWillPerformClientRedirect(const URL&, double i
 }
 
 void FlFrameLoaderClient::dispatchDidChangeLocationWithinPage() {
-	notImplemented();
+	if (frame != &view->priv->page->mainFrame())
+		return;
+
+	free((char *) view->priv->url);
+	view->priv->url = strdup(frame->document()->url().string().utf8().data());
+
+	if (view->priv->titleChanged)
+		view->priv->titleChanged();
 }
 
 void FlFrameLoaderClient::dispatchDidPushStateWithinPage() {
@@ -176,7 +183,14 @@ void FlFrameLoaderClient::dispatchDidChangeIcons(IconType) {
 }
 
 void FlFrameLoaderClient::dispatchDidCommitLoad() {
-	notImplemented();
+	if (frame != &view->priv->page->mainFrame())
+		return;
+
+	free((char *) view->priv->url);
+	view->priv->url = strdup(frame->document()->url().string().utf8().data());
+
+	if (view->priv->titleChanged)
+		view->priv->titleChanged();
 }
 
 void FlFrameLoaderClient::dispatchDidFailProvisionalLoad(const ResourceError &error) {
