@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ErrorsFLTK.h>
 #include <MainFrame.h>
 #include <MIMETypeRegistry.h>
+#include <MouseEvent.h>
 #include <NavigationAction.h>
 #include <NotImplemented.h>
 #include <ResourceError.h>
@@ -44,6 +45,7 @@ extern int (*urlblockfunc)(const char *);
 extern const char * (*aboutpagefunc)(const char*);
 extern void (*sslerrfunc)(webview *, const char *);
 extern webview *(*popupfunc)(const char *);
+extern void (*bgtabfunc)(const char*);
 
 FlFrameLoaderClient::FlFrameLoaderClient(webview *inview, Frame *inframe) {
 	view = inview;
@@ -285,7 +287,7 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNewWindowAction(const Navigatio
 	policyfunc(PolicyUse);
 }
 
-void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const NavigationAction&,
+void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const NavigationAction &act,
 		const ResourceRequest &req,
 		PassRefPtr<FormState>, FramePolicyFunction policyfunc) {
 
@@ -327,6 +329,25 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 
 		policyfunc(PolicyIgnore);
 		return;
+	}
+
+	if (act.type() == NavigationTypeLinkClicked &&
+		act.event()->isMouseEvent()) {
+		const MouseEvent * const ev = toMouseEvent(act.event());
+
+		if (ev->button() == 0 && ev->shiftKey() && !ev->ctrlKey() && popupfunc) {
+			popupfunc(act.url().string().utf8().data());
+			policyfunc(PolicyIgnore);
+			return;
+		} else if (ev->button() == 1 && bgtabfunc) {
+			bgtabfunc(act.url().string().utf8().data());
+			policyfunc(PolicyIgnore);
+			return;
+		} else if (ev->button() == 0 && ev->shiftKey() && ev->ctrlKey() && bgtabfunc) {
+			bgtabfunc(act.url().string().utf8().data());
+			policyfunc(PolicyIgnore);
+			return;
+		}
 	}
 
 	policyfunc(PolicyUse);
