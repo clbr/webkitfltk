@@ -47,6 +47,7 @@ int (*sslfunc)(const char *, const char *) = NULL;
 void (*sslerrfunc)(webview *, const char *) = NULL;
 webview *(*popupfunc)(const char *) = NULL;
 void (*downloadrefreshfunc)() = NULL;
+void (*newdownloadfunc)() = NULL;
 
 int wheelspeed = 100;
 
@@ -149,4 +150,8 @@ void wk_set_popup_func(webview *(*func)(const char*)) {
 
 void wk_set_download_refresh_func(void (*func)()) {
 	downloadrefreshfunc = func;
+}
+
+void wk_set_new_download_func(void (*func)()) {
+	newdownloadfunc = func;
 }

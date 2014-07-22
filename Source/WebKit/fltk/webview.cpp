@@ -53,6 +53,7 @@ using namespace WebCore;
 
 extern int wheelspeed;
 extern const char * (*downloaddirfunc)();
+extern void (*newdownloadfunc)();
 
 webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
@@ -614,6 +615,8 @@ void webview::download(const char * const url, const char * const suggestedname,
 
 	// All good.
 	priv->downloads.push_back(new ::download(url, c.value(), req));
+	if (newdownloadfunc)
+		newdownloadfunc();
 }
 
 unsigned webview::numDownloads() const {

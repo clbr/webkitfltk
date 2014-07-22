@@ -63,6 +63,9 @@ void wk_set_download_func(void (*func)(const char *url, const char *file));
 // Callback that some downloads were updated
 void wk_set_download_refresh_func(void (*func)());
 
+// Callback for when a new download has been started
+void wk_set_new_download_func(void (*func)());
+
 // Page requests a popup to this address
 void wk_set_popup_func(webview *(*func)(const char*));
 
