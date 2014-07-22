@@ -48,6 +48,7 @@ void (*sslerrfunc)(webview *, const char *) = NULL;
 webview *(*popupfunc)(const char *) = NULL;
 void (*downloadrefreshfunc)() = NULL;
 void (*newdownloadfunc)() = NULL;
+void (*bgtabfunc)(const char*) = NULL;
 
 int wheelspeed = 100;
 
@@ -154,4 +155,8 @@ void wk_set_download_refresh_func(void (*func)()) {
 
 void wk_set_new_download_func(void (*func)()) {
 	newdownloadfunc = func;
+}
+
+void wk_set_bgtab_func(void (*func)(const char*)) {
+	bgtabfunc = func;
 }

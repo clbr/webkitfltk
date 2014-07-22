@@ -69,6 +69,9 @@ void wk_set_new_download_func(void (*func)());
 // Page requests a popup to this address
 void wk_set_popup_func(webview *(*func)(const char*));
 
+// Please open this address in a background tab
+void wk_set_bgtab_func(void (*func)(const char*));
+
 // Drop RAM caches
 void wk_drop_caches();
 
