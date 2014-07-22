@@ -20,7 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "webviewpriv.h"
 
 #include <ContextMenu.h>
+#include <ContextMenuController.h>
+#include <HitTestResult.h>
 #include <NotImplemented.h>
+
+extern void (*bgtabfunc)(const char*);
 
 using namespace WebCore;
 
@@ -32,8 +36,24 @@ void FlContextMenuClient::contextMenuDestroyed() {
 	delete this;
 }
 
-void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem*, const ContextMenu*) {
-	notImplemented();
+enum {
+	ctxOpenInBGTab = ContextMenuItemBaseApplicationTag + 1,
+};
+
+void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
+	const ContextMenu*) {
+
+	const HitTestResult &hit = view->priv->page->contextMenuController().hitTestResult();
+
+	switch ((unsigned) it->action()) {
+		case ctxOpenInBGTab:
+			if (hit.isLiveLink() && bgtabfunc) {
+				bgtabfunc(hit.absoluteLinkURL().string().utf8().data());
+			}
+		break;
+		default:
+			printf("Unknown action %u\n", it->action());
+	}
 }
 
 void FlContextMenuClient::downloadURL(const URL &url) {
@@ -67,6 +87,8 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 	OwnPtr<ContextMenu> m = menu;
 	Vector<ContextMenuItem> newitems;
 
+	const HitTestResult &hit = view->priv->page->contextMenuController().hitTestResult();
+
 	unsigned i;
 	for (i = 0; i < m->items().size(); i++) {
 		const ContextMenuItem &cur = m->items()[i];
@@ -77,6 +99,16 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 			case ContextMenuItemTagSearchWeb:
 			case ContextMenuItemTagStartSpeaking:
 			case ContextMenuItemTagStopSpeaking:
+			break;
+			case ContextMenuItemTagOpenLinkInNewWindow:
+			{
+				newitems.append(cur);
+				ContextMenuItem c(ActionType,
+						(ContextMenuAction) ctxOpenInBGTab,
+						"Open Link in Background Tab",
+						true, false);
+				newitems.append(c);
+			}
 			break;
 			default:
 				newitems.append(cur);
