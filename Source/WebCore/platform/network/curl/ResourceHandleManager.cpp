@@ -463,7 +463,7 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
     CURL* h = d->m_handle;
     const char* effectiveURL;
     curl_easy_getinfo(h, CURLINFO_EFFECTIVE_URL, &effectiveURL);
-    const URL url(ParsedURLString, effectiveURL);
+    const URL url(URL(), effectiveURL);
 
     if (url.protocol() == "ftp") {
         static bool modeAscii = false;
