@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <NotImplemented.h>
 
 extern void (*bgtabfunc)(const char*);
+extern webview *(*popupfunc)(const char *);
 
 using namespace WebCore;
 
@@ -38,6 +39,7 @@ void FlContextMenuClient::contextMenuDestroyed() {
 
 enum {
 	ctxOpenInBGTab = ContextMenuItemBaseApplicationTag + 1,
+	ctxTineye,
 };
 
 void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
@@ -49,6 +51,18 @@ void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
 		case ctxOpenInBGTab:
 			if (hit.isLiveLink() && bgtabfunc) {
 				bgtabfunc(hit.absoluteLinkURL().string().utf8().data());
+			}
+		break;
+		case ctxTineye:
+			if (!hit.absoluteImageURL().isEmpty() &&
+				!hit.absoluteImageURL().protocol().contains("file") &&
+				popupfunc) {
+				char tmp[1024];
+				const String enc = encodeWithURLEscapeSequences(hit.absoluteImageURL().string());
+				snprintf(tmp, 1024, "http://www.tineye.com"
+					"/search/?url=%s", enc.ascii().data());
+
+				popupfunc(tmp);
 			}
 		break;
 		default:
@@ -114,6 +128,15 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 				newitems.append(cur);
 			break;
 		}
+	}
+
+	if (!hit.absoluteImageURL().isEmpty() &&
+		!hit.absoluteImageURL().protocol().contains("file")) {
+		ContextMenuItem c(ActionType,
+				(ContextMenuAction) ctxTineye,
+				"Reverse Search Image on TinEye",
+				true, false);
+		newitems.append(c);
 	}
 
 	m->setItems(newitems);
