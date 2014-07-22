@@ -65,9 +65,13 @@ void download::didReceiveDataOfLength(int size) {
 }
 
 void download::didFinish() {
+
+	finished = true;
+
 	if (downloadfunc)
 		downloadfunc(url, file);
-	finished = true;
+	if (downloadrefreshfunc)
+		downloadrefreshfunc();
 }
 
 void download::didFail() {
@@ -76,6 +80,10 @@ void download::didFail() {
 
 void download::stop() {
 	curl.cancel();
+	failed = true;
+
+	if (downloadrefreshfunc)
+		downloadrefreshfunc();
 }
 
 bool download::isFailed() const {
