@@ -74,6 +74,9 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 		switch (cur.action()) {
 			// Remove some unsupported menu items
 			case ContextMenuItemTagSpellingMenu:
+			case ContextMenuItemTagSearchWeb:
+			case ContextMenuItemTagStartSpeaking:
+			case ContextMenuItemTagStopSpeaking:
 			break;
 			default:
 				newitems.append(cur);
