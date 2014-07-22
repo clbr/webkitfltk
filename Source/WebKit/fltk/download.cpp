@@ -25,6 +25,7 @@ using namespace WTF;
 using namespace WebCore;
 
 extern void (*downloadfunc)(const char *url, const char *file);
+extern void (*downloadrefreshfunc)();
 
 download::download(const char *url, const char *file,
 			const ResourceRequest *req) {
@@ -58,6 +59,9 @@ void download::didReceiveResponse() {
 void download::didReceiveDataOfLength(int size) {
 
 	received += size;
+
+	if (downloadrefreshfunc)
+		downloadrefreshfunc();
 }
 
 void download::didFinish() {
