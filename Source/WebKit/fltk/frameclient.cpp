@@ -171,7 +171,8 @@ void FlFrameLoaderClient::dispatchWillClose() {
 }
 
 void FlFrameLoaderClient::dispatchDidReceiveIcon() {
-	notImplemented();
+	if (view->priv->faviconChanged)
+		view->priv->faviconChanged(view);
 }
 
 void FlFrameLoaderClient::dispatchDidStartProvisionalLoad() {
