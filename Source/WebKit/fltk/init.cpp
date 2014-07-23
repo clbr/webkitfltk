@@ -36,6 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <runtime/InitializeThreading.h>
 #include <wtf/MainThread.h>
 
+#include <cairo.h>
+
 using namespace WebCore;
 
 const char * (*uafunc)(const char *) = NULL;
@@ -173,4 +175,51 @@ void wk_set_favicon_dir(const char *dir) {
 
 	iconDatabase().setEnabled(true);
 	iconDatabase().open(String::fromUTF8(dir), IconDatabase::defaultDatabaseFilename());
+}
+
+Fl_RGB_Image *wk_get_favicon(const char *url) {
+
+	if (!url)
+		return NULL;
+
+	const URL parsed(URL(), String::fromUTF8(url));
+	cairo_surface_t *surf =
+		iconDatabase().synchronousNativeIconForPageURL(parsed.string(), IntSize(16, 16)).get();
+	if (!surf)
+		return NULL;
+
+	const cairo_surface_type_t type = cairo_surface_get_type(surf);
+	if (type != CAIRO_SURFACE_TYPE_IMAGE) {
+		printf("Surface type not image (%u)\n", type);
+		return NULL;
+	}
+
+	const cairo_format_t format = cairo_image_surface_get_format(surf);
+	if (format != CAIRO_FORMAT_ARGB32 && format != CAIRO_FORMAT_RGB24) {
+		printf("Unknown format %u\n", format);
+		return NULL;
+	}
+
+	const int w = cairo_image_surface_get_width(surf);
+	const int h = cairo_image_surface_get_height(surf);
+	const int s = cairo_image_surface_get_stride(surf);
+	if (w <= 0 || h <= 0 || s <= 0) {
+		printf("Invalid icon %dx%d stride %d\n", w, h, s);
+		return NULL;
+	}
+
+	unsigned char *data = cairo_image_surface_get_data(surf);
+	if (!data)
+		return NULL;
+	int depth = 3;
+	if (format == CAIRO_FORMAT_ARGB32)
+		depth = 4;
+
+	int ld = 0;
+	if (s != depth * w)
+		ld = s - depth * w;
+
+	Fl_RGB_Image *pic = new Fl_RGB_Image(data, w, h, depth, ld);
+
+	return pic;
 }
