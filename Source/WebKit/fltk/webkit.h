@@ -81,7 +81,7 @@ char *wk_urlencode(const char *in);
 
 // Favicons
 void wk_set_favicon_dir(const char *dir);
-Fl_RGB_Image *wk_get_favicon(const char *url);
+Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize = 16);
 
 } // extern C
 

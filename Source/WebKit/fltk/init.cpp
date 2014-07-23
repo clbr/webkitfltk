@@ -177,14 +177,15 @@ void wk_set_favicon_dir(const char *dir) {
 	iconDatabase().open(String::fromUTF8(dir), IconDatabase::defaultDatabaseFilename());
 }
 
-Fl_RGB_Image *wk_get_favicon(const char *url) {
+Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize) {
 
 	if (!url)
 		return NULL;
 
 	const URL parsed(URL(), String::fromUTF8(url));
 	cairo_surface_t *surf =
-		iconDatabase().synchronousNativeIconForPageURL(parsed.string(), IntSize(16, 16)).get();
+		iconDatabase().synchronousNativeIconForPageURL(parsed.string(),
+						IntSize(targetsize, targetsize)).get();
 	if (!surf)
 		return NULL;
 
