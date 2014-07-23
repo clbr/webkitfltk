@@ -26,3 +26,13 @@ FLTKCONFIG = $(shell which fltk-config13 || which fltk-config)
 PERL ?= $(shell which perl)
 PYTHON ?= $(shell which python)
 RUBY ?= $(shell which ruby)
+
+ifeq ($(PERL),)
+  $(error Perl not found, set the PERL var if it's not in path)
+endif
+ifeq ($(PYTHON),)
+  $(error Python not found, set the PYTHON var if it's not in path)
+endif
+ifeq ($(RUBY),)
+  $(error Ruby not found, set the RUBY var if it's not in path)
+endif
