@@ -765,4 +765,27 @@ bool BitmapImage::canAnimate()
     return shouldAnimate() && frameCount() > 1;
 }
 
+void BitmapImage::setClosestSizeFrame(const IntSize &size)
+{
+    if (frameCount() > 1) {
+        unsigned best = 0, bestDistance = 1000000, i;
+        const unsigned max = frameCount();
+        for (i = 0; i < max; i++) {
+            const IntSize &check = m_source.frameSizeAtIndex(i);
+            int xdist = check.width() - size.width();
+            xdist *= xdist;
+
+            int ydist = check.height() - size.height();
+            ydist *= ydist;
+
+            if (xdist + ydist < bestDistance) {
+                best = i;
+                bestDistance = xdist + ydist;
+            }
+        }
+
+        m_currentFrame = best;
+    }
+}
+
 }

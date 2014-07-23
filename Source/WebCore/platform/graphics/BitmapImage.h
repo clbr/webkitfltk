@@ -194,6 +194,8 @@ public:
     
     bool canAnimate();
 
+    void setClosestSizeFrame(const IntSize &);
+
 private:
     void updateSize(ImageOrientationDescription = ImageOrientationDescription()) const;
 

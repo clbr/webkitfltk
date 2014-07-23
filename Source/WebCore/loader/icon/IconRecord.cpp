@@ -53,12 +53,15 @@ IconRecord::~IconRecord()
     LOG(IconDatabase, "Destroying IconRecord for icon url %s", m_iconURL.ascii().data());
 }
 
-Image* IconRecord::image(const IntSize&)
+Image* IconRecord::image(const IntSize &size)
 {
     // FIXME rdar://4680377 - For size right now, we are returning our one and only image and the Bridge
     // is resizing it in place.  We need to actually store all the original representations here and return a native
     // one, or resize the best one to the requested size and cache that result.
-    
+
+    // Get the closest-sized ICO frame.
+    ((BitmapImage *) m_image.get())->setClosestSizeFrame(size);
+
     return m_image.get();
 }
 
