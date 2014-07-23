@@ -76,6 +76,9 @@ void wk_set_bgtab_func(void (*func)(const char*));
 // Drop RAM caches
 void wk_drop_caches();
 
+// Cleanup on exit. Calls drop_caches.
+void wk_exit();
+
 // Returns a malloced, url-encoded string
 char *wk_urlencode(const char *in);
 

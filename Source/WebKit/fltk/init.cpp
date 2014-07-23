@@ -240,3 +240,8 @@ Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize) {
 
 	return pic;
 }
+
+void wk_exit() {
+	iconDatabase().close();
+	wk_drop_caches();
+}
