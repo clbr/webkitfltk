@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <CrossOriginPreflightResultCache.h>
 #include <FontCache.h>
 #include <GCController.h>
+#include <IconDatabase.h>
 #include <Logging.h>
 #include <MemoryCache.h>
 #include <Page.h>
@@ -159,4 +160,17 @@ void wk_set_new_download_func(void (*func)()) {
 
 void wk_set_bgtab_func(void (*func)(const char*)) {
 	bgtabfunc = func;
+}
+
+void wk_set_favicon_dir(const char *dir) {
+	if (!dir)
+		return;
+
+	if (iconDatabase().isEnabled()) {
+		printf("Tried to open favicon db twice\n");
+		return;
+	}
+
+	iconDatabase().setEnabled(true);
+	iconDatabase().open(String::fromUTF8(dir), IconDatabase::defaultDatabaseFilename());
 }

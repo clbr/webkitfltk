@@ -78,6 +78,9 @@ void wk_drop_caches();
 // Returns a malloced, url-encoded string
 char *wk_urlencode(const char *in);
 
+// Favicons
+void wk_set_favicon_dir(const char *dir);
+
 } // extern C
 
 #endif
