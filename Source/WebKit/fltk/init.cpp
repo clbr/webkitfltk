@@ -219,6 +219,17 @@ Fl_RGB_Image *wk_get_favicon(const char *url) {
 	if (s != depth * w)
 		ld = s - depth * w;
 
+	// FLTK 1.3 does not support BGRA data. Convert it to RGBA.
+	// TODO: this only handles little endian.
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			unsigned char * const px = &data[y * s + x * depth];
+			unsigned char tmp = px[0];
+			px[0] = px[2];
+			px[2] = tmp;
+		}
+	}
+
 	Fl_RGB_Image *pic = new Fl_RGB_Image(data, w, h, depth, ld);
 
 	return pic;
