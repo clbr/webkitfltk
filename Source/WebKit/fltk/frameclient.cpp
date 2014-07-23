@@ -319,6 +319,11 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 		free((char *) path);
 	} else if (req.url().string().startsWith("about:")) {
 
+		if (req.url().string() == "about:blank") {
+			policyfunc(PolicyUse);
+			return;
+		}
+
 		if (aboutpagefunc) {
 			const char * const page =
 				aboutpagefunc(req.url().string().utf8().data() + 6);
