@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_RGB_Image.H>
+#include <vector>
 
 #include "webview.h"
 
@@ -83,7 +84,7 @@ void wk_exit();
 char *wk_urlencode(const char *in);
 
 // Favicons
-void wk_set_favicon_dir(const char *dir);
+void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads = NULL);
 Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize = 16);
 
 } // extern C

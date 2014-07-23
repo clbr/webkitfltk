@@ -164,7 +164,7 @@ void wk_set_bgtab_func(void (*func)(const char*)) {
 	bgtabfunc = func;
 }
 
-void wk_set_favicon_dir(const char *dir) {
+void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads) {
 	if (!dir)
 		return;
 
@@ -174,6 +174,16 @@ void wk_set_favicon_dir(const char *dir) {
 	}
 
 	iconDatabase().setEnabled(true);
+
+	if (preloads && preloads->size()) {
+		unsigned i;
+		const unsigned max = preloads->size();
+		for (i = 0; i < max; i++) {
+			iconDatabase().retainIconForPageURL(String::fromUTF8((*preloads)[i]));
+		}
+		iconDatabase().retainedPageURLCount();
+	}
+
 	iconDatabase().open(String::fromUTF8(dir), IconDatabase::defaultDatabaseFilename());
 }
 
