@@ -24,38 +24,52 @@
  */
 
 #include "config.h"
-#include "PutByIdVariant.h"
+#include "ConstantStructureCheck.h"
 
-#include <wtf/ListDump.h>
+#include "JSCInlines.h"
 
 namespace JSC {
 
-void PutByIdVariant::dump(PrintStream& out) const
+void ConstantStructureCheck::dumpInContext(PrintStream& out, DumpContext* context) const
 {
-    dumpInContext(out, 0);
+    out.print(
+        "(Check if ", inContext(JSValue(m_constant), context), " has structure ",
+        pointerDumpInContext(m_structure, context), ")");
 }
 
-void PutByIdVariant::dumpInContext(PrintStream& out, DumpContext* context) const
+void ConstantStructureCheck::dump(PrintStream& out) const
 {
-    switch (kind()) {
-    case NotSet:
-        out.print("<empty>");
-        return;
-        
-    case Replace:
-        out.print(
-            "<Replace: ", pointerDumpInContext(structure(), context), ", ", offset(), ">");
-        return;
-        
-    case Transition:
-        out.print(
-            "<Transition: ", pointerDumpInContext(oldStructure(), context), " -> ",
-            pointerDumpInContext(newStructure(), context), ", [",
-            listDumpInContext(constantChecks(), context), "], ", offset(), ">");
-        return;
+    dumpInContext(out, nullptr);
+}
+
+Structure* structureFor(const ConstantStructureCheckVector& vector, JSCell* constant)
+{
+    for (unsigned i = vector.size(); i--;) {
+        if (vector[i].constant() == constant)
+            return vector[i].structure();
     }
-    
-    RELEASE_ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
+bool areCompatible(const ConstantStructureCheckVector& a, const ConstantStructureCheckVector& b)
+{
+    for (unsigned i = a.size(); i--;) {
+        Structure* otherStructure = structureFor(b, a[i].constant());
+        if (!otherStructure)
+            continue;
+        if (a[i].structure() != otherStructure)
+            return false;
+    }
+    return true;
+}
+
+void mergeInto(const ConstantStructureCheckVector& source, ConstantStructureCheckVector& target)
+{
+    for (unsigned i = source.size(); i--;) {
+        if (structureFor(target, source[i].constant()))
+            continue;
+        target.append(source[i]);
+    }
 }
 
 } // namespace JSC

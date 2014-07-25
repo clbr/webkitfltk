@@ -23,40 +23,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "PutByIdVariant.h"
+#ifndef ConstantStructureCheck_h
+#define ConstantStructureCheck_h
 
-#include <wtf/ListDump.h>
+#include "DumpContext.h"
+#include "JSCell.h"
+#include "Structure.h"
+#include <wtf/PrintStream.h>
+#include <wtf/Vector.h>
 
 namespace JSC {
 
-void PutByIdVariant::dump(PrintStream& out) const
-{
-    dumpInContext(out, 0);
-}
-
-void PutByIdVariant::dumpInContext(PrintStream& out, DumpContext* context) const
-{
-    switch (kind()) {
-    case NotSet:
-        out.print("<empty>");
-        return;
-        
-    case Replace:
-        out.print(
-            "<Replace: ", pointerDumpInContext(structure(), context), ", ", offset(), ">");
-        return;
-        
-    case Transition:
-        out.print(
-            "<Transition: ", pointerDumpInContext(oldStructure(), context), " -> ",
-            pointerDumpInContext(newStructure(), context), ", [",
-            listDumpInContext(constantChecks(), context), "], ", offset(), ">");
-        return;
+class ConstantStructureCheck {
+public:
+    ConstantStructureCheck()
+        : m_constant(nullptr)
+        , m_structure(nullptr)
+    {
     }
     
-    RELEASE_ASSERT_NOT_REACHED();
-}
+    ConstantStructureCheck(JSCell* constant, Structure* structure)
+        : m_constant(constant)
+        , m_structure(structure)
+    {
+        ASSERT(!!m_constant == !!m_structure);
+    }
+    
+    bool operator!() const { return !m_constant; }
+    
+    JSCell* constant() const { return m_constant; }
+    Structure* structure() const { return m_structure; }
+    
+    void dumpInContext(PrintStream&, DumpContext*) const;
+    void dump(PrintStream&) const;
+    
+private:
+    JSCell* m_constant;
+    Structure* m_structure;
+};
+
+typedef Vector<ConstantStructureCheck, 2> ConstantStructureCheckVector;
+
+Structure* structureFor(const ConstantStructureCheckVector& vector, JSCell* constant);
+bool areCompatible(const ConstantStructureCheckVector&, const ConstantStructureCheckVector&);
+void mergeInto(const ConstantStructureCheckVector& source, ConstantStructureCheckVector& target);
 
 } // namespace JSC
+
+#endif // ConstantStructureCheck_h
 

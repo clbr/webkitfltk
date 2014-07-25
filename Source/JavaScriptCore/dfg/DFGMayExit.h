@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,26 +23,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGCSEPhase_h
-#define DFGCSEPhase_h
+#ifndef DFGMayExit_h
+#define DFGMayExit_h
 
 #if ENABLE(DFG_JIT)
-
-#include "DFGCommon.h"
 
 namespace JSC { namespace DFG {
 
 class Graph;
+struct Node;
 
-// Block-local common subexpression elimination. This is an optional phase, but
-// it is rather profitable. It has fairly accurate heap modeling and will match
-// a wide range of subexpression similarities. It's known to produce big wins
-// on a few benchmarks, and is relatively cheap to run.
-bool performCSE(Graph&);
+// A *very* conservative approximation of whether or not a node could possibly exit. Usually
+// returns true except in cases where we obviously don't expect an exit.
+
+bool mayExit(Graph&, Node*);
 
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
 
-#endif // DFGCSEPhase_h
+#endif // DFGMayExit_h
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,26 +23,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGCSEPhase_h
-#define DFGCSEPhase_h
+#include "config.h"
+#include "DFGFrozenValue.h"
 
 #if ENABLE(DFG_JIT)
 
-#include "DFGCommon.h"
+#include "JSCInlines.h"
 
 namespace JSC { namespace DFG {
 
-class Graph;
+FrozenValue* FrozenValue::emptySingleton()
+{
+    static FrozenValue empty;
+    return &empty;
+}
 
-// Block-local common subexpression elimination. This is an optional phase, but
-// it is rather profitable. It has fairly accurate heap modeling and will match
-// a wide range of subexpression similarities. It's known to produce big wins
-// on a few benchmarks, and is relatively cheap to run.
-bool performCSE(Graph&);
+void FrozenValue::dumpInContext(PrintStream& out, DumpContext* context) const
+{
+    if (!!m_value && m_value.isCell())
+        out.print(m_strength, ":");
+    m_value.dumpInContextAssumingStructure(out, context, m_structure);
+}
+
+void FrozenValue::dump(PrintStream& out) const
+{
+    dumpInContext(out, 0);
+}
 
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGCSEPhase_h
-
