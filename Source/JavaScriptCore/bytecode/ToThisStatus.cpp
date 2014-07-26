@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,41 +24,49 @@
  */
 
 #include "config.h"
-#include "ArrayBufferNeuteringWatchpoint.h"
-
-#include "JSCInlines.h"
+#include "ToThisStatus.h"
 
 namespace JSC {
 
-const ClassInfo ArrayBufferNeuteringWatchpoint::s_info = {
-    "ArrayBufferNeuteringWatchpoint", 0, 0, 0,
-    CREATE_METHOD_TABLE(ArrayBufferNeuteringWatchpoint)
-};
-
-ArrayBufferNeuteringWatchpoint::ArrayBufferNeuteringWatchpoint(VM& vm)
-    : Base(vm, vm.arrayBufferNeuteringWatchpointStructure.get())
-    , m_set(adoptRef(new WatchpointSet(IsWatched)))
+ToThisStatus merge(ToThisStatus a, ToThisStatus b)
 {
-}
-
-void ArrayBufferNeuteringWatchpoint::destroy(JSCell* cell)
-{
-    static_cast<ArrayBufferNeuteringWatchpoint*>(cell)->ArrayBufferNeuteringWatchpoint::~ArrayBufferNeuteringWatchpoint();
-}
-
-ArrayBufferNeuteringWatchpoint* ArrayBufferNeuteringWatchpoint::create(VM& vm)
-{
-    ArrayBufferNeuteringWatchpoint* result = new
-        (NotNull, allocateCell<ArrayBufferNeuteringWatchpoint>(vm.heap))
-        ArrayBufferNeuteringWatchpoint(vm);
-    result->finishCreation(vm);
-    return result;
-}
-
-Structure* ArrayBufferNeuteringWatchpoint::createStructure(VM& vm)
-{
-    return Structure::create(vm, 0, jsNull(), TypeInfo(CellType, StructureFlags), info());
+    switch (a) {
+    case ToThisOK:
+        return b;
+    case ToThisConflicted:
+        return ToThisConflicted;
+    case ToThisClearedByGC:
+        if (b == ToThisConflicted)
+            return ToThisConflicted;
+        return ToThisClearedByGC;
+    }
+    
+    RELEASE_ASSERT_NOT_REACHED();
+    return ToThisConflicted;
 }
 
 } // namespace JSC
+
+namespace WTF {
+
+using namespace JSC;
+
+void printInternal(PrintStream& out, ToThisStatus status)
+{
+    switch (status) {
+    case ToThisOK:
+        out.print("OK");
+        return;
+    case ToThisConflicted:
+        out.print("Conflicted");
+        return;
+    case ToThisClearedByGC:
+        out.print("ClearedByGC");
+        return;
+    }
+    
+    RELEASE_ASSERT_NOT_REACHED();
+}
+
+} // namespace WTF
 

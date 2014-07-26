@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,42 +23,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "ArrayBufferNeuteringWatchpoint.h"
+#ifndef ToThisStatus_h
+#define ToThisStatus_h
 
-#include "JSCInlines.h"
+#include <wtf/PrintStream.h>
 
 namespace JSC {
 
-const ClassInfo ArrayBufferNeuteringWatchpoint::s_info = {
-    "ArrayBufferNeuteringWatchpoint", 0, 0, 0,
-    CREATE_METHOD_TABLE(ArrayBufferNeuteringWatchpoint)
+enum ToThisStatus {
+    ToThisOK,
+    ToThisConflicted,
+    ToThisClearedByGC
 };
 
-ArrayBufferNeuteringWatchpoint::ArrayBufferNeuteringWatchpoint(VM& vm)
-    : Base(vm, vm.arrayBufferNeuteringWatchpointStructure.get())
-    , m_set(adoptRef(new WatchpointSet(IsWatched)))
-{
-}
-
-void ArrayBufferNeuteringWatchpoint::destroy(JSCell* cell)
-{
-    static_cast<ArrayBufferNeuteringWatchpoint*>(cell)->ArrayBufferNeuteringWatchpoint::~ArrayBufferNeuteringWatchpoint();
-}
-
-ArrayBufferNeuteringWatchpoint* ArrayBufferNeuteringWatchpoint::create(VM& vm)
-{
-    ArrayBufferNeuteringWatchpoint* result = new
-        (NotNull, allocateCell<ArrayBufferNeuteringWatchpoint>(vm.heap))
-        ArrayBufferNeuteringWatchpoint(vm);
-    result->finishCreation(vm);
-    return result;
-}
-
-Structure* ArrayBufferNeuteringWatchpoint::createStructure(VM& vm)
-{
-    return Structure::create(vm, 0, jsNull(), TypeInfo(CellType, StructureFlags), info());
-}
+ToThisStatus merge(ToThisStatus, ToThisStatus);
 
 } // namespace JSC
+
+namespace WTF {
+
+void printInternal(PrintStream&, JSC::ToThisStatus);
+
+} // namespace WTF
+
+#endif // ToThisStatus_h
 
