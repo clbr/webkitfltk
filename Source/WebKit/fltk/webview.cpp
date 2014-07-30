@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <HTMLAnchorElement.h>
 #include <InspectorController.h>
 #include <MainFrame.h>
+#include <markup.h>
 #include <NodeList.h>
 #include <PlatformKeyboardEvent.h>
 #include <Settings.h>
@@ -857,4 +858,17 @@ void webview::snapshot(const char *where) {
 		return;
 
 	fl_alert("%s", cairo_status_to_string(ret));
+}
+
+char *webview::focusedSource() const {
+
+	Frame * const focused = &priv->page->focusController().focusedOrMainFrame();
+	if (!focused->document() || !focused->document()->isHTMLDocument())
+		return NULL;
+
+	if (focused->view() && focused->view()->layoutPending())
+		focused->view()->layout();
+
+	const String src = createMarkup(*focused->document());
+	return strdup(src.utf8().data());
 }

@@ -53,6 +53,9 @@ public:
 
 	void snapshot(const char *);
 
+	// Return the malloced source code of the focused frame
+	char *focusedSource() const;
+
 	// Download handling
 	unsigned numDownloads() const;
 	void stopDownload(const unsigned);
