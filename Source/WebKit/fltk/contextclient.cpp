@@ -40,12 +40,14 @@ void FlContextMenuClient::contextMenuDestroyed() {
 enum {
 	ctxOpenInBGTab = ContextMenuItemBaseApplicationTag + 1,
 	ctxTineye,
+	ctxViewSource,
 };
 
 void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
 	const ContextMenu*) {
 
 	const HitTestResult &hit = view->priv->page->contextMenuController().hitTestResult();
+	Frame* frame = hit.innerNonSharedNode()->document().frame();
 
 	switch ((unsigned) it->action()) {
 		case ctxOpenInBGTab:
@@ -63,6 +65,16 @@ void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
 					"/search/?url=%s", enc.ascii().data());
 
 				popupfunc(tmp);
+			}
+		break;
+		case ctxViewSource:
+			if (frame) {
+				char *src = view->focusedSource();
+				if (src) {
+					webview *newview = popupfunc("about:blank");
+					newview->loadString(src, "text/plain");
+					free(src);
+				}
 			}
 		break;
 		default:
@@ -120,6 +132,16 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 				ContextMenuItem c(ActionType,
 						(ContextMenuAction) ctxOpenInBGTab,
 						"Open Link in Background Tab",
+						true, false);
+				newitems.append(c);
+			}
+			break;
+			case ContextMenuItemTagReload:
+			{
+				newitems.append(cur);
+				ContextMenuItem c(ActionType,
+						(ContextMenuAction) ctxViewSource,
+						"View frame source",
 						true, false);
 				newitems.append(c);
 			}
