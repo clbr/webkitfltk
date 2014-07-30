@@ -211,6 +211,9 @@ void FlChromeClient::setStatusbarText(const String &s) {
 	view->priv->statusbartext = NULL;
 
 	view->priv->statusbartext = strdup(s.utf8().data());
+
+	if (view->priv->statusChanged)
+		view->priv->statusChanged(view);
 }
 
 bool FlChromeClient::shouldInterruptJavaScript() {

@@ -67,6 +67,7 @@ public:
 	void (*loadStateChanged)(webview *);
 	void (*progressChanged)(webview *, float);
 	void (*faviconChanged)(webview *);
+	void (*statusChanged)(webview *);
 };
 
 #endif

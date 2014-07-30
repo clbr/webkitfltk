@@ -68,6 +68,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv->loadStateChanged = NULL;
 	priv->progressChanged = NULL;
 	priv->faviconChanged = NULL;
+	priv->statusChanged = NULL;
 
 	Fl_Widget *wid = this;
 	while (wid->parent())
@@ -692,6 +693,10 @@ void webview::progressChangedCB(void (*func)(webview *, float)) {
 
 void webview::faviconChangedCB(void (*func)(webview *)) {
 	priv->faviconChanged = func;
+}
+
+void webview::statusChangedCB(void (*func)(webview *)) {
+	priv->statusChanged = func;
 }
 
 void webview::back() {

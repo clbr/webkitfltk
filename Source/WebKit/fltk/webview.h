@@ -92,6 +92,7 @@ public:
 	void loadStateChangedCB(void (*func)(webview *));
 	void progressChangedCB(void (*func)(webview *, float));
 	void faviconChangedCB(void (*func)(webview *));
+	void statusChangedCB(void (*func)(webview *));
 
 private:
 	void handlecontextmenu(void *);
