@@ -355,11 +355,11 @@ void FlEditorClient::handleInputMethodKeydown(KeyboardEvent*) {
 }
 
 void FlEditorClient::textFieldDidBeginEditing(Element*) {
-	notImplemented();
+	view->priv->editing = true;
 }
 
 void FlEditorClient::textFieldDidEndEditing(Element*) {
-	notImplemented();
+	view->priv->editing = false;
 }
 
 void FlEditorClient::textDidChangeInTextField(Element*) {
