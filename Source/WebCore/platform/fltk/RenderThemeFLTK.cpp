@@ -133,6 +133,11 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	cairo_t* cairo = info.context->platformContext()->cr();
 	ASSERT(cairo);
 
+	double cx1, cx2, cy1, cy2;
+	cairo_clip_extents(cairo, &cx1, &cy1, &cx2, &cy2);
+	const unsigned cw = cx2 - cx1;
+	const unsigned ch = cy2 - cy1;
+
 	cairo_surface_t *surf = cairo_get_target(cairo);
 	cairo_matrix_t mat;
 	cairo_get_matrix(cairo, &mat);
@@ -204,8 +209,8 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	if (!w)
 		return true; // We don't support it, please draw for us
 
-	const unsigned x0 = mat.x0;
-	const unsigned y0 = mat.y0;
+	const int x0 = mat.x0;
+	const int y0 = mat.y0;
 
 	w->resize(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
 	w->activate();
@@ -282,8 +287,21 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		break;
 	}
 
+	unsigned clipx = info.rect.x().toInt();
+	if (cx1 > clipx)
+		clipx = cx1;
+	unsigned clipy = info.rect.y().toInt();
+	if (cy1 > clipy)
+		clipy = cy1;
+	unsigned clipw = info.rect.width().toInt();
+	if (cw < clipw)
+		clipw = cw;
+	unsigned cliph = info.rect.height().toInt();
+	if (ch < cliph)
+		cliph = ch;
+
 	fl_begin_offscreen(d);
-	fl_push_clip(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
+	fl_push_clip(clipx + x0, clipy + y0, clipw, cliph);
 	w->draw();
 
 	if (type == Spinner)
