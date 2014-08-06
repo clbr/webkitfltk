@@ -317,24 +317,25 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 			return;
 		}
 		free((char *) path);
-	} else if (req.url().string().startsWith("about:")) {
+	} else if (req.url().string().startsWith("about:") &&
+		req.url().string() != "about:blank") {
 
-		if (req.url().string() == "about:blank") {
-			policyfunc(PolicyUse);
-			return;
-		}
+		static bool byus = false;
 
-		if (aboutpagefunc) {
+		if (aboutpagefunc && !byus) {
 			const char * const page =
 				aboutpagefunc(req.url().string().utf8().data() + 6);
 			if (page) {
-				view->loadString(page);
+				byus = true;
+				view->loadString(page, "text/html", "UTF-8",
+						req.url().string().utf8().data());
+				byus = false;
 				free((char *) page);
+
+				policyfunc(PolicyIgnore);
+				return;
 			}
 		}
-
-		policyfunc(PolicyIgnore);
-		return;
 	}
 
 	if (act.type() == NavigationTypeLinkClicked &&
