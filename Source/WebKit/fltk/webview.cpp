@@ -213,7 +213,7 @@ void webview::load(const char *url) {
 	}
 
 	// No protocol?
-	if (!str.contains("://")) {
+	if (!str.contains("://") && !str.startsWith("about:")) {
 		str = "http://";
 		str.append(orig);
 	}
