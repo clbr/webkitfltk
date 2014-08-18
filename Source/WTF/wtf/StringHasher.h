@@ -38,6 +38,12 @@ namespace WTF {
 // Golden ratio. Arbitrary start value to avoid mapping all zeros to a hash value of zero.
 static const unsigned stringHashingStartValue = 0x9E3779B9U;
 
+#ifdef __GNUC__
+typedef UChar UCharMayAlias __attribute__((__may_alias__));
+#else
+typedef UChar UCharMayAlias;
+#endif
+
 class StringHasher {
 public:
     static const unsigned flagCount = 8; // Save 8 bits for StringImpl to use as flags.
@@ -52,7 +58,7 @@ public:
     // The hasher hashes two characters at a time, and thus an "aligned" hasher is one
     // where an even number of characters have been added. Callers that always add
     // characters two at a time can use the "assuming aligned" functions.
-    void addCharactersAssumingAligned(UChar a, UChar b)
+    void addCharactersAssumingAligned(UCharMayAlias a, UCharMayAlias b)
     {
         ASSERT(!m_hasPendingCharacter);
         m_hash += a;
@@ -60,7 +66,7 @@ public:
         m_hash += m_hash >> 11;
     }
 
-    void addCharacter(UChar character)
+    void addCharacter(UCharMayAlias character)
     {
         if (m_hasPendingCharacter) {
             m_hasPendingCharacter = false;
@@ -72,7 +78,7 @@ public:
         m_hasPendingCharacter = true;
     }
 
-    void addCharacters(UChar a, UChar b)
+    void addCharacters(UCharMayAlias a, UCharMayAlias b)
     {
         if (m_hasPendingCharacter) {
 #if !ASSERT_DISABLED
@@ -89,7 +95,7 @@ public:
         addCharactersAssumingAligned(a, b);
     }
 
-    template<typename T, UChar Converter(T)> void addCharactersAssumingAligned(const T* data, unsigned length)
+    template<typename T, UCharMayAlias Converter(T)> void addCharactersAssumingAligned(const T* data, unsigned length)
     {
         ASSERT(!m_hasPendingCharacter);
 
@@ -110,7 +116,7 @@ public:
         addCharactersAssumingAligned<T, defaultConverter>(data, length);
     }
 
-    template<typename T, UChar Converter(T)> void addCharactersAssumingAligned(const T* data)
+    template<typename T, UCharMayAlias Converter(T)> void addCharactersAssumingAligned(const T* data)
     {
         ASSERT(!m_hasPendingCharacter);
 
@@ -129,7 +135,7 @@ public:
         addCharactersAssumingAligned<T, defaultConverter>(data);
     }
 
-    template<typename T, UChar Converter(T)> void addCharacters(const T* data, unsigned length)
+    template<typename T, UCharMayAlias Converter(T)> void addCharacters(const T* data, unsigned length)
     {
         if (m_hasPendingCharacter && length) {
             m_hasPendingCharacter = false;
@@ -144,7 +150,7 @@ public:
         addCharacters<T, defaultConverter>(data, length);
     }
 
-    template<typename T, UChar Converter(T)> void addCharacters(const T* data)
+    template<typename T, UCharMayAlias Converter(T)> void addCharacters(const T* data)
     {
         if (m_hasPendingCharacter && *data) {
             m_hasPendingCharacter = false;
@@ -190,14 +196,14 @@ public:
         return result;
     }
 
-    template<typename T, UChar Converter(T)> static unsigned computeHashAndMaskTop8Bits(const T* data, unsigned length)
+    template<typename T, UCharMayAlias Converter(T)> static unsigned computeHashAndMaskTop8Bits(const T* data, unsigned length)
     {
         StringHasher hasher;
         hasher.addCharactersAssumingAligned<T, Converter>(data, length);
         return hasher.hashWithTop8BitsMasked();
     }
 
-    template<typename T, UChar Converter(T)> static unsigned computeHashAndMaskTop8Bits(const T* data)
+    template<typename T, UCharMayAlias Converter(T)> static unsigned computeHashAndMaskTop8Bits(const T* data)
     {
         StringHasher hasher;
         hasher.addCharactersAssumingAligned<T, Converter>(data);
@@ -214,14 +220,14 @@ public:
         return computeHashAndMaskTop8Bits<T, defaultConverter>(data);
     }
 
-    template<typename T, UChar Converter(T)> static unsigned computeHash(const T* data, unsigned length)
+    template<typename T, UCharMayAlias Converter(T)> static unsigned computeHash(const T* data, unsigned length)
     {
         StringHasher hasher;
         hasher.addCharactersAssumingAligned<T, Converter>(data, length);
         return hasher.hash();
     }
 
-    template<typename T, UChar Converter(T)> static unsigned computeHash(const T* data)
+    template<typename T, UCharMayAlias Converter(T)> static unsigned computeHash(const T* data)
     {
         StringHasher hasher;
         hasher.addCharactersAssumingAligned<T, Converter>(data);
@@ -244,7 +250,7 @@ public:
         // We want that for all string hashing so we can use those bits in StringImpl and hash
         // strings consistently, but I don't see why we'd want that for general memory hashing.
         ASSERT(!(length % 2));
-        return computeHashAndMaskTop8Bits<UChar>(static_cast<const UChar*>(data), length / sizeof(UChar));
+        return computeHashAndMaskTop8Bits<UCharMayAlias>(static_cast<const UCharMayAlias*>(data), length / sizeof(UCharMayAlias));
     }
 
     template<size_t length> static unsigned hashMemory(const void* data)
@@ -254,12 +260,12 @@ public:
     }
 
 private:
-    static UChar defaultConverter(UChar character)
+    static UCharMayAlias defaultConverter(UCharMayAlias character)
     {
         return character;
     }
 
-    static UChar defaultConverter(LChar character)
+    static UCharMayAlias defaultConverter(LChar character)
     {
         return character;
     }
@@ -287,7 +293,7 @@ private:
 
     unsigned m_hash;
     bool m_hasPendingCharacter;
-    UChar m_pendingCharacter;
+    UCharMayAlias m_pendingCharacter;
 };
 
 } // namespace WTF
