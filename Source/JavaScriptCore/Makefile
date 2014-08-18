@@ -479,7 +479,7 @@ CXXFLAGS += -I bindings -I builtins -I bytecode -I bytecompiler -I dfg \
 		-I runtime -I tools -I yarr 
 CXXFLAGS += -std=gnu++11 -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
 CXXFLAGS += -DBUILDING_FLTK__
-CXXFLAGS += -fno-omit-frame-pointer -fno-tree-dce
+CXXFLAGS += -fno-omit-frame-pointer
 CXXFLAGS += $(shell icu-config --cppflags)
 
 include ../Makefile.fltk.shared
