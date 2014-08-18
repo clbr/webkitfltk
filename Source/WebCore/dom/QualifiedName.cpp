@@ -146,17 +146,7 @@ const AtomicString& QualifiedName::localNameUpper() const
 unsigned QualifiedName::QualifiedNameImpl::computeHash() const
 {
     QualifiedNameComponents components = { m_prefix.impl(), m_localName.impl(), m_namespace.impl() };
-
-    /* The following dance works around a GCC 4.8.3 bug.
-     * It's a nasty one that left components uninitialized,
-     * causing the hash to become random, and then the cache
-     * deleted some other component.
-     */
-    QualifiedNameComponents *foo = new QualifiedNameComponents;
-    *foo = components;
-    unsigned out = hashComponents(*foo);
-    delete foo;
-    return out;
+    return hashComponents(components);
 }
 
 void createQualifiedName(void* targetAddress, StringImpl* name, const AtomicString& nameNamespace)
