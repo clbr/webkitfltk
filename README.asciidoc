@@ -23,6 +23,9 @@ make -C Source/JavaScriptCore gen
 make -C Source/JavaScriptCore
 make -C Source/WebCore
 make -C Source/WebKit/fltk
+
+# Optionally
+make -C Source/WebKit/fltk install
 ----
 
 Notes
