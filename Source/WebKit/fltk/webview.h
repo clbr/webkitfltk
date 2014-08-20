@@ -96,6 +96,7 @@ public:
 	void progressChangedCB(void (*func)(webview *, float));
 	void faviconChangedCB(void (*func)(webview *));
 	void statusChangedCB(void (*func)(webview *));
+	void historyAddCB(void (*func)(const char *url, const char *title, const time_t when));
 
 private:
 	void handlecontextmenu(void *);

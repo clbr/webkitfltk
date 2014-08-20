@@ -413,7 +413,18 @@ void FlFrameLoaderClient::finishedLoading(DocumentLoader*) {
 }
 
 void FlFrameLoaderClient::updateGlobalHistory() {
-	notImplemented();
+	DocumentLoader *loader = frame->loader().documentLoader();
+	if (!loader)
+		return;
+
+	if (!view->priv->historyAdd)
+		return;
+
+	const CString &url = loader->urlForHistory().string().utf8();
+	const CString &title = loader->title().string().utf8();
+	const time_t now = time(NULL);
+
+	view->priv->historyAdd(url.data(), title.data(), now);
 }
 
 void FlFrameLoaderClient::updateGlobalHistoryRedirectLinks() {

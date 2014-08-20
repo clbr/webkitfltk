@@ -68,6 +68,7 @@ public:
 	void (*progressChanged)(webview *, float);
 	void (*faviconChanged)(webview *);
 	void (*statusChanged)(webview *);
+	void (*historyAdd)(const char *url, const char *title, const time_t when);
 };
 
 #endif
