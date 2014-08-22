@@ -31,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/types.h>
 #include <unistd.h>
 
+#undef None // X11 collision with JSC
+#undef Status
+
 #include <BackForwardController.h>
 #include <ContextMenuController.h>
 #include <Editor.h>
@@ -44,6 +47,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <markup.h>
 #include <NodeList.h>
 #include <PlatformKeyboardEvent.h>
+#include <ScriptController.h>
+#include <bindings/ScriptValue.h>
 #include <Settings.h>
 #include <WidgetBackingStoreCairo.h>
 #include <WindowsKeyboardCodes.h>
@@ -878,4 +883,16 @@ char *webview::focusedSource() const {
 
 	const String src = createMarkup(*focused->document());
 	return strdup(src.utf8().data());
+}
+
+void webview::executeJS(const char *str) {
+
+	if (!str)
+		return;
+
+	Frame * const f = &priv->page->mainFrame();
+	if (!f)
+		return;
+
+	f->script().executeScript(String::fromUTF8(str), true);
 }

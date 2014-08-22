@@ -56,6 +56,8 @@ public:
 	// Return the malloced source code of the focused frame
 	char *focusedSource() const;
 
+	void executeJS(const char *);
+
 	// Download handling
 	unsigned numDownloads() const;
 	void stopDownload(const unsigned);
