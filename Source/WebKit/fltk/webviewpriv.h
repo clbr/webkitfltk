@@ -69,6 +69,7 @@ public:
 	void (*faviconChanged)(webview *);
 	void (*statusChanged)(webview *);
 	void (*historyAdd)(const char *url, const char *title, const time_t when);
+	void (*siteChanging)(webview *, const char *url);
 };
 
 #endif
