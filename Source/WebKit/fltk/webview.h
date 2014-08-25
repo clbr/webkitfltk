@@ -22,6 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class privatewebview;
 
+enum SettingBool {
+	WK_SETTING_JS = 0,
+	WK_SETTING_CSS,
+	WK_SETTING_IMG,
+};
+
+enum SettingDouble {
+	WK_SETTING_ZOOM = 0,
+};
+
 class webview: public Fl_Widget {
 public:
 	webview(int x, int y, int w, int h);
@@ -91,6 +101,13 @@ public:
 	void paste();
 	bool find(const char *what, bool caseSensitive = false, bool forward = true);
 	unsigned countFound(const char *what, bool caseSensitive = false);
+
+	// Settings
+	void setBool(const SettingBool, const bool);
+	bool getBool(const SettingBool) const;
+
+	void setDouble(const SettingDouble, const double);
+	double getDouble(const SettingDouble) const;
 
 	// Callbacks
 	void titleChangedCB(void (*func)());

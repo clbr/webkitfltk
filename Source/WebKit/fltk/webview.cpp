@@ -896,3 +896,69 @@ void webview::executeJS(const char *str) {
 
 	f->script().executeScript(String::fromUTF8(str), true);
 }
+
+// Settings
+
+void webview::setBool(const SettingBool item, const bool val) {
+
+	Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_JS:
+			set.setScriptEnabled(val);
+		break;
+		case WK_SETTING_CSS:
+			set.setAuthorAndUserStylesEnabled(val);
+		break;
+		case WK_SETTING_IMG:
+			set.setImagesEnabled(val);
+		break;
+	}
+}
+
+bool webview::getBool(const SettingBool item) const {
+
+	Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_JS:
+			return set.isScriptEnabled();
+		break;
+		case WK_SETTING_CSS:
+			return set.authorAndUserStylesEnabled();
+		break;
+		case WK_SETTING_IMG:
+			return set.areImagesEnabled();
+		break;
+	}
+
+	fprintf(stderr, "Error, tried to fetch unknown bool setting %u\n",
+		item);
+	return false;
+}
+
+void webview::setDouble(const SettingDouble item, const double val) {
+
+	//Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_ZOOM:
+			priv->page->mainFrame().setPageZoomFactor(val);
+		break;
+	}
+}
+
+double webview::getDouble(const SettingDouble item) const {
+
+	//Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_ZOOM:
+			return priv->page->mainFrame().pageZoomFactor();
+		break;
+	}
+
+	fprintf(stderr, "Error, tried to fetch unknown double setting %u\n",
+		item);
+	return 0;
+}
