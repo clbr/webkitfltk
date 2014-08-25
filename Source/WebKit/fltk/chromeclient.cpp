@@ -290,6 +290,9 @@ void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned 
 			setStatusbarText(url.string());
 			view->priv->hoveringlink = true;
 		}
+	} else {
+		if (view->priv->statusChanged)
+			view->priv->statusChanged(view);
 	}
 }
 
