@@ -68,7 +68,6 @@ void webkitInit() {
 
 	PlatformStrategiesFLTK::initialize();
 	atomicCanonicalTextEncodingName("UTF-8");
-	cacheStorage().setCacheDirectory("cache");
 	PageGroup::setShouldTrackVisitedLinks(true);
 
 	Fl::lock();
