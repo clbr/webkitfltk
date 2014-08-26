@@ -87,6 +87,10 @@ char *wk_urlencode(const char *in);
 void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads = NULL);
 Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize = 16);
 
+// Cache
+void wk_set_cache_dir(const char *dir);
+void wk_set_cache_max(const unsigned bytes);
+
 } // extern C
 
 #endif

@@ -255,3 +255,11 @@ void wk_exit() {
 	iconDatabase().close();
 	wk_drop_caches();
 }
+
+void wk_set_cache_dir(const char *dir) {
+	cacheStorage().setCacheDirectory(dir);
+}
+
+void wk_set_cache_max(const unsigned bytes) {
+	cacheStorage().setMaximumSize(bytes);
+}
