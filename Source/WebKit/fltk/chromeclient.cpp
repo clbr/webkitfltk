@@ -157,9 +157,15 @@ void FlChromeClient::setResizable(bool) {
 void FlChromeClient::addMessageToConsole(JSC::MessageSource src, JSC::MessageLevel lvl,
 		const String &msg, unsigned line, unsigned column,
 		const String &srcid) {
-	notImplemented();
-	printf("JSC console: %s %u:%u %s\n",
+	char tmp[1024];
+	snprintf(tmp, 1024, "%s %u:%u %s",
 		srcid.utf8().data(), line, column, msg.utf8().data());
+	tmp[1023] = '\0';
+
+	if (view->priv->error)
+		view->priv->error(tmp);
+	else
+		fprintf(stderr, "Error console: %s\n", tmp);
 }
 
 bool FlChromeClient::canRunBeforeUnloadConfirmPanel() {
