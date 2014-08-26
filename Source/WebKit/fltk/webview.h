@@ -117,7 +117,7 @@ public:
 	void statusChangedCB(void (*func)(webview *));
 	void historyAddCB(void (*func)(const char *url, const char *title, const time_t when));
 	void siteChangingCB(void (*func)(webview *, const char *url));
-	void errorCB(void (*error)(const char *err));
+	void errorCB(void (*error)(webview *, const char *err));
 
 private:
 	void handlecontextmenu(void *);

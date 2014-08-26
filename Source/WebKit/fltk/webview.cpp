@@ -718,7 +718,7 @@ void webview::siteChangingCB(void (*func)(webview *, const char *url)) {
 	priv->siteChanging = func;
 }
 
-void webview::errorCB(void (*func)(const char *err)) {
+void webview::errorCB(void (*func)(webview *, const char *err)) {
 	priv->error = func;
 }
 

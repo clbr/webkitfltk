@@ -163,7 +163,7 @@ void FlChromeClient::addMessageToConsole(JSC::MessageSource src, JSC::MessageLev
 	tmp[1023] = '\0';
 
 	if (view->priv->error)
-		view->priv->error(tmp);
+		view->priv->error(view, tmp);
 	else
 		fprintf(stderr, "Error console: %s\n", tmp);
 }
