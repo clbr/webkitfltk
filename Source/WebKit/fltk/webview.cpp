@@ -244,8 +244,7 @@ void webview::loadString(const char * const str, const char * const mime,
 	SubstituteData substituteData(sharedBuffer.release(),
 		mime ? String::fromUTF8(mime) : String::fromUTF8("text/html"),
 		enc ? String::fromUTF8(enc) : String::fromUTF8("UTF-8"),
-		URL(URL(), String::fromUTF8("")),
-		URL(URL(), String::fromUTF8("")));
+		base, base);
 
 	f->loader().load(FrameLoadRequest(f, req, substituteData));
 }
