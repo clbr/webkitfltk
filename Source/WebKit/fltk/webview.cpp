@@ -1032,3 +1032,41 @@ void webview::bindEvent(const char *element, const char *type, const char *event
 		e->addEventListener(event, l.release(), capture);
 	}
 }
+
+const char *webview::getValue(const char *element, const char *type, const char *cssclass) {
+
+	RefPtr<NodeList> elem = priv->page->mainFrame().document()->getElementsByTagName(element);
+	unsigned max = elem->length();
+	unsigned i;
+
+	for (i = 0; i < max; i++) {
+		Node *n = elem->item(i);
+		Element *e = toElement(n);
+
+		if (type) {
+			if (!isHTMLInputElement(n))
+				continue;
+
+			const char *hastype = e->getAttribute("type").
+						string().utf8().data();
+
+			if (strcmp(hastype, type))
+				continue;
+		}
+
+		if (cssclass) {
+			const char *hasclass = e->getAttribute("class").
+						string().utf8().data();
+
+			if (strcmp(cssclass, hasclass))
+				continue;
+		}
+
+		if (isHTMLInputElement(n))
+			return strdup(toHTMLInputElement(e)->value().utf8().data());
+		else
+			return strdup(e->getAttribute("value").string().utf8().data());
+	}
+
+	return NULL;
+}
