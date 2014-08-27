@@ -119,6 +119,11 @@ public:
 	void siteChangingCB(void (*func)(webview *, const char *url));
 	void errorCB(void (*error)(webview *, const char *err));
 
+	// Bind a callback to element action. Call after loading has finished.
+	void bindEvent(const char *element, const char *type, const char *event,
+			void (*func)(const char *name, const char *id,
+					const char *cssclass, const char *value),
+			const bool capture = false);
 private:
 	void handlecontextmenu(void *);
 };

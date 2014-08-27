@@ -37,11 +37,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <BackForwardController.h>
 #include <ContextMenuController.h>
 #include <Editor.h>
+#include <EventListener.h>
 #include <FocusController.h>
 #include <FrameLoadRequest.h>
 #include <FrameSelection.h>
 #include <FrameView.h>
 #include <HTMLAnchorElement.h>
+#include <HTMLInputElement.h>
 #include <InspectorController.h>
 #include <MainFrame.h>
 #include <markup.h>
@@ -970,4 +972,63 @@ double webview::getDouble(const SettingDouble item) const {
 	fprintf(stderr, "Error, tried to fetch unknown double setting %u\n",
 		item);
 	return 0;
+}
+
+typedef void (*eventfunc)(const char *name, const char *id,
+			const char *cssclass, const char *value);
+
+class FlEventListener: public EventListener {
+public:
+	FlEventListener(Element *elem, eventfunc f):
+				EventListener(FlEventListenerType),
+				m_elem(elem), m_func(f) {
+	}
+
+	void handleEvent(ScriptExecutionContext*, Event*) override {
+		m_func(m_elem->getAttribute("name").string().utf8().data(),
+			m_elem->getAttribute("id").string().utf8().data(),
+			m_elem->getAttribute("class").string().utf8().data(),
+			m_elem->getAttribute("value").string().utf8().data());
+	}
+
+	bool operator==(const EventListener &other) {
+		if (other.type() == FlEventListenerType) {
+			const FlEventListener &e = (const FlEventListener &) other;
+			return m_elem == e.m_elem && m_func == e.m_func;
+		}
+		return false;
+	}
+
+private:
+	Element *m_elem;
+	eventfunc m_func;
+};
+
+void webview::bindEvent(const char *element, const char *type, const char *event,
+			void (*func)(const char *name, const char *id,
+					const char *cssclass, const char *value),
+			const bool capture) {
+
+	RefPtr<NodeList> elem = priv->page->mainFrame().document()->getElementsByTagName(element);
+	unsigned max = elem->length();
+	unsigned i;
+
+	for (i = 0; i < max; i++) {
+		Node *n = elem->item(i);
+		Element *e = toElement(n);
+
+		if (type) {
+			if (!isHTMLInputElement(n))
+				continue;
+
+			const char *hastype = e->getAttribute("type").
+						string().utf8().data();
+
+			if (strcmp(hastype, type))
+				continue;
+		}
+
+		RefPtr<FlEventListener> l(adoptRef(new FlEventListener(e, func)));
+		e->addEventListener(event, l.release(), capture);
+	}
 }

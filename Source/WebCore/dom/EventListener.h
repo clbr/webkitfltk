@@ -44,7 +44,8 @@ namespace WebCore {
             GObjectEventListenerType,
             NativeEventListenerType,
             SVGTRefTargetEventListenerType,
-            MediaControlsAppleEventListenerType 
+            MediaControlsAppleEventListenerType,
+            FlEventListenerType
         };
 
         virtual ~EventListener() { }
