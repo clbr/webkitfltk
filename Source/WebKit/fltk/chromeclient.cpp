@@ -285,6 +285,8 @@ void FlChromeClient::contentsSizeChanged(Frame*, const IntSize&) const {
 
 void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned int flags) {
 
+	const bool cleared = view->priv->statusbartext != NULL;
+
 	if (view->priv->statusbartext)
 		free((char *) view->priv->statusbartext);
 	view->priv->statusbartext = NULL;
@@ -297,7 +299,7 @@ void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned 
 			view->priv->hoveringlink = true;
 		}
 	} else {
-		if (view->priv->statusChanged)
+		if (view->priv->statusChanged && cleared)
 			view->priv->statusChanged(view);
 	}
 }
