@@ -78,6 +78,7 @@
 #include "MathExtras.h"
 #include "StdLibExtras.h"
 #include "StringExtras.h"
+#include "spoofing.h"
 
 #include <algorithm>
 #include <limits.h>
@@ -489,6 +490,9 @@ LocalTimeOffset calculateLocalTimeOffset(double ms)
         localTimeSeconds += secondsPerDay;
     // FIXME: time_t has a potential problem in 2038.
     time_t localTime = static_cast<time_t>(localTimeSeconds);
+
+    if (spoofedTZ)
+        return LocalTimeOffset(0, spoofedTZ() * msPerSecond);
 
 #if HAVE(TM_GMTOFF)
     tm localTM;

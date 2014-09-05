@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <runtime/InitializeThreading.h>
 #include <wtf/MainThread.h>
+#include <wtf/spoofing.h>
 
 #include <cairo.h>
 
@@ -52,6 +53,7 @@ webview *(*popupfunc)(const char *) = NULL;
 void (*downloadrefreshfunc)() = NULL;
 void (*newdownloadfunc)() = NULL;
 void (*bgtabfunc)(const char*) = NULL;
+int (*spoofedTZ)() = NULL;
 
 int wheelspeed = 100;
 
@@ -261,4 +263,8 @@ void wk_set_cache_dir(const char *dir) {
 
 void wk_set_cache_max(const unsigned bytes) {
 	cacheStorage().setMaximumSize(bytes);
+}
+
+void wk_set_tz_func(int (*func)()) {
+	spoofedTZ = func;
 }

@@ -35,9 +35,6 @@ extern "C" {
 // Init. Call this before show()ing anything.
 void webkitInit();
 
-// Use this for per-page useragents.
-void wk_set_useragent_func(const char * (*func)(const char *));
-
 // Content blocking. Return 0 for ok, 1 for block.
 void wk_set_urlblock_func(int (*func)(const char *));
 
@@ -90,6 +87,12 @@ Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize = 16);
 // Cache
 void wk_set_cache_dir(const char *dir);
 void wk_set_cache_max(const unsigned bytes);
+
+// Spoofing functions
+// Use this for per-page useragents.
+void wk_set_useragent_func(const char * (*func)(const char *));
+// Return the number of seconds east of GMT
+void wk_set_tz_func(int (*func)());
 
 } // extern C
 
