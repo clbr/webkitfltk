@@ -53,7 +53,9 @@ webview *(*popupfunc)(const char *) = NULL;
 void (*downloadrefreshfunc)() = NULL;
 void (*newdownloadfunc)() = NULL;
 void (*bgtabfunc)(const char*) = NULL;
+
 int (*spoofedTZ)() = NULL;
+const char *(*spoofedAccept)(const char *) = NULL;
 
 int wheelspeed = 100;
 
@@ -267,4 +269,8 @@ void wk_set_cache_max(const unsigned bytes) {
 
 void wk_set_tz_func(int (*func)()) {
 	spoofedTZ = func;
+}
+
+void wk_set_accept_func(const char *(*func)(const char*)) {
+	spoofedAccept = func;
 }

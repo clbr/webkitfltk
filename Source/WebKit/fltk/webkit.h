@@ -93,6 +93,8 @@ void wk_set_cache_max(const unsigned bytes);
 void wk_set_useragent_func(const char * (*func)(const char *));
 // Return the number of seconds east of GMT
 void wk_set_tz_func(int (*func)());
+// Return the Accept: header for this page
+void wk_set_accept_func(const char *(*func)(const char*));
 
 } // extern C
 

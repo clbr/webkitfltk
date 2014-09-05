@@ -70,6 +70,7 @@
 #include <wtf/Threading.h>
 #include <wtf/Vector.h>
 #include <wtf/text/CString.h>
+#include <wtf/spoofing.h>
 
 
 namespace WebCore {
@@ -1119,6 +1120,12 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
             CString headerLatin1 = headerString.latin1();
             headers = curl_slist_append(headers, headerLatin1.data());
         }
+    }
+
+    if (spoofedAccept) {
+        String str = "Accept: ";
+        str.append(spoofedAccept(url.host().utf8().data()));
+        headers = curl_slist_append(headers, str.latin1().data());
     }
 
     String method = job->firstRequest().httpMethod();
