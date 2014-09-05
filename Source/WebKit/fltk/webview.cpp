@@ -985,10 +985,16 @@ public:
 	}
 
 	void handleEvent(ScriptExecutionContext*, Event*) override {
+		String valuestr;
+		if (isHTMLInputElement(m_elem))
+			valuestr = toHTMLInputElement(m_elem)->value();
+		else
+			valuestr = m_elem->getAttribute("value").string();
+
 		m_func(m_elem->getAttribute("name").string().utf8().data(),
 			m_elem->getAttribute("id").string().utf8().data(),
 			m_elem->getAttribute("class").string().utf8().data(),
-			m_elem->getAttribute("value").string().utf8().data());
+			valuestr.utf8().data());
 	}
 
 	bool operator==(const EventListener &other) {
