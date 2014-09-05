@@ -56,6 +56,7 @@ void (*bgtabfunc)(const char*) = NULL;
 
 int (*spoofedTZ)() = NULL;
 const char *(*spoofedAccept)(const char *) = NULL;
+const char *(*spoofedLanguage)(const char *) = NULL;
 
 int wheelspeed = 100;
 
@@ -273,4 +274,8 @@ void wk_set_tz_func(int (*func)()) {
 
 void wk_set_accept_func(const char *(*func)(const char*)) {
 	spoofedAccept = func;
+}
+
+void wk_set_language_func(const char *(*func)(const char *)) {
+	spoofedLanguage = func;
 }

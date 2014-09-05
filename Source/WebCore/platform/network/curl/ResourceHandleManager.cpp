@@ -1127,7 +1127,13 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
         str.append(spoofedAccept(url.host().utf8().data()));
         headers = curl_slist_append(headers, str.latin1().data());
 
-        str = "Accept-encoding: gzip,deflate";
+        str = "Accept-encoding: gzip, deflate";
+        headers = curl_slist_append(headers, str.latin1().data());
+    }
+
+    if (spoofedLanguage) {
+	String str = "Accept-language: ";
+	str.append(spoofedLanguage(url.host().utf8().data()));
         headers = curl_slist_append(headers, str.latin1().data());
     }
 

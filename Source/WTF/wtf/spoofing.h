@@ -20,5 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 extern int (*spoofedTZ)();
 extern const char *(*spoofedAccept)(const char *);
+extern const char *(*spoofedLanguage)(const char *);
 
 #endif
