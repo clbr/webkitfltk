@@ -162,6 +162,7 @@ public:
 
     EditorClient* editorClient() const { return m_editorClient; }
     PlugInClient* plugInClient() const { return m_plugInClient; }
+    ContextMenuClient* contextMenuClient() const { return m_contextMenuClient; }
 
     MainFrame& mainFrame() { ASSERT(m_mainFrame); return *m_mainFrame; }
     const MainFrame& mainFrame() const { ASSERT(m_mainFrame); return *m_mainFrame; }
@@ -492,6 +493,7 @@ private:
 
     EditorClient* m_editorClient;
     PlugInClient* m_plugInClient;
+    ContextMenuClient* m_contextMenuClient;
     ValidationMessageClient* m_validationMessageClient;
 
     int m_subframeCount;
