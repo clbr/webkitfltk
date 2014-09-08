@@ -70,7 +70,7 @@ void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
 		case ctxViewSource:
 			if (frame) {
 				char *src = view->focusedSource();
-				if (src) {
+				if (src && popupfunc) {
 					webview *newview = popupfunc("about:blank");
 					newview->loadString(src, "text/plain");
 					free(src);
