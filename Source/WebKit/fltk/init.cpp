@@ -58,6 +58,7 @@ int (*spoofedTZ)() = NULL;
 const char *(*spoofedAccept)(const char *) = NULL;
 const char *(*spoofedLanguage)(const char *) = NULL;
 
+const char *wk_stream_exec;
 int wheelspeed = 100;
 
 void webkitInit() {
@@ -278,4 +279,8 @@ void wk_set_accept_func(const char *(*func)(const char*)) {
 
 void wk_set_language_func(const char *(*func)(const char *)) {
 	spoofedLanguage = func;
+}
+
+void wk_set_streaming_prog(const char *prog) {
+	wk_stream_exec = prog;
 }

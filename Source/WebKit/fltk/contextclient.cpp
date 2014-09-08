@@ -125,6 +125,13 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 			case ContextMenuItemTagSearchWeb:
 			case ContextMenuItemTagStartSpeaking:
 			case ContextMenuItemTagStopSpeaking:
+			case ContextMenuItemTagOpenMediaInNewWindow:
+			case ContextMenuItemTagToggleMediaControls:
+			case ContextMenuItemTagToggleMediaLoop:
+			case ContextMenuItemTagEnterVideoFullscreen:
+			case ContextMenuItemTagMediaPlayPause:
+			case ContextMenuItemTagMediaMute:
+			case ContextMenuItemTagToggleVideoFullscreen:
 			break;
 			case ContextMenuItemTagOpenLinkInNewWindow:
 			{

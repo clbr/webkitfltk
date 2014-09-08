@@ -26,6 +26,7 @@ SRC = plugins/PluginPackageNone.cpp \
 	platform/fltk/TemporaryLinkStubs.cpp \
 	platform/fltk/ImageFLTK.cpp \
 	platform/fltk/PopupMenuFLTK.cpp \
+	platform/fltk/MediaPlayerFLTK.cpp \
 	plugins/PluginViewNone.cpp \
 	platform/graphics/cairo/GraphicsContextCairo.cpp \
 	platform/ScrollAnimatorNone.cpp \
@@ -996,6 +997,7 @@ SRC = plugins/PluginPackageNone.cpp \
     html/shadow/MediaControlElementTypes.cpp \
     html/shadow/MediaControlElements.cpp \
     html/shadow/MediaControls.cpp \
+    html/shadow/MediaControlsFifth.cpp \
     html/shadow/MeterShadowElement.cpp \
     html/shadow/ProgressShadowElement.cpp \
     html/shadow/SliderThumbElement.cpp \
@@ -2533,7 +2535,44 @@ SRC = plugins/PluginPackageNone.cpp \
 	platform/graphics/opentype/OpenTypeVerticalData.cpp \
 	platform/posix/FileSystemPOSIX.cpp \
 	platform/posix/SharedBufferPOSIX.cpp \
-	platform/LocalizedStrings.cpp
+	platform/LocalizedStrings.cpp \
+	html/track/AudioTrack.cpp \
+	html/track/AudioTrackList.cpp \
+	html/track/BufferedLineReader.cpp \
+	html/track/DataCue.cpp \
+	html/track/InbandDataTextTrack.cpp \
+	html/track/InbandGenericTextTrack.cpp \
+	html/track/InbandTextTrack.cpp \
+	html/track/InbandWebVTTTextTrack.cpp \
+	html/track/LoadableTextTrack.cpp \
+	html/track/TextTrack.cpp \
+	html/track/TextTrackCue.cpp \
+	html/track/TextTrackCueGeneric.cpp \
+	html/track/TextTrackCueList.cpp \
+	html/track/TextTrackList.cpp \
+	html/track/TrackBase.cpp \
+	html/track/TrackEvent.cpp \
+	html/track/TrackListBase.cpp \
+	html/track/VideoTrack.cpp \
+	html/track/VideoTrackList.cpp \
+	html/track/VTTCue.cpp \
+	html/track/VTTScanner.cpp \
+	html/track/WebVTTElement.cpp \
+	html/track/WebVTTParser.cpp \
+	html/track/WebVTTTokenizer.cpp \
+	loader/cache/CachedTextTrack.cpp \
+	platform/graphics/TextTrackRepresentation.cpp \
+	JSAudioTrack.cpp \
+	JSAudioTrackList.cpp \
+	JSDataCue.cpp \
+	JSTextTrack.cpp \
+	JSTextTrackCue.cpp \
+	JSTextTrackCueList.cpp \
+	JSTextTrackList.cpp \
+	JSTrackEvent.cpp \
+	JSVTTCue.cpp \
+	JSVideoTrack.cpp \
+	JSVideoTrackList.cpp
 
 
 OBJ := $(SRC:.cpp=.o)
@@ -3259,7 +3298,18 @@ IDLS = Modules/battery/BatteryManager.idl \
     xml/XPathNSResolver.idl \
     xml/XPathResult.idl \
     xml/XSLTProcessor.idl \
-    InternalSettingsGenerated.idl
+    InternalSettingsGenerated.idl \
+    html/track/AudioTrack.idl \
+    html/track/AudioTrackList.idl \
+    html/track/DataCue.idl \
+    html/track/TextTrack.idl \
+    html/track/TextTrackCue.idl \
+    html/track/TextTrackCueList.idl \
+    html/track/TextTrackList.idl \
+    html/track/TrackEvent.idl \
+    html/track/VideoTrack.idl \
+    html/track/VideoTrackList.idl \
+    html/track/VTTCue.idl
 
 include ../Makefile.fltk.shared
 CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)

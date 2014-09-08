@@ -5129,6 +5129,10 @@ bool HTMLMediaElement::createMediaControls()
 
     ensureUserAgentShadowRoot().appendChild(mediaControls, ASSERT_NO_EXCEPTION);
 
+#if ENABLE(FIFTH_VIDEO)
+    if (!controls()) setControls(true);
+#endif
+
     if (!controls() || !inDocument())
         mediaControls->hide();
 
@@ -5144,6 +5148,10 @@ void HTMLMediaElement::configureMediaControls()
 
     ensureUserAgentShadowRoot();
     return;
+#endif
+
+#if ENABLE(FIFTH_VIDEO)
+    if (!controls()) setControls(true);
 #endif
 
     if (!controls() || !inDocument()) {

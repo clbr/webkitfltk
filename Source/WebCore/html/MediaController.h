@@ -106,6 +106,7 @@ public:
     virtual bool isLiveStream() const override;
     
     virtual bool hasCurrentSrc() const override;
+    virtual const URL &currentSrc() const override;
     
     virtual void returnToRealtime() override;
 

@@ -33,6 +33,7 @@
 namespace WebCore {
 
 class TimeRanges;
+class URL;
 
 typedef int ExceptionCode;
 
@@ -96,6 +97,7 @@ public:
     virtual bool isLiveStream() const = 0;
 
     virtual bool hasCurrentSrc() const = 0;
+    virtual const URL &currentSrc() const = 0;
 
     virtual void returnToRealtime() = 0;
 };

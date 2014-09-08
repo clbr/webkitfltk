@@ -654,6 +654,15 @@ bool MediaController::hasCurrentSrc() const
     return true;
 }
 
+const URL &MediaController::currentSrc() const
+{
+    for (size_t index = 0; index < m_mediaElements.size(); ++index) {
+        if (m_mediaElements[index]->hasCurrentSrc())
+            return m_mediaElements[index]->currentSrc();
+    }
+    return blankURL();
+}
+
 void MediaController::returnToRealtime()
 {
     for (size_t index = 0; index < m_mediaElements.size(); ++index)

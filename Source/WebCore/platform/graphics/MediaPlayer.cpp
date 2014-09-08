@@ -75,6 +75,10 @@
 #endif // USE(AVFOUNDATION)
 #endif
 
+#if ENABLE(FIFTH_VIDEO)
+#include "fltk/MediaPlayerFLTK.h"
+#endif
+
 namespace WebCore {
 
 const PlatformMedia NoPlatformMedia = { PlatformMedia::None, {0} };
@@ -223,6 +227,10 @@ static Vector<MediaPlayerFactory*>& installedMediaEngines(RequeryEngineOptions r
 
 #if defined(PlatformMediaEngineClassName)
     PlatformMediaEngineClassName::registerMediaEngine(addMediaEngine);
+#endif
+
+#if ENABLE(FIFTH_VIDEO)
+    MediaPlayerFLTK::registerMediaEngine(addMediaEngine);
 #endif
 
     return installedEngines;

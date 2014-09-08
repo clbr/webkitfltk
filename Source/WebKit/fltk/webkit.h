@@ -74,6 +74,9 @@ void wk_set_bgtab_func(void (*func)(const char*));
 // Drop RAM caches
 void wk_drop_caches();
 
+// Set streaming program and args, default none
+void wk_set_streaming_prog(const char *);
+
 // Cleanup on exit. Calls drop_caches.
 void wk_exit();
 
