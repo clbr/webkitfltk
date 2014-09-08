@@ -779,19 +779,4 @@ bool RenderThemeFLTK::paintProgressBar(const RenderObject& object, const PaintIn
 }
 #endif
 
-#if ENABLE(VIDEO)
-String RenderThemeFLTK::mediaControlsStyleSheet()
-{
-    return ASCIILiteral(mediaControlsAppleUserAgentStyleSheet);
-}
-
-String RenderThemeFLTK::mediaControlsScript()
-{
-    StringBuilder scriptBuilder;
-    scriptBuilder.append(mediaControlsLocalizedStringsJavaScript, sizeof(mediaControlsLocalizedStringsJavaScript));
-    scriptBuilder.append(mediaControlsAppleJavaScript, sizeof(mediaControlsAppleJavaScript));
-    return scriptBuilder.toString();
-}
-#endif
-
 }

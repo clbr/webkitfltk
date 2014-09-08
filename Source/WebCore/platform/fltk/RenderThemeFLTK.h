@@ -171,10 +171,6 @@ public:
     virtual double animationDurationForProgressBar(RenderProgress*) const override;
 #endif
 
-#if ENABLE(VIDEO)
-    virtual String mediaControlsStyleSheet() override;
-    virtual String mediaControlsScript() override;
-#endif
 #if ENABLE(VIDEO_TRACK)
     virtual bool supportsClosedCaptioning() const override { return true; }
 #endif
