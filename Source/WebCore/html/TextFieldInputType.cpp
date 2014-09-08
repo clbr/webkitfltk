@@ -328,7 +328,7 @@ void TextFieldInputType::attributeChanged()
 {
     // FIXME: Updating the inner text on any attribute update should
     // be unnecessary. We should figure out what attributes affect.
-    updateInnerTextValue();
+    if (m_innerText) updateInnerTextValue();
 }
 
 void TextFieldInputType::disabledAttributeChanged()
