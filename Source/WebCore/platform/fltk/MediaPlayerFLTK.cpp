@@ -159,6 +159,9 @@ void MediaPlayerFLTK::getSupportedTypes(HashSet<String>& supportedTypes)
 
 MediaPlayer::SupportsType MediaPlayerFLTK::supportsType(const MediaEngineSupportParameters& parameters)
 {
+    if (!mimeTypeCache().contains(parameters.type))
+        return MediaPlayer::IsNotSupported;
+
     return MediaPlayer::IsSupported;
 }
 
