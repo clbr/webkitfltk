@@ -108,7 +108,9 @@ bool MediaSession::clientWillBeginPlayback()
 {
     setState(Playing);
     MediaSessionManager::sharedManager().sessionWillBeginPlayback(*this);
+#if ENABLE(PAGE_VISIBILITY_API)
     updateClientDataBuffering();
+#endif
     return true;
 }
 
@@ -125,7 +127,9 @@ bool MediaSession::clientWillPausePlayback()
     
     setState(Paused);
     MediaSessionManager::sharedManager().sessionWillEndPlayback(*this);
+#if ENABLE(PAGE_VISIBILITY_API)
     updateClientDataBuffering();
+#endif
     return true;
 }
 
