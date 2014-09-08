@@ -213,11 +213,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	const int y0 = mat.y0;
 
 	w->resize(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
-	w->activate();
+	w->set_active();
 	if (!isEnabled(object) || isReadOnlyControl(object))
-		w->deactivate();
-//	if (isFocused(object))
-//		Fl::focus(w);
+		w->clear_active();
 
 	switch (type) {
 		case Button:
@@ -272,9 +270,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 			s_spinner->size(rect.width(), rect.height() / 2);
 			s_spinnerdown->resize(rect.x() + x0, rect.y() + y0 + rect.height() / 2,
 						rect.width(), rect.height() / 2);
-			s_spinnerdown->activate();
+			s_spinnerdown->set_active();
 			if (!isEnabled(object) || isReadOnlyControl(object))
-				s_spinnerdown->deactivate();
+				s_spinnerdown->clear_active();
 
 			s_spinner->value(0);
 			s_spinnerdown->value(0);
@@ -306,6 +304,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 
 	if (type == Spinner)
 		((Fl_Widget *) s_spinnerdown)->draw();
+
+//	if (isFocused(object))
+//		w->draw_focus();
 
 	fl_pop_clip();
 	fl_end_offscreen();
