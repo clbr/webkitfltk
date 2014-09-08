@@ -465,7 +465,7 @@ int webview::handle(const int e) {
 			if (e == FL_KEYDOWN && !ret)
 				keyscroll(priv->page->mainFrame(), win, Fl::event_shift());
 
-			if (priv->editing)
+			if (priv->editing || key == FL_Tab)
 				return 1;
 			else
 				return 0;
