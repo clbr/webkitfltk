@@ -59,20 +59,21 @@ FloatRect FlChromeClient::pageRect() {
 }
 
 void FlChromeClient::focus() {
-	notImplemented();
+	view->take_focus();
 }
 
 void FlChromeClient::unfocus() {
-	notImplemented();
 }
 
 bool FlChromeClient::canTakeFocus(FocusDirection) {
-	notImplemented();
-	return true;
+	// This is called when cycling through links/focusable objects and we
+	// reach the last focusable object.
+
+	return false;
 }
 
 void FlChromeClient::takeFocus(FocusDirection) {
-	notImplemented();
+	unfocus();
 }
 
 void FlChromeClient::focusedElementChanged(Element*) {
