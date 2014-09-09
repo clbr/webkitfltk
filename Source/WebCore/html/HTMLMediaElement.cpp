@@ -157,7 +157,7 @@ static void clearFlags(unsigned& value, unsigned flags)
 #if !LOG_DISABLED
 static String urlForLoggingMedia(const URL& url)
 {
-    static const unsigned maximumURLLengthForLogging = 128;
+    static const unsigned maximumURLLengthForLogging = 1024;
 
     if (url.string().length() < maximumURLLengthForLogging)
         return url.string();
