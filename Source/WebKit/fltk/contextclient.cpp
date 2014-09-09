@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 extern void (*bgtabfunc)(const char*);
 extern webview *(*popupfunc)(const char *);
+extern void (*persitesettingsfunc)(const char*);
 
 using namespace WebCore;
 
@@ -41,6 +42,7 @@ enum {
 	ctxOpenInBGTab = ContextMenuItemBaseApplicationTag + 1,
 	ctxTineye,
 	ctxViewSource,
+	ctxPerSiteSettings,
 };
 
 void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
@@ -75,6 +77,11 @@ void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
 					newview->loadString(src, "text/plain");
 					free(src);
 				}
+			}
+		break;
+		case ctxPerSiteSettings:
+			if (frame && persitesettingsfunc) {
+				persitesettingsfunc(view->url());
 			}
 		break;
 		default:
@@ -151,6 +158,14 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 						"View frame source",
 						true, false);
 				newitems.append(c);
+
+				if (persitesettingsfunc) {
+					ContextMenuItem c(ActionType,
+							(ContextMenuAction) ctxPerSiteSettings,
+							"Edit per-site settings",
+							true, false);
+					newitems.append(c);
+				}
 			}
 			break;
 			default:

@@ -53,6 +53,7 @@ webview *(*popupfunc)(const char *) = NULL;
 void (*downloadrefreshfunc)() = NULL;
 void (*newdownloadfunc)() = NULL;
 void (*bgtabfunc)(const char*) = NULL;
+void (*persitesettingsfunc)(const char*) = NULL;
 
 int (*spoofedTZ)() = NULL;
 const char *(*spoofedAccept)(const char *) = NULL;
@@ -283,4 +284,8 @@ void wk_set_language_func(const char *(*func)(const char *)) {
 
 void wk_set_streaming_prog(const char *prog) {
 	wk_stream_exec = prog;
+}
+
+void wk_set_persite_settings_func(void (*func)(const char*)) {
+	persitesettingsfunc = func;
 }

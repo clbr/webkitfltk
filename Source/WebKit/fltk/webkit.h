@@ -91,6 +91,9 @@ Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize = 16);
 void wk_set_cache_dir(const char *dir);
 void wk_set_cache_max(const unsigned bytes);
 
+// Per-site settings
+void wk_set_persite_settings_func(void (*func)(const char*));
+
 // Spoofing functions
 // Use this for per-page useragents.
 void wk_set_useragent_func(const char * (*func)(const char *));
