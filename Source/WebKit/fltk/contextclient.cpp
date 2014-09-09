@@ -153,11 +153,14 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 			case ContextMenuItemTagReload:
 			{
 				newitems.append(cur);
-				ContextMenuItem c(ActionType,
-						(ContextMenuAction) ctxViewSource,
-						"View frame source",
-						true, false);
-				newitems.append(c);
+
+				if (popupfunc) {
+					ContextMenuItem c(ActionType,
+							(ContextMenuAction) ctxViewSource,
+							"View frame source",
+							true, false);
+					newitems.append(c);
+				}
 
 				if (persitesettingsfunc) {
 					ContextMenuItem c(ActionType,
