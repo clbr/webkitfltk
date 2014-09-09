@@ -109,7 +109,7 @@ static void stream(const char *url, ContextMenuClient *) {
 
 	if (fork() == 0) {
 		char tmp[1360];
-		snprintf(tmp, 1360, "%s %s", wk_stream_exec, url);
+		snprintf(tmp, 1360, "%s '%s'", wk_stream_exec, url);
 		tmp[1359] = '\0';
 		system(tmp);
 		exit(0);
