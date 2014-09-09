@@ -1074,6 +1074,12 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
     curl_easy_setopt(d->m_handle, CURLOPT_REDIR_PROTOCOLS, allowedProtocols);
     curl_easy_setopt(d->m_handle, CURLOPT_CONNECTTIMEOUT, 30);
 
+    // Youtube requires an insecure SSL cipher that curl disables by default.
+    // Enable it only for those sites to stay secure.
+    if (url.host().endsWith("googlevideo.com") ||
+        url.host().endsWith("youtube.com"))
+        curl_easy_setopt(d->m_handle, CURLOPT_SSL_CIPHER_LIST, "DEFAULT");
+
     setSSLVerifyOptions(job);
 
     // enable gzip and deflate through Accept-Encoding:
