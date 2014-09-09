@@ -277,7 +277,10 @@ void FlFrameLoaderClient::dispatchDecidePolicyForResponse(const ResourceResponse
 	if (view->priv->loadStateChanged)
 		view->priv->loadStateChanged(view);
 
-	if (canShowMIMEType(resp.mimeType()))
+	if (canShowMIMEType(resp.mimeType()) &&
+		!resp.mimeType().startsWith("video") &&
+		!resp.mimeType().startsWith("audio") &&
+		!resp.mimeType().startsWith("application"))
 		policyfunc(PolicyUse);
 	else
 		policyfunc(PolicyDownload);
