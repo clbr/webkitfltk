@@ -974,6 +974,76 @@ double webview::getDouble(const SettingDouble item) const {
 	return 0;
 }
 
+void webview::setInt(const SettingInt item, const int val) {
+
+	Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_FONT_SIZE:
+			set.setDefaultFontSize(val);
+		break;
+		case WK_SETTING_FIXED_SIZE:
+			return set.setDefaultFixedFontSize(val);
+		break;
+		case WK_SETTING_MINIMUM_FONT_SIZE:
+			return set.setMinimumFontSize(val);
+		break;
+	}
+}
+
+int webview::getInt(const SettingInt item) const {
+
+	Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_FONT_SIZE:
+			return set.defaultFontSize();
+		break;
+		case WK_SETTING_FIXED_SIZE:
+			return set.defaultFixedFontSize();
+		break;
+		case WK_SETTING_MINIMUM_FONT_SIZE:
+			return set.minimumFontSize();
+		break;
+	}
+
+	fprintf(stderr, "Error, tried to fetch unknown int setting %u\n",
+		item);
+	return 0;
+}
+
+void webview::setChar(const SettingChar item, const char *val) {
+
+	Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_DEFAULT_FONT:
+			set.setStandardFontFamily(val);
+		break;
+		case WK_SETTING_FIXED_FONT:
+			set.setFixedFontFamily(val);
+		break;
+	}
+}
+
+const char *webview::getChar(const SettingChar item) const {
+
+	Settings &set = priv->page->mainFrame().settings();
+
+	switch (item) {
+		case WK_SETTING_DEFAULT_FONT:
+			return strdup(set.standardFontFamily().string().utf8().data());
+		break;
+		case WK_SETTING_FIXED_FONT:
+			return strdup(set.fixedFontFamily().string().utf8().data());
+		break;
+	}
+
+	fprintf(stderr, "Error, tried to fetch unknown char setting %u\n",
+		item);
+	return NULL;
+}
+
 typedef void (*eventfunc)(const char *name, const char *id,
 			const char *cssclass, const char *value);
 

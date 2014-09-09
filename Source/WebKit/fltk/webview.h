@@ -32,6 +32,17 @@ enum SettingDouble {
 	WK_SETTING_ZOOM = 0,
 };
 
+enum SettingInt {
+	WK_SETTING_FONT_SIZE = 0,
+	WK_SETTING_FIXED_SIZE,
+	WK_SETTING_MINIMUM_FONT_SIZE,
+};
+
+enum SettingChar {
+	WK_SETTING_DEFAULT_FONT = 0,
+	WK_SETTING_FIXED_FONT,
+};
+
 class webview: public Fl_Widget {
 public:
 	webview(int x, int y, int w, int h);
@@ -108,6 +119,12 @@ public:
 
 	void setDouble(const SettingDouble, const double);
 	double getDouble(const SettingDouble) const;
+
+	void setInt(const SettingInt, const int);
+	int getInt(const SettingInt) const;
+
+	void setChar(const SettingChar, const char *);
+	const char *getChar(const SettingChar) const;
 
 	// Callbacks
 	void titleChangedCB(void (*func)());
