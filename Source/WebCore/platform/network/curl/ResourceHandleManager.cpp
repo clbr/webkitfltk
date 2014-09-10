@@ -1009,6 +1009,8 @@ void ResourceHandleManager::applyAuthenticationToRequest(ResourceHandle* handle,
         user = d->m_initialCredential.user();
         password = d->m_initialCredential.password();
         curl_easy_setopt(d->m_handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+    } else if (request.url().protocol() == "ftp" && d->m_user.isEmpty()) {
+        user = "anonymous";
     }
 
     // It seems we need to set CURLOPT_USERPWD even if username and password is empty.
