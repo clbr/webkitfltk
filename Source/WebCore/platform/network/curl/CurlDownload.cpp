@@ -33,6 +33,7 @@
 #include "MainThreadTask.h"
 #include "ResourceHandleManager.h"
 #include "ResourceRequest.h"
+#include "SSLHandle.h"
 #include <wtf/MainThread.h>
 #include <wtf/text/CString.h>
 
@@ -292,6 +293,15 @@ void CurlDownload::init(CurlDownloadListener* listener, const URL& url)
     String urlStr = url.string();
     m_url = fastStrDup(urlStr.latin1().data());
 
+#ifndef NDEBUG
+    if (getenv("DEBUG_CURL"))
+        curl_easy_setopt(m_curlHandle, CURLOPT_VERBOSE, 1);
+#endif
+
+    // Fifth handles certs differently; ignore CA checks.
+    curl_easy_setopt(m_curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_easy_setopt(m_curlHandle, CURLOPT_SSL_VERIFYHOST, 2L);
+
     curl_easy_setopt(m_curlHandle, CURLOPT_URL, m_url);
     curl_easy_setopt(m_curlHandle, CURLOPT_PRIVATE, this);
     curl_easy_setopt(m_curlHandle, CURLOPT_WRITEFUNCTION, writeCallback);
@@ -302,9 +312,13 @@ void CurlDownload::init(CurlDownloadListener* listener, const URL& url)
     curl_easy_setopt(m_curlHandle, CURLOPT_MAXREDIRS, 10);
     curl_easy_setopt(m_curlHandle, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 
-    const char* certPath = getenv("CURL_CA_BUNDLE_PATH");
-    if (certPath)
-        curl_easy_setopt(m_curlHandle, CURLOPT_CAINFO, certPath);
+    // Youtube requires an insecure SSL cipher that curl disables by default.
+    // Enable it only for those sites to stay secure.
+    if (url.host().endsWith("googlevideo.com") ||
+        url.host().endsWith("youtube.com"))
+        curl_easy_setopt(m_curlHandle, CURLOPT_SSL_CIPHER_LIST, "DEFAULT");
+
+    // TODO warning: download certs *aren't* currently checked! Requires SSLHandle reorg.
 
     CURLSH* curlsh = ResourceHandleManager::sharedInstance()->getCurlShareHandle();
     if (curlsh)
