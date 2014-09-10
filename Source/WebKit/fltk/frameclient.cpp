@@ -280,7 +280,11 @@ void FlFrameLoaderClient::dispatchDecidePolicyForResponse(const ResourceResponse
 	if (canShowMIMEType(resp.mimeType()) &&
 		!resp.mimeType().startsWith("video") &&
 		!resp.mimeType().startsWith("audio") &&
-		!resp.mimeType().startsWith("application"))
+		!resp.mimeType().startsWith("application/ogg") &&
+		!resp.mimeType().startsWith("application/vnd.apple.mpeg") &&
+		!resp.mimeType().startsWith("application/vnd.rn-real") &&
+		!resp.mimeType().startsWith("application/x-3gp") &&
+		!resp.mimeType().startsWith("application/x-pn-real"))
 		policyfunc(PolicyUse);
 	else
 		policyfunc(PolicyDownload);
