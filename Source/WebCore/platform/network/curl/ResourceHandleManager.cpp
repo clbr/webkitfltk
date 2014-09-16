@@ -72,6 +72,7 @@
 #include <wtf/text/CString.h>
 #include <wtf/spoofing.h>
 
+extern const char *wk_cookiepath;
 
 namespace WebCore {
 
@@ -128,6 +129,10 @@ static char* cookieJarPath()
         return fastStrDup("cookies.dat");
 
     return fastStrDup(cookieJarFullPath);
+#elif PLATFORM(FLTK)
+    if (wk_cookiepath)
+        return fastStrDup(wk_cookiepath);
+    return fastStrDup("cookies.dat");
 #else
     return fastStrDup("cookies.dat");
 #endif

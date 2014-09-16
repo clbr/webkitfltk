@@ -59,7 +59,8 @@ int (*spoofedTZ)() = NULL;
 const char *(*spoofedAccept)(const char *) = NULL;
 const char *(*spoofedLanguage)(const char *) = NULL;
 
-const char *wk_stream_exec;
+const char *wk_stream_exec = NULL;
+const char *wk_cookiepath = NULL;
 int wheelspeed = 100;
 
 void webkitInit() {
@@ -288,4 +289,9 @@ void wk_set_streaming_prog(const char *prog) {
 
 void wk_set_persite_settings_func(void (*func)(const char*)) {
 	persitesettingsfunc = func;
+}
+
+void wk_set_cookie_path(const char *path) {
+	free((char *) wk_cookiepath);
+	asprintf((char **) &wk_cookiepath, "%s/cookies.dat", path);
 }

@@ -83,6 +83,9 @@ void wk_exit();
 // Returns a malloced, url-encoded string
 char *wk_urlencode(const char *in);
 
+// Where to store the cookie file?
+void wk_set_cookie_path(const char *path);
+
 // Favicons
 void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads = NULL);
 Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize = 16);
