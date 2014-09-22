@@ -76,6 +76,25 @@ static const ExtensionMap extensionMap[] = {
     { 0, 0 }
 };
 
+static const char *textExtensions[] = {
+    "txt",
+    "lst",
+    "diff",
+    "patch",
+    "info",
+    "log",
+    "dep",
+    "list",
+    "c",
+    "cpp",
+    "cxx",
+    "h",
+    "news",
+    "changes",
+    "tree",
+    NULL
+};
+
 String MIMETypeRegistry::getMIMETypeForExtension(const String &ext)
 {
     ASSERT(isMainThread());
@@ -86,6 +105,12 @@ String MIMETypeRegistry::getMIMETypeForExtension(const String &ext)
         if (s == e->extension)
             return e->mimeType;
         ++e;
+    }
+
+    unsigned i;
+    for (i = 0; textExtensions[i]; i++) {
+        if (s == textExtensions[i])
+            return "text/plain";
     }
 
     return String();
