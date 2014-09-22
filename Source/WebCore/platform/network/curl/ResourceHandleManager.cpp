@@ -482,6 +482,9 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
             modeAscii = false;
         } else if (ptr[0] == '1' && ptr[1] == '5' && ptr[2] == '0' && modeAscii) {
             d->m_response.setMimeType("application/x-ftp-directory");
+        } else {
+            if (d->m_response.mimeType().isEmpty())
+                d->m_response.setMimeType(MIMETypeRegistry::getMIMETypeForPath(url.lastPathComponent()));
         }
 
         return totalSize;
