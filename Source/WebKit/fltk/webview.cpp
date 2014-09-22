@@ -139,6 +139,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	set.setDefaultFontSize(16);
 	set.setDefaultFixedFontSize(16);
 	set.setDownloadableBinaryFontsEnabled(false);
+	set.setAcceleratedCompositingEnabled(false);
 
 	// Cairo
 	resize();
