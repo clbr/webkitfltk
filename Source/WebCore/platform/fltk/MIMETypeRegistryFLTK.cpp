@@ -76,7 +76,7 @@ static const ExtensionMap extensionMap[] = {
     { 0, 0 }
 };
 
-static const char *textExtensions[] = {
+static const char * const textExtensions[] = {
     "txt",
     "lst",
     "diff",
