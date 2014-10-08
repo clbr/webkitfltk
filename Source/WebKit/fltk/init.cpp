@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FontCache.h>
 #include <GCController.h>
 #include <IconDatabase.h>
+#include <IconDatabaseClient.h>
 #include <Logging.h>
 #include <MemoryCache.h>
 #include <Page.h>
@@ -180,13 +181,35 @@ void wk_set_bgtab_func(void (*func)(const char*)) {
 	bgtabfunc = func;
 }
 
-void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads) {
+class dbclient: public IconDatabaseClient {
+public:
+	dbclient(void (*func)()): done(func) {}
+	void didImportIconURLForPageURL(const String&) {}
+	void didImportIconDataForPageURL(const String&) {}
+	void didChangeIconForPageURL(const String&) {}
+	void didRemoveAllIcons() {}
+	void didFinishURLImport() {
+		done();
+	}
+private:
+	void (*done)();
+};
+
+static dbclient *dbc;
+
+void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads,
+			void (*done)()) {
 	if (!dir)
 		return;
 
 	if (iconDatabase().isEnabled()) {
 		printf("Tried to open favicon db twice\n");
 		return;
+	}
+
+	if (done) {
+		dbc = new dbclient(done);
+		iconDatabase().setClient(dbc);
 	}
 
 	iconDatabase().setEnabled(true);

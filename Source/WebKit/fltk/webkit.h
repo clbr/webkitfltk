@@ -87,7 +87,8 @@ char *wk_urlencode(const char *in);
 void wk_set_cookie_path(const char *path);
 
 // Favicons
-void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads = NULL);
+void wk_set_favicon_dir(const char *dir, const std::vector<const char*> *preloads = NULL,
+			void (*done)() = NULL);
 Fl_RGB_Image *wk_get_favicon(const char *url, const unsigned targetsize = 16);
 
 // Cache
