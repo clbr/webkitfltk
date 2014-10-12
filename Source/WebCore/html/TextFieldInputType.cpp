@@ -195,8 +195,11 @@ void TextFieldInputType::forwardEvent(Event* event)
                 }
 
                 renderTextControl->capsLockStateMayHaveChanged();
-            } else if (event->type() == eventNames().focusEvent)
+            } else if (event->type() == eventNames().focusEvent) {
                 renderTextControl->capsLockStateMayHaveChanged();
+                if (Frame* frame = element().document().frame())
+                    frame->editor().textFieldDidBeginEditing(&element());
+            }
 
             element().forwardEvent(event);
         }
