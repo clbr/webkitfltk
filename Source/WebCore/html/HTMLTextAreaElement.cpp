@@ -273,6 +273,13 @@ void HTMLTextAreaElement::defaultEventHandler(Event* event)
     else if (renderer() && event->isBeforeTextInsertedEvent())
         handleBeforeTextInsertedEvent(toBeforeTextInsertedEvent(event));
 
+    if (Frame* frame = document().frame()) {
+        if (event->type() == eventNames().focusEvent)
+            frame->editor().textFieldDidBeginEditing(this);
+        else if (event->type() == eventNames().blurEvent)
+            frame->editor().textFieldDidEndEditing(this);
+    }
+
     HTMLTextFormControlElement::defaultEventHandler(event);
 }
 
