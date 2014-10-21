@@ -285,7 +285,7 @@ void webview::resize() {
 		priv->page->mainFrame().view()->resize(priv->w, priv->h);
 }
 
-static void keyscroll(Frame &f, const unsigned key, const bool shift) {
+static bool keyscroll(Frame &f, const unsigned key, const bool shift) {
 
 	ScrollDirection dir;
 	ScrollGranularity gran;
@@ -325,12 +325,14 @@ static void keyscroll(Frame &f, const unsigned key, const bool shift) {
 			dir = ScrollDown;
 		break;
 		default:
-			return;
+			return false;
 	}
 
 	if (f.eventHandler().scrollOverflow(dir, gran))
-		return;
+		return true;
 	f.view()->scroll(dir, gran);
+
+	return true;
 }
 
 int webview::handle(const int e) {
@@ -464,11 +466,12 @@ int webview::handle(const int e) {
 			bool ret = priv->event->keyEvent(pev);
 
 			if (e == FL_KEYDOWN && !ret)
-				keyscroll(priv->page->mainFrame(), win, Fl::event_shift());
+				ret = keyscroll(priv->page->mainFrame(), win, Fl::event_shift());
 
 			if ((priv->editing && !Fl::event_ctrl() && key != FL_Control_L &&
 				key != FL_Control_R) ||
-				(key == FL_Tab && !Fl::event_ctrl()))
+				(key == FL_Tab && !Fl::event_ctrl()) ||
+				ret)
 				return 1;
 			else
 				return 0;
