@@ -468,10 +468,15 @@ int webview::handle(const int e) {
 			if (e == FL_KEYDOWN && !ret)
 				ret = keyscroll(priv->page->mainFrame(), win, Fl::event_shift());
 
-			if ((priv->editing && !Fl::event_ctrl() && key != FL_Control_L &&
-				key != FL_Control_R) ||
-				(key == FL_Tab && !Fl::event_ctrl()) ||
-				ret)
+			// Ctrl-tab and shortcuts must never be caught by the view.
+			if (key == FL_Tab && Fl::event_ctrl())
+				return 0;
+			if (priv->editing && (Fl::event_ctrl() ||
+						key == FL_Control_L ||
+						key == FL_Control_R))
+				return 0;
+
+			if (priv->editing || ret || key == FL_Tab)
 				return 1;
 			else
 				return 0;
