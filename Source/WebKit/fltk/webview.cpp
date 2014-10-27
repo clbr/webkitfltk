@@ -471,9 +471,9 @@ int webview::handle(const int e) {
 			// Ctrl-tab and shortcuts must never be caught by the view.
 			if (key == FL_Tab && Fl::event_ctrl())
 				return 0;
-			if (priv->editing && (Fl::event_ctrl() ||
-						key == FL_Control_L ||
-						key == FL_Control_R))
+			if (Fl::event_ctrl() ||
+				key == FL_Control_L ||
+				key == FL_Control_R)
 				return 0;
 
 			if (priv->editing || ret || key == FL_Tab)
