@@ -242,7 +242,8 @@ void FlChromeClient::invalidateRootView(const IntRect &rect) {
 	if (rect.width() < 2)
 		view->redraw();
 	else
-		view->damage(FL_DAMAGE_EXPOSE, rect.x(), rect.y(),
+		view->damage(FL_DAMAGE_EXPOSE, rect.x() + view->x(),
+				rect.y() + view->y(),
 				rect.width(), rect.height());
 }
 

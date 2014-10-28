@@ -178,8 +178,8 @@ void webview::draw() {
 	int cx, cy, cw, ch;
 	fl_clip_box(x(), y(), w(), h(), cx, cy, cw, ch);
 	if (!cw) return;
-	priv->clipx = cx;
-	priv->clipy = cy;
+	priv->clipx = cx - x();
+	priv->clipy = cy - y();
 	priv->clipw = cw;
 	priv->cliph = ch;
 
