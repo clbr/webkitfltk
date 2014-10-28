@@ -51,6 +51,8 @@ public:
 	unsigned depth;
 	unsigned w, h;
 
+	int clipx, clipy, clipw, cliph;
+
 	struct timespec lastdraw;
 
 	bool editing;

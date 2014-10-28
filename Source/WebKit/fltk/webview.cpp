@@ -178,6 +178,10 @@ void webview::draw() {
 	int cx, cy, cw, ch;
 	fl_clip_box(x(), y(), w(), h(), cx, cy, cw, ch);
 	if (!cw) return;
+	priv->clipx = cx;
+	priv->clipy = cy;
+	priv->clipw = cw;
+	priv->cliph = ch;
 
 	drawWeb(); // for now here
 
@@ -202,7 +206,8 @@ void webview::drawWeb() {
 	f->view()->updateLayoutAndStyleIfNeededRecursive();
 
 	priv->gc->applyDeviceScaleFactor(f->page()->deviceScaleFactor());
-	f->view()->paint(priv->gc, IntRect(0, 0, w(), h()));
+	f->view()->paint(priv->gc, IntRect(priv->clipx, priv->clipy,
+						priv->clipw, priv->cliph));
 	priv->page->inspectorController().drawHighlight(*priv->gc);
 }
 
