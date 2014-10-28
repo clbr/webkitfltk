@@ -238,7 +238,12 @@ IntRect FlChromeClient::windowResizerRect() const {
 }
 
 void FlChromeClient::invalidateRootView(const IntRect &rect) {
-	view->redraw();
+
+	if (rect.width() < 2)
+		view->redraw();
+	else
+		view->damage(FL_DAMAGE_EXPOSE, rect.x(), rect.y(),
+				rect.width(), rect.height());
 }
 
 void FlChromeClient::invalidateContentsAndRootView(const IntRect &rect) {
