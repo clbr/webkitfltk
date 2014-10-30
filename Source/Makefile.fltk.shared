@@ -20,6 +20,7 @@ CXXFLAGS += -DENABLE_NETSCAPE_PLUGIN_API=0 -DENABLE_SQL_DATABASE=0 \
 
 CXXFLAGS += -ffunction-sections -fdata-sections
 CXXFLAGS += -fno-rtti -fno-exceptions
+CXXFLAGS += -Wall
 
 FLTKCONFIG = $(shell which fltk-config13 || which fltk-config)
 
