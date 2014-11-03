@@ -424,6 +424,7 @@ int webview::handle(const int e) {
 			fl_cursor(FL_CURSOR_DEFAULT);
 			return 1;
 		case FL_FOCUS:
+			Fl::focus(this);
 			if (!priv->page->mainFrame().view()->isPainting()) {
 				priv->page->focusController().setActive(true);
 				priv->page->mainFrame().selection().setFocused(true);
