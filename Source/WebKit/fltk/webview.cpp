@@ -340,6 +340,27 @@ static bool keyscroll(Frame &f, const unsigned key, const bool shift) {
 	return true;
 }
 
+static unsigned remapkey(const unsigned key, unsigned *mod) {
+
+	switch (key) {
+		case FL_Down:
+		case FL_Right:
+			if (Fl::event_shift() && !Fl::event_ctrl() && !Fl::event_alt()) {
+				*mod &= ~PlatformEvent::ShiftKey;
+				return FL_Tab;
+			}
+		break;
+		case FL_Up:
+		case FL_Left:
+			if (Fl::event_shift() && !Fl::event_ctrl() && !Fl::event_alt()) {
+				return FL_Tab;
+			}
+		break;
+	}
+
+	return key;
+}
+
 int webview::handle(const int e) {
 
 	switch (e) {
@@ -456,12 +477,13 @@ int webview::handle(const int e) {
 				modifiers |= PlatformEvent::MetaKey;
 
 			bool iskeypad = false;
-			const unsigned key = Fl::event_key();
+			unsigned key = remapkey(Fl::event_key(), &modifiers);
+
 			if (key >= FL_KP && key <= FL_KP_Last)
 				iskeypad = true;
 
-			String keyid = keyidfor(Fl::event_key());
-			unsigned win = winkeyfor(Fl::event_key());
+			String keyid = keyidfor(key);
+			unsigned win = winkeyfor(key);
 
 			PlatformKeyboardEvent pev(type, text, text,
 						keyid, win, 0, 0,
