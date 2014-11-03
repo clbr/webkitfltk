@@ -478,7 +478,8 @@ int webview::handle(const int e) {
 				return 0;
 			if (Fl::event_ctrl() ||
 				key == FL_Control_L ||
-				key == FL_Control_R)
+				key == FL_Control_R ||
+				(key >= FL_F && key <= FL_F_Last))
 				return 0;
 
 			if (priv->editing || ret || key == FL_Tab)
