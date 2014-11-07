@@ -83,9 +83,9 @@ void webkitInit() {
 
 	// Make sure the runtime cairo version is new enough
 	const int runtime = cairo_version();
-	const int required = CAIRO_VERSION_ENCODE(1, 12, 17);
+	const int required = CAIRO_VERSION_ENCODE(1, 12, 18);
 	if (runtime < required) {
-		printf("The Cairo version on this system is too old, 1.12.17 required (%d, %d)\n",
+		printf("The Cairo version on this system is too old, 1.12.18 required (%d, %d)\n",
 			runtime, required);
 		exit(1);
 	}
