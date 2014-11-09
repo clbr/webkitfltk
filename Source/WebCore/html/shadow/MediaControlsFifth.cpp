@@ -35,6 +35,7 @@
 #include "HTMLNames.h"
 #include "MediaController.h"
 #include "WheelEvent.h"
+#include <wtf/text/CString.h>
 
 #include <FL/fl_ask.H>
 #include <unistd.h>
@@ -270,8 +271,8 @@ bool MediaControlsFifth::shouldClosedCaptionsContainerPreventPageScrolling(int w
 
 void MediaControlsFifth::handleClickEvent(Event* event)
 {
-    Node* currentTarget = event->currentTarget()->toNode();
-    Node* target = event->target()->toNode();
+//    Node* currentTarget = event->currentTarget()->toNode();
+//    Node* target = event->target()->toNode();
 }
 
 void MediaControlsFifth::closedCaptionTracksChanged()
