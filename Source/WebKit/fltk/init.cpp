@@ -73,7 +73,9 @@ void webkitInit() {
 	JSC::initializeThreading();
 	WTF::initializeMainThread();
 
+#if !LOG_DISABLED
 	WebCore::initializeLoggingChannelsIfNecessary();
+#endif
 
 	PlatformStrategiesFLTK::initialize();
 	atomicCanonicalTextEncodingName("UTF-8");
