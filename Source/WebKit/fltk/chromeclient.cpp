@@ -312,12 +312,18 @@ void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned 
 }
 
 void FlChromeClient::setToolTip(const String &str, TextDirection) {
+
+	if (view->tooltip() && !strcmp(view->tooltip(), str.utf8().data()))
+		return;
+
 	view->copy_tooltip(str.utf8().data());
 
-	if (str.length() > 1)
-		Fl_Tooltip::enter(view);
-	else
+	if (str.length() > 1) {
 		Fl_Tooltip::enter((Fl_Widget *) 0);
+		Fl_Tooltip::enter(view);
+	} else {
+		Fl_Tooltip::enter((Fl_Widget *) 0);
+	}
 }
 
 void FlChromeClient::print(Frame*) {
