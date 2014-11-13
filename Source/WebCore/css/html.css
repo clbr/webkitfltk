@@ -1128,19 +1128,19 @@ nobr {
 
 /* states */
 
-:focus { 
-    outline: auto 5px -webkit-focus-ring-color
-}
-
 /* Read-only text fields do not show a focus ring but do still receive focus */
 html:focus, body:focus, input[readonly]:focus { 
-    outline: none
+    outline: none !important;
 }
 
 applet:focus, embed:focus, iframe:focus, object:focus {
-    outline: none
+    outline: none !important;
 }
   
+:focus {
+    outline: auto 5px -webkit-focus-ring-color !important;
+}
+
 input:focus, textarea:focus, isindex:focus, keygen:focus, select:focus {
     outline-offset: -2px
 }
