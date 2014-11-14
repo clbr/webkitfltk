@@ -135,6 +135,10 @@ bool ScrollbarThemeFLTK::paint(ScrollbarThemeClient *bar, GraphicsContext *gc,
 	flbar->maximum(bar->maximum());
 	flbar->value(bar->currentPos());
 
+	flbar->set_active();
+	if (!bar->enabled())
+		flbar->clear_active();
+
 	fl_begin_offscreen(d);
 	fl_push_clip(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
 	((Fl_Widget *) flbar)->draw();
