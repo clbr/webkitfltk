@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GCController.h>
 #include <IconDatabase.h>
 #include <IconDatabaseClient.h>
+#include <ImageSource.h>
 #include <Logging.h>
 #include <MemoryCache.h>
 #include <Page.h>
@@ -328,4 +329,10 @@ void wk_set_persite_settings_func(void (*func)(const char*)) {
 void wk_set_cookie_path(const char *path) {
 	free((char *) wk_cookiepath);
 	asprintf((char **) &wk_cookiepath, "%s/cookies.dat", path);
+}
+
+void wk_set_image_max(const unsigned size) {
+#if ENABLE(IMAGE_DECODER_DOWN_SAMPLING)
+	ImageSource::setMaxPixelsPerDecodedImage(size * size);
+#endif
 }

@@ -98,6 +98,9 @@ void wk_set_cache_max(const unsigned bytes);
 // Per-site settings
 void wk_set_persite_settings_func(void (*func)(const char*));
 
+// Maximum image size. Default is 1024, meaning 1024^2 pixels. Larger ones get resized.
+void wk_set_image_max(const unsigned size);
+
 // Spoofing functions
 // Use this for per-page useragents.
 void wk_set_useragent_func(const char * (*func)(const char *));
