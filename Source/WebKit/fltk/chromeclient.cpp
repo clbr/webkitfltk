@@ -181,16 +181,38 @@ void FlChromeClient::closeWindowSoon() {
 	notImplemented();
 }
 
+static const char *shortenJS(const char * const url) {
+	// Not thread safe, but that's ok, as these functions are only
+	// called from the main thread.
+
+	enum {
+		bufsize = 64
+	};
+
+	static char buf[bufsize];
+	const unsigned len = strlen(url);
+
+	if (len < bufsize)
+		return url;
+
+	memcpy(buf, url, bufsize - 1);
+
+	buf[bufsize - 4] = buf[bufsize - 3] = buf[bufsize - 2] = '.';
+	buf[bufsize - 1] = '\0';
+
+	return buf;
+}
+
 void FlChromeClient::runJavaScriptAlert(Frame *f, const String &s) {
 	fl_message_title("Javascript alert");
-	fl_alert("<%s>\n\n%s", f->document()->baseURI().string().utf8().data(),
+	fl_alert("<%s>\n\n%s", shortenJS(f->document()->baseURI().string().utf8().data()),
 			s.utf8().data());
 }
 
 bool FlChromeClient::runJavaScriptConfirm(Frame *f, const String &s) {
 	fl_message_title("Javascript confirm");
 	return fl_choice("<%s>\n\n%s", fl_cancel, fl_ok, NULL,
-			f->document()->baseURI().string().utf8().data(),
+			shortenJS(f->document()->baseURI().string().utf8().data()),
 			s.utf8().data());
 }
 
@@ -199,7 +221,7 @@ bool FlChromeClient::runJavaScriptPrompt(Frame *f, const String &s,
 
 	fl_message_title("Javascript prompt");
 	const char *res = fl_input("<%s>\n\n%s", def.utf8().data(),
-				f->document()->baseURI().string().utf8().data(),
+				shortenJS(f->document()->baseURI().string().utf8().data()),
 				s.utf8().data());
 	if (!res)
 		return false;
