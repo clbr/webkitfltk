@@ -32,7 +32,11 @@ static int filter(const struct dirent * const cur) {
 	return 1;
 }
 
+#if defined(__GLIBC__) && __GLIBC_MINOR__ < 10
 static int comp(const void *ap, const void *bp) {
+#else
+static int comp(const struct dirent **ap, const struct dirent **bp) {
+#endif
 
 	const struct dirent **a = (const struct dirent **) ap;
 	const struct dirent **b = (const struct dirent **) bp;
