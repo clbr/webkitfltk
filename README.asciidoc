@@ -33,3 +33,19 @@ Notes
 
 GCC 4.7.3 minimum. 4.7 series is in theory enough, but .0-.2 had a C++11 bug.
 4.8.3 tested.
+
+On debug vs release
+-------------------
+
+We don't like to hide functionality behind magic, so "release" and "debug" are
+fully controlled by your CXXFLAGS.
+
+release:: A build without -g and with -DNDEBUG, ie no asserts. Requires about 500mb
+		space.
+debug:: A built with -g and without -DNDEBUG, both asserts and debug symbols.
+	Requires around 10gb space.
+asserts only:: Without -g, without -DNDEBUG. Requires about 2gb space.
+
+The asserts are helpful when debugging crashes, while taking much less space
+than a full debug build. They aren't that useful in normal use, because almost
+every other site blows up then.
