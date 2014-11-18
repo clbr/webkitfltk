@@ -1,0 +1,9 @@
+prefix=PREFIX
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: WebkitFLTK
+Description: Web browser library
+Version: VERSION
+Libs: -L${libdir} -lwebkitfltk
+Cflags: -I${includedir}/webkitfltk

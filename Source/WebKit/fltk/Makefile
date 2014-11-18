@@ -142,10 +142,15 @@ clean:
 PREFIX ?= /usr
 
 install: all
-	mkdir -p $(DESTDIR)/$(PREFIX)/lib
+	mkdir -p $(DESTDIR)/$(PREFIX)/lib/pkgconfig
 	mkdir -p $(DESTDIR)/$(PREFIX)/include/webkitfltk
 	install -m644 $(NAME) $(DESTDIR)/$(PREFIX)/lib
 	insthdr=`grep 'include "' webkit.h | cut -d\" -f2`; \
 	for hdr in $$insthdr webkit.h; do \
 		install -m644 $$hdr $(DESTDIR)/$(PREFIX)/include/webkitfltk; \
 	done
+	majorver=`grep WK_FLTK_MAJOR webkit.h | cut -d" " -f3`; \
+	minorver=`grep WK_FLTK_MINOR webkit.h | cut -d" " -f3`; \
+	patchver=`grep WK_FLTK_PATCH webkit.h | cut -d" " -f3`; \
+	sed -e "s@PREFIX@$(PREFIX)@" -e "s@VERSION@$$majorver.$$minorver.$$patchver@" \
+		webkitfltk.pc > $(DESTDIR)/$(PREFIX)/lib/pkgconfig/webkitfltk.pc
