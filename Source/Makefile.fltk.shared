@@ -37,6 +37,9 @@ endif
 ifeq ($(RUBY),)
   $(error Ruby not found, set the RUBY var if it's not in path)
 endif
+ifeq ($(shell which gperf),)
+  $(error gperf not found)
+endif
 
 PYTHONVER = $(shell $(PYTHON) --version 2>&1 | cut -d. -f1 | cut -d' ' -f2-)
 ifneq ($(PYTHONVER), 2)
