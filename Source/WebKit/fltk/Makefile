@@ -104,7 +104,7 @@ CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)
 NAME = /tmp/libwebkitfltk.a
 
 LIBS = -lz -pthread -lxslt -lxml2 -ldl -lsqlite3 \
-	-Wl,-Bstatic `icu-config --ldflags` -lharfbuzz -lharfbuzz-icu -Wl,-Bdynamic \
+	`icu-config --ldflags` -lharfbuzz -lharfbuzz-icu \
 	-lfreetype -lfontconfig -lcairo \
 	-lpng -ljpeg -lrt -lcurl -lssl -lcrypto -lglib-2.0 \
 	`$(FLTKCONFIG) --ldflags --use-images` \
