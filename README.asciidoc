@@ -40,11 +40,11 @@ On debug vs release
 We don't like to hide functionality behind magic, so "release" and "debug" are
 fully controlled by your CXXFLAGS.
 
-release:: A build without -g and with -DNDEBUG, ie no asserts. Requires about 500mb
+release:: A build without -g and with -DNDEBUG, ie no asserts. Requires about 800mb
 		space.
 debug:: A built with -g and without -DNDEBUG, both asserts and debug symbols.
 	Requires around 10gb space.
-asserts only:: Without -g, without -DNDEBUG. Requires about 2gb space.
+asserts only:: Without -g, without -DNDEBUG. Requires about 1.5gb space.
 
 The asserts are helpful when debugging crashes, while taking much less space
 than a full debug build. They aren't that useful in normal use, because almost
