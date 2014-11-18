@@ -60,7 +60,8 @@ Image* IconRecord::image(const IntSize &size)
     // one, or resize the best one to the requested size and cache that result.
 
     // Get the closest-sized ICO frame.
-    ((BitmapImage *) m_image.get())->setClosestSizeFrame(size);
+    if (m_image.get())
+        ((BitmapImage *) m_image.get())->setClosestSizeFrame(size);
 
     return m_image.get();
 }
