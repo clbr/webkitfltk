@@ -25,7 +25,7 @@ CXXFLAGS += -Wall
 FLTKCONFIG = $(shell which fltk-config13 || which fltk-config)
 
 PERL ?= $(shell which perl)
-PYTHON ?= $(shell which python)
+PYTHON ?= $(shell which python2 || which python)
 RUBY ?= $(shell which ruby)
 
 ifeq ($(PERL),)
@@ -36,4 +36,9 @@ ifeq ($(PYTHON),)
 endif
 ifeq ($(RUBY),)
   $(error Ruby not found, set the RUBY var if it's not in path)
+endif
+
+PYTHONVER = $(shell $(PYTHON) --version 2>&1 | cut -d. -f1 | cut -d' ' -f2-)
+ifneq ($(PYTHONVER), 2)
+  $(error Python 2 is required, 3 won't work.)
 endif
