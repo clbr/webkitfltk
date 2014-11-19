@@ -20,6 +20,7 @@
 #include "config.h"
 
 #include "PopupMenuFLTK.h"
+#include <FrameView.h>
 #include <wtf/text/CString.h>
 
 #include <FL/Fl_Menu_Item.H>
@@ -64,8 +65,9 @@ void PopupMenuFLTK::show(const IntRect &rect, FrameView *view, int index) {
 	items.append(end);
 
 	// Offset by the webview coords
-	unsigned x = rect.x() + m_x;
-	unsigned y = rect.y() + m_y;
+	const IntPoint shift = view->contentsToWindow(rect.location());
+	const unsigned x = shift.x() + m_x;
+	const unsigned y = shift.y() + m_y;
 
 	const Fl_Menu_Item *ptr = items[0].pulldown(x, y,
 							rect.width(), rect.height());
