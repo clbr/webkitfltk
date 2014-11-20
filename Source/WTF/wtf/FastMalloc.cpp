@@ -2118,8 +2118,16 @@ void TCMalloc_PageHeap::initializeScavenger()
 
     pthread_cond_init(&m_scavengeCondition, 0);
     m_scavengeThreadActive = true;
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    // Explicit 1mb stack. For musl the default is too small, for glibc too large.
+    pthread_attr_setstacksize(&attr, 1024 * 1024);
+
     pthread_t thread;
-    pthread_create(&thread, 0, runScavengerThread, this);
+    pthread_create(&thread, &attr, runScavengerThread, this);
+
+    pthread_attr_destroy(&attr);
 }
 
 void* TCMalloc_PageHeap::runScavengerThread(void* context)

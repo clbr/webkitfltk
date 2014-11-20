@@ -179,10 +179,18 @@ ThreadIdentifier createThreadInternal(ThreadFunction entryPoint, void* data, con
 {
     auto invocation = std::make_unique<ThreadFunctionInvocation>(entryPoint, data);
     pthread_t threadHandle;
-    if (pthread_create(&threadHandle, 0, wtfThreadEntryPoint, invocation.get())) {
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    // Explicit 2mb stack. For musl the default is too small, for glibc too large.
+    pthread_attr_setstacksize(&attr, 2 * 1024 * 1024);
+
+    if (pthread_create(&threadHandle, &attr, wtfThreadEntryPoint, invocation.get())) {
         LOG_ERROR("Failed to create pthread at entry point %p with data %p", wtfThreadEntryPoint, invocation.get());
         return 0;
     }
+
+    pthread_attr_destroy(&attr);
 
     // Balanced by std::unique_ptr constructor in wtfThreadEntryPoint.
     ThreadFunctionInvocation* leakedInvocation = invocation.release();
