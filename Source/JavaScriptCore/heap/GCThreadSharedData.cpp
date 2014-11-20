@@ -90,7 +90,7 @@ GCThreadSharedData::GCThreadSharedData(VM* vm)
         SlotVisitor* slotVisitor = new SlotVisitor(*this);
         CopyVisitor* copyVisitor = new CopyVisitor(*this);
         GCThread* newThread = new GCThread(*this, slotVisitor, copyVisitor);
-        ThreadIdentifier threadID = createThread(GCThread::gcThreadStartFunc, newThread, "JavaScriptCore::Marking");
+        ThreadIdentifier threadID = createThread(GCThread::gcThreadStartFunc, newThread, "JSC::Marking");
         newThread->initializeThreadID(threadID);
         m_gcThreads.append(newThread);
     }

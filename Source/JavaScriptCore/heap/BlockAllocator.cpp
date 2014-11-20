@@ -39,7 +39,7 @@ inline ThreadIdentifier createBlockFreeingThread(BlockAllocator* allocator)
 {
     if (!GCActivityCallback::s_shouldCreateGCTimer)
         return 0; // No block freeing thread.
-    ThreadIdentifier identifier = createThread(allocator->blockFreeingThreadStartFunc, allocator, "JavaScriptCore::BlockFree");
+    ThreadIdentifier identifier = createThread(allocator->blockFreeingThreadStartFunc, allocator, "JSC::BlockFree");
     RELEASE_ASSERT(identifier);
     return identifier;
 }

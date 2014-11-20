@@ -235,7 +235,7 @@ void SamplingThread::start(unsigned hertz)
     s_running = true;
     s_hertz = hertz;
 
-    s_samplingThread = createThread(threadStartFunc, 0, "JavaScriptCore::Sampler");
+    s_samplingThread = createThread(threadStartFunc, 0, "JSC::Sampler");
 }
 
 void SamplingThread::stop()
