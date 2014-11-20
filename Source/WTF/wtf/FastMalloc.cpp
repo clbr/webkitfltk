@@ -90,6 +90,10 @@
 #include <wtf/DataLog.h>
 #include <wtf/StdLibExtras.h>
 
+#if OS(LINUX)
+#include <sys/prctl.h>
+#endif
+
 #if OS(DARWIN)
 #include <mach/mach_init.h>
 #include <malloc/malloc.h>
@@ -2948,6 +2952,8 @@ void TCMalloc_PageHeap::scavengerThread()
 {
 #if HAVE(PTHREAD_SETNAME_NP)
     pthread_setname_np("JavaScriptCore: FastMalloc scavenger");
+#elif OS(LINUX)
+    prctl(PR_SET_NAME, "JSC scavenger", 0, 0, 0);
 #endif
 
     while (1) {

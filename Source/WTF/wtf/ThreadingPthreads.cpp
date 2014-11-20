@@ -59,6 +59,10 @@
 #include <objc/objc-auto.h>
 #endif
 
+#if OS(LINUX)
+#include <sys/prctl.h>
+#endif
+
 namespace WTF {
 
 class PthreadState {
@@ -191,6 +195,8 @@ void initializeCurrentThreadInternal(const char* threadName)
 {
 #if HAVE(PTHREAD_SETNAME_NP)
     pthread_setname_np(threadName);
+#elif OS(LINUX)
+    prctl(PR_SET_NAME, threadName, 0, 0, 0);
 #else
     UNUSED_PARAM(threadName);
 #endif
