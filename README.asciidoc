@@ -17,7 +17,8 @@ plain makefiles included herein.
 
 The cmake system did not work for us, which is the reason for the makefiles.
 
-Perl, Python 2 and Ruby are all needed as build-time dependencies.
+Perl, Python 2 and Ruby are all needed as build-time dependencies. For more info
+see http://fifth-browser.sourceforge.net/downloads.html
 
 ----
 make -C Source/WTF/wtf
