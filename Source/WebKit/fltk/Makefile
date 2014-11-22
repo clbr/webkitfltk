@@ -119,7 +119,7 @@ $(NAME): $(OBJ) ../../WTF/wtf/libwtf.a ../../JavaScriptCore/libjsc.a \
 	rm -f $(NAME)
 	ar cru $(NAME) $(OBJ)
 	ranlib $(NAME)
-	echo -e "CREATE tmp.a\n\
+	printf "CREATE tmp.a\n\
 	ADDLIB $(NAME)\n\
 	ADDLIB ../../WTF/wtf/libwtf.a\n\
 	ADDLIB ../../JavaScriptCore/libjsc.a\n\
