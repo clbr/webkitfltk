@@ -220,8 +220,10 @@ void CurlDownloadManager::downloadThread(void* data)
         int messagesInQueue = 0;
         CURLMsg* msg = curl_multi_info_read(downloadManager->getMultiHandle(), &messagesInQueue);
 
-        if (!msg)
+        if (!msg) {
+            downloadManager->stopThreadIfIdle();
             continue;
+        }
 
         CurlDownload* download = 0;
         CURLcode err = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &download);
