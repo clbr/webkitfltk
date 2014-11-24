@@ -73,8 +73,9 @@ void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
 			if (frame) {
 				char *src = view->focusedSource();
 				if (src && popupfunc) {
-					webview *newview = popupfunc("about:blank");
-					newview->loadString(src, "text/plain");
+					webview *newview = popupfunc("");
+					if (newview)
+						newview->loadString(src, "text/plain");
 					free(src);
 				}
 			}
