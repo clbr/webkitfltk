@@ -369,7 +369,7 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 		}
 	}
 
-	if (view->priv->siteChanging)
+	if (view->priv->siteChanging && &view->priv->page->mainFrame() == frame)
 		view->priv->siteChanging(view, req.url().string().utf8().data());
 
 	policyfunc(PolicyUse);
