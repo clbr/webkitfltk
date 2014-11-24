@@ -41,6 +41,7 @@ enum SettingInt {
 enum SettingChar {
 	WK_SETTING_DEFAULT_FONT = 0,
 	WK_SETTING_FIXED_FONT,
+	WK_SETTING_USER_CSS,
 };
 
 class webview: public Fl_Widget {

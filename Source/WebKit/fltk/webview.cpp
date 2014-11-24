@@ -1063,6 +1063,15 @@ void webview::setChar(const SettingChar item, const char *val) {
 		case WK_SETTING_FIXED_FONT:
 			set.setFixedFontFamily(val);
 		break;
+		case WK_SETTING_USER_CSS:
+			if (val) {
+				String base = "file://";
+				base.append(String::fromUTF8(val));
+				set.setUserStyleSheetLocation(URL(URL(), base));
+			} else {
+				set.setUserStyleSheetLocation(blankURL());
+			}
+		break;
 	}
 }
 
@@ -1076,6 +1085,9 @@ const char *webview::getChar(const SettingChar item) const {
 		break;
 		case WK_SETTING_FIXED_FONT:
 			return strdup(set.fixedFontFamily().string().utf8().data());
+		break;
+		case WK_SETTING_USER_CSS:
+			return strdup(set.userStyleSheetLocation().string().utf8().data());
 		break;
 	}
 
