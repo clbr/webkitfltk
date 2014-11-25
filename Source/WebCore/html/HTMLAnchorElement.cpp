@@ -531,6 +531,13 @@ void HTMLAnchorElement::handleClick(Event* event)
     appendServerMapMousePosition(url, event);
     URL kurl = document().completeURL(url.toString());
 
+    String tgt = target();
+    if (event->isMouseEvent()) {
+        const MouseEvent * const ev = toMouseEvent(event);
+        if (ev->button() == 1)
+            tgt = "";
+    }
+
 #if ENABLE(DOWNLOAD_ATTRIBUTE)
     if (hasAttribute(downloadAttr)) {
         ResourceRequest request(kurl);
@@ -546,7 +553,7 @@ void HTMLAnchorElement::handleClick(Event* event)
         frame->loader().client().startDownload(request, fastGetAttribute(downloadAttr));
     } else
 #endif
-        frame->loader().urlSelected(kurl, target(), event, LockHistory::No, LockBackForwardList::No, hasRel(RelationNoReferrer) ? NeverSendReferrer : MaybeSendReferrer);
+        frame->loader().urlSelected(kurl, tgt, event, LockHistory::No, LockBackForwardList::No, hasRel(RelationNoReferrer) ? NeverSendReferrer : MaybeSendReferrer);
 
     sendPings(kurl);
 }
