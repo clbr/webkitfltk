@@ -28,14 +28,32 @@
 #include <wtf/text/CString.h>
 
 #include <FL/Fl.H>
+#include <FL/Fl_Widget.H>
 #include <FL/x.H>
 #include <X11/Xlib.h>
 
 extern Window fl_message_window;
 
-namespace WebCore {
+class paster_t: public Fl_Widget {
+public:
+	paster_t(): Fl_Widget(0, 0, 0, 0), text(NULL) {}
 
-static String internalclip;
+	int handle(int e) {
+		text = NULL;
+		if (e == FL_PASTE) {
+			text = Fl::event_text();
+			return 1;
+		}
+
+		return Fl_Widget::handle(e);
+	}
+
+	void draw() {}
+
+	const char *text;
+};
+
+namespace WebCore {
 
 Pasteboard::Pasteboard()
 {
@@ -44,7 +62,6 @@ Pasteboard::Pasteboard()
 void Pasteboard::writePlainText(const String &str, SmartReplaceOption)
 {
     Fl::copy(str.utf8().data(), str.length());
-    internalclip = str;
 }
 
 void Pasteboard::clear()
@@ -92,12 +109,20 @@ void Pasteboard::clear(const String&)
 
 void Pasteboard::read(PasteboardPlainText &text)
 {
+    static paster_t *paster = NULL;
+    if (!paster)
+        paster = new paster_t;
+
     const Window owner = XGetSelectionOwner(fl_display, XA_PRIMARY);
     if (owner == None) {
         text.text = "";
         return;
     } else if (owner == fl_message_window) {
-        text.text = internalclip;
+        Fl::paste(*paster, 0, Fl::clipboard_plain_text);
+        if (paster->text)
+            text.text = paster->text;
+        else
+            text.text = "";
         return;
     }
 
