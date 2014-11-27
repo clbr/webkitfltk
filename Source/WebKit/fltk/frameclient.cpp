@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "webviewpriv.h"
 #include "dirlisting.h"
 
+#include <AuthenticationChallenge.h>
+#include <Credential.h>
 #include <wtf/text/CString.h>
 #include <DocumentLoader.h>
 #include <FrameNetworkingContext.h>
@@ -32,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ResourceError.h>
 #include <ResourceLoader.h>
 #include <ResourceRequest.h>
+
+#include <FL/fl_ask.H>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -96,11 +100,49 @@ void FlFrameLoaderClient::dispatchWillSendRequest(DocumentLoader*, unsigned long
 }
 
 bool FlFrameLoaderClient::shouldUseCredentialStorage(DocumentLoader*, unsigned long identifier) {
-	return false;
+	return true;
 }
 
-void FlFrameLoaderClient::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, unsigned long identifier, const AuthenticationChallenge&) {
-	notImplemented();
+void FlFrameLoaderClient::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*,
+		unsigned long identifier, const AuthenticationChallenge &challenge) {
+	char title[160];
+	snprintf(title, 160, "Authentication for site %s:%u",
+		challenge.protectionSpace().host().utf8().data(),
+		challenge.protectionSpace().port());
+	title[159] = '\0';
+
+	const String msg = challenge.protectionSpace().realm();
+
+	fl_message_title(title);
+	const char *name;
+	if (msg.isEmpty())
+		name = fl_input("Username:");
+	else
+		name = fl_input("%s\nUsername:", NULL, msg.utf8().data());
+
+	if (!name) {
+		challenge.authenticationClient()->receivedRequestToContinueWithoutCredential(challenge);
+		return;
+	}
+
+	const String username = String::fromUTF8(name);
+
+	fl_message_title(title);
+	const char *pw;
+	if (msg.isEmpty())
+		pw = fl_password("Password:");
+	else
+		pw = fl_password("%s\nPassword:", NULL, msg.utf8().data());
+
+	if (!pw) {
+		challenge.authenticationClient()->receivedRequestToContinueWithoutCredential(challenge);
+		return;
+	}
+
+	const String password = String::fromUTF8(pw);
+
+	Credential cred(username, password, CredentialPersistenceForSession);
+	challenge.authenticationClient()->receivedCredential(challenge, cred);
 }
 
 void FlFrameLoaderClient::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, unsigned long identifier, const AuthenticationChallenge&) {
