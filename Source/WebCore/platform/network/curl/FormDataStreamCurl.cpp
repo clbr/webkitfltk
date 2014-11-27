@@ -113,6 +113,13 @@ bool FormDataStream::hasMoreElements() const
     return m_formDataElementIndex < elements.size();
 }
 
+void FormDataStream::resetPos()
+{
+    if (m_file) {
+        rewind(m_file);
+    }
+}
+
 } // namespace WebCore
 
 #endif

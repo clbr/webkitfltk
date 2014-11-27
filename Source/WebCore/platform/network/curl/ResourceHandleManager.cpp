@@ -602,6 +602,25 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
     return totalSize;
 }
 
+/* Called for HTTP(S) POST uploads on some sites, curl already sent data but
+   needs to re-send it. Simpler interface than the seek one.
+*/
+curlioerr ioctlCallback(CURL *handle, int cmd, void *data)
+{
+    ResourceHandle* job = static_cast<ResourceHandle*>(data);
+    ResourceHandleInternal* d = job->getInternal();
+
+    if (d->m_cancelled)
+        return CURLIOE_FAILRESTART;
+
+    if (cmd != CURLIOCMD_RESTARTREAD)
+        return CURLIOE_UNKNOWNCMD;
+
+    d->m_formDataStream.resetPos();
+
+    return CURLIOE_OK;
+}
+
 /* This is called to obtain HTTP POST or PUT data.
    Iterate through FormData elements and upload files.
    Carefully respect the given buffer size and fill the rest of the data at the next calls.
@@ -851,6 +870,8 @@ static void setupFormData(ResourceHandle* job, CURLoption sizeOption, struct cur
 
     curl_easy_setopt(d->m_handle, CURLOPT_READFUNCTION, readCallback);
     curl_easy_setopt(d->m_handle, CURLOPT_READDATA, job);
+    curl_easy_setopt(d->m_handle, CURLOPT_IOCTLFUNCTION, ioctlCallback);
+    curl_easy_setopt(d->m_handle, CURLOPT_IOCTLDATA, job);
 }
 
 void ResourceHandleManager::setupPUT(ResourceHandle* job, struct curl_slist** headers)
