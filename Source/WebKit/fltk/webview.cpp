@@ -44,6 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FrameView.h>
 #include <HTMLAnchorElement.h>
 #include <HTMLInputElement.h>
+#include <HTMLLinkElement.h>
 #include <InspectorController.h>
 #include <MainFrame.h>
 #include <markup.h>
@@ -783,9 +784,26 @@ void webview::prev() {
 }
 
 void webview::next() {
-	RefPtr<NodeList> links = priv->page->mainFrame().document()->getElementsByTagName("a");
-	unsigned max = links->length();
+
+	// Primary check - the HTML pagination code
+	RefPtr<NodeList> pagination =
+		priv->page->mainFrame().document()->getElementsByTagName("link");
+	unsigned max = pagination->length();
 	unsigned i, t;
+
+	for (i = 0; i < max; i++) {
+		HTMLLinkElement * const e = toHTMLLinkElement(pagination->item(i));
+		if (e->href().isEmpty()) continue;
+		if (equalIgnoringCase(e->rel(), "next")) {
+			// Perfect match.
+			load(e->href().string().utf8().data());
+			return;
+		}
+	}
+
+	// No matches, parse links
+	RefPtr<NodeList> links = priv->page->mainFrame().document()->getElementsByTagName("a");
+	max = links->length();
 
 	const char targets[][10] = {
 		"thread",
