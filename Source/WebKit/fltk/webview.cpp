@@ -141,6 +141,9 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	set.setDownloadableBinaryFontsEnabled(false);
 	set.setAcceleratedCompositingEnabled(false);
 
+	priv->page->focusController().setActive(true);
+	priv->page->focusController().setFocusedFrame(&priv->page->mainFrame());
+
 	// Cairo
 	resize();
 
@@ -448,16 +451,16 @@ int webview::handle(const int e) {
 			return 1;
 		case FL_FOCUS:
 			Fl::focus(this);
-			if (!priv->page->mainFrame().view()->isPainting()) {
-				priv->page->focusController().setActive(true);
-				priv->page->mainFrame().selection().setFocused(true);
-			}
+			priv->page->focusController().setActive(true);
+
+			if (priv->page->focusController().focusedFrame())
+				priv->page->focusController().setFocused(true);
+			else
+				priv->page->focusController().setFocusedFrame(&priv->page->mainFrame());
 			return 1;
 		case FL_UNFOCUS:
-			if (!priv->page->mainFrame().view()->isPainting()) {
-				priv->page->focusController().setActive(false);
-				priv->page->mainFrame().selection().setFocused(false);
-			}
+			priv->page->focusController().setActive(false);
+			priv->page->focusController().setFocused(false);
 			return 1;
 		case FL_KEYDOWN:
 		case FL_KEYUP:
