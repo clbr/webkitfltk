@@ -101,16 +101,6 @@ void RenderThemeFLTK::adjustSizeConstraints(RenderStyle* style, FormType type) c
     style->setPaddingRight(desc->padding.right());
 }
 
-static bool isFormElementTooLargeToDisplay(const IntSize& elementSize)
-{
-    // This limit of 20000 pixels is hardcoded inside edje -- anything above this size
-    // will be clipped. This value seems to be reasonable enough so that hardcoding it
-    // here won't be a problem.
-    static const int maxEdjeDimension = 20000;
-
-    return elementSize.width() > maxEdjeDimension || elementSize.height() > maxEdjeDimension;
-}
-
 bool RenderThemeFLTK::isControlStyled(const RenderStyle* style, const BorderData& border, const FillLayer& background, const Color& backgroundColor) const
 {
     return RenderTheme::isControlStyled(style, border, background, backgroundColor) || style->appearance() == MenulistButtonPart;
