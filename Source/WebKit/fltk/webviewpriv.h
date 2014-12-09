@@ -40,7 +40,6 @@ typedef unsigned long Pixmap;
 class privatewebview {
 public:
 	WebCore::Page *page;
-	WebCore::EventHandler *event;
 
 	cairo_t *cairo;
 	cairo_surface_t *cairosurf;

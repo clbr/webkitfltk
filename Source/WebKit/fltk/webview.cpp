@@ -124,7 +124,6 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 
 	MainFrame *f = &priv->page->mainFrame();
 	f->init();
-	priv->event = &f->eventHandler();
 
 	// Default settings
 	Settings &set = priv->page->mainFrame().settings();
@@ -364,6 +363,8 @@ static unsigned remapkey(const unsigned key, unsigned *mod) {
 
 int webview::handle(const int e) {
 
+	EventHandler *ev = &priv->page->mainFrame().eventHandler();
+
 	switch (e) {
 		case FL_PUSH:
 		case FL_RELEASE:
@@ -411,13 +412,13 @@ int webview::handle(const int e) {
 						currentTime());
 
 			if (e == FL_PUSH) {
-				priv->event->handleMousePressEvent(pev);
+				ev->handleMousePressEvent(pev);
 				if (btn == RightButton)
 					handlecontextmenu(&pev);
 			} else if (e == FL_RELEASE) {
-				priv->event->handleMouseReleaseEvent(pev);
+				ev->handleMouseReleaseEvent(pev);
 			} else {
-				priv->event->mouseMoved(pev);
+				ev->mouseMoved(pev);
 			}
 
 			return 1;
@@ -436,7 +437,7 @@ int webview::handle(const int e) {
 						Fl::event_alt(),
 						Fl::event_command());
 
-			priv->event->handleWheelEvent(pev);
+			ev->handleWheelEvent(pev);
 
 			return 1;
 			}
@@ -461,6 +462,9 @@ int webview::handle(const int e) {
 		case FL_KEYDOWN:
 		case FL_KEYUP:
 			{
+			// Keyboard events need to go to the focused frame, others to main
+			ev = &priv->page->focusController().focusedOrMainFrame().eventHandler();
+
 			PlatformEvent::Type type = PlatformEvent::KeyDown;
 			if (e == FL_KEYUP)
 				type = PlatformEvent::KeyUp;
@@ -492,10 +496,11 @@ int webview::handle(const int e) {
 						(PlatformEvent::Modifiers) modifiers,
 						currentTime());
 
-			bool ret = priv->event->keyEvent(pev);
+			bool ret = ev->keyEvent(pev);
 
 			if (e == FL_KEYDOWN && !ret)
-				ret = keyscroll(priv->page->mainFrame(), win, Fl::event_shift());
+				ret = keyscroll(priv->page->focusController().focusedOrMainFrame(),
+						win, Fl::event_shift());
 
 			// Ctrl-tab and shortcuts must never be caught by the view.
 			if (key == FL_Tab && Fl::event_ctrl())
