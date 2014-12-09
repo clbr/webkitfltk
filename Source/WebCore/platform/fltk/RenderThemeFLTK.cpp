@@ -354,7 +354,7 @@ RenderThemeFLTK::~RenderThemeFLTK()
 static bool supportsFocus(ControlPart appearance)
 {
     switch (appearance) {
-    case PushButtonPart:
+/*    case PushButtonPart:
     case ButtonPart:
     case TextFieldPart:
     case TextAreaPart:
@@ -364,7 +364,7 @@ static bool supportsFocus(ControlPart appearance)
     case CheckboxPart:
     case SliderVerticalPart:
     case SliderHorizontalPart:
-        return true;
+        return true; consistent focus for now */
     default:
         return false;
     }
