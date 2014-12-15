@@ -1175,8 +1175,8 @@ void webview::bindEvent(const char *element, const char *type, const char *event
 			if (!isHTMLInputElement(n))
 				continue;
 
-			const char *hastype = e->getAttribute("type").
-						string().utf8().data();
+			const CString &typestr = e->getAttribute("type").string().utf8();
+			const char *hastype = typestr.data();
 
 			if (strcmp(hastype, type))
 				continue;
@@ -1201,16 +1201,16 @@ const char *webview::getValue(const char *element, const char *type, const char 
 			if (!isHTMLInputElement(n))
 				continue;
 
-			const char *hastype = e->getAttribute("type").
-						string().utf8().data();
+			const CString &typestr = e->getAttribute("type").string().utf8();
+			const char *hastype = typestr.data();
 
 			if (strcmp(hastype, type))
 				continue;
 		}
 
 		if (cssclass) {
-			const char *hasclass = e->getAttribute("class").
-						string().utf8().data();
+			const CString &classstr = e->getAttribute("class").string().utf8();
+			const char *hasclass = classstr.data();
 
 			if (strcmp(cssclass, hasclass))
 				continue;
