@@ -137,6 +137,8 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 	Drawable d = cairo_xlib_surface_get_drawable(surf);
 
 	Fl_Widget *w = NULL;
+	Fl_Group * const oldgroup = Fl_Group::current();
+	Fl_Group::current(NULL);
 
 	switch (type) {
 		case Button:
@@ -195,6 +197,7 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 			w = s_spinner;
 		break;
 	}
+	Fl_Group::current(oldgroup);
 
 	if (!w)
 		return true; // We don't support it, please draw for us

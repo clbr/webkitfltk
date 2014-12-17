@@ -49,8 +49,14 @@ ScrollbarTheme* ScrollbarTheme::nativeTheme()
 }
 
 ScrollbarThemeFLTK::ScrollbarThemeFLTK() {
-	if (!flbar)
+	if (!flbar) {
+		Fl_Group * const oldgroup = Fl_Group::current();
+		Fl_Group::current(NULL);
+
 		flbar = new myscroll(0, 0, 10, 10);
+
+		Fl_Group::current(oldgroup);
+	}
 }
 
 bool ScrollbarThemeFLTK::hasThumb(ScrollbarThemeClient *bar) {
