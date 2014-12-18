@@ -222,7 +222,6 @@ void MediaControlsFifth::loadedMetadata()
 
 void MediaControlsFifth::changedMute()
 {
-    MediaControls::changedMute();
 }
 
 void MediaControlsFifth::changedVolume()
