@@ -110,7 +110,7 @@ LIBS = -lz -pthread -lxslt -lxml2 -ldl -lsqlite3 \
 	`$(FLTKCONFIG) --ldflags --use-images` \
 	-static-libgcc -static-libstdc++
 
-all: $(NAME) testapp/testapp
+all: $(NAME) testapp/testapp bench/webkitbench
 
 -include $(OBJ:.o=.d)
 
@@ -130,6 +130,10 @@ $(NAME): $(OBJ) ../../WTF/wtf/libwtf.a ../../JavaScriptCore/libjsc.a \
 
 testapp/testapp: $(NAME) Makefile $(wildcard testapp/*.cpp)
 	$(CXX) -o testapp/testapp testapp/*.cpp $(CXXFLAGS) $(NAME) \
+		$(LIBS)
+
+bench/webkitbench: $(NAME) Makefile $(wildcard bench/*.cpp)
+	$(CXX) -o bench/webkitbench bench/*.cpp $(CXXFLAGS) $(NAME) \
 		$(LIBS)
 
 clean:
