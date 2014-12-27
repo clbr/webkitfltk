@@ -110,8 +110,14 @@ void Pasteboard::clear(const String&)
 void Pasteboard::read(PasteboardPlainText &text)
 {
     static paster_t *paster = NULL;
-    if (!paster)
+    if (!paster) {
+        Fl_Group * const oldgroup = Fl_Group::current();
+        Fl_Group::current(NULL);
+
         paster = new paster_t;
+
+        Fl_Group::current(oldgroup);
+    }
 
     const Window owner = XGetSelectionOwner(fl_display, XA_PRIMARY);
     if (owner == None) {
