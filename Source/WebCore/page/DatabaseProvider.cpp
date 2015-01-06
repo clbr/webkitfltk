@@ -35,14 +35,14 @@ DatabaseProvider::~DatabaseProvider()
 }
 
 #if ENABLE(INDEXED_DATABASE)
-RefPtr<IDBFactoryBackendInterface> DatabaseProvider::idbFactoryBackend()
+IDBFactoryBackendInterface* DatabaseProvider::idbFactoryBackend()
 {
     if (!m_didCreateIDBFactoryBackendInterface) {
         m_backendInterface = createIDBFactoryBackend();
         m_didCreateIDBFactoryBackendInterface = true;
     }
 
-    return m_backendInterface;
+    return m_backendInterface.get();
 }
 #endif
 
