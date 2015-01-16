@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,24 +23,18 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DiagnosticLoggingClient_h
-#define DiagnosticLoggingClient_h
-
-#include "DiagnosticLoggingResultType.h"
-#include <wtf/Forward.h>
+#ifndef DiagnosticLoggingResultType_h
+#define DiagnosticLoggingResultType_h
 
 namespace WebCore {
 
-class DiagnosticLoggingClient {
-public:
-    virtual void logDiagnosticMessage(const String& message, const String& description) { UNUSED_PARAM(message); UNUSED_PARAM(description); }
-    virtual void logDiagnosticMessageWithResult(const String& message, const String& description, DiagnosticLoggingResultType) { UNUSED_PARAM(message); UNUSED_PARAM(description); }
-    virtual void logDiagnosticMessageWithValue(const String& message, const String& description, const String& value) { UNUSED_PARAM(message); UNUSED_PARAM(description); UNUSED_PARAM(value); }
-
-protected:
-    virtual ~DiagnosticLoggingClient() { }
+enum DiagnosticLoggingResultType {
+    DiagnosticLoggingResultPass,
+    DiagnosticLoggingResultFail,
+    DiagnosticLoggingResultNoop,
 };
 
-}
+} // namespace WebCore
 
-#endif
+#endif // DiagnosticLoggingResultType_h
+
