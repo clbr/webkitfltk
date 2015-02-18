@@ -23,31 +23,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef SetupVarargsFrame_h
-#define SetupVarargsFrame_h
+#ifndef FTLJSCallVarargs_h
+#define FTLJSCallVarargs_h
 
-#if ENABLE(JIT)
+#if ENABLE(FTL_JIT)
 
-#include "CCallHelpers.h"
-#include "VirtualRegister.h"
+#include "FTLJSCallBase.h"
 
 namespace JSC {
 
-void emitSetVarargsFrame(CCallHelpers&, GPRReg lengthGPR, bool lengthIncludesThis, GPRReg numUsedSlotsGPR, GPRReg resultGPR);
+class LinkBuffer;
 
-// Assumes that SP refers to the last in-use stack location, and after this returns SP will point to
-// the newly created frame plus the native header. scratchGPR2 may be the same as numUsedSlotsGPR.
-void emitSetupVarargsFrameFastCase(CCallHelpers&, GPRReg numUsedSlotsGPR, GPRReg scratchGPR1, GPRReg scratchGPR2, GPRReg scratchGPR3, ValueRecovery argCountRecovery, VirtualRegister firstArgumentReg, unsigned firstVarArgOffset, CCallHelpers::JumpList& slowCase);
+namespace DFG {
+class Graph;
+struct Node;
+}
 
-// Variant that assumes normal stack frame.
-void emitSetupVarargsFrameFastCase(CCallHelpers&, GPRReg numUsedSlotsGPR, GPRReg scratchGPR1, GPRReg scratchGPR2, GPRReg scratchGPR3, unsigned firstVarArgOffset, CCallHelpers::JumpList& slowCase);
+namespace FTL {
 
-// Variant for potentially inlined stack frames.
-void emitSetupVarargsFrameFastCase(CCallHelpers&, GPRReg numUsedSlotsGPR, GPRReg scratchGPR1, GPRReg scratchGPR2, GPRReg scratchGPR3, InlineCallFrame*, unsigned firstVarArgOffset, CCallHelpers::JumpList& slowCase);
+class JSCallVarargs {
+public:
+    JSCallVarargs();
+    JSCallVarargs(unsigned stackmapID, DFG::Node*);
+    
+    DFG::Node* node() const { return m_node; }
+    
+    static unsigned numSpillSlotsNeeded();
+    
+    void emit(CCallHelpers&, DFG::Graph&, int32_t spillSlotsOffset);
+    void link(VM&, LinkBuffer&, CodeLocationLabel exceptionHandler);
+    
+    unsigned stackmapID() const { return m_stackmapID; }
+    
+    bool operator<(const JSCallVarargs& other) const
+    {
+        return m_instructionOffset < other.m_instructionOffset;
+    }
+    
+private:
+    unsigned m_stackmapID;
+    DFG::Node* m_node;
+    JSCallBase m_callBase;
+    CCallHelpers::JumpList m_exceptions;
 
-} // namespace JSC
+public:
+    uint32_t m_instructionOffset;
+};
 
-#endif // ENABLE(JIT)
+} } // namespace JSC::FTL
 
-#endif // SetupVarargsFrame_h
+#endif // ENABLE(FTL_JIT)
+
+#endif // FTLJSCallVarargs_h
 
