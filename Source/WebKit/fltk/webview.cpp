@@ -81,6 +81,7 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv->historyAdd = NULL;
 	priv->siteChanging = NULL;
 	priv->error = NULL;
+	priv->resourceStateChanged = NULL;
 
 	Fl_Widget *wid = this;
 	while (wid->parent())
@@ -770,6 +771,10 @@ void webview::siteChangingCB(void (*func)(webview *, const char *url)) {
 
 void webview::errorCB(void (*func)(webview *, const char *err)) {
 	priv->error = func;
+}
+
+void webview::resourceStateChangedCB(void (*func)(unsigned long id, bool finished)) {
+	priv->resourceStateChanged = func;
 }
 
 void webview::back() {

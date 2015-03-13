@@ -97,6 +97,8 @@ void FlFrameLoaderClient::dispatchWillSendRequest(DocumentLoader*, unsigned long
 
 	if (urlblockfunc && urlblockfunc(req.url().string().utf8().data()))
 		req.setURL(blankURL());
+	else if (view->priv->resourceStateChanged)
+		view->priv->resourceStateChanged(identifier, false);
 }
 
 bool FlFrameLoaderClient::shouldUseCredentialStorage(DocumentLoader*, unsigned long identifier) {
@@ -158,7 +160,8 @@ void FlFrameLoaderClient::dispatchDidReceiveContentLength(DocumentLoader*, unsig
 }
 
 void FlFrameLoaderClient::dispatchDidFinishLoading(DocumentLoader*, unsigned long identifier) {
-	notImplemented();
+	if (view->priv->resourceStateChanged)
+		view->priv->resourceStateChanged(identifier, true);
 }
 
 void FlFrameLoaderClient::dispatchDidFailLoading(DocumentLoader*, unsigned long identifier, const ResourceError&) {

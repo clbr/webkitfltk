@@ -136,6 +136,7 @@ public:
 	void historyAddCB(void (*func)(const char *url, const char *title, const time_t when));
 	void siteChangingCB(void (*func)(webview *, const char *url));
 	void errorCB(void (*error)(webview *, const char *err));
+	void resourceStateChangedCB(void (*resourceStateChanged)(unsigned long id, bool finished));
 
 	// Bind a callback to element action. Call after loading has finished.
 	void bindEvent(const char *element, const char *type, const char *event,

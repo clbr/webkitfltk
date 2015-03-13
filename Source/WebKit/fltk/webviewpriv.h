@@ -72,6 +72,7 @@ public:
 	void (*historyAdd)(const char *url, const char *title, const time_t when);
 	void (*siteChanging)(webview *, const char *url);
 	void (*error)(webview *, const char *err);
+	void (*resourceStateChanged)(unsigned long id, bool finished);
 };
 
 #endif
