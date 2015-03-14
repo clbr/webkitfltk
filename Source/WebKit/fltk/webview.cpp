@@ -64,7 +64,8 @@ extern int wheelspeed;
 extern const char * (*downloaddirfunc)();
 extern void (*newdownloadfunc)();
 
-webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
+webview::webview(int x, int y, int w, int h, bool noGui): Fl_Widget(x, y, w, h),
+			noGUI(noGui) {
 
 	priv = new privatewebview;
 	priv->gc = NULL;
@@ -84,12 +85,15 @@ webview::webview(int x, int y, int w, int h): Fl_Widget(x, y, w, h) {
 	priv->resourceStateChanged = NULL;
 
 	Fl_Widget *wid = this;
-	while (wid->parent())
-		wid = wid->parent();
-	priv->window = wid->as_window();
 
-	fl_open_display();
-	priv->depth = fl_visual->depth;
+	if (!noGUI) {
+		while (wid->parent())
+			wid = wid->parent();
+		priv->window = wid->as_window();
+
+		fl_open_display();
+		priv->depth = fl_visual->depth;
+	}
 
 	Page::PageClients clients;
 	clients.chromeClient = new FlChromeClient(this);
@@ -169,6 +173,15 @@ void webview::draw() {
 	if (!priv->cairo)
 		return;
 	ASSERT(isMainThread());
+
+	if (noGUI) {
+		priv->clipx = 0;
+		priv->clipy = 0;
+		priv->clipw = w();
+		priv->cliph = h();
+//		drawWeb();
+		return;
+	}
 
 	// Don't draw at over 60 fps. Save power and penguins.
 	struct timespec now;
@@ -274,6 +287,21 @@ void webview::resize() {
 		priv->h = h();
 	}
 
+	if (noGUI) {
+		cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w(), h());
+		priv->cairo = cairo_create(surf);
+		cairo_surface_destroy(surf);
+
+		if (priv->gc)
+			delete priv->gc;
+		priv->gc = new GraphicsContext(priv->cairo);
+
+		if (old)
+			priv->page->mainFrame().view()->resize(priv->w, priv->h);
+
+		return;
+	}
+
 	if (old)
 		XFreePixmap(fl_display, priv->cairopix);
 	priv->cairopix = XCreatePixmap(fl_display, DefaultRootWindow(fl_display),
@@ -366,6 +394,10 @@ static unsigned remapkey(const unsigned key, unsigned *mod) {
 }
 
 int webview::handle(const int e) {
+
+	if (noGUI) {
+		return 0;
+	}
 
 	EventHandler *ev = &priv->page->mainFrame().eventHandler();
 
@@ -1228,4 +1260,8 @@ const char *webview::getValue(const char *element, const char *type, const char 
 	}
 
 	return NULL;
+}
+
+bool webview::isNoGui() const {
+	return noGUI;
 }

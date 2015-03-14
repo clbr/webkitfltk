@@ -46,7 +46,7 @@ enum SettingChar {
 
 class webview: public Fl_Widget {
 public:
-	webview(int x, int y, int w, int h);
+	webview(int x, int y, int w, int h, bool noGui = false);
 	~webview();
 
 	void draw() override;
@@ -147,8 +147,11 @@ public:
 	const char *getValue(const char *element, const char *type = NULL,
 				const char *cssclass = NULL);
 
+
+	bool isNoGui() const;
 private:
 	void handlecontextmenu(void *);
+	bool noGUI;
 };
 
 #endif

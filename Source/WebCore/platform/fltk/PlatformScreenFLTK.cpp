@@ -40,6 +40,7 @@
 #include "Widget.h"
 
 #include <FL/Fl.H>
+#include <FL/x.H>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
@@ -79,6 +80,9 @@ FloatRect screenRect(Widget* widget)
 {
     if (!widget)
         return FloatRect();
+
+    if (!fl_display)
+        return FloatRect(0, 0, widget->width(), widget->height());
 
     int x, y, w, h;
     Fl::screen_xywh(x, y, w, h);
