@@ -26,6 +26,7 @@ enum SettingBool {
 	WK_SETTING_JS = 0,
 	WK_SETTING_CSS,
 	WK_SETTING_IMG,
+	WK_SETTING_LOCALSTORAGE,
 };
 
 enum SettingDouble {

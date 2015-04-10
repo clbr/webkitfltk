@@ -820,10 +820,14 @@ Storage* DOMWindow::localStorage(ExceptionCode& ec) const
         return 0;
 
     RefPtr<StorageArea> storageArea;
+#if PLATFORM(FLTK)
+    storageArea = page->group().transientLocalStorage(document->topOrigin())->storageArea(document->securityOrigin());
+#else
     if (!document->securityOrigin()->canAccessLocalStorage(document->topOrigin()))
         storageArea = page->group().transientLocalStorage(document->topOrigin())->storageArea(document->securityOrigin());
     else
         storageArea = page->group().localStorage()->storageArea(document->securityOrigin());
+#endif
 
     if (!storageArea->canAccessStorage(m_frame)) {
         ec = SECURITY_ERR;

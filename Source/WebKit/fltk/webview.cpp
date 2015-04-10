@@ -1027,6 +1027,9 @@ void webview::setBool(const SettingBool item, const bool val) {
 		case WK_SETTING_IMG:
 			set.setImagesEnabled(val);
 		break;
+		case WK_SETTING_LOCALSTORAGE:
+			set.setLocalStorageEnabled(val);
+		break;
 	}
 }
 
@@ -1043,6 +1046,9 @@ bool webview::getBool(const SettingBool item) const {
 		break;
 		case WK_SETTING_IMG:
 			return set.areImagesEnabled();
+		break;
+		case WK_SETTING_LOCALSTORAGE:
+			return set.localStorageEnabled();
 		break;
 	}
 
