@@ -654,10 +654,12 @@ Frame *FlFrameLoaderClient::getFrame() const {
 }
 
 void FlFrameLoaderClient::convertMainResourceLoadToDownload(DocumentLoader *dl,
-		const ResourceRequest &req, const ResourceResponse&) {
+		const ResourceRequest &req, const ResourceResponse &resp) {
 	dl->mainResourceLoader()->handle()->setDefersLoading(true);
 	view->download(req.url().string().utf8().data(),
-			req.url().lastPathComponent().utf8().data(),
+			resp.suggestedFilename().isEmpty() ?
+			req.url().lastPathComponent().utf8().data() :
+			resp.suggestedFilename().utf8().data(),
 			&req);
 }
 
