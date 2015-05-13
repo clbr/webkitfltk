@@ -61,7 +61,8 @@ Pasteboard::Pasteboard()
 
 void Pasteboard::writePlainText(const String &str, SmartReplaceOption)
 {
-    Fl::copy(str.utf8().data(), str.length());
+    const CString &cstr = str.utf8();
+    Fl::copy(cstr.data(), cstr.length());
 }
 
 void Pasteboard::clear()
@@ -126,7 +127,7 @@ void Pasteboard::read(PasteboardPlainText &text)
     } else if (owner == fl_message_window) {
         Fl::paste(*paster, 0, Fl::clipboard_plain_text);
         if (paster->text)
-            text.text = paster->text;
+            text.text = String::fromUTF8(paster->text);
         else
             text.text = "";
         return;
@@ -157,7 +158,7 @@ void Pasteboard::read(PasteboardPlainText &text)
         int res = XGetWindowProperty(fl_display, fl_window, XA_STRING, 0, bytes, 0,
                                      AnyPropertyType, &type, &fmt, &num, &dummy, &data);
         if (res == Success) {
-            text.text = data;
+            text.text = String::fromUTF8(data);
             free(data);
         }
     }
