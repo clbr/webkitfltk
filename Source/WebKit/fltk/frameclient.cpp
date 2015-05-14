@@ -606,6 +606,16 @@ void FlFrameLoaderClient::setTitle(const StringWithDirection &title, const URL &
 	view->priv->title = strdup(title.string().utf8().data());
 	view->priv->url = strdup(url.string().utf8().data());
 
+	// The URL passed to this function is the "pretty" url for history.
+	// It might differ from the real URL. Display the real URL if the
+	// protocols differ, as that could have security implications.
+	// Otherwise prefer the pretty URL.
+
+	if (url.protocol() != frame->document()->url().protocol()) {
+		free((char *) view->priv->url);
+		view->priv->url = strdup(frame->document()->url().string().utf8().data());
+	}
+
 	if (view->priv->titleChanged)
 		view->priv->titleChanged();
 }
