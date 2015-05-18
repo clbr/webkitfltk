@@ -273,10 +273,16 @@ void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 			return;
 	}
 
+	const uint32_t failinglen = err.failingURL().length();
+	char failingurl[1024] = "";
+	if (failinglen > 1)
+		snprintf(failingurl, 1024, "<a href=\"%1$s\">%1$s</a>: ",
+			err.failingURL().utf8().data());
+	failingurl[1023] = '\0';
+
 	char *ptr = NULL;
-	asprintf(&ptr, "<html><body><h2>%s%serror %u, %s</h2>%s</body></html>",
-		err.failingURL().utf8().data(),
-		err.failingURL().length() > 1 ? ": " : "",
+	asprintf(&ptr, "<html><body><h2>%serror %u, %s</h2>%s</body></html>",
+		failingurl,
 		err.errorCode(),
 		err.localizedDescription().utf8().data(),
 		instructions ? instructions : "");
