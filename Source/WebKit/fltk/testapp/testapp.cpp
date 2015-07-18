@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
 	Fl_Window *win = new Fl_Window(800, 600);
 	v = new webview(0, 0, 800, 600);
 	win->end();
+	win->resizable(v);
 	win->show(argc, argv);
 
 	if (argc > 1)
@@ -20,15 +21,9 @@ int main(int argc, char **argv) {
 	else
 		v->load("http://google.com");
 
-//  WebCore::Page* page = new WebCore::Page(pageClients);
-//  WebCore::FrameLoaderClient* loaderClient = new WebCore::FrameLoaderClient();
-//  RefPtr<WebCore::Frame> frame = WebCore::Frame::create(page, 0, loaderClient);
-//  frame->init();
-//  WebCore::ResourceRequest req = WebCore::ResourceRequest("http://google.com/");
-//  frame->loader()->load(req, false);
-
 	wk_set_download_func(dl);
 
+	// The mainloop
 	Fl::run();
 
 	// Give everything the chance to cleanup
