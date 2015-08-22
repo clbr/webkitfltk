@@ -142,7 +142,7 @@ public:
 	// Bind a callback to element action. Call after loading has finished.
 	void bindEvent(const char *element, const char *type, const char *event,
 			void (*func)(const char *name, const char *id,
-					const char *cssclass, const char *value),
+			const char *cssclass, const char *value),
 			const bool capture = false);
 	// Get the malloced value of an element with optional type and css class
 	const char *getValue(const char *element, const char *type = NULL,
