@@ -1302,6 +1302,37 @@ void webview::emulateClick(const char *element, const char *type, const char *cs
 	}
 }
 
+unsigned webview::getLinkDetails(const char *cssclass, char **hrefs, char **texts,
+					const unsigned allocated) {
+
+	RefPtr<NodeList> elem = priv->page->mainFrame().document()->getElementsByTagName("a");
+	unsigned max = elem->length();
+	unsigned i;
+	unsigned cur = 0;
+
+	for (i = 0; i < max; i++) {
+		Node *n = elem->item(i);
+		HTMLAnchorElement *e = toHTMLAnchorElement(n);
+
+		if (cssclass) {
+			const CString &classstr = e->getAttribute("class").string().utf8();
+			const char *hasclass = classstr.data();
+
+			if (strcmp(cssclass, hasclass))
+				continue;
+		}
+
+		if (cur >= allocated)
+			return cur;
+
+		hrefs[cur] = strdup(e->href().string().utf8().data());
+		texts[cur] = strdup(e->text().utf8().data());
+		cur++;
+	}
+
+	return cur;
+}
+
 bool webview::isNoGui() const {
 	return noGUI;
 }

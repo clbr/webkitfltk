@@ -150,6 +150,9 @@ public:
 	// Click the first element that matches these parameters.
 	void emulateClick(const char *element, const char *type = NULL,
 				const char *cssclass = NULL);
+	// Get the link details for up to the given number - allocation by the user
+	unsigned getLinkDetails(const char *cssclass, char **hrefs, char **texts,
+				const unsigned allocated);
 
 
 	bool isNoGui() const;
