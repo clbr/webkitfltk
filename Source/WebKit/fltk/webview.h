@@ -147,6 +147,9 @@ public:
 	// Get the malloced value of an element with optional type and css class
 	const char *getValue(const char *element, const char *type = NULL,
 				const char *cssclass = NULL);
+	// Click the first element that matches these parameters.
+	void emulateClick(const char *element, const char *type = NULL,
+				const char *cssclass = NULL);
 
 
 	bool isNoGui() const;

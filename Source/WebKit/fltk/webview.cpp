@@ -1268,6 +1268,40 @@ const char *webview::getValue(const char *element, const char *type, const char 
 	return NULL;
 }
 
+void webview::emulateClick(const char *element, const char *type, const char *cssclass) {
+
+	RefPtr<NodeList> elem = priv->page->mainFrame().document()->getElementsByTagName(element);
+	unsigned max = elem->length();
+	unsigned i;
+
+	for (i = 0; i < max; i++) {
+		Node *n = elem->item(i);
+		Element *e = toElement(n);
+
+		if (type) {
+			if (!isHTMLInputElement(n))
+				continue;
+
+			const CString &typestr = e->getAttribute("type").string().utf8();
+			const char *hastype = typestr.data();
+
+			if (strcmp(hastype, type))
+				continue;
+		}
+
+		if (cssclass) {
+			const CString &classstr = e->getAttribute("class").string().utf8();
+			const char *hasclass = classstr.data();
+
+			if (strcmp(cssclass, hasclass))
+				continue;
+		}
+
+		e->dispatchSimulatedClick(nullptr, SendNoEvents, DoNotShowPressedLook);
+		return;
+	}
+}
+
 bool webview::isNoGui() const {
 	return noGUI;
 }
