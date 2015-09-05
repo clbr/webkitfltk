@@ -163,6 +163,12 @@ void wk_set_ssl_err_func(void (*func)(webview *, const char *)) {
 
 // Return 1 if ok, 0 to abort SSL connection
 int fl_check_cert(const String &str, const String &host) {
+
+	// If there was a typo, e.g. 'https:/foo.com', the host will be empty.
+	// It would fail anyhow, but fail it here too.
+	if (!host.length())
+		return 0;
+
 	if (sslfunc)
 		return sslfunc(str.utf8().data(), host.utf8().data());
 	return 1;
