@@ -74,6 +74,7 @@ void handleDataURL(ResourceHandle* handle)
     if (base64) {
         data = decodeURLEscapeSequences(data);
         handle->client()->didReceiveResponse(handle, response);
+        if (!handle->client()) return;
 
         Vector<char> out;
         if (base64Decode(data, out, Base64IgnoreWhitespace) && out.size() > 0) {
@@ -84,6 +85,7 @@ void handleDataURL(ResourceHandle* handle)
         TextEncoding encoding(charset);
         data = decodeURLEscapeSequences(data, encoding);
         handle->client()->didReceiveResponse(handle, response);
+        if (!handle->client()) return;
 
         CString encodedData = encoding.encode(data, URLEncodedEntitiesForUnencodables);
         response.setExpectedContentLength(encodedData.length());

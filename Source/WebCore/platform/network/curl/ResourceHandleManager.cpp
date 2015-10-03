@@ -956,6 +956,7 @@ void ResourceHandleManager::dispatchSynchronousJob(ResourceHandle* job)
 
     if (kurl.protocolIsData()) {
         handleDataURL(job);
+        job->deref();
         return;
     }
 
