@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "download.h"
 
+#include <wtf/text/Base64.h>
+#include <wtf/text/CString.h>
 #include <string.h>
 
 using namespace WTF;
@@ -26,6 +28,43 @@ using namespace WebCore;
 
 extern void (*downloadfunc)(const char *url, const char *file);
 extern void (*downloadrefreshfunc)();
+
+static void saveData(const char *file, const char *data, const unsigned size) {
+	FILE *f = fopen(file, "w");
+	if (!f) return;
+
+	fwrite(data, size, 1, f);
+
+	fclose(f);
+}
+
+static unsigned handleData(const char *url, const char *file) {
+
+	const char *comma = strchr(url, ',');
+	if (!comma || comma - url < 6)
+		return 0;
+
+	comma -= 6;
+	const bool base64 = strncmp(comma, "base64", 6) == 0;
+	comma += 7;
+
+	const String data = decodeURLEscapeSequences(comma);
+	if (base64) {
+		Vector<char> out;
+		if (base64Decode(data, out, Base64IgnoreWhitespace) && out.size() > 0) {
+
+			saveData(file, &out[0], out.size());
+
+			return out.size();
+		}
+	} else {
+		const CString utf8 = data.utf8();
+		saveData(file, utf8.data(), utf8.length());
+		return data.length();
+	}
+
+	return 0;
+}
 
 download::download(const char *url, const char *file,
 			const ResourceRequest *req) {
@@ -35,6 +74,21 @@ download::download(const char *url, const char *file,
 	received = 0;
 	size = -1;
 	failed = finished = false;
+	isData = false;
+
+	// Is it a data: url? data:image/octet-stream;base64,iVBORw0KG
+	if (!strncmp(url, "data:", 5)) {
+		isData = true;
+
+		size = received = handleData(url, file);
+
+		if (size)
+			didFinish();
+		else
+			didFail();
+
+		return;
+	}
 
 	curl.init(this, URL(ParsedURLString, this->url));
 
@@ -52,6 +106,9 @@ download::~download() {
 }
 
 void download::didReceiveResponse() {
+	if (isData)
+		return;
+
 	const ResourceResponse &res = curl.getResponse();
 	size = res.expectedContentLength();
 }
@@ -79,6 +136,9 @@ void download::didFail() {
 }
 
 void download::stop() {
+	if (isData)
+		return;
+
 	curl.cancel();
 	failed = true;
 

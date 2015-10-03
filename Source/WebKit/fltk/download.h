@@ -44,6 +44,7 @@ private:
 	time_t time;
 	long long size, received;
 	bool failed, finished;
+	bool isData;
 };
 
 #endif
