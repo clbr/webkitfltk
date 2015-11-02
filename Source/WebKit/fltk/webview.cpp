@@ -83,6 +83,7 @@ webview::webview(int x, int y, int w, int h, bool noGui): Fl_Widget(x, y, w, h),
 	priv->siteChanging = NULL;
 	priv->error = NULL;
 	priv->resourceStateChanged = NULL;
+	priv->quietdiags = false;
 
 	Fl_Widget *wid = this;
 
@@ -1030,6 +1031,9 @@ void webview::setBool(const SettingBool item, const bool val) {
 		case WK_SETTING_LOCALSTORAGE:
 			set.setLocalStorageEnabled(val);
 		break;
+		case WK_SETTING_QUIET_JS_DIALOGS:
+			priv->quietdiags = val;
+		break;
 	}
 }
 
@@ -1049,6 +1053,9 @@ bool webview::getBool(const SettingBool item) const {
 		break;
 		case WK_SETTING_LOCALSTORAGE:
 			return set.localStorageEnabled();
+		break;
+		case WK_SETTING_QUIET_JS_DIALOGS:
+			return priv->quietdiags;
 		break;
 	}
 

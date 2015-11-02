@@ -205,24 +205,41 @@ static const char *shortenJS(const char * const url) {
 
 void FlChromeClient::runJavaScriptAlert(Frame *f, const String &s) {
 	fl_message_title("Javascript alert");
-	fl_alert("<%s>\n\n%s", shortenJS(f->document()->baseURI().string().utf8().data()),
+	if (view->priv->quietdiags) {
+		fl_alert("%s", s.utf8().data());
+	} else {
+		fl_alert("<%s>\n\n%s", shortenJS(f->document()->baseURI().string().utf8().data()),
 			s.utf8().data());
+	}
 }
 
 bool FlChromeClient::runJavaScriptConfirm(Frame *f, const String &s) {
 	fl_message_title("Javascript confirm");
-	return fl_choice("<%s>\n\n%s", fl_cancel, fl_ok, NULL,
+	if (view->priv->quietdiags) {
+		return fl_choice("%s", fl_cancel, fl_ok, NULL,
+			s.utf8().data());
+	} else {
+		return fl_choice("<%s>\n\n%s", fl_cancel, fl_ok, NULL,
 			shortenJS(f->document()->baseURI().string().utf8().data()),
 			s.utf8().data());
+	}
 }
 
 bool FlChromeClient::runJavaScriptPrompt(Frame *f, const String &s,
 		const String &def, String &out) {
 
 	fl_message_title("Javascript prompt");
-	const char *res = fl_input("<%s>\n\n%s", def.utf8().data(),
+	const char *res;
+
+	if (view->priv->quietdiags) {
+		res = fl_input("%s", def.utf8().data(),
+				s.utf8().data());
+	} else {
+		res = fl_input("<%s>\n\n%s", def.utf8().data(),
 				shortenJS(f->document()->baseURI().string().utf8().data()),
 				s.utf8().data());
+	}
+
 	if (!res)
 		return false;
 	out = res;

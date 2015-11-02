@@ -61,6 +61,8 @@ public:
 	const char *url;
 	bool hoveringlink;
 
+	bool quietdiags;
+
 	std::vector<download *> downloads;
 
 	// Callbacks
