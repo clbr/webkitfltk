@@ -995,6 +995,7 @@ void ResourceHandleManager::startJob(ResourceHandle* job)
 
     if (kurl.protocolIsData()) {
         handleDataURL(job);
+        job->deref();
         return;
     }
 
