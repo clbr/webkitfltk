@@ -78,7 +78,7 @@ namespace WebCore {
 
 // only when waiting on network traffic, poll by this much
 const double pollTimeSeconds = 0.02;
-const int maxRunningJobs = 5;
+const int maxRunningJobs = 128;
 
 static const bool ignoreSSLErrors = getenv("WEBKIT_IGNORE_SSL_ERRORS");
 
