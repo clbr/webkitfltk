@@ -178,7 +178,7 @@ bool SocketStreamHandle::waitForAvailableData(CURL* curlHandle, std::chrono::mil
     fd_set fdread;
     FD_ZERO(&fdread);
     FD_SET(socket, &fdread);
-    int rc = ::select(0, &fdread, nullptr, nullptr, &timeout);
+    int rc = ::select(socket + 1, &fdread, nullptr, nullptr, &timeout);
     return rc == 1;
 }
 
