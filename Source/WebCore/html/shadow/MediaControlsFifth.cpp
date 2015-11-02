@@ -137,6 +137,8 @@ PassRefPtr<MediaControlsFifth> MediaControlsFifth::createControls(Document& docu
     controls->m_dlButton = dlButton.get();
     dlButton->setAttribute(valueAttr, "Download");
     dlButton->setType("button");
+    dlButton->setInlineStyleProperty(CSSPropertyPosition, CSSValueRelative, true);
+    dlButton->setInlineStyleProperty(CSSPropertyZIndex, ASCIILiteral("2147483647"), true);
     RefPtr<FlMediaEventListener> l(adoptRef(new FlMediaEventListener(controls.get(), dl, ctx)));
     dlButton->addEventListener("click", l.release(), false);
     controls->appendChild(dlButton.release(), ec);
@@ -147,6 +149,8 @@ PassRefPtr<MediaControlsFifth> MediaControlsFifth::createControls(Document& docu
     controls->m_streamButton = streamButton.get();
     streamButton->setAttribute(valueAttr, "Stream");
     streamButton->setType("button");
+    streamButton->setInlineStyleProperty(CSSPropertyPosition, CSSValueRelative, true);
+    streamButton->setInlineStyleProperty(CSSPropertyZIndex, ASCIILiteral("2147483647"), true);
     RefPtr<FlMediaEventListener> l2(adoptRef(new FlMediaEventListener(controls.get(), stream, ctx)));
     streamButton->addEventListener("click", l2.release(), false);
     controls->appendChild(streamButton.release(), ec);
