@@ -164,8 +164,9 @@ void FlFrameLoaderClient::dispatchDidFinishLoading(DocumentLoader*, unsigned lon
 		view->priv->resourceStateChanged(identifier, true);
 }
 
-void FlFrameLoaderClient::dispatchDidFailLoading(DocumentLoader*, unsigned long identifier, const ResourceError&) {
-	notImplemented();
+void FlFrameLoaderClient::dispatchDidFailLoading(DocumentLoader*, unsigned long identifier, const ResourceError &err) {
+	if (err.errorCode() == CURLE_SSL_CACERT && sslerrfunc)
+		sslerrfunc(view, err.domain().utf8().data());
 }
 
 bool FlFrameLoaderClient::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int length) {
