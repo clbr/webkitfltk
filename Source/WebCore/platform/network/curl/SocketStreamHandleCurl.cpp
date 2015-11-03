@@ -175,6 +175,9 @@ bool SocketStreamHandle::waitForAvailableData(CURL* curlHandle, std::chrono::mil
     if (curl_easy_getinfo(curlHandle, CURLINFO_LASTSOCKET, &socket) != CURLE_OK)
         return false;
 
+    if (socket < 0)
+        return false;
+
     fd_set fdread;
     FD_ZERO(&fdread);
     FD_SET(socket, &fdread);
