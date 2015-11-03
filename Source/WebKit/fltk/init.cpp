@@ -50,7 +50,7 @@ const char * (*downloaddirfunc)() = NULL;
 const char * (*aboutpagefunc)(const char *) = NULL;
 void (*downloadfunc)(const char *url, const char *file) = NULL;
 int (*sslfunc)(const char *, const char *) = NULL;
-void (*sslerrfunc)(webview *, const char *) = NULL;
+void (*sslerrfunc)(webview *, const char *, const bool) = NULL;
 webview *(*popupfunc)(const char *) = NULL;
 void (*downloadrefreshfunc)() = NULL;
 void (*newdownloadfunc)() = NULL;
@@ -157,7 +157,7 @@ void wk_set_ssl_func(int (*func)(const char *, const char *)) {
 	sslfunc = func;
 }
 
-void wk_set_ssl_err_func(void (*func)(webview *, const char *)) {
+void wk_set_ssl_err_func(void (*func)(webview *, const char *, const bool)) {
 	sslerrfunc = func;
 }
 

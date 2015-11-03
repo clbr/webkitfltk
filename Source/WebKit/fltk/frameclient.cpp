@@ -47,7 +47,7 @@ using namespace WTF;
 extern const char * (*uafunc)(const char *);
 extern int (*urlblockfunc)(const char *);
 extern const char * (*aboutpagefunc)(const char*);
-extern void (*sslerrfunc)(webview *, const char *);
+extern void (*sslerrfunc)(webview *, const char *, const bool);
 extern webview *(*popupfunc)(const char *);
 extern void (*bgtabfunc)(const char*);
 
@@ -166,7 +166,7 @@ void FlFrameLoaderClient::dispatchDidFinishLoading(DocumentLoader*, unsigned lon
 
 void FlFrameLoaderClient::dispatchDidFailLoading(DocumentLoader*, unsigned long identifier, const ResourceError &err) {
 	if (err.errorCode() == CURLE_SSL_CACERT && sslerrfunc)
-		sslerrfunc(view, err.domain().utf8().data());
+		sslerrfunc(view, err.domain().utf8().data(), true);
 }
 
 bool FlFrameLoaderClient::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int length) {
@@ -452,7 +452,7 @@ void FlFrameLoaderClient::revertToProvisionalState(DocumentLoader*) {
 
 void FlFrameLoaderClient::setMainDocumentError(DocumentLoader*, const ResourceError &err) {
 	if (err.errorCode() == CURLE_SSL_CACERT && sslerrfunc)
-		sslerrfunc(view, err.domain().utf8().data());
+		sslerrfunc(view, err.domain().utf8().data(), false);
 }
 
 void FlFrameLoaderClient::setMainFrameDocumentReady(bool) {

@@ -48,7 +48,7 @@ void wk_set_downloaddir_func(const char * (*func)());
 void wk_set_ssl_func(int (*func)(const char *, const char *));
 
 // Inform the browser of which tab needs a scary SSL warning
-void wk_set_ssl_err_func(void (*func)(webview *, const char *));
+void wk_set_ssl_err_func(void (*func)(webview *, const char *, const bool sub));
 
 // Scrolling speed
 void wk_set_wheel_speed(const int in);
