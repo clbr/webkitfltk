@@ -296,7 +296,8 @@ void CurlDownload::init(CurlDownloadListener* listener, const URL& url)
     m_url = fastStrDup(urlStr.latin1().data());
 
 #ifndef NDEBUG
-    if (getenv("DEBUG_CURL"))
+    static const char * const debug = getenv("DEBUG_CURL");
+    if (debug)
         curl_easy_setopt(m_curlHandle, CURLOPT_VERBOSE, 1);
 #endif
 

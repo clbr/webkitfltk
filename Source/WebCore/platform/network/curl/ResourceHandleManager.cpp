@@ -1083,7 +1083,8 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
         ASSERT_UNUSED(error, error == CURLE_OK);
     }
 #ifndef NDEBUG
-    if (getenv("DEBUG_CURL"))
+    static const char * const debug = getenv("DEBUG_CURL");
+    if (debug)
         curl_easy_setopt(d->m_handle, CURLOPT_VERBOSE, 1);
 #endif
 
