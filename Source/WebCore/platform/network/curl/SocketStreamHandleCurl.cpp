@@ -175,8 +175,10 @@ bool SocketStreamHandle::waitForAvailableData(CURL* curlHandle, std::chrono::mil
     if (curl_easy_getinfo(curlHandle, CURLINFO_LASTSOCKET, &socket) != CURLE_OK)
         return false;
 
-    if (socket < 0)
+    if (socket < 0) {
+        m_stopThread = true;
         return false;
+    }
 
     fd_set fdread;
     FD_ZERO(&fdread);
