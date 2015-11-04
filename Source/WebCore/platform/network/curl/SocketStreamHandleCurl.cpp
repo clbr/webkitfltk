@@ -190,6 +190,7 @@ bool SocketStreamHandle::waitForAvailableData(CURL* curlHandle, std::chrono::mil
 void SocketStreamHandle::runThread(void *data)
 {
     ASSERT(!isMainThread());
+    static const char * const debug = getenv("DEBUG_WEBSOCKET");
 
     SocketStreamHandle * const obj = (SocketStreamHandle *) data;
     CURL* curlHandle = curl_easy_init();
@@ -197,10 +198,22 @@ void SocketStreamHandle::runThread(void *data)
     if (!curlHandle)
         return;
 
+    const bool isWSS = obj->m_url.protocolIs("wss");
+    const unsigned short port = obj->m_url.hasPort() ? obj->m_url.port() :
+                                (isWSS ? 443 : 80);
+
     curl_easy_setopt(curlHandle, CURLOPT_URL, obj->m_url.host().utf8().data());
-    curl_easy_setopt(curlHandle, CURLOPT_PORT, obj->m_url.port());
+    curl_easy_setopt(curlHandle, CURLOPT_PORT, port);
     curl_easy_setopt(curlHandle, CURLOPT_CONNECT_ONLY, 1);
     curl_easy_setopt(curlHandle, CURLOPT_CONNECTTIMEOUT_MS, 500);
+
+    if (isWSS) {
+        curl_easy_setopt(curlHandle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
+    }
+
+    if (debug) {
+        curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 1);
+    }
 
     // Connect to host
     if (curl_easy_perform(curlHandle) != CURLE_OK)
