@@ -15,6 +15,7 @@ xcuserdata
 *.d
 cookies.dat
 *.html
+*.gcda
 
 # Ignore auto-generated files by VS2005 and VS2010.
 *.vcproj.*.user
