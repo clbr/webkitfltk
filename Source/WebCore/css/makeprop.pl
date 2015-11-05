@@ -303,4 +303,4 @@ EOF
 close HEADER;
 
 my $gperf = $ENV{GPERF} ? $ENV{GPERF} : "gperf";
-system("\"$gperf\" --key-positions=\"*\" -D -n -s 2 CSSPropertyNames.gperf --output-file=CSSPropertyNames.cpp") == 0 || die "calling gperf failed: $?";
+system("\"$gperf\" --key-positions=\"*\" -m 50 -D -n -s 2 CSSPropertyNames.gperf --output-file=CSSPropertyNames.cpp") == 0 || die "calling gperf failed: $?";
