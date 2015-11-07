@@ -29,6 +29,7 @@
 #include "AXObjectCache.h"
 #include "Document.h"
 #include "ExceptionCodePlaceholder.h"
+#include "RenderElement.h"
 #include "htmlediting.h"
 
 namespace WebCore {
