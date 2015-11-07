@@ -571,6 +571,8 @@ LLIntOffsetsExtractor: LLIntDesiredOffsets.h InspectorJS.json
 	$(RUBY) offlineasm/asm.rb -I. llint/LowLevelInterpreter.asm \
 		LLIntOffsetsExtractor LLIntAssembly.h
 
+llint/LowLevelInterpreter.o: CXXFLAGS += -fno-lto
+
 -include $(OBJ:.o=.d)
 
 %.o: %.cpp
