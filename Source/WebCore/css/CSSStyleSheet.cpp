@@ -35,6 +35,7 @@
 #include "HTMLStyleElement.h"
 #include "MediaList.h"
 #include "Node.h"
+#include "SVGElement.h"
 #include "SVGNames.h"
 #include "SecurityOrigin.h"
 #include "StyleResolver.h"
