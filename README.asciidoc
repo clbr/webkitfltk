@@ -35,7 +35,7 @@ Notes
 -----
 
 GCC 4.7.3 minimum. 4.7 series is in theory enough, but .0-.2 had a C++11 bug.
-4.8.3 tested.
+4.8.3 and 5.2.0 tested.
 
 On debug vs release
 -------------------
