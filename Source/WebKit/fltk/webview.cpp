@@ -499,6 +499,17 @@ int webview::handle(const int e) {
 		case FL_KEYDOWN:
 		case FL_KEYUP:
 			{
+			unsigned key = Fl::event_key();
+			// First of all: only take up events we got a down event for
+			if (e == FL_KEYDOWN) {
+				priv->pressedkeys.insert(key);
+			} else {
+				if (priv->pressedkeys.count(key) == 0)
+					return 1;
+
+				priv->pressedkeys.erase(key);
+			}
+
 			// Keyboard events need to go to the focused frame, others to main
 			ev = &priv->page->focusController().focusedOrMainFrame().eventHandler();
 
@@ -519,7 +530,7 @@ int webview::handle(const int e) {
 				modifiers |= PlatformEvent::MetaKey;
 
 			bool iskeypad = false;
-			unsigned key = remapkey(Fl::event_key(), &modifiers);
+			key = remapkey(key, &modifiers);
 
 			if (key >= FL_KP && key <= FL_KP_Last)
 				iskeypad = true;
