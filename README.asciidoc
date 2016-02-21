@@ -9,6 +9,15 @@ has corresponding changes.
 It very likely won't be upstreamed, as the Webkit community has (rightfully)
 some strict requirements for ports that we can't fill (3 full-time people, etc.).
 
+Dependencies
+------------
+
+WebkitFLTK requires cairo, harfbuzz, libxslt, sqlite, ICU,
+and FLTK 1.3.3 or greater. 
+FLTK 1.3.2 does not provide set_active()/clear_active(), and
+1.3.3 fixes several bugs.
+JavaScriptCore needs Perl, Python, and Ruby to build.
+
 Building
 --------
 
