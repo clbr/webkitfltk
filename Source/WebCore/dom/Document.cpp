@@ -4810,62 +4810,11 @@ RefPtr<XPathNSResolver> Document::createNSResolver(Node* nodeResolver)
     return m_xpathEvaluator->createNSResolver(nodeResolver);
 }
 
-RefPtr<XPathResult> Document::evaluate(const String& expression,
-                                           Node* contextNode,
-                                           XPathNSResolver* resolver,
-                                           unsigned short type,
-                                           XPathResult* result,
-                                           ExceptionCode& ec)
+RefPtr<XPathResult> Document::evaluate(const String& expression, Node* contextNode, XPathNSResolver* resolver, unsigned short type, XPathResult* result, ExceptionCode& ec)
 {
     if (!m_xpathEvaluator)
         m_xpathEvaluator = XPathEvaluator::create();
     return m_xpathEvaluator->evaluate(expression, contextNode, resolver, type, result, ec);
-}
-
-const Vector<IconURL>& Document::shortcutIconURLs()
-{
-    // Include any icons where type = link, rel = "shortcut icon".
-    return iconURLs(Favicon);
-}
-
-const Vector<IconURL>& Document::iconURLs(int iconTypesMask)
-{
-    m_iconURLs.clear();
-
-    if (!head())
-        return m_iconURLs;
-
-    Ref<HTMLCollection> children = head()->children();
-    unsigned int length = children->length();
-    for (unsigned int i = 0; i < length; ++i) {
-        Node* child = children->item(i);
-        if (!is<HTMLLinkElement>(*child))
-            continue;
-        HTMLLinkElement& linkElement = downcast<HTMLLinkElement>(*child);
-        if (!(linkElement.iconType() & iconTypesMask))
-            continue;
-        if (linkElement.href().isEmpty())
-            continue;
-
-        // Put it at the front to ensure that icons seen later take precedence as required by the spec.
-        IconURL newURL(linkElement.href(), linkElement.iconSizes(), linkElement.type(), linkElement.iconType());
-        m_iconURLs.append(newURL);
-    }
-
-    m_iconURLs.reverse();
-    return m_iconURLs;
-}
-
-void Document::addIconURL(const String& url, const String&, const String&, IconType iconType)
-{
-    if (url.isEmpty())
-        return;
-
-    Frame* f = frame();
-    if (!f)
-        return;
-
-    f->loader().didChangeIcons(iconType);
 }
 
 void Document::initSecurityContext()
@@ -6003,13 +5952,24 @@ void Document::didAddWheelEventHandler(Node& node)
         DebugPageOverlays::didChangeEventHandlers(*frame);
 }
 
-void Document::didRemoveWheelEventHandler(Node& node)
+static bool removeHandlerFromSet(EventTargetSet& handlerSet, Node& node, EventHandlerRemoval removal)
+{
+    switch (removal) {
+    case EventHandlerRemoval::One:
+        return handlerSet.remove(&node);
+    case EventHandlerRemoval::All:
+        return handlerSet.removeAll(&node);
+    }
+    return false;
+}
+
+void Document::didRemoveWheelEventHandler(Node& node, EventHandlerRemoval removal)
 {
     if (!m_wheelEventTargets)
         return;
 
-    ASSERT(m_wheelEventTargets->contains(&node));
-    m_wheelEventTargets->remove(&node);
+    if (!removeHandlerFromSet(*m_wheelEventTargets, node, removal))
+        return;
 
     if (Document* parent = parentDocument()) {
         parent->didRemoveWheelEventHandler(*this);
@@ -6056,14 +6016,13 @@ void Document::didAddTouchEventHandler(Node& handler)
 #endif
 }
 
-void Document::didRemoveTouchEventHandler(Node& handler)
+void Document::didRemoveTouchEventHandler(Node& handler, EventHandlerRemoval removal)
 {
 #if ENABLE(TOUCH_EVENTS)
     if (!m_touchEventTargets)
         return;
 
-    ASSERT(m_touchEventTargets->contains(&handler));
-    m_touchEventTargets->remove(&handler);
+    removeHandlerFromSet(*m_touchEventTargets, handler, removal);
 
     if (Document* parent = parentDocument()) {
         parent->didRemoveTouchEventHandler(*this);
@@ -6084,6 +6043,7 @@ void Document::didRemoveTouchEventHandler(Node& handler)
     page->chrome().client().needTouchEvents(false);
 #else
     UNUSED_PARAM(handler);
+    UNUSED_PARAM(removal);
 #endif
 }
 
@@ -6139,7 +6099,7 @@ Document::RegionFixedPair Document::absoluteRegionForEventTargets(const EventTar
 
     for (auto it : *targets) {
         LayoutRect rootRelativeBounds;
-        
+
         if (is<Document>(it.key)) {
             Document* document = downcast<Document>(it.key);
             if (document == this)

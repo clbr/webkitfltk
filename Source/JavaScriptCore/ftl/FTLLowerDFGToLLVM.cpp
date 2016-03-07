@@ -639,7 +639,8 @@ private:
             compileReallocatePropertyStorage();
             break;
         case ToString:
-            compileToString();
+        case CallStringConstructor:
+            compileToStringOrCallStringConstructor();
             break;
         case ToPrimitive:
             compileToPrimitive();
@@ -3288,7 +3289,7 @@ private:
                 object, oldStorage, transition->previous, transition->next));
     }
     
-    void compileToString()
+    void compileToStringOrCallStringConstructor()
     {
         switch (m_node->child1().useKind()) {
         case StringObjectUse: {
@@ -3356,9 +3357,9 @@ private:
             m_out.appendTo(notString, continuation);
             LValue operation;
             if (m_node->child1().useKind() == CellUse)
-                operation = m_out.operation(operationToStringOnCell);
+                operation = m_out.operation(m_node->op() == ToString ? operationToStringOnCell : operationCallStringConstructorOnCell);
             else
-                operation = m_out.operation(operationToString);
+                operation = m_out.operation(m_node->op() == ToString ? operationToString : operationCallStringConstructor);
             ValueFromBlock convertedResult = m_out.anchor(vmCall(operation, m_callFrame, value));
             m_out.jump(continuation);
             
@@ -4707,9 +4708,8 @@ private:
 
             LBasicBlock lastNext = m_out.appendTo(checkHole, slowCase);
             LValue doubleValue = m_out.loadDouble(baseIndex(heap, storage, index, m_node->child2()));
-            ValueFromBlock checkHoleResult = m_out.anchor(
-                m_out.doubleNotEqualOrUnordered(doubleValue, doubleValue));
-            m_out.branch(checkHoleResult.value(), rarely(slowCase), usually(continuation));
+            ValueFromBlock checkHoleResult = m_out.anchor(m_out.doubleEqual(doubleValue, doubleValue));
+            m_out.branch(checkHoleResult.value(), usually(continuation), rarely(slowCase));
             
             m_out.appendTo(slowCase, continuation);
             ValueFromBlock slowResult = m_out.anchor(m_out.equal(

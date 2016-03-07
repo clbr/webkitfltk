@@ -36,7 +36,6 @@
 #include "DocumentTiming.h"
 #include "FocusDirection.h"
 #include "FontSelector.h"
-#include "IconURL.h"
 #include "MutationObserver.h"
 #include "PageVisibilityState.h"
 #include "PlatformScreen.h"
@@ -240,6 +239,7 @@ enum NodeListInvalidationType {
 };
 const int numNodeListInvalidationTypes = InvalidateOnAnyAttrChange + 1;
 
+enum class EventHandlerRemoval { One, All };
 typedef HashCountedSet<Node*> EventTargetSet;
 
 enum DocumentClass {
@@ -930,10 +930,6 @@ public:
     bool hasNodesWithPlaceholderStyle() const { return m_hasNodesWithPlaceholderStyle; }
     void setHasNodesWithPlaceholderStyle() { m_hasNodesWithPlaceholderStyle = true; }
 
-    WEBCORE_EXPORT const Vector<IconURL>& shortcutIconURLs();
-    WEBCORE_EXPORT const Vector<IconURL>& iconURLs(int iconTypesMask);
-    void addIconURL(const String& url, const String& mimeType, const String& size, IconType);
-
     void updateFocusAppearanceSoon(bool restorePreviousSelection);
     void cancelFocusAppearanceUpdate();
 
@@ -1123,7 +1119,7 @@ public:
     void initDNSPrefetch();
 
     void didAddWheelEventHandler(Node&);
-    void didRemoveWheelEventHandler(Node&);
+    void didRemoveWheelEventHandler(Node&, EventHandlerRemoval = EventHandlerRemoval::One);
 
     double lastHandledUserGestureTimestamp() const { return m_lastHandledUserGestureTimestamp; }
     void updateLastHandledUserGestureTimestamp();
@@ -1139,7 +1135,7 @@ public:
     WEBCORE_EXPORT unsigned touchEventHandlerCount() const;
 
     void didAddTouchEventHandler(Node&);
-    void didRemoveTouchEventHandler(Node&);
+    void didRemoveTouchEventHandler(Node&, EventHandlerRemoval = EventHandlerRemoval::One);
 
     void didRemoveEventTargetNode(Node&);
 
@@ -1502,7 +1498,6 @@ private:
 
     bool m_createRenderers;
     bool m_inPageCache;
-    Vector<IconURL> m_iconURLs;
 
     HashSet<Element*> m_documentSuspensionCallbackElements;
     HashSet<Element*> m_mediaVolumeCallbackElements;
