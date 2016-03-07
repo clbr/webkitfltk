@@ -1,3 +1,307 @@
+2015-05-06  Andreas Kling  <akling@apple.com>
+
+        Don't allocate a StringImpl for every Number JSValue in JSON.stringify().
+        <https://webkit.org/b/144676>
+
+        Reviewed by Darin Adler.
+
+        We were creating a new String for every number JSValue passing through the JSON stringifier.
+        These StringImpl allocations were dominating one of the Kraken JSON benchmarks.
+        Optimize this by using StringBuilder::appendECMAScriptNumber() which uses a stack buffer
+        for the conversion instead.
+
+        13% progression on Kraken/json-stringify-tinderbox.
+
+        * runtime/JSONObject.cpp:
+        (JSC::Stringifier::appendStringifiedValue):
+
+2015-05-06  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183847.
+        https://bugs.webkit.org/show_bug.cgi?id=144691
+
+        Caused many assertion failures (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "GC has trouble with pathologically large array allocations"
+        https://bugs.webkit.org/show_bug.cgi?id=144609
+        http://trac.webkit.org/changeset/183847
+
+2015-05-05  Filip Pizlo  <fpizlo@apple.com>
+
+        PutGlobalVar shouldn't have an unconditional store barrier
+        https://bugs.webkit.org/show_bug.cgi?id=133104
+
+        Reviewed by Benjamin Poulain.
+        
+        We don't need a store barrier on PutGlobalVar if the value being stored can be
+        speculated to not be a cell.
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+
+2015-05-05  Filip Pizlo  <fpizlo@apple.com>
+
+        CopiedBlock::reportLiveBytes() should be totally cool with oversize blocks
+        https://bugs.webkit.org/show_bug.cgi?id=144667
+
+        Reviewed by Andreas Kling.
+        
+        We are now calling this method for oversize blocks. It had an assertion that indirectly
+        implied that the block is not oversize, because it was claiming that the number of live
+        bytes should be smaller than the non-oversize-block size.
+
+        * heap/CopiedBlockInlines.h:
+        (JSC::CopiedBlock::reportLiveBytes):
+
+2015-05-05  Filip Pizlo  <fpizlo@apple.com>
+
+        GC has trouble with pathologically large array allocations
+        https://bugs.webkit.org/show_bug.cgi?id=144609
+
+        Reviewed by Mark Lam.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::updateObjectCounts): Make this code less confusing.
+        * heap/SlotVisitorInlines.h:
+        (JSC::SlotVisitor::copyLater): The early return for isOversize() was the bug. We still need to report these bytes as live. Otherwise the GC doesn't know that it owns this memory.
+        * jsc.cpp: Add size measuring hooks to write the largeish test.
+        (GlobalObject::finishCreation):
+        (functionGCAndSweep):
+        (functionFullGC):
+        (functionEdenGC):
+        (functionHeapSize):
+        * tests/stress/new-array-storage-array-with-size.js: Fix this so that it actually allocates ArrayStorage arrays and tests the thing it was supposed to test.
+        * tests/stress/new-largeish-contiguous-array-with-size.js: Added. This tests what the other test accidentally started testing, but does so without running your system out of memory.
+        (foo):
+        (test):
+
+2015-05-05  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL SwitchString slow case creates duplicate switch cases
+        https://bugs.webkit.org/show_bug.cgi?id=144634
+
+        Reviewed by Geoffrey Garen.
+        
+        The problem of duplicate switches is sufficiently annoying that I fixed the issue and also
+        added mostly-debug-only asserts to catch such issues earlier.
+
+        * bytecode/CallVariant.cpp:
+        (JSC::variantListWithVariant): Assertion to prevent similar bugs.
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::switchStringRecurse): Assertion to prevent similar bugs.
+        (JSC::FTL::LowerDFGToLLVM::switchStringSlow): This is the bug.
+        * jit/BinarySwitch.cpp:
+        (JSC::BinarySwitch::BinarySwitch): Assertion to prevent similar bugs.
+        * jit/Repatch.cpp:
+        (JSC::linkPolymorphicCall): Assertion to prevent similar bugs.
+        * tests/stress/ftl-switch-string-slow-duplicate-cases.js: Added. This tests the FTL SwitchString bug. It was previously crashing every time.
+        (foo):
+        (cat):
+
+2015-05-05  Basile Clement  <basile_clement@apple.com>
+
+        Fix debug builds after r183812
+        https://bugs.webkit.org/show_bug.cgi?id=144300
+
+        Rubber stamped by Andreas Kling and Filip Pizlo.
+
+        hasObjectMaterializationData() didn't treat MaterializeCreateActivation
+        as having materialization data, which was causing an assertion failure when
+        sinking CreateActivations on debug builds.
+
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::hasObjectMaterializationData):
+
+2015-05-04  Basile Clement  <basile_clement@apple.com>
+
+        Allow CreateActivation sinking
+        https://bugs.webkit.org/show_bug.cgi?id=144300
+
+        Reviewed by Filip Pizlo.
+
+        This pursues the work started in
+        https://bugs.webkit.org/show_bug.cgi?id=144016 to expand the set of
+        allocations we are able to sink by allowing sinking of CreateActivation
+        node.
+
+        This is achieved by following closely the way NewObject is currently
+        sunk: we add a new PhantomCreateActivation node to record the initial
+        position of the CreateActivation node, new ClosureVarPLoc promoted heap
+        locations to keep track of the variables put in the activation, and a
+        new MaterializeCreateActivation node to allocate and populate the sunk
+        activation.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.cpp:
+        (JSC::DFG::Node::convertToPutClosureVarHint):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertToPhantomCreateActivation):
+        (JSC::DFG::Node::isActivationAllocation):
+        (JSC::DFG::Node::isPhantomActivationAllocation):
+        (JSC::DFG::Node::isPhantomAllocation):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGObjectAllocationSinkingPhase.cpp:
+        (JSC::DFG::ObjectAllocationSinkingPhase::lowerNonReadingOperationsOnPhantomAllocations):
+        (JSC::DFG::ObjectAllocationSinkingPhase::handleNode):
+        (JSC::DFG::ObjectAllocationSinkingPhase::createMaterialize):
+        (JSC::DFG::ObjectAllocationSinkingPhase::populateMaterialize):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGPromotedHeapLocation.cpp:
+        (WTF::printInternal):
+        * dfg/DFGPromotedHeapLocation.h:
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::validateCPS):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileMaterializeCreateActivation):
+        * ftl/FTLOperations.cpp:
+        (JSC::FTL::operationMaterializeObjectInOSR):
+        * tests/stress/activation-sink-osrexit.js: Added.
+        (bar):
+        (foo.set result):
+        * tests/stress/activation-sink.js: Added.
+        (bar):
+
+2015-05-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix stale comment.
+
+        * tests/mozilla/js1_5/Array/regress-101964.js:
+
+2015-05-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Large array shouldn't be slow
+        https://bugs.webkit.org/show_bug.cgi?id=144617
+
+        Rubber stamped by Mark Lam.
+
+        * tests/mozilla/js1_5/Array/regress-101964.js: 500ms isn't enough in debug mode. We don't care how long this takes so long as we run it to completion. I've raised the limit much higher.
+
+2015-05-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Large array shouldn't be slow
+        https://bugs.webkit.org/show_bug.cgi?id=144617
+
+        Rubber stamped by Mark Lam.
+
+        * tests/mozilla/js1_5/Array/regress-101964.js: Mozilla may have cared about this being fast a decade ago (or more), but we don't care. We've consistently found that an array implementation that punishes this case to get speed on common-case array accesses is better. This should fix some test failures on the bots.
+
+2015-05-04  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183789.
+        https://bugs.webkit.org/show_bug.cgi?id=144620
+
+        Causing flakiness on exceptionFuzz tests locally on 32-bit
+        build (Requested by saamyjoon on #webkit).
+
+        Reverted changeset:
+
+        "Global functions should be initialized as JSFunctions in byte
+        code"
+        https://bugs.webkit.org/show_bug.cgi?id=144178
+        http://trac.webkit.org/changeset/183789
+
+2015-05-04  Saam Barati  <saambarati1@gmail.com>
+
+        Global functions should be initialized as JSFunctions in byte code
+        https://bugs.webkit.org/show_bug.cgi?id=144178
+
+        Reviewed by Geoffrey Garen.
+
+        This patch makes the initialization of global functions more explicit by
+        moving initialization into bytecode. It also prepares JSC for having ES6
+        style lexical scoping because initializing global functions in bytecode
+        easily allows global functions to be initialized with the proper scope that
+        will have access to global lexical variables. Global lexical variables
+        should be visible to global functions but don't live on the global object.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedProgramCodeBlock::visitChildren):
+        * bytecode/UnlinkedCodeBlock.h:
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::generate):
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * bytecompiler/BytecodeGenerator.h:
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::initializeGlobalProperties):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::addGlobalVar):
+        (JSC::JSGlobalObject::addFunction):
+        * runtime/JSGlobalObject.h:
+
+2015-05-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Large array shouldn't be slow
+        https://bugs.webkit.org/show_bug.cgi?id=144617
+
+        Reviewed by Geoffrey Garen.
+        
+        Decouple MIN_SPARSE_ARRAY_INDEX, which is the threshold for storing to the sparse map when
+        you're already using ArrayStorage mode, from the minimul array length required to use
+        ArrayStorage in a new Array(length) allocation.
+        
+        Lift the array allocation length threshold to something very high. If this works, we'll
+        probably remove that threshold entirely.
+        
+        This is a 27% speed-up on JetStream/hash-map. Because run-jsc-benchmarks still can't run
+        JetStream as a discrete suite, this adds hash-map to LongSpider so that we run it somewhere
+        for now.
+
+        * dfg/DFGCallArrayAllocatorSlowPathGenerator.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNewArrayWithSize):
+        * runtime/ArrayConventions.h:
+        * runtime/JSArray.h:
+        (JSC::JSArray::create):
+        * runtime/JSGlobalObject.h:
+        (JSC::constructEmptyArray):
+        * tests/stress/new-array-storage-array-with-size.js: Skip this test until we fix https://bugs.webkit.org/show_bug.cgi?id=144609.
+
+2015-05-03  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Add backed intrinsics to private functions exposed with private symbols in global object
+        https://bugs.webkit.org/show_bug.cgi?id=144545
+
+        Reviewed by Darin Adler.
+
+        Math.abs and Math.floor have ASM intrinsics And it is further accelerated in DFG/FTL layers.
+        This patch adds intrinsic to private functions exposed with private symbols in global object,
+        @floor and @abs.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::globalPrivateFuncAbs): Deleted.
+        (JSC::globalPrivateFuncFloor): Deleted.
+        * runtime/MathObject.cpp:
+        * runtime/MathObject.h:
+        * tests/stress/array-from-abs-and-floor.js: Added.
+        (target1):
+        (target2):
+        (target3):
+
 2015-05-04  Csaba Osztrogonác  <ossy@webkit.org>
 
         [cmake] ARM related build system cleanup

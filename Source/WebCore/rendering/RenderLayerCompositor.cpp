@@ -1419,7 +1419,7 @@ void RenderLayerCompositor::computeCompositingRequirements(RenderLayer* ancestor
 
 #if ENABLE(CSS_COMPOSITING)
     layer.setHasNotIsolatedCompositedBlendingDescendants(childState.hasNotIsolatedCompositedBlendingDescendants);
-    ASSERT(!layer.hasNotIsolatedCompositedBlendingDescendants() || layer.hasNotIsolatedBlendingDescendants());
+    // ASSERT(!layer.hasNotIsolatedCompositedBlendingDescendants() || layer.hasNotIsolatedBlendingDescendants());
 #endif
     // Now check for reasons to become composited that depend on the state of descendant layers.
     RenderLayer::IndirectCompositingReason indirectCompositingReason;
@@ -3216,9 +3216,14 @@ bool RenderLayerCompositor::viewHasTransparentBackground(Color* backgroundColor)
 
 void RenderLayerCompositor::rootBackgroundTransparencyChanged()
 {
+    if (!inCompositingMode())
+        return;
+
     Color documentBackgroundColor = m_renderView.frameView().documentBackgroundColor();
     if (m_lastDocumentBackgroundColor.isValid() && documentBackgroundColor.hasAlpha() == m_lastDocumentBackgroundColor.hasAlpha())
         return;
+
+    m_lastDocumentBackgroundColor = documentBackgroundColor;
 
     // FIXME: We should do something less expensive than a full layer rebuild.
     setCompositingLayersNeedRebuild();
