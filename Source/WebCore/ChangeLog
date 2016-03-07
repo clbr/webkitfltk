@@ -1,3 +1,561 @@
+2014-07-01  Alex Christensen  <achristensen@webkit.org>
+
+        [WebGL] Fix PVRTC extension.
+        https://bugs.webkit.org/show_bug.cgi?id=134525
+
+        Reviewed by Dean Jackson.
+
+        * html/canvas/WebGLRenderingContext.cpp:
+        (WebCore::WebGLRenderingContext::validateCompressedTexDimensions):
+        Remove the return false which I mistakenly committed in r170128
+        and make the gl error match the S3TC error and the khronos test.
+
+2014-07-01  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: iOS does not expose ARIA toggle buttons at all (not even as a regular button)
+        https://bugs.webkit.org/show_bug.cgi?id=133875
+
+        Reviewed by Enrica Casucci.
+
+        Support the toggle button type in iOS.
+
+        Test: platform/ios-sim/accessibility/toggle-button.html
+
+        * accessibility/ios/WebAccessibilityObjectWrapperIOS.mm:
+        (-[WebAccessibilityObjectWrapper accessibilityCanFuzzyHitTest]):
+        (-[WebAccessibilityObjectWrapper accessibilityTraits]):
+        (-[WebAccessibilityObjectWrapper determineIsAccessibilityElement]):
+
+2014-07-01  Dean Jackson  <dino@apple.com>
+
+        [iOS] Subsampled JPEG images do not draw correctly via the canvas APIs
+        https://bugs.webkit.org/show_bug.cgi?id=134513
+        <rdar://problem/12078860>
+        <rdar://problem/16745393>
+
+        Reviewed by Tim Horton.
+
+        Subsampled images (e.g. JPEG) were not consistently using
+        their original dimensions and subsampled dimensions. This caused
+        things like texImage2D to pack the pixels incorrectly, or drawImage
+        to squish the rendering.
+
+        Renamed m_scale to m_subsamplingScale on FrameData.
+
+        Tests: fast/canvas/image-potential-subsample.html
+               fast/canvas/webgl/tex-image-and-sub-image-2d-with-potentially-subsampled-image.html
+
+        * platform/graphics/BitmapImage.cpp:
+        (WebCore::BitmapImage::cacheFrame): Rename to m_subsamplingScale.
+        (WebCore::BitmapImage::frameAtIndex): Ditto.
+        * platform/graphics/BitmapImage.h:
+        (WebCore::FrameData::FrameData): Ditto.
+        * platform/graphics/cg/BitmapImageCG.cpp:
+        (WebCore::FrameData::clear): Ditto.
+        (WebCore::BitmapImage::BitmapImage): Ditto.
+        (WebCore::BitmapImage::draw): Use a scaledSrcRect that reflects the subsampled size,
+        rather than assuming the srcRect accurately reflects how many pixels we have
+        in the Bitmap.
+        (WebCore::BitmapImage::copyUnscaledFrameAtIndex):
+        * platform/graphics/cg/GraphicsContext3DCG.cpp:
+        (WebCore::GraphicsContext3D::ImageExtractor::extractImage): Similar fix, although this
+        time we just ask the image decoder to take into account the subsampled size
+        when it is "generating" a frame, causing it to use the bitmap data it has already
+        decoded.
+
+2014-07-01  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Selected DOM element highlights invisible near bottom of the viewport (topContentInset?)
+        https://bugs.webkit.org/show_bug.cgi?id=133818
+
+        Reviewed by Beth Dakin.
+
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::InspectorOverlay::update):
+        Take the topContentInset into account when sizing the InspectorOverlay's FrameView.
+
+2014-07-01  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: HTML indeterminate IDL attribute not mapped to checkbox value=2
+        https://bugs.webkit.org/show_bug.cgi?id=134492
+
+        Reviewed by Andreas Kling.
+
+        Support the indeterminate attribute in AX code.
+
+        Test: Update existing test: accessibility/aria-checked-mixed-value
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::checkboxOrRadioValue):
+
+2014-07-01  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Typing an automatic text replacement phrase after a br in contenteditable is not rendered as expected
+        https://bugs.webkit.org/show_bug.cgi?id=133883
+
+        Reviewed by Enrica Casucci.
+
+        enclosingDeletableElement() makes sure that the element's container is editable, but not
+        that it is capable of having content inside it (like how a <br> can't).
+
+        No new tests. I don't think this is testable because it requires setting some state in System Preferences.
+
+        * editing/DeleteButtonController.cpp:
+        (WebCore::enclosingDeletableElement):
+
+2014-07-01  Alex Christensen  <achristensen@webkit.org>
+
+        [iOS] Unreviewed build fix after r170640.
+
+        * page/EditorClient.h:
+        (WebCore::EditorClient::selectedTelephoneNumberRangesChanged):
+        Add ifdefs to make everything compile and link.
+
+2014-07-01  Daniel Bates  <dabates@apple.com>
+
+        Remove unnecessary calls to std::move()
+        https://bugs.webkit.org/show_bug.cgi?id=134493
+
+        Reviewed by Anders Carlsson.
+
+        * Modules/encryptedmedia/CDM.cpp:
+        (WebCore::CDM::CDM):
+        * css/CSSGrammar.y.in:
+        * css/CSSPrimitiveValue.cpp:
+        (WebCore::CSSPrimitiveValue::formatNumberValue):
+        * css/MediaQuery.cpp:
+        (WebCore::MediaQuery::MediaQuery):
+        * platform/graphics/mac/FontMac.mm:
+        (WebCore::Font::dashesForIntersectionsWithRect):
+
+2014-07-01  Zalan Bujtas  <zalan@apple.com>
+
+        Subpixel rendering: Pixel crack in breadcrumbs at devforums.apple.com.
+        https://bugs.webkit.org/show_bug.cgi?id=134491
+
+        Reviewed by Simon Fraser.
+
+        Do not early round geometry values, while computing background image position. It changes the final
+        subpixel values and that could lead to wrong snap positions.
+        pixelSnapBackgroundImageGeometryForPainting() takes care of geometry snapping.
+
+        Test: fast/backgrounds/background-image-size-double-rounding.html
+
+        * rendering/RenderBoxModelObject.cpp:
+        (WebCore::RenderBoxModelObject::calculateBackgroundImageGeometry):
+
+2014-07-01  Pratik Solanki  <psolanki@apple.com>
+
+        Create NSURLRequest lazily when USE(CFNETWORK) is enabled
+        https://bugs.webkit.org/show_bug.cgi?id=134441
+
+        Reviewed by Andreas Kling.
+
+        No new tests. Should be covered by existing tests.
+
+        * platform/network/cf/ResourceRequest.h:
+        (WebCore::ResourceRequest::ResourceRequest):
+        (WebCore::ResourceRequest::encodingRequiresPlatformData):
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        (WebCore::ResourceRequest::doUpdatePlatformRequest):
+        (WebCore::ResourceRequest::doUpdatePlatformHTTPBody):
+        (WebCore::ResourceRequest::setStorageSession):
+        * platform/network/cocoa/ResourceRequestCocoa.mm:
+        (WebCore::ResourceRequest::nsURLRequest):
+
+2014-07-01  Brady Eidson  <beidson@apple.com>
+
+        Combine the Telephone and Selection overlay controllers, updating UI behavior.
+        https://bugs.webkit.org/show_bug.cgi?id=134461
+
+        Reviewed by Tim Horton.
+
+        * WebCore.exp.in:
+
+        * dom/Range.cpp:
+        (WebCore::Range::contains): Returns true if the Range completely contains the passed-in Range.
+        * dom/Range.h:
+
+2014-07-01  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION(160908): vube.com video won't play after going into and out of fullscreen
+        https://bugs.webkit.org/show_bug.cgi?id=134489
+
+        Reviewed by Zalan Bujtas.
+
+        Test: fullscreen/full-screen-plugin.html
+
+        It is difficult to restore the render tree correctly in all cases after removing a full screen
+        renderer from the tree. r160908 avoided dealing with this by simply always reconstructing the subtree.
+        Unfortunately plugin lifetime is currently tied to its renderer so this would cause the plugin to restart.
+        
+        With this patch we avoid reconstruction in normal cases and only force it if the render tree is complicated.
+
+        * dom/Document.cpp:
+        (WebCore::unwrapFullScreenRenderer):
+        
+            Force reconstruction conditionally.
+
+        (WebCore::Document::webkitWillEnterFullScreenForElement):
+        (WebCore::Document::webkitDidExitFullScreenForElement):
+        * rendering/RenderFullScreen.cpp:
+        (WebCore::RenderFullScreen::wrapRenderer):
+        (WebCore::RenderFullScreen::unwrapRenderer):
+        
+            Deal with the simple case of single child, possibly in anonymous wrapper.
+            In other cases request reconstruction.
+            This is covered by the existing fullscreen tests.
+
+        * rendering/RenderFullScreen.h:
+
+2014-07-01  Zan Dobersek  <zdobersek@igalia.com>
+
+        Remove remaining Vector<> copies in WebCore accessibility code
+        https://bugs.webkit.org/show_bug.cgi?id=133263
+
+        Reviewed by Darin Adler.
+
+        * accessibility/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::notificationPostTimerFired): Don't copy the Vector member and
+        then clear it -- move it into the local variable instead.
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::ariaLabeledByText): Move the axElements Vector into
+        the AccessibilityText constructor.
+        (WebCore::AccessibilityNodeObject::stringValue): Create a const reference to the Vector of
+        HTMLSelectElement's list items instead of copying it.
+        * accessibility/AccessibilityObject.h:
+        (WebCore::AccessibilityText::AccessibilityText): Take the Vector parameter by non-const
+        value and move it into the member variable.
+        * accessibility/AccessibilityRenderObject.cpp: 
+        (WebCore::AccessibilityRenderObject::stringValue): Create a const reference to the Vector
+        of HTMLSelectElement's list items instead of copying it.
+        (WebCore::AccessibilityRenderObject::ariaSelectedRows): Wrap the AccessibilityChildrenVector
+        iteration in a lambda. Use it to iterate over either the newly-constructed Vector (in case
+        the object has the tree role) or the reference to the vector returned by
+        AccessibilityTable::rows() (in case the object is an AccessibilityTable instance).
+
+2014-06-30  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r170605.
+        https://bugs.webkit.org/show_bug.cgi?id=134484
+
+        The changes cause crashes on ARM64 (Requested by benjaminp on
+        #webkit).
+
+        Reverted changeset:
+
+        "Reduce dynamic memory allocation in css jit."
+        https://bugs.webkit.org/show_bug.cgi?id=134416
+        http://trac.webkit.org/changeset/170605
+
+2014-06-30  Anders Carlsson  <andersca@apple.com>
+
+        Change the AddBackForwardItem message to take a page state object
+        https://bugs.webkit.org/show_bug.cgi?id=134475
+
+        Reviewed by Andreas Kling.
+
+        * WebCore.exp.in:
+
+2014-06-30  Benjamin Poulain  <benjamin@webkit.org>
+
+        [iOS][WK2] Do not put tap highlight on images that are not in links, and on applet/embed/object
+        https://bugs.webkit.org/show_bug.cgi?id=134471
+        <rdar://problem/17513542>
+
+        Reviewed by Enrica Casucci.
+
+        UIKit has some special code to avoid tap highlight on certain type of object. This is not very flexible
+        since the page has no way of overriding that behavior.
+
+        This patch implement the same feature by changing the default stylesheet. The tap highlight is disabled
+        by default for those object, and enabled for images that are in a link.
+
+        * css/html.css:
+        (applet, embed, object, img):
+        (:-webkit-any-link img):
+
+2014-06-30  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        All Indic text is rendered as boxes on iOS
+        https://bugs.webkit.org/show_bug.cgi?id=134464
+
+        Reviewed by Simon Fraser.
+
+        I made a typo in r170207.
+
+        Test: fast/text/indic.html
+
+        * platform/graphics/ios/FontCacheIOS.mm:
+        (WebCore::languageSpecificFallbackFont):
+
+2014-06-30  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [iOS] languageSpecificFallbackFont() is not consistent
+        https://bugs.webkit.org/show_bug.cgi?id=134473
+
+        Reviewed by Darin Adler.
+
+        It can use "<" throughout the function as well as keeping the fallthrough behavior consistent.
+
+        No tests because there is no behavior change.
+
+        * platform/graphics/ios/FontCacheIOS.mm:
+        (WebCore::languageSpecificFallbackFont):
+
+2014-06-30  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Do not compile JSFileException
+        and JSFileReaderSync multiple times.
+
+2014-06-30  Daniel Bates  <dabates@apple.com>
+
+        Avoid copying function object in lambda function in ScrollingThread::dispatchBarrier(); actually use move semantics
+        https://bugs.webkit.org/show_bug.cgi?id=134470
+
+        Reviewed by Anders Carlsson.
+
+        Currently we always copy construct the captured std::function object when calling callOnMainThread()
+        in the lambda function created in ScrollingThread::dispatchBarrier() because captured variables are
+        const in a lambda expression's body by default. That is, the std::function object is captured as const.
+        Instead, we should mark this lambda expression as mutable so the captured std::function object is
+        non-const and hence we can use move semantics when passing it to callOnMainThread().
+
+        * page/scrolling/ScrollingThread.cpp:
+        (WebCore::ScrollingThread::dispatchBarrier):
+
+2014-06-30  Anders Carlsson  <andersca@apple.com>
+
+        Adopt the legacy session decoding inside WebPage::restoreSession for now
+        https://bugs.webkit.org/show_bug.cgi?id=134465
+
+        Reviewed by Sam Weinig.
+
+        * WebCore.exp.in:
+
+2014-06-30  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r170578.
+        https://bugs.webkit.org/show_bug.cgi?id=134462
+
+        causes assertions loading nytimes.com on iOS (Requested by
+        smfr on #webkit).
+
+        Reverted changeset:
+
+        "Create NSURLRequest lazily when USE(CFNETWORK) is enabled"
+        https://bugs.webkit.org/show_bug.cgi?id=134441
+        http://trac.webkit.org/changeset/170578
+
+2014-06-30  Alex Christensen  <achristensen@webkit.org>
+
+        Reduce dynamic memory allocation in css jit.
+        https://bugs.webkit.org/show_bug.cgi?id=134416
+
+        Reviewed by Benjamin Poulain.
+
+        * cssjit/FunctionCall.h:
+        (WebCore::FunctionCall::FunctionCall):
+        (WebCore::FunctionCall::saveAllocatedCallerSavedRegisters):
+        * cssjit/RegisterAllocator.h:
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::addPseudoClassType):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generatePrologue):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateSelectorChecker):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateElementIsNthChild):
+        Use inlineCapacity template parameter to reduce malloc calls.
+        I use 16 and 32 as the inline capacity for non-register related vectors because that
+        is probably big enough for the selector compiler, and if it is not then a malloc
+        call will not be significant because the selector is very complex.
+        * cssjit/StackAllocator.h:
+        (WebCore::StackAllocator::push):
+        Pass a vector of stack references to match calls to pop and to avoid a call to appendVector.
+
+2014-06-30  Alex Christensen  <achristensen@webkit.org>
+
+        Use non-thumb registers in armv7 css jit.
+        https://bugs.webkit.org/show_bug.cgi?id=134450
+
+        Reviewed by Geoff Garen.
+
+        * cssjit/RegisterAllocator.h:
+        (WebCore::RegisterAllocator::isValidRegister):
+        (WebCore::RegisterAllocator::isCallerSavedRegister):
+        Use additional general purpose registers.
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::compile):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateSelectorChecker):
+        Always succeed when compiling css selectors.
+
+2014-06-30  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Tiles on bottom of screen are not always allocated when necessary
+        https://bugs.webkit.org/show_bug.cgi?id=134272
+
+        Reviewed by Simon Fraser.
+
+        The initial visibleRect is in the coordinate of the root layer, so its origin
+        is at the top left of the view. The initial rect we were using doesn't
+        include the contents inset, so it was too short, which was causing tiles near
+        the bottom of the screen to not always be allocated if the tile threshold was
+        close to the bottom of the view. Instead, we want to include the contents
+        inset size so the visible rect includes the entire view.
+        GraphicsLayerCA::recursiveCommitChanges() takes care of mapping and cropping
+        the visible rect into the tiled layer's coordinate system, at which point it
+        is used for visible tile logic.
+
+        Test: platform/mac-wk2/tiled-drawing/visible-rect-content-inset.html
+
+        * platform/graphics/ca/TileCoverageMap.cpp:
+        (WebCore::TileCoverageMap::update):
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::flushPendingLayerChanges):
+
+2014-06-30  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed project gardening.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Clean up path information so
+        files appear in appropriate places in project view.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+
+2014-06-30  Zalan Bujtas  <zalan@apple.com>
+
+        Remove redundant repaintCompositedLayers() parameter and its dependencies.
+        https://bugs.webkit.org/show_bug.cgi?id=134431
+
+        Reviewed by Darin Adler.
+
+        No change in functionality.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::convertToPixelSnappedLayerCoords): Deleted.
+        (WebCore::RenderLayer::convertToLayerCoords): Deleted.
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::repaintCompositedLayers):
+        (WebCore::RenderLayerCompositor::recursiveRepaintLayer):
+        * rendering/RenderLayerCompositor.h:
+
+2014-06-30  Alex Christensen  <achristensen@webkit.org>
+
+        Remove webkit prefix from pointer lock.
+        https://bugs.webkit.org/show_bug.cgi?id=134312
+
+        Reviewed by Dean Jackson.
+
+        * dom/Document.cpp:
+        (WebCore::Document::exitPointerLock):
+        (WebCore::Document::pointerLockElement):
+        (WebCore::Document::webkitExitPointerLock): Deleted.
+        (WebCore::Document::webkitPointerLockElement): Deleted.
+        * dom/Document.h:
+        * dom/Document.idl:
+        * dom/Element.cpp:
+        (WebCore::Element::requestPointerLock):
+        (WebCore::Element::webkitRequestPointerLock): Deleted.
+        * dom/Element.h:
+        * dom/Element.idl:
+        * dom/EventNames.h:
+        * dom/MouseEvent.idl:
+        * dom/MouseRelatedEvent.h:
+        (WebCore::MouseRelatedEvent::movementX):
+        (WebCore::MouseRelatedEvent::movementY):
+        (WebCore::MouseRelatedEvent::webkitMovementX): Deleted.
+        (WebCore::MouseRelatedEvent::webkitMovementY): Deleted.
+        * page/PointerLockController.cpp:
+        (WebCore::PointerLockController::PointerLockController):
+        Initialize all data members.
+        (WebCore::PointerLockController::requestPointerLock):
+        (WebCore::PointerLockController::didAcquirePointerLock):
+        (WebCore::PointerLockController::didNotAcquirePointerLock):
+        (WebCore::PointerLockController::didLosePointerLock):
+
+2014-06-30  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        U16_IS_SURROGATE should not be called with a UChar32
+        https://bugs.webkit.org/show_bug.cgi?id=134440
+
+        Reviewed by Darin Adler.
+
+        No new tests because there is no behavior change.
+
+        * platform/graphics/mac/ComplexTextController.cpp:
+        (WebCore::advanceByCombiningCharacterSequence):
+
+2014-06-30  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Remove m_evasObject from Widget
+        https://bugs.webkit.org/show_bug.cgi?id=134442
+
+        Reviewed by Gyuyoung Kim.
+
+        Since WebKit1/EFL was dropped, we don't need to keep the m_evasObject
+        in the Widget.cpp because it's not used for WebKit2/Efl.
+
+        * platform/Widget.h:
+        (WebCore::Widget::evasObject): Deleted.
+        * platform/efl/ScrollbarEfl.cpp:
+        Removed WebKit1/Efl specific code which uses m_evasObject.
+        It will be a dummy until WebKit2/Efl support proper scrollbar implementation.
+        (WebCore::ScrollbarEfl::ScrollbarEfl):
+        (WebCore::ScrollbarEfl::~ScrollbarEfl):
+        (WebCore::ScrollbarEfl::setParent):
+        (WebCore::ScrollbarEfl::frameRectsChanged):
+        (WebCore::ScrollbarEfl::invalidate):
+        (ScrollbarEfl::ScrollbarEfl): Deleted.
+        (ScrollbarEfl::~ScrollbarEfl): Deleted.
+        (scrollbarEflEdjeMessage): Deleted.
+        (ScrollbarEfl::setParent): Deleted.
+        (ScrollbarEfl::updateThumbPosition): Deleted.
+        (ScrollbarEfl::updateThumbProportion): Deleted.
+        (ScrollbarEfl::updateThumbPositionAndProportion): Deleted.
+        (ScrollbarEfl::frameRectsChanged): Deleted.
+        (ScrollbarEfl::invalidate): Deleted.
+        * platform/efl/ScrollbarEfl.h:
+        Removed unnecessary methods. In addition, applied final, override keyword.
+        (WebCore::ScrollbarEfl::handleMouseMoveEvent): Deleted.
+        (WebCore::ScrollbarEfl::handleMouseOutEvent): Deleted.
+        (WebCore::ScrollbarEfl::handleMousePressEvent): Deleted.
+        (WebCore::ScrollbarEfl::handleMouseReleaseEvent): Deleted.
+        * platform/efl/WidgetEfl.cpp:
+        (WebCore::Widget::Widget):
+        (WebCore::Widget::setEvasObject): Deleted.
+
+2014-06-30  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
+
+        Fix deprecated warning with bison 3
+        https://bugs.webkit.org/show_bug.cgi?id=133791
+
+        Reviewed by Csaba Osztrogonác.
+
+        No new tests because no functional changes.
+
+        * css/CSSGrammar.y.in:
+        * xml/XPathGrammar.y:
+
+2014-06-30  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        Remove HarfBuzzShaper::setDrawRange()
+        https://bugs.webkit.org/show_bug.cgi?id=134243
+
+        Reviewed by Gyuyoung Kim.
+
+        setDrawRange() is not used anywhere. Remove it.
+        And m_fromIndex and m_toIndex are changed by only setDrawRange().
+        So remove them too and use the default values instead of them.
+
+        No new tests, no behavior changes.
+
+        * platform/graphics/harfbuzz/HarfBuzzShaper.cpp:
+        (WebCore::HarfBuzzShaper::HarfBuzzShaper):
+        (WebCore::HarfBuzzShaper::fillGlyphBufferFromHarfBuzzRun):
+            currentCharacterIndex is unsigned, always greater than 0. Clean up if statements.
+        (WebCore::HarfBuzzShaper::setDrawRange): Deleted.
+        * platform/graphics/harfbuzz/HarfBuzzShaper.h:
+
 2014-06-29  Pratik Solanki  <psolanki@apple.com>
 
         Create NSURLRequest lazily when USE(CFNETWORK) is enabled

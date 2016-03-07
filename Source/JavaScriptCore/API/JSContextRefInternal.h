@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2004, 2006, 2008 Apple Inc. All rights reserved.
- * Copyright (C) 2008 INdT - Instituto Nokia de Tecnologia
- * Copyright (C) 2009-2010 ProFUSION embedded systems
- * Copyright (C) 2009-2010 Samsung Electronics
+ * Copyright (C) 2014 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,30 +23,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ScrollbarEfl_h
-#define ScrollbarEfl_h
+#ifndef JSContextRefInternal_h
+#define JSContextRefInternal_h
 
-#include "Scrollbar.h"
-#include <wtf/PassRefPtr.h>
+#include "JSContextRefPrivate.h"
 
-namespace WebCore {
+#if USE(CF)
+#include <CoreFoundation/CFRunLoop.h>
+#endif
 
-class ScrollbarEfl final : public Scrollbar {
-public:
-    friend class Scrollbar;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    virtual ~ScrollbarEfl();
+#if USE(CF)
+/*!
+@function
+@abstract Gets the run loop used by the Web Inspector debugger when evaluating JavaScript in this context.
+@param ctx The JSGlobalContext whose setting you want to get.
+*/
+JS_EXPORT CFRunLoopRef JSGlobalContextGetDebuggerRunLoop(JSGlobalContextRef ctx) CF_AVAILABLE(10_10, 8_0);
 
-    virtual void setFrameRect(const IntRect&) override;
-    virtual void frameRectsChanged() override;
-    virtual void invalidate() override;
+/*!
+@function
+@abstract Sets the run loop used by the Web Inspector debugger when evaluating JavaScript in this context.
+@param ctx The JSGlobalContext that you want to change.
+@param runLoop The new value of the setting for the context.
+*/
+JS_EXPORT void JSGlobalContextSetDebuggerRunLoop(JSGlobalContextRef ctx, CFRunLoopRef) CF_AVAILABLE(10_10, 8_0);
+#endif
 
-protected:
-    ScrollbarEfl(ScrollableArea*, ScrollbarOrientation, ScrollbarControlSize);
-
-    virtual void setParent(ScrollView*) override;
-};
-
+#ifdef __cplusplus
 }
+#endif
 
-#endif // ScrollbarEfl_h
+#endif // JSContextRefInternal_h

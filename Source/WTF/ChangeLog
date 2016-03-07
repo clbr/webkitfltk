@@ -1,3 +1,53 @@
+2014-06-30  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r170605.
+        https://bugs.webkit.org/show_bug.cgi?id=134484
+
+        The changes cause crashes on ARM64 (Requested by benjaminp on
+        #webkit).
+
+        Reverted changeset:
+
+        "Reduce dynamic memory allocation in css jit."
+        https://bugs.webkit.org/show_bug.cgi?id=134416
+        http://trac.webkit.org/changeset/170605
+
+2014-06-30  Daniel Bates  <dabates@apple.com>
+
+        Make TransformIterator::TransformIterator() take rvalue references
+        https://bugs.webkit.org/show_bug.cgi?id=134468
+
+        Reviewed by Darin Adler.
+
+        It's unnecessary to support TransformIterator::TransformIterator() taking const lvalue references
+        as we only call it with rvalues. As a side benefit, we can use move semantics to initialize the
+        members of TransformIterator.
+
+        * wtf/IteratorAdaptors.h:
+        (WTF::TransformIterator::TransformIterator): Make constructor take arguments as rvalue references.
+        (WTF::makeTransformIterator): Substitute std::move() for std::forward().
+
+2014-06-30  Alex Christensen  <achristensen@webkit.org>
+
+        Reduce dynamic memory allocation in css jit.
+        https://bugs.webkit.org/show_bug.cgi?id=134416
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/Deque.h:
+        Added inlineCapacity optional template parameter.
+
+2014-06-30  Anders Carlsson  <andersca@apple.com>
+
+        Add code for encoding legacy session history entries
+        https://bugs.webkit.org/show_bug.cgi?id=134452
+
+        Reviewed by Andreas Kling.
+
+        * wtf/MallocPtr.h:
+        (WTF::MallocPtr::malloc):
+        (WTF::MallocPtr::realloc):
+
 2014-06-27  Andreas Kling  <akling@apple.com>
 
         [ARMv7] Skip one particularly expensive fastFree() alignment check.
