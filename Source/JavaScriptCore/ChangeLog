@@ -1,3 +1,266 @@
+2015-04-15  Jordan Harband  <ljharb@gmail.com>
+
+        String.prototype.startsWith/endsWith/includes have wrong length in r182673
+        https://bugs.webkit.org/show_bug.cgi?id=143659
+
+        Reviewed by Benjamin Poulain.
+
+        Fix lengths of String.prototype.{includes,startsWith,endsWith} per spec
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-string.prototype.includes
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-string.prototype.startswith
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-string.prototype.endswith
+
+        * runtime/StringPrototype.cpp:
+        (JSC::StringPrototype::finishCreation):
+
+2015-04-15  Mark Lam  <mark.lam@apple.com>
+
+        Remove obsolete VMInspector debugging tool.
+        https://bugs.webkit.org/show_bug.cgi?id=143798
+
+        Reviewed by Michael Saboff.
+
+        I added the VMInspector tool 3 years ago to aid in VM hacking work.  Some of it
+        has bit rotted, and now the VM also has better ways to achieve its functionality.
+        Hence this code is now obsolete and should be removed.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * interpreter/CallFrame.h:
+        * interpreter/VMInspector.cpp: Removed.
+        * interpreter/VMInspector.h: Removed.
+        * llint/LowLevelInterpreter.cpp:
+
+2015-04-15  Jordan Harband  <ljharb@gmail.com>
+
+        Math.imul has wrong length in Safari 8.0.4
+        https://bugs.webkit.org/show_bug.cgi?id=143658
+
+        Reviewed by Benjamin Poulain.
+
+        Correcting function length from 1, to 2, to match spec
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-math.imul
+
+        * runtime/MathObject.cpp:
+        (JSC::MathObject::finishCreation):
+
+2015-04-15  Jordan Harband  <ljharb@gmail.com>
+
+        Number.parseInt in nightly r182673 has wrong length
+        https://bugs.webkit.org/show_bug.cgi?id=143657
+
+        Reviewed by Benjamin Poulain.
+
+        Correcting function length from 1, to 2, to match spec
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.parseint
+
+        * runtime/NumberConstructor.cpp:
+        (JSC::NumberConstructor::finishCreation):
+
+2015-04-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Harden DFGForAllKills
+        https://bugs.webkit.org/show_bug.cgi?id=143792
+
+        Reviewed by Geoffrey Garen.
+        
+        Unfortunately, we don't have a good way to test this yet - but it will be needed to prevent
+        bugs in https://bugs.webkit.org/show_bug.cgi?id=143734.
+        
+        Previously ForAllKills used the bytecode kill analysis. That seemed like a good idea because
+        that analysis is cheaper than the full liveness analysis. Unfortunately, it's probably wrong:
+        
+        - It looks for kill sites at forExit origin boundaries. But, something might have been killed
+          by an operation that was logically in between the forExit origins at the boundary, but was
+          removed from the DFG for whatever reason. The DFG is allowed to have bytecode instruction
+          gaps.
+        
+        - It overlooked the fact that a MovHint that addresses a local that is always live kills that
+          local. For example, storing to an argument means that the prior value of the argument is
+          killed.
+        
+        This fixes the analysis by making it handle MovHints directly, and making it define kills in
+        the most conservative way possible: it asks if you were live before but dead after. If we
+        have the compile time budget to afford this more direct approach, then it's definitel a good
+        idea since it's so fool-proof.
+
+        * dfg/DFGArgumentsEliminationPhase.cpp:
+        * dfg/DFGForAllKills.h:
+        (JSC::DFG::forAllKilledOperands):
+        (JSC::DFG::forAllKilledNodesAtNodeIndex):
+        (JSC::DFG::forAllDirectlyKilledOperands): Deleted.
+
+2015-04-15  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Provide SPI to allow changing whether JSContexts are remote debuggable by default
+        https://bugs.webkit.org/show_bug.cgi?id=143681
+
+        Reviewed by Darin Adler.
+
+        * API/JSRemoteInspector.h:
+        * API/JSRemoteInspector.cpp:
+        (JSRemoteInspectorGetInspectionEnabledByDefault):
+        (JSRemoteInspectorSetInspectionEnabledByDefault):
+        Provide SPI to toggle the default enabled inspection state of debuggables.
+
+        * API/JSContextRef.cpp:
+        (JSGlobalContextCreateInGroup):
+        Respect the default setting.
+
+2015-04-15  Joseph Pecoraro  <pecoraro@apple.com>
+
+        JavaScriptCore: Use kCFAllocatorDefault where possible
+        https://bugs.webkit.org/show_bug.cgi?id=143747
+
+        Reviewed by Darin Adler.
+
+        * heap/HeapTimer.cpp:
+        (JSC::HeapTimer::HeapTimer):
+        * inspector/remote/RemoteInspectorDebuggableConnection.mm:
+        (Inspector::RemoteInspectorInitializeGlobalQueue):
+        (Inspector::RemoteInspectorDebuggableConnection::setupRunLoop):
+        For consistency and readability use the constant instead of
+        different representations of null.
+
+2015-04-14  Michael Saboff  <msaboff@apple.com>
+
+        Remove JavaScriptCoreUseJIT default from JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=143746
+
+        Reviewed by Mark Lam.
+
+        * runtime/VM.cpp:
+        (JSC::enableAssembler):
+
+2015-04-14  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r180020): Web Inspector crashes on pages that have a stylesheet with an invalid MIME type
+        https://bugs.webkit.org/show_bug.cgi?id=143745
+        <rdar://problem/20243916>
+
+        Reviewed by Joseph Pecoraro.
+
+        Add assertion in ContentSearchUtilities::findMagicComment() to make
+        sure the content String is not null or we would crash in
+        JSC::Yarr::interpret() later.
+
+        * inspector/ContentSearchUtilities.cpp:
+        (Inspector::ContentSearchUtilities::findMagicComment):
+
+2015-04-14  Michael Saboff  <msaboff@apple.com>
+
+        DFG register fillSpeculate*() functions should validate incoming spill format is compatible with requested fill format
+        https://bugs.webkit.org/show_bug.cgi?id=143727
+
+        Reviewed by Geoffrey Garen.
+
+        Used the result of AbstractInterpreter<>::filter() to check that the current spill format is compatible
+        with the requested fill format.  If filter() reports a contradiction, then we force an OSR exit.
+        Removed individual checks made redundant by the new check.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Internal):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateBoolean):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Internal):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt52):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateBoolean):
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Replace JavaScriptCoreOutputConsoleMessagesToSystemConsole default with an SPI
+        https://bugs.webkit.org/show_bug.cgi?id=143691
+
+        Reviewed by Geoffrey Garen.
+
+        * API/JSRemoteInspector.h:
+        * API/JSRemoteInspector.cpp:
+        (JSRemoteInspectorSetLogToSystemConsole):
+        Add SPI to enable/disable logging to the system console.
+        This only affects JSContext `console` logs and warnings.
+
+        * inspector/JSGlobalObjectConsoleClient.h:
+        * inspector/JSGlobalObjectConsoleClient.cpp:
+        (Inspector::JSGlobalObjectConsoleClient::logToSystemConsole):
+        (Inspector::JSGlobalObjectConsoleClient::setLogToSystemConsole):
+        (Inspector::JSGlobalObjectConsoleClient::messageWithTypeAndLevel):
+        (Inspector::JSGlobalObjectConsoleClient::initializeLogToSystemConsole): Deleted.
+        Simplify access to the setting now that it doesn't need to
+        initialize its value from preferences.
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Auto-attach fails after r179562, initialization too late after dispatch
+        https://bugs.webkit.org/show_bug.cgi?id=143682
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::singleton):
+        If we are on the main thread, run the initialization immediately.
+        Otherwise dispatch to the main thread. This way if the first JSContext
+        was created on the main thread it can get auto-attached if applicable.
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Unreviewed build fix for Mavericks.
+
+        Mavericks includes this file but does not enable ENABLE_REMOTE_INSPECTOR
+        so the Inspector namespace is not available when compiling this file.
+
+        * API/JSRemoteInspector.cpp:
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Expose private APIs to interact with RemoteInspector instead of going through WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=143729
+
+        Reviewed by Timothy Hatcher.
+
+        * API/JSRemoteInspector.h: Added.
+        * API/JSRemoteInspector.cpp: Added.
+        (JSRemoteInspectorDisableAutoStart):
+        (JSRemoteInspectorStart):
+        (JSRemoteInspectorSetParentProcessInformation):
+        Add the new SPIs for basic remote inspection behavior.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        Add the new files to Mac only, since remote inspection is only
+        enabled there anyways.
+
+2015-04-14  Mark Lam  <mark.lam@apple.com>
+
+        Rename JSC_dfgFunctionWhitelistFile to JSC_dfgWhitelist.
+        https://bugs.webkit.org/show_bug.cgi?id=143722
+
+        Reviewed by Michael Saboff.
+
+        Renaming JSC_dfgFunctionWhitelistFile to JSC_dfgWhitelist so that it is
+        shorter, and easier to remember (without having to look it up) and to
+        type.  JSC options now support descriptions, and one can always look up
+        the description if the option's purpose is not already obvious.
+
+        * dfg/DFGFunctionWhitelist.cpp:
+        (JSC::DFG::FunctionWhitelist::ensureGlobalWhitelist):
+        (JSC::DFG::FunctionWhitelist::contains):
+        * runtime/Options.h:
+
+2015-04-13  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Windows build. Windows doesn't take kindly to private classes that use FAST_ALLOCATED.
+
+        * runtime/InferredValue.h:
+
+2015-04-13  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix build. I introduced a new cell type at the same time as kling changed how new cell types are written.
+
+        * runtime/InferredValue.h:
+
 2015-04-08  Filip Pizlo  <fpizlo@apple.com>
 
         JSC should detect singleton functions

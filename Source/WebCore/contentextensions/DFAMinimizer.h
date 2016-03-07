@@ -23,22 +23,25 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-.object-tree-array-index.object-tree-map-entry > .titles > .title > .index-name {
-    width: 40px;
-    text-align: right;
-    margin-right: 5px;
-}
+#ifndef DFAMinimizer_h
+#define DFAMinimizer_h
 
-.object-tree-map-entry.key:not(:first-child) {
-    border-top: 1px solid hsla(0, 0%, 0%, 0.05);
-}
+#if ENABLE(CONTENT_EXTENSIONS)
 
-.object-tree-map-entry {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    left: -2px;
-}
+#include "DFANode.h"
+#include <wtf/Vector.h>
 
-.object-tree-property + ol .object-tree-map-entry {
-    left: -8px;
-}
+namespace WebCore {
+namespace ContentExtensions {
+
+class DFAMinimizer {
+public:
+    WEBCORE_EXPORT static unsigned minimize(Vector<DFANode>& dfaGraph, unsigned rootNode);
+};
+
+} // namespace ContentExtensions
+} // namespace WebCore
+
+#endif // ENABLE(CONTENT_EXTENSIONS)
+
+#endif // DFAMinimizer_h

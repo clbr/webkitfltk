@@ -1003,16 +1003,18 @@
 		26601EBF14B3B9AD0012C0FE /* PlatformEventFactoryIOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 26601EBD14B3B9AD0012C0FE /* PlatformEventFactoryIOS.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		26601EC014B3B9AD0012C0FE /* PlatformEventFactoryIOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 26601EBE14B3B9AD0012C0FE /* PlatformEventFactoryIOS.mm */; };
 		267725FC1A5B3AD9003C24DD /* DFA.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267725F61A5B3AD9003C24DD /* DFA.cpp */; };
-		267725FD1A5B3AD9003C24DD /* DFA.h in Headers */ = {isa = PBXBuildFile; fileRef = 267725F71A5B3AD9003C24DD /* DFA.h */; };
-		267725FF1A5B3AD9003C24DD /* DFANode.h in Headers */ = {isa = PBXBuildFile; fileRef = 267725F91A5B3AD9003C24DD /* DFANode.h */; };
+		267725FD1A5B3AD9003C24DD /* DFA.h in Headers */ = {isa = PBXBuildFile; fileRef = 267725F71A5B3AD9003C24DD /* DFA.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		267725FF1A5B3AD9003C24DD /* DFANode.h in Headers */ = {isa = PBXBuildFile; fileRef = 267725F91A5B3AD9003C24DD /* DFANode.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		267726001A5B3AD9003C24DD /* NFAToDFA.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267725FA1A5B3AD9003C24DD /* NFAToDFA.cpp */; };
-		267726011A5B3AD9003C24DD /* NFAToDFA.h in Headers */ = {isa = PBXBuildFile; fileRef = 267725FB1A5B3AD9003C24DD /* NFAToDFA.h */; };
+		267726011A5B3AD9003C24DD /* NFAToDFA.h in Headers */ = {isa = PBXBuildFile; fileRef = 267725FB1A5B3AD9003C24DD /* NFAToDFA.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		267726041A5DF6F2003C24DD /* URLFilterParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267726021A5DF6F2003C24DD /* URLFilterParser.cpp */; };
 		267726051A5DF6F2003C24DD /* URLFilterParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 267726031A5DF6F2003C24DD /* URLFilterParser.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		269239961505E1AA009E57FC /* JSIDBVersionChangeEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 269239921505E1AA009E57FC /* JSIDBVersionChangeEvent.h */; };
 		269397221A4A412F00E8349D /* NFANode.h in Headers */ = {isa = PBXBuildFile; fileRef = 269397201A4A412F00E8349D /* NFANode.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		269397241A4A5B6400E8349D /* NFA.h in Headers */ = {isa = PBXBuildFile; fileRef = 269397231A4A5B6400E8349D /* NFA.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		269397261A4A5FBD00E8349D /* NFA.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 269397251A4A5FBD00E8349D /* NFA.cpp */; };
+		26A517FD1AB92238006335DF /* DFAMinimizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 26A517FB1AB92238006335DF /* DFAMinimizer.cpp */; };
+		26A517FE1AB92238006335DF /* DFAMinimizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 26A517FC1AB92238006335DF /* DFAMinimizer.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		26AA0F9E18D2A18B00419381 /* SelectorPseudoElementTypeMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 26AA0F9D18D2A18B00419381 /* SelectorPseudoElementTypeMap.cpp */; };
 		26B9998F1803AE7200D01121 /* RegisterAllocator.h in Headers */ = {isa = PBXBuildFile; fileRef = 26B9998E1803AE7200D01121 /* RegisterAllocator.h */; };
 		26B999911803B3C900D01121 /* StackAllocator.h in Headers */ = {isa = PBXBuildFile; fileRef = 26B999901803B3C900D01121 /* StackAllocator.h */; };
@@ -2484,6 +2486,8 @@
 		7ACD88D314C08BD60084EDD2 /* InspectorIndexedDBAgent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7ACD88D114C08BD60084EDD2 /* InspectorIndexedDBAgent.cpp */; };
 		7ACD88D414C08BD60084EDD2 /* InspectorIndexedDBAgent.h in Headers */ = {isa = PBXBuildFile; fileRef = 7ACD88D214C08BD60084EDD2 /* InspectorIndexedDBAgent.h */; };
 		7ADE722610CBBB9B006B3B3A /* ContextMenuProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 7ADE722510CBBB9B006B3B3A /* ContextMenuProvider.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		7AE335F11ACB09E200E401EF /* WheelEventTestTrigger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AE335EF1ACB09E200E401EF /* WheelEventTestTrigger.cpp */; };
+		7AE335F21ACB09E200E401EF /* WheelEventTestTrigger.h in Headers */ = {isa = PBXBuildFile; fileRef = 7AE335F01ACB09E200E401EF /* WheelEventTestTrigger.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		7AF9B20218CFB2DF00C64BEF /* VTTRegion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9B1FC18CFB2DF00C64BEF /* VTTRegion.cpp */; };
 		7AF9B20318CFB2DF00C64BEF /* VTTRegion.h in Headers */ = {isa = PBXBuildFile; fileRef = 7AF9B1FD18CFB2DF00C64BEF /* VTTRegion.h */; };
 		7AF9B20518CFB2DF00C64BEF /* VTTRegionList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9B1FF18CFB2DF00C64BEF /* VTTRegionList.cpp */; };
@@ -8100,6 +8104,8 @@
 		269397201A4A412F00E8349D /* NFANode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NFANode.h; sourceTree = "<group>"; };
 		269397231A4A5B6400E8349D /* NFA.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NFA.h; sourceTree = "<group>"; };
 		269397251A4A5FBD00E8349D /* NFA.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NFA.cpp; sourceTree = "<group>"; };
+		26A517FB1AB92238006335DF /* DFAMinimizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DFAMinimizer.cpp; sourceTree = "<group>"; };
+		26A517FC1AB92238006335DF /* DFAMinimizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFAMinimizer.h; sourceTree = "<group>"; };
 		26AA0F9918D2973D00419381 /* makeSelectorPseudoElementsMap.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = makeSelectorPseudoElementsMap.py; sourceTree = "<group>"; };
 		26AA0F9A18D2973D00419381 /* SelectorPseudoElementTypeMap.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = SelectorPseudoElementTypeMap.in; sourceTree = "<group>"; };
 		26AA0F9D18D2A18B00419381 /* SelectorPseudoElementTypeMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SelectorPseudoElementTypeMap.cpp; sourceTree = "<group>"; };
@@ -9731,6 +9737,8 @@
 		7ACD88D114C08BD60084EDD2 /* InspectorIndexedDBAgent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InspectorIndexedDBAgent.cpp; sourceTree = "<group>"; };
 		7ACD88D214C08BD60084EDD2 /* InspectorIndexedDBAgent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorIndexedDBAgent.h; sourceTree = "<group>"; };
 		7ADE722510CBBB9B006B3B3A /* ContextMenuProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContextMenuProvider.h; sourceTree = "<group>"; };
+		7AE335EF1ACB09E200E401EF /* WheelEventTestTrigger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WheelEventTestTrigger.cpp; sourceTree = "<group>"; };
+		7AE335F01ACB09E200E401EF /* WheelEventTestTrigger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WheelEventTestTrigger.h; sourceTree = "<group>"; };
 		7AF9B1FC18CFB2DF00C64BEF /* VTTRegion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VTTRegion.cpp; sourceTree = "<group>"; };
 		7AF9B1FD18CFB2DF00C64BEF /* VTTRegion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VTTRegion.h; sourceTree = "<group>"; };
 		7AF9B1FE18CFB2DF00C64BEF /* VTTRegion.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = VTTRegion.idl; sourceTree = "<group>"; };
@@ -15531,6 +15539,8 @@
 				5C39305F1AA0F6A90029C816 /* DFABytecodeCompiler.h */,
 				5C3930601AA0F6A90029C816 /* DFABytecodeInterpreter.cpp */,
 				5C3930611AA0F6A90029C816 /* DFABytecodeInterpreter.h */,
+				26A517FB1AB92238006335DF /* DFAMinimizer.cpp */,
+				26A517FC1AB92238006335DF /* DFAMinimizer.h */,
 				267725F91A5B3AD9003C24DD /* DFANode.h */,
 				269397251A4A5FBD00E8349D /* NFA.cpp */,
 				269397231A4A5B6400E8349D /* NFA.h */,
@@ -16976,6 +16986,8 @@
 				494BD7940F55C8EE00747828 /* WebKitPoint.idl */,
 				93EC449F188F4BB800661DF1 /* WheelEventDeltaTracker.cpp */,
 				93EC44A0188F4BB800661DF1 /* WheelEventDeltaTracker.h */,
+				7AE335EF1ACB09E200E401EF /* WheelEventTestTrigger.cpp */,
+				7AE335F01ACB09E200E401EF /* WheelEventTestTrigger.h */,
 				BC8243E60D0CFD7500460C8F /* WindowFeatures.cpp */,
 				BC8243E70D0CFD7500460C8F /* WindowFeatures.h */,
 				7E99AF520B13846468FB01A5 /* WindowFocusAllowedIndicator.cpp */,
@@ -23609,6 +23621,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FE115FAB167988CD00249134 /* AbstractDatabaseServer.h in Headers */,
+				7AE335F21ACB09E200E401EF /* WheelEventTestTrigger.h in Headers */,
 				41E1B1D10FF5986900576B3B /* AbstractWorker.h in Headers */,
 				29A8122E0FBB9C1D00510293 /* AccessibilityARIAGridCell.h in Headers */,
 				29A812330FBB9C1D00510293 /* AccessibilityARIAGridRow.h in Headers */,
@@ -23652,6 +23665,7 @@
 				316FE1120E6E1DA700BF6088 /* AnimationBase.h in Headers */,
 				316FE1140E6E1DA700BF6088 /* AnimationController.h in Headers */,
 				0F15DA8A0F3AAEE70000CE47 /* AnimationControllerPrivate.h in Headers */,
+				26A517FE1AB92238006335DF /* DFAMinimizer.h in Headers */,
 				5CBC8DAD1AAA302200E1C803 /* MediaAccessibilitySoftLink.h in Headers */,
 				49E912AD0EFAC906009D0CAF /* AnimationList.h in Headers */,
 				6C568CB119DAFEA000430CA2 /* MaskImageOperation.h in Headers */,
@@ -28075,6 +28089,7 @@
 				7728694E14F8882500F484DC /* EXTTextureFilterAnisotropic.cpp in Sources */,
 				A75E8B880E1DE2D6007F2481 /* FEBlend.cpp in Sources */,
 				A75E8B8A0E1DE2D6007F2481 /* FEColorMatrix.cpp in Sources */,
+				7AE335F11ACB09E200E401EF /* WheelEventTestTrigger.cpp in Sources */,
 				A75E8B8C0E1DE2D6007F2481 /* FEComponentTransfer.cpp in Sources */,
 				A75E8B8E0E1DE2D6007F2481 /* FEComposite.cpp in Sources */,
 				84730D781248F0B300D3A9C9 /* FEConvolveMatrix.cpp in Sources */,
@@ -30355,6 +30370,7 @@
 				A833C7CC0A2CF07400D57664 /* XLinkNames.cpp in Sources */,
 				00B9318713BA8DB30035A948 /* XMLDocumentParser.cpp in Sources */,
 				00B9318913BA8DBC0035A948 /* XMLDocumentParserLibxml2.cpp in Sources */,
+				26A517FD1AB92238006335DF /* DFAMinimizer.cpp in Sources */,
 				00B9318B13BA8DC90035A948 /* XMLDocumentParserScope.cpp in Sources */,
 				59C28045138DC2410079B7E2 /* XMLErrors.cpp in Sources */,
 				BC772C460C4EB2C60083285F /* XMLHttpRequest.cpp in Sources */,

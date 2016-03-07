@@ -1199,6 +1199,8 @@
 		A54CF2FA184EAEDA00237F19 /* ScriptObject.h in Headers */ = {isa = PBXBuildFile; fileRef = A54CF2F8184EAEDA00237F19 /* ScriptObject.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A54E8EB018BFFBBB00556D28 /* GCSegmentedArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A343F7418A1748B0039B085 /* GCSegmentedArray.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A54E8EB118BFFBBE00556D28 /* GCSegmentedArrayInlines.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A343F7718A1749D0039B085 /* GCSegmentedArrayInlines.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		A552C37F1ADDB8FE00139726 /* JSRemoteInspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A552C37D1ADDB8FE00139726 /* JSRemoteInspector.cpp */; };
+		A552C3801ADDB8FE00139726 /* JSRemoteInspector.h in Headers */ = {isa = PBXBuildFile; fileRef = A552C37E1ADDB8FE00139726 /* JSRemoteInspector.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A55D93A5185012A800400DED /* ScriptFunctionCall.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A55D93A3185012A800400DED /* ScriptFunctionCall.cpp */; };
 		A55D93A6185012A800400DED /* ScriptFunctionCall.h in Headers */ = {isa = PBXBuildFile; fileRef = A55D93A4185012A800400DED /* ScriptFunctionCall.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A55D93AC18514F7900400DED /* InspectorProtocolTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = A55D93AB18514F7900400DED /* InspectorProtocolTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -1644,8 +1646,6 @@
 		FE0D4A091ABA2437002F54BF /* GlobalContextWithFinalizerTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE0D4A071ABA2437002F54BF /* GlobalContextWithFinalizerTest.cpp */; };
 		FE20CE9D15F04A9500DF3430 /* LLIntCLoop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE20CE9B15F04A9500DF3430 /* LLIntCLoop.cpp */; };
 		FE20CE9E15F04A9500DF3430 /* LLIntCLoop.h in Headers */ = {isa = PBXBuildFile; fileRef = FE20CE9C15F04A9500DF3430 /* LLIntCLoop.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		FE4A331F15BD2E07006F54F3 /* VMInspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE4A331D15BD2E07006F54F3 /* VMInspector.cpp */; };
-		FE4A332015BD2E07006F54F3 /* VMInspector.h in Headers */ = {isa = PBXBuildFile; fileRef = FE4A331E15BD2E07006F54F3 /* VMInspector.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		FE5932A7183C5A2600A1ECCC /* VMEntryScope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5932A5183C5A2600A1ECCC /* VMEntryScope.cpp */; };
 		FE5932A8183C5A2600A1ECCC /* VMEntryScope.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5932A6183C5A2600A1ECCC /* VMEntryScope.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		FE7BA60F1A1A7CEC00F1F7B4 /* HeapVerifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE7BA60D1A1A7CEC00F1F7B4 /* HeapVerifier.cpp */; };
@@ -2949,6 +2949,8 @@
 		A54CF2F3184EAB2400237F19 /* ScriptValue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScriptValue.h; sourceTree = "<group>"; };
 		A54CF2F7184EAEDA00237F19 /* ScriptObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScriptObject.cpp; sourceTree = "<group>"; };
 		A54CF2F8184EAEDA00237F19 /* ScriptObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScriptObject.h; sourceTree = "<group>"; };
+		A552C37D1ADDB8FE00139726 /* JSRemoteInspector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSRemoteInspector.cpp; sourceTree = "<group>"; };
+		A552C37E1ADDB8FE00139726 /* JSRemoteInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSRemoteInspector.h; sourceTree = "<group>"; };
 		A55D93A3185012A800400DED /* ScriptFunctionCall.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScriptFunctionCall.cpp; sourceTree = "<group>"; };
 		A55D93A4185012A800400DED /* ScriptFunctionCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScriptFunctionCall.h; sourceTree = "<group>"; };
 		A55D93AB18514F7900400DED /* InspectorProtocolTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorProtocolTypes.h; sourceTree = "<group>"; };
@@ -3422,8 +3424,6 @@
 		FE0D4A081ABA2437002F54BF /* GlobalContextWithFinalizerTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GlobalContextWithFinalizerTest.h; path = API/tests/GlobalContextWithFinalizerTest.h; sourceTree = "<group>"; };
 		FE20CE9B15F04A9500DF3430 /* LLIntCLoop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LLIntCLoop.cpp; path = llint/LLIntCLoop.cpp; sourceTree = "<group>"; };
 		FE20CE9C15F04A9500DF3430 /* LLIntCLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LLIntCLoop.h; path = llint/LLIntCLoop.h; sourceTree = "<group>"; };
-		FE4A331D15BD2E07006F54F3 /* VMInspector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VMInspector.cpp; sourceTree = "<group>"; };
-		FE4A331E15BD2E07006F54F3 /* VMInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VMInspector.h; sourceTree = "<group>"; };
 		FE5932A5183C5A2600A1ECCC /* VMEntryScope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VMEntryScope.cpp; sourceTree = "<group>"; };
 		FE5932A6183C5A2600A1ECCC /* VMEntryScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VMEntryScope.h; sourceTree = "<group>"; };
 		FE7BA60D1A1A7CEC00F1F7B4 /* HeapVerifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HeapVerifier.cpp; sourceTree = "<group>"; };
@@ -3846,8 +3846,6 @@
 				149B24FF0D8AF6D1009CB8C7 /* Register.h */,
 				A7C1EAEC17987AB600299DB2 /* StackVisitor.cpp */,
 				A7C1EAED17987AB600299DB2 /* StackVisitor.h */,
-				FE4A331D15BD2E07006F54F3 /* VMInspector.cpp */,
-				FE4A331E15BD2E07006F54F3 /* VMInspector.h */,
 			);
 			path = interpreter;
 			sourceTree = "<group>";
@@ -4083,6 +4081,8 @@
 				A72028B41797601E0098028C /* JSCTestRunnerUtils.cpp */,
 				A72028B51797601E0098028C /* JSCTestRunnerUtils.h */,
 				86E3C60A167BAB87006D760A /* JSExport.h */,
+				A552C37D1ADDB8FE00139726 /* JSRemoteInspector.cpp */,
+				A552C37E1ADDB8FE00139726 /* JSRemoteInspector.h */,
 				C25D709A16DE99F400FCA6BC /* JSManagedValue.h */,
 				C25D709916DE99F400FCA6BC /* JSManagedValue.mm */,
 				2A4BB7F218A41179008A0FCD /* JSManagedValueInternal.h */,
@@ -6003,6 +6003,7 @@
 				70113D4C1A8DB093003848C4 /* IteratorOperations.h in Headers */,
 				BC18C4130E16F5CD00B34460 /* JavaScript.h in Headers */,
 				0F2B9CF519D0BAC100B1D1B5 /* FTLExitPropertyValue.h in Headers */,
+				A552C3801ADDB8FE00139726 /* JSRemoteInspector.h in Headers */,
 				A503FA1A188E0FB000110F14 /* JavaScriptCallFrame.h in Headers */,
 				BC18C4140E16F5CD00B34460 /* JavaScriptCore.h in Headers */,
 				BC18C4150E16F5CD00B34460 /* JavaScriptCorePrefix.h in Headers */,
@@ -6429,7 +6430,6 @@
 				0F426A491460CBB700131F8F /* VirtualRegister.h in Headers */,
 				BC18C4200E16F5CD00B34460 /* VM.h in Headers */,
 				FE5932A8183C5A2600A1ECCC /* VMEntryScope.h in Headers */,
-				FE4A332015BD2E07006F54F3 /* VMInspector.h in Headers */,
 				FED94F2F171E3E2300BE77A4 /* Watchdog.h in Headers */,
 				0F919D2615853CE3004A4E7D /* Watchpoint.h in Headers */,
 				142E313C134FF0A600AFADB5 /* Weak.h in Headers */,
@@ -7308,6 +7308,7 @@
 				95F6E6950E5B5F970091E860 /* JSProfilerPrivate.cpp in Sources */,
 				7C184E1A17BEDBD3007CB63A /* JSPromise.cpp in Sources */,
 				7C184E2217BEE240007CB63A /* JSPromiseConstructor.cpp in Sources */,
+				A552C37F1ADDB8FE00139726 /* JSRemoteInspector.cpp in Sources */,
 				0F893BDB1936E23C001211F4 /* DFGStructureAbstractValue.cpp in Sources */,
 				7C008CDA187124BB00955C24 /* JSPromiseDeferred.cpp in Sources */,
 				7C008CD2186F8A9300955C24 /* JSPromiseFunctions.cpp in Sources */,
@@ -7508,7 +7509,6 @@
 				0F24E55817F74EDB00ABB217 /* ValueRecovery.cpp in Sources */,
 				E18E3A590DF9278C00D90B34 /* VM.cpp in Sources */,
 				FE5932A7183C5A2600A1ECCC /* VMEntryScope.cpp in Sources */,
-				FE4A331F15BD2E07006F54F3 /* VMInspector.cpp in Sources */,
 				FED94F2E171E3E2300BE77A4 /* Watchdog.cpp in Sources */,
 				FED94F30171E3E2300BE77A4 /* WatchdogMac.cpp in Sources */,
 				0F919D2515853CE0004A4E7D /* Watchpoint.cpp in Sources */,

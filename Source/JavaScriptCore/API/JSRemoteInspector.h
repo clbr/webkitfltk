@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,7 +23,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WebCore_FWD_VMInspector_h
-#define WebCore_FWD_VMInspector_h
-#include <JavaScriptCore/VMInspector.h>
+#ifndef JSRemoteInspector_h
+#define JSRemoteInspector_h
+
+#include <JavaScriptCore/JSBase.h>
+#include <JavaScriptCore/WebKitAvailability.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+JS_EXPORT void JSRemoteInspectorDisableAutoStart(void) CF_AVAILABLE(10_11, 9_0);
+JS_EXPORT void JSRemoteInspectorStart(void) CF_AVAILABLE(10_11, 9_0);
+JS_EXPORT void JSRemoteInspectorSetParentProcessInformation(pid_t, const uint8_t* auditData, size_t auditLength) CF_AVAILABLE(10_11, 9_0);
+
+JS_EXPORT void JSRemoteInspectorSetLogToSystemConsole(bool) CF_AVAILABLE(10_11, 9_0);
+
+JS_EXPORT bool JSRemoteInspectorGetInspectionEnabledByDefault(void) CF_AVAILABLE(10_11, 9_0);
+JS_EXPORT void JSRemoteInspectorSetInspectionEnabledByDefault(bool) CF_AVAILABLE(10_11, 9_0);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* JSRemoteInspector_h */
