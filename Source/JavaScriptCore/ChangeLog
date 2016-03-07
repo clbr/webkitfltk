@@ -1,3 +1,197 @@
+2014-12-11  Alexey Proskuryakov  <ap@apple.com>
+
+        Explicitly export some RWIProtocol classes
+        rdar://problem/19220408
+
+        * inspector/scripts/codegen/generate_objc_header.py:
+        (ObjCHeaderGenerator._generate_type_interface):
+        * inspector/scripts/tests/expected/commands-with-async-attribute.json-result:
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+        * inspector/scripts/tests/expected/events-with-optional-parameters.json-result:
+        * inspector/scripts/tests/expected/generate-domains-with-feature-guards.json-result:
+        * inspector/scripts/tests/expected/shadowed-optional-type-setters.json-result:
+        * inspector/scripts/tests/expected/type-declaration-object-type.json-result:
+        * inspector/scripts/tests/expected/type-requiring-runtime-casts.json-result:
+
+2014-12-11  Mark Lam  <mark.lam@apple.com>
+
+        Fix broken build after r177146.
+        https://bugs.webkit.org/show_bug.cgi?id=139533 
+
+        Not reviewed.
+
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::init):
+        - Restored CallFrame::init() minus the unused JSScope* arg.
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        - Remove JSScope* arg when calling CallFrame::init().
+
+2014-12-11  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION: Use of undefined CallFrame::ScopeChain value
+        https://bugs.webkit.org/show_bug.cgi?id=139533
+
+        Reviewed by Mark Lam.
+
+        Removed CallFrame::scope() and CallFrame::setScope() and eliminated or changed
+        all usages of these funcitons.  In some cases the scope is passed in or determined
+        another way.  In some cases the scope is used to calculate other values.  Lastly
+        were places where these functions where used that are no longer needed.  For
+        example when making a call, the caller's ScopeChain was copied to the callee's
+        ScopeChain.  This change no longer uses the ScopeChain call frame header slot.
+        That slot will be removed in a future patch.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * runtime/JSLexicalEnvironment.h:
+        (JSC::JSLexicalEnvironment::create):
+        (JSC::JSLexicalEnvironment::JSLexicalEnvironment):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_create_lexical_environment):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_create_lexical_environment):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        (JSC::LLInt::handleHostCall):
+        (JSC::LLInt::setUpCall):
+        (JSC::LLInt::llint_throw_stack_overflow_error):
+        Pass the current scope value to the helper operationCreateActivation() and
+        the call to JSLexicalEnvironment::create() instead of using the stack frame
+        scope chain value.
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        CreateActivation now has a second child, the scope.
+
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::init): Deleted.  This is dead code.
+        (JSC::ExecState::scope): Deleted.
+        (JSC::ExecState::setScope): Deleted.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::dumpRegisters): Changed so we didn't access the scope
+        chain slot.  
+        
+        (JSC::Interpreter::execute):
+        (JSC::Interpreter::executeCall):
+        (JSC::Interpreter::executeConstruct):
+        Changed process to find JSScope values on the stack or by some other means.
+
+        * runtime/JSWithScope.h:
+        (JSC::JSWithScope::JSWithScope): Deleted.
+        Eliminated unused constructor.
+
+        * runtime/StrictEvalActivation.cpp:
+        (JSC::StrictEvalActivation::StrictEvalActivation):
+        * runtime/StrictEvalActivation.h:
+        (JSC::StrictEvalActivation::create):
+        Changed to pass in the current scope.
+
+2014-12-10  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Use std::unique_ptr instead of OwnPtr in JSC - heap, jit, runtime, and parser directories
+        https://bugs.webkit.org/show_bug.cgi?id=139351
+
+        Reviewed by Filip Pizlo.
+
+        As a step to use std::unique_ptr<>, this cleans up OwnPtr and PassOwnPtr.
+
+        * bytecode/SamplingTool.h:
+        (JSC::SamplingTool::SamplingTool):
+        * heap/CopiedBlock.h:
+        (JSC::CopiedBlock::didSurviveGC):
+        (JSC::CopiedBlock::pin):
+        * heap/CopiedBlockInlines.h:
+        (JSC::CopiedBlock::reportLiveBytes):
+        * heap/GCActivityCallback.h:
+        * heap/GCThread.cpp:
+        * heap/Heap.h:
+        * heap/HeapInlines.h:
+        (JSC::Heap::markListSet):
+        * jit/ExecutableAllocator.cpp:
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompile):
+        * jit/JIT.h:
+        * jit/JITThunks.cpp:
+        (JSC::JITThunks::JITThunks):
+        (JSC::JITThunks::clearHostFunctionStubs):
+        * jit/JITThunks.h:
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::Parser):
+        * parser/Parser.h:
+        (JSC::Scope::Scope):
+        (JSC::Scope::pushLabel):
+        * parser/ParserArena.cpp:
+        * parser/ParserArena.h:
+        (JSC::ParserArena::identifierArena):
+        * parser/SourceProviderCache.h:
+        * runtime/CodeCache.h:
+        * runtime/Executable.h:
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::sortVector):
+        * runtime/JSGlobalObject.h:
+
+2014-12-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Please disable the webkitFirstVersionWithInitConstructorSupport check on Apple TV
+        https://bugs.webkit.org/show_bug.cgi?id=139501
+
+        Reviewed by Gavin Barraclough.
+
+        NSVersionOfLinkTimeLibrary only works if you link directly against
+        JavaScriptCore, which is a bit awkward for our Apple TV client to do.
+
+        It's easy enough just to disable this check on Apple TV, since it has no
+        backwards compatibility requirement.
+
+        * API/JSWrapperMap.mm:
+        (supportsInitMethodConstructors):
+
+2014-12-10  Matthew Mirman  <mmirman@apple.com>
+
+        Fixes operationPutByIds such that they check that the put didn't
+        change the structure of the object who's property access is being
+        cached.
+        https://bugs.webkit.org/show_bug.cgi?id=139196
+
+        Reviewed by Filip Pizlo.
+
+        * jit/JITOperations.cpp:
+        (JSC::operationGetByIdOptimize): changed get to getPropertySlot
+        (JSC::operationPutByIdStrictBuildList): saved the structure before the put.
+        (JSC::operationPutByIdNonStrictBuildList): ditto.
+        (JSC::operationPutByIdDirectStrictBuildList): ditto.
+        (JSC::operationPutByIdDirectNonStrictBuildList): ditto.
+        * jit/Repatch.cpp:
+        (JSC::tryCachePutByID): fixed structure() to use the existant vm. 
+        (JSC::tryBuildPutByIdList): Added a check that the old structure's id 
+        is the same as the new.
+        (JSC::buildPutByIdList): Added an argument
+        * jit/Repatch.h: 
+        (JSC::buildPutByIdList): Added an argument
+        * tests/stress/put-by-id-strict-build-list-order.js: Added.
+
+2014-12-10  Csaba Osztrogonác  <ossy@webkit.org>
+
+        URTBF after r177030.
+
+        Fix linking failure occured on ARM buildbots:
+        lib/libjavascriptcore_efl.so.1.11.0: undefined reference to `JSC::Structure::get(JSC::VM&, JSC::PropertyName, unsigned int&)'
+
+        * runtime/NullGetterFunction.cpp:
+
 2014-12-09  Michael Saboff  <msaboff@apple.com>
 
         DFG Tries using an inner object's getter/setter when one hasn't been defined

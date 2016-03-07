@@ -1,3 +1,768 @@
+2014-12-11  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        ASSERTION FAILED: animatedTypes[0].properties.size() == 1 in WebCore::SVGAnimatedTypeAnimator::constructFromBaseValue.
+        https://bugs.webkit.org/show_bug.cgi?id=139046.
+
+        Reviewed by Dirk Schulze.
+
+        Test: svg/animations/unsupported-animate-element-attributes.svg.
+        
+        The SVG base animator element should not animate an attribute if it is not
+        supported by the target SVG element. Besides the CSS presentation attributes, 
+        every SVG element defines which attributes can be animated by including them
+        between BEGIN_DECLARE_ANIMATED_PROPERTIES and END_DECLARE_ANIMATED_PROPERTIES
+        in the definition of the class. This definition builds attribute-properties map.
+        When restarting the animation, the animator looks for all the attributes that
+        match the animated attribute name. If the supported attribute-properties map
+        does not include the animated attribute name, an empty element-properties list
+        should be returned. When getting an empty element-properties list, the animator
+        should not start any animation for the unsupported attribute.
+
+        Do not start the animation if the animated attribute is not supported by 
+        the target SVG element.
+        * svg/SVGAnimateElementBase.cpp:
+        (WebCore::SVGAnimateElementBase::resetAnimatedType):
+        
+        Return an empty element-properties list if the animated attribute is not
+        supported by the target SVG element.
+        * svg/SVGAnimatedTypeAnimator.cpp:
+        (WebCore::SVGAnimatedTypeAnimator::findAnimatedPropertiesForAttributeName):
+
+2014-12-10  Dean Jackson  <dino@apple.com>
+
+        InstancedArray crashes attempting to draw out of bounds
+        https://bugs.webkit.org/show_bug.cgi?id=139521
+
+        Reviewed by Simon Fraser.
+
+        We were not doing index validation correctly for instancing.
+
+        Test: fast/canvas/webgl/angle-instanced-arrays-out-of-bounds.html
+
+        * html/canvas/WebGLRenderingContext.cpp:
+        (WebCore::WebGLRenderingContext::validateVertexAttributes): We need to check
+        the number of instances drawn against the amount of instance data that has
+        been provided, taking into account the number of repeats (the divisor).
+        (WebCore::WebGLRenderingContext::drawArrays): Added some whitespace to make it more clear.
+        (WebCore::WebGLRenderingContext::validateDrawElements): This needs to take a primcount
+        parameter so that it can correctly validate the call (when used from drawElementsInstanced).
+        (WebCore::WebGLRenderingContext::drawElements): New signature to validate.
+        (WebCore::WebGLRenderingContext::drawArraysInstanced): Rearrange this a bit. The
+        primcount validation is already being done by the validateDrawArrays call. Also, there
+        was a bogus UNUSED_PARAM hanging around.
+        (WebCore::WebGLRenderingContext::drawElementsInstanced): Similar rearrangement. Use
+        the primcount parameter.
+        * html/canvas/WebGLRenderingContext.h:
+
+2014-12-11  Anders Carlsson  <andersca@apple.com>
+
+        Remove unused storage header includes
+        https://bugs.webkit.org/show_bug.cgi?id=139540
+
+        Reviewed by Antti Koivisto.
+
+        * storage/StorageAreaImpl.cpp:
+        * storage/StorageAreaSync.cpp:
+        * storage/StorageNamespaceImpl.cpp:
+        (WebCore::StorageNamespaceImpl::localStorageNamespace): Deleted.
+        (WebCore::StorageNamespaceImpl::sessionStorageNamespace): Deleted.
+        (WebCore::StorageNamespaceImpl::transientLocalStorageNamespace): Deleted.
+        * storage/StorageNamespaceImpl.h:
+        * storage/StorageSyncManager.cpp:
+        * storage/StorageThread.cpp:
+        * storage/StorageTracker.cpp:
+
+2014-12-11  Radu Stavila  <stavila@adobe.com>
+
+        [SVG Masking] Enable the use of <mask> elements for -webkit-mask-image
+        https://bugs.webkit.org/show_bug.cgi?id=139294
+
+        Reviewed by Simon Fraser.
+
+        This patch links together all parts required for the functionality which improves 
+        the -webkit-mask-image property by allowing it to reference a <mask> element defined 
+        in an inline or external SVG document.
+        Support for this new functionality has been added in a previous patch, under issue
+        https://bugs.webkit.org/show_bug.cgi?id=139092. A more detailed description of how
+        the new functionality works can be found in the ChangeLog for that commit.
+        The containsSVGDocument in ScrollView has been removed because it was added in the
+        previous patch but is no longer required.
+
+        Tests: css3/masking/mask-base64.html
+               css3/masking/mask-multiple-values.html
+               css3/masking/mask-svg-clipped-fragmentId.html
+               css3/masking/mask-svg-fragmentId.html
+               css3/masking/mask-svg-inline-fragmentId.html
+               css3/masking/mask-svg-inline-invalid-fragmentId.html
+               css3/masking/mask-svg-invalid-fragmentId.html
+               css3/masking/mask-svg-no-fragmentId-tiled.html
+               css3/masking/mask-svg-no-fragmentId.html
+               css3/masking/mask-svg-script-entire-svg-to-mask.html
+               css3/masking/mask-svg-script-mask-to-entire-svg.html
+               css3/masking/mask-svg-script-mask-to-none.html
+               css3/masking/mask-svg-script-mask-to-png.html
+               css3/masking/mask-svg-script-none-to-mask.html
+               css3/masking/mask-svg-script-none-to-png.html
+               css3/masking/mask-svg-script-png-to-mask.html
+               css3/masking/mask-svg-script-png-to-none.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseFillShorthand):
+        (WebCore::CSSParser::parseFillProperty):
+        (WebCore::CSSParser::parseMaskImage):
+        * css/CSSParser.h:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::adjustStyleForMaskImages):
+        (WebCore::StyleResolver::applyProperty):
+        (WebCore::StyleResolver::loadPendingSVGDocuments):
+        (WebCore::StyleResolver::createMaskImageOperations):
+        (WebCore::StyleResolver::loadPendingImages):
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::blendFunc):
+        (WebCore::MaskImagePropertyWrapper::MaskImagePropertyWrapper):
+        (WebCore::MaskImagePropertyWrapper::equals):
+        (WebCore::CSSPropertyAnimationWrapperMap::CSSPropertyAnimationWrapperMap):
+        * platform/graphics/MaskImageOperation.cpp:
+        (WebCore::MaskImageOperation::~MaskImageOperation):
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::maskClipRect):
+        * rendering/RenderBox.h:
+        * rendering/RenderBoxModelObject.cpp:
+        (WebCore::RenderBoxModelObject::paintFillLayerExtended):
+        (WebCore::RenderBoxModelObject::calculateFillTileSize):
+        (WebCore::RenderBoxModelObject::calculateBackgroundImageGeometry):
+        * rendering/RenderElement.cpp:
+        (WebCore::RenderElement::~RenderElement):
+        (WebCore::RenderElement::updateFillImages):
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::calculateClipRects):
+        * rendering/RenderLayer.h:
+        * rendering/style/FillLayer.h:
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::setMaskImage):
+        * rendering/style/RenderStyle.h:
+
+2014-12-09  Jeremy Jones  <jeremyj@apple.com>
+
+        Restore interface state when stopping optimized fullscreen.
+        https://bugs.webkit.org/show_bug.cgi?id=139465
+
+        Reviewed by Simon Fraser.
+
+        * platform/ios/WebVideoFullscreenControllerAVKit.mm:
+        (-[WebVideoFullscreenController fullscreenMayReturnToInline:]): add empty implementation.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h: add declaration
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::enterFullscreen): restore interface context when optimized mode ends.
+        (WebVideoFullscreenInterfaceAVKit::setIsOptimized): restore interface context when optimized mode ends.
+
+2014-12-11  Anders Carlsson  <andersca@apple.com>
+
+        Remove unused storage header includes
+        https://bugs.webkit.org/show_bug.cgi?id=139540
+
+        Reviewed by Antti Koivisto.
+
+        * storage/StorageAreaImpl.cpp:
+        * storage/StorageAreaSync.cpp:
+        * storage/StorageNamespaceImpl.cpp:
+        (WebCore::StorageNamespaceImpl::localStorageNamespace): Deleted.
+        (WebCore::StorageNamespaceImpl::sessionStorageNamespace): Deleted.
+        (WebCore::StorageNamespaceImpl::transientLocalStorageNamespace): Deleted.
+        * storage/StorageNamespaceImpl.h:
+        * storage/StorageSyncManager.cpp:
+        * storage/StorageThread.cpp:
+        * storage/StorageTracker.cpp:
+
+2014-12-11  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (Async Text Input): Text input method state is not reset when reloading a page
+        https://bugs.webkit.org/show_bug.cgi?id=139504
+        rdar://problem/19034674
+
+        Reviewed by Enrica Casucci.
+
+        Explicitly notify EditorClient when a composition is voluntarily canceled by WebCore.
+        These are almost certainly not all the places where this happens, but this fixes the bug,
+        and lays the groundwork for using this new client call instead of didChangeSelection
+        hacks.
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::clear):
+        (WebCore::Editor::cancelComposition):
+        * loader/EmptyClients.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::willTransitionToCommitted):
+        * page/EditorClient.h:
+
+2014-12-10  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of the storage strategy
+        https://bugs.webkit.org/show_bug.cgi?id=139519
+
+        Reviewed by Antti Koivisto.
+
+        * CMakeLists.txt:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * page/DOMWindow.cpp:
+        (WebCore::DOMWindow::localStorage):
+        * page/Page.cpp:
+        (WebCore::Page::Page):
+        (WebCore::Page::~Page):
+        (WebCore::Page::sessionStorage):
+        (WebCore::Page::setStorageNamespaceProvider):
+        * page/Page.h:
+        (WebCore::Page::storageNamespaceProvider):
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::localStorage):
+        (WebCore::PageGroup::transientLocalStorage):
+        * platform/PlatformStrategies.h:
+        (WebCore::PlatformStrategies::PlatformStrategies):
+        (WebCore::PlatformStrategies::storageStrategy): Deleted.
+        * storage/StorageNamespace.cpp: Removed.
+        * storage/StorageNamespace.h:
+        * storage/StorageStrategy.cpp: Removed.
+        * storage/StorageStrategy.h: Removed.
+
+2014-12-11  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Move click counter logic back to WebKitWebViewBase
+        https://bugs.webkit.org/show_bug.cgi?id=137685
+
+        Reviewed by Martin Robinson.
+
+        Remove GtkClickCounter.
+
+        * PlatformGTK.cmake:
+        * platform/gtk/GtkClickCounter.cpp: Removed.
+        * platform/gtk/GtkClickCounter.h: Removed.
+
+2014-12-11  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Implement sizes attribute for link tag
+        https://bugs.webkit.org/show_bug.cgi?id=125775
+
+        Reviewed by Martin Robinson.
+
+        * bindings/gobject/WebKitDOMCustom.cpp:
+        (webkit_dom_html_link_element_set_sizes): Add custom setter implementation.
+        * bindings/gobject/WebKitDOMCustomUnstable.h:
+        * bindings/js/JSHTMLLinkElementCustom.cpp:
+        (WebCore::JSHTMLLinkElement::sizes): Remove custom getter implementation.
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (HasUnstableCustomAPI): Mark WebKitDOMHTMLLinkElement as having custom unstable API.
+        * html/HTMLLinkElement.idl: Mark sizes attribute as CustomSetter
+        instead of Custom, since the getter can be autogenerated, and make
+        it available to the GObject DOM bindings too.
+
+2014-12-10  Chris Dumez  <cdumez@apple.com>
+
+        http://omfgdogs.info/ only animates when you resize the window
+        https://bugs.webkit.org/show_bug.cgi?id=139435
+        <rdar://problem/19190493>
+
+        Reviewed by Simon Fraser.
+
+        After r163928, we would fail to animate a gif if:
+        - it is used as a background image of a 0-height html element
+        - it is used as a background image of a 0-height body element whose
+          background is delegated to the root (because the root has no
+          background).
+
+        This is because in such cases, shouldRepaintForImageAnimation()
+        should use the background rect instead of the renderer's overflow
+        rect to determine if the image is inside the viewport. Both cases
+        are addressed in this patch.
+
+        Tests: fast/images/animated-gif-body-delegated-background-image.html
+               fast/images/animated-gif-body-outside-viewport.html
+               fast/images/animated-gif-html-background-image.html
+
+        * rendering/RenderElement.cpp:
+        (WebCore::shouldRepaintForImageAnimation):
+        * testing/Internals.cpp:
+        (WebCore::Internals::hasPausedImageAnimations):
+        * testing/Internals.h:
+        * testing/Internals.idl:
+
+2014-12-10  Timothy Horton  <timothy_horton@apple.com>
+
+        Fix the build.
+
+        * html/canvas/WebGLDrawBuffers.cpp:
+        Yosemite is 101000, not 10100.
+        Also, __MAC_OS_X_VERSION_MIN_REQUIRED is only defined for PLATFORM(MAC).
+
+2014-12-10  Zalan Bujtas  <zalan@apple.com>
+
+        Continuously repainting large parts of Huffington Post.
+        https://bugs.webkit.org/show_bug.cgi?id=139468
+
+        Reviewed by Antti Koivisto.
+
+        This patch eliminates redundant repaint requests for inlines when neither the parent
+        block flow nor any of the inline children are dirty.
+        Previously,
+        1. simple line layout always recalculated inline content positions regardless of whether
+        the content needed relayout at all; as a result, it always triggered full repaint.
+        2. inline tree layout ignored the needslayout flag on the last line and treated it dirty
+        (unless it broke cleanly (<div>foo<br></div>)).
+        This was an ancient workaround for an editing/insert use case, but it seems not to be the case anymore.
+
+        Tests: fast/repaint/implicitly-positioned-block-repaint-complex-line-layout.html
+               fast/repaint/implicitly-positioned-block-repaint-simple-line-layout.html
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::layoutInlineChildren):
+        (WebCore::RenderBlockFlow::layoutSimpleLines): Check if we need to trigger layout at all.
+        * rendering/RenderBlockFlow.h:
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlockFlow::determineStartPosition): Remove the last line dirty hack. If it
+        happens to introduce regression, we should fix it at the caller site to make the line dirty.
+
+2014-12-10  Anders Carlsson  <andersca@apple.com>
+
+        Add an empty storage namespace provider
+        https://bugs.webkit.org/show_bug.cgi?id=139520
+
+        Reviewed by Tim Horton.
+
+        * loader/EmptyClients.cpp:
+        (WebCore::fillWithEmptyClients):
+
+2014-12-10  Beth Dakin  <bdakin@apple.com>
+
+        Speculative build fix.
+
+        * platform/spi/mac/NSImmediateActionGestureRecognizerSPI.h:
+
+2014-12-10  Beth Dakin  <bdakin@apple.com>
+
+        WK2: Add initial support for immediate actions
+        https://bugs.webkit.org/show_bug.cgi?id=139511
+
+        Reviewed by Tim Horton.
+
+        SPI needed for immediate actions.
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/spi/mac/NSImmediateActionGestureRecognizerSPI.h: Added.
+
+2014-12-10  Martin Hock  <mhock@apple.com>
+
+        [iOS] Add setting to ignore viewport scaling constraints
+        https://bugs.webkit.org/show_bug.cgi?id=139466
+        <rdar://problem/19200328>
+
+        Reviewed by Benjamin Poulain.
+
+        * WebCore.exp.in:
+        * page/Settings.in: Add setting to ignore viewport scaling constraints.
+        * page/ViewportConfiguration.cpp: Ignore viewport scaling constraints based on preference.
+        (WebCore::ViewportConfiguration::initialScale):
+        (WebCore::ViewportConfiguration::minimumScale):
+        (WebCore::ViewportConfiguration::allowsUserScaling):
+        * page/ViewportConfiguration.h:
+        (WebCore::ViewportConfiguration::setIgnoreScalingConstraints):
+        (WebCore::ViewportConfiguration::allowsUserScaling): Moved to cpp.
+
+2014-12-10  Andreas Kling  <akling@apple.com>
+
+        Speculative fix for assertion "frame().view() == this"
+        <rdar://problem/18419449>
+
+        Rubber-stamped by Anders Carlsson.
+
+        I have not reproduced this issue, but we can safely ignore animation
+        notifications for cached pages.
+
+        * rendering/RenderElement.cpp:
+        (WebCore::RenderElement::newImageAnimationFrameAvailable):
+
+2014-12-10  Anders Carlsson  <andersca@apple.com>
+
+        Add session storage handling to StorageNamespaceProvider
+        https://bugs.webkit.org/show_bug.cgi?id=139507
+
+        Reviewed by Tim Horton.
+
+        * page/Page.cpp:
+        (WebCore::Page::sessionStorage):
+        * storage/StorageNamespaceProvider.h:
+
+2014-12-10  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Follow-up patch to r177099.
+        https://bugs.webkit.org/show_bug.cgi?id=133634
+        <rdar://problem/15949588>
+
+        Enable GL_EXT_draw_buffers on iOS as well.
+        * platform/graphics/opengl/Extensions3DOpenGL.cpp:
+        (WebCore::Extensions3DOpenGL::supportsExtension):
+
+2014-12-10  Roger Fong  <roger_fong@apple.com>
+
+        Implement Multiple Render Targets as WebGL 1 extension.
+        https://bugs.webkit.org/show_bug.cgi?id=133634.
+        <rdar://problem/15949588>
+
+        Reviewed by Brent Fulgham.
+
+        Tested by:
+        webgl/1.0.3/conformance/extensions/webgl-draw-buffers.html
+
+        Enable the implementation now that an underlying driver bug has been resolved.
+        Do not enable for desktop platforms older that OS X 10.10.
+        * html/canvas/WebGLDrawBuffers.cpp:
+        (WebCore::WebGLDrawBuffers::supported):
+
+2014-12-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r164329): Input fields are not honoring the maxlength attribute
+        https://bugs.webkit.org/show_bug.cgi?id=139447
+
+        Reviewed by Benjamin Poulain.
+
+        The bug was caused by String::substring being called with the selection's end offset
+        in the second argument instead of the selection's length in handleBeforeTextInsertedEvent.
+
+        Fixed the bug by passing the right second argument to String::substring.
+
+        Test: fast/forms/input-maxlength-inserting-in-middle.html
+
+        * html/TextFieldInputType.cpp:
+        (WebCore::TextFieldInputType::handleBeforeTextInsertedEvent):
+
+2014-12-10  Anders Carlsson  <andersca@apple.com>
+
+        Add a missing null check.
+
+        * page/Page.cpp:
+        (WebCore::Page::~Page):
+
+2014-12-10  Antti Koivisto  <antti@apple.com>
+
+        Crash when creating CSSCalcBinaryOperation
+        https://bugs.webkit.org/show_bug.cgi?id=134886
+        rdar://problem/17663561
+
+        Reviewed by Chris Dumez.
+
+        Test: fast/css/calc-binary-operation-crash.html
+
+        * css/CSSCalculationValue.cpp:
+        (WebCore::determineCategory):
+
+        Ensure that both axis are within the addSubtractResult table.
+        Remove unneeded CalcOther test. The call site guarantees it doesn't happen and the normal cases would handle it anyway.
+        Also strengthen some asserts.
+
+2014-12-10  Anders Carlsson  <andersca@apple.com>
+
+        Add WebStorageNamespaceProvider::closeLocalStorage
+        https://bugs.webkit.org/show_bug.cgi?id=139502
+
+        Reviewed by Tim Horton.
+
+        * page/Page.cpp:
+        (WebCore::Page::~Page):
+        Call StorageNamespaceProvider::removePage.
+
+        * storage/StorageNamespaceProvider.h:
+        (WebCore::StorageNamespaceProvider::optionalLocalStorageNamespace):
+        Helper function that returns the local storage namespace if one exists.
+
+2014-12-10  Joanmarie Diggs  <jdiggs@igalia.com>
+
+        AX: [ATK] MathML tokens with text fail to expose their text content via AtkText
+        https://bugs.webkit.org/show_bug.cgi?id=139454
+
+        Reviewed by Chris Fleizach.
+
+        Expose the text content of the element for non-anonymous RenderMathMLOperators.
+        This is needed because for ATK we expose the rendered element itself; not the
+        descendant text renderers. Also include MathML tokens as objects which should
+        implement AtkText.
+
+        Test: accessibility/math-text.html
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::textUnderElement):
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (getInterfaceMaskFromObject):
+
+2014-12-10  Sebastian Dröge  <sebastian@centricular.com>
+
+        [GStreamer] Use appsrcs instead of unconnected queues
+        https://bugs.webkit.org/show_bug.cgi?id=139490
+
+        Reviewed by Philippe Normand.
+
+        * platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.cpp:
+        (webkit_web_audio_src_init):
+        (webKitWebAudioSrcConstructed):
+        (webKitWebAudioSrcFinalize):
+        (webKitWebAudioSrcSetProperty):
+        (webKitWebAudioSrcLoop):
+        (webKitWebAudioSrcChangeState):
+        Previously we directly chained buffers into unconnected queues,
+        which confused some code inside GStreamer and caused some harmless
+        warnings. Now we use appsrcs instead, which also allows us to remove
+        quite some code.
+
+2014-12-10  Enrica Casucci  <enrica@apple.com>
+
+        Fix iOS builders for 8.0
+        https://bugs.webkit.org/show_bug.cgi?id=139495
+
+        Reviewed by Eric Carlson.
+
+        * WebCore.exp.in:
+        * platform/ios/WebVideoFullscreenControllerAVKit.mm:
+        (-[WebVideoFullscreenController enterFullscreen:mode:]):
+        (-[WebVideoFullscreenController requestHideAndExitFullscreen]):
+        (-[WebVideoFullscreenController enterFullscreen:]): Deleted.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+
+
+2014-12-10  peavo@outlook.com  <peavo@outlook.com>
+
+        [Curl] Cache entry is sometimes deleted when request receives a not modified response.
+        https://bugs.webkit.org/show_bug.cgi?id=139339
+
+        Reviewed by Alex Christensen.
+
+        Sometimes it happens that a request receives a not modified response,
+        but the cache entry has already been deleted by another request.
+        This can be avoided by locking a cache entry while there are pending
+        requests for the cache entry's url.
+
+        * platform/network/curl/CurlCacheEntry.h:
+        (WebCore::CurlCacheEntry::addClient):
+        (WebCore::CurlCacheEntry::removeClient):
+        (WebCore::CurlCacheEntry::hasClients):
+        * platform/network/curl/CurlCacheManager.cpp:
+        (WebCore::CurlCacheManager::didReceiveResponse):
+        (WebCore::CurlCacheManager::didFail):
+        (WebCore::CurlCacheManager::addCacheEntryClient):
+        (WebCore::CurlCacheManager::removeCacheEntryClient):
+        * platform/network/curl/CurlCacheManager.h:
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::isHttpNotModified):
+        (WebCore::headerCallback):
+        (WebCore::ResourceHandleManager::initializeHandle):
+
+2014-12-10  Sebastian Dröge  <sebastian@centricular.com>
+
+        [GStreamer] Use a buffer pool for allocations in the AudioDestination
+        https://bugs.webkit.org/show_bug.cgi?id=139487
+
+        Reviewed by Philippe Normand.
+
+        * platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.cpp:
+        (webKitWebAudioSrcLoop):
+        (webKitWebAudioSrcChangeState):
+        Use a buffer pool for the allocations instead of allocating a
+        new small buffer for every 128 samples we produce.
+
+2014-12-10  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] Add support for text-decoration-skip
+        https://bugs.webkit.org/show_bug.cgi?id=131540
+
+        Reviewed by Gustavo Noronha Silva.
+
+        No new tests. This is covered by existing layout tests.
+
+        * platform/graphics/cairo/FontCairo.cpp:
+        (WebCore::GlyphIterationState): Added this class, a modified version of the Mac
+        port's implementation.
+        (WebCore::Font::dashesForIntersectionsWithRect): Ditto.
+        * platform/graphics/cairo/FontCairoHarfbuzzNG.cpp:
+        (WebCore::Font::getGlyphsAndAdvancesForComplexText): Added an implementation for
+        HarfBuzz that just fills out the GlyphBuffer, but does not render it.
+        (WebCore::Font::drawComplexText): Use the new getGlyphsAndAdvancesForComplexText
+        in a similar way to the Mac port.
+        * platform/graphics/harfbuzz/HarfBuzzShaper.cpp:
+        (WebCore::HarfBuzzShaper::fillGlyphBufferFromHarfBuzzRun): We need to pass the current
+        character index to GlyphBuffer:add since it's used by dashesForIntersectionsWithRect
+        and otherwise it will be uninitialized when we try to access it.
+
+2014-12-10  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r177048) 11 failures on layout tests fast/selectors.
+        <https://webkit.org/b/139483>
+
+        Unreviewed fix for bots.
+
+        When rolling out the broken change, I accidentally also rolled out
+        a bug fix that Benjamin had made to sibling invalidation.
+        Restore his implementation of nodeOrItsAncestorNeedsStyleRecalc().
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::nodeOrItsAncestorNeedsStyleRecalc):
+        (WebCore::updateStyleIfNeededForNode):
+        (WebCore::ComputedStyleExtractor::propertyValue):
+
+2014-12-08  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] AudioSourceProvider support in the MediaPlayer
+        https://bugs.webkit.org/show_bug.cgi?id=78883
+
+        Reviewed by Gustavo Noronha Silva.
+
+        GStreamer-based audio source provider for the GTK and EFL
+        ports. This new component gathers decoded raw audio data from the
+        MediaPlayer and pipes it to an AudioBus when required by the
+        User Agent.
+
+        * PlatformEfl.cmake: New files in the build.
+        * PlatformGTK.cmake: Ditto.
+        * platform/audio/gstreamer/AudioSourceProviderGStreamer.cpp: Added.
+        (WebCore::onAppsinkNewBufferCallback): Function called when a new
+        buffer can be pulled from appsink.
+        (WebCore::onGStreamerDeinterleavePadAddedCallback): Function
+        called when a new source pad has been added to deinterleave.
+        (WebCore::onGStreamerDeinterleaveReadyCallback): Function called
+        when the deinterleave element completed the configuration of all
+        its source pads.
+        (WebCore::copyGstreamerBuffersToAudioChannel): Called for each
+        channel of the AudioBus that needs data as input.
+        (WebCore::AudioSourceProviderGStreamer::AudioSourceProviderGStreamer):
+        Create an audio bin that by default routes buffers only to
+        autoaudiosink. A new route is added if the provider has a client.
+        (WebCore::AudioSourceProviderGStreamer::~AudioSourceProviderGStreamer):
+        Clean buffer adapters and audio bin.
+        (WebCore::AudioSourceProviderGStreamer::configureAudioBin):
+        (WebCore::AudioSourceProviderGStreamer::provideInput): Transfer
+        data from the buffer adapters to the bus channels.
+        (WebCore::AudioSourceProviderGStreamer::handleAudioBuffer): Pull a
+        buffer from appsink and queue it to the buffer adapter.
+        (WebCore::AudioSourceProviderGStreamer::setClient): Complete the
+        construction of the audio bin by adding a new chain to the tee
+        element. This new chain will deinterleave the buffer stream to
+        planar audio channels and route them to an appsink per channel for
+        data extraction.
+        (WebCore::AudioSourceProviderGStreamer::handleNewDeinterleavePad):
+        A new appsink after a new source pad has been added to deinterleave.
+        (WebCore::AudioSourceProviderGStreamer::deinterleavePadsConfigured):
+        Configure the client Node format (number of channels and sample
+        rate) once the provider knows how many audio channels are managed
+        by the pipeline.
+        (WebCore::cleanUpElementsAfterDeinterleaveSourcePadCallback):
+        (WebCore::AudioSourceProviderGStreamer::cleanUpElementsAfterDeinterleaveSourcePad):
+        Remove the elements after the given deinterleave source pad.
+        (WebCore::AudioSourceProviderGStreamer::reset): Cleanup the
+        deinterleave source pads. This is especially needed before the
+        whole pipeline goes to NULL and later on prerolls again.
+        * platform/audio/gstreamer/AudioSourceProviderGStreamer.h: Added.
+        (WebCore::AudioSourceProviderGStreamer::create): Use this to
+        create the provider and get an OwnPtr of it.
+        (WebCore::AudioSourceProviderGStreamer::client): Provider client getter.
+        (WebCore::AudioSourceProviderGStreamer::getAudioBin): Audio bin
+        getter, used by the media player to configure its
+        playbin::audio-sink property.
+        * platform/graphics/gstreamer/GRefPtrGStreamer.cpp:
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.cpp:
+        (WebCore::MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer):
+        Provider life cycle management and reset the audio provider before
+        going to NULL.
+        (WebCore::MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer): Ditto.
+        (WebCore::MediaPlayerPrivateGStreamer::handlePluginInstallerResult): Ditto.
+        (WebCore::MediaPlayerPrivateGStreamer::cancelLoad): Ditto.
+        (WebCore::MediaPlayerPrivateGStreamer::didEnd): Ditto.
+        (WebCore::MediaPlayerPrivateGStreamer::createAudioSink): Configure
+        the audio source provider if needed.
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.h:
+        (WebCore::MediaPlayerPrivateGStreamer::audioSourceProvider):
+        Provider getter, used by MediaPlayer and MediaElement.
+
+2014-12-09  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Scrolling to anchor tags does nothing in vertical-rl writing mode
+        https://bugs.webkit.org/show_bug.cgi?id=137838
+
+        Reviewed by David Hyatt.
+
+        Scroll to a particular tag, and make sure the viewport is rendered as expected.
+
+        Tests: fast/events/scroll-to-anchor-vertical-lr-writing-mode.html
+               fast/events/scroll-to-anchor-vertical-writing-mode-contained-2.html
+               fast/events/scroll-to-anchor-vertical-writing-mode-contained.html
+               fast/events/scroll-to-anchor-vertical-writing-mode.html
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::scrollToAnchor):
+        * rendering/ScrollBehavior.cpp:
+        * rendering/ScrollBehavior.h:
+
+2014-12-09  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        REGRESSION(r155906): Page content disappears on Tuaw article after loading
+        https://bugs.webkit.org/show_bug.cgi?id=138100
+
+        Reviewed by Simon Fraser.
+
+        Test: ManualTests/float-layer-not-painting.html
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::insertFloatingObject): If a layout happens,
+        it can change whether the float's renderer has a self painting layer.
+        So in that case, we need to update the flag on the FloatingObject
+        instance for that float.
+
+2014-12-09  Andreas Kling  <akling@apple.com>
+
+        Roll out r165076.
+        <rdar://problem/18490587>
+
+        This change broke selection when editing Confluence wiki pages.
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::nodeOrItsAncestorNeedsStyleRecalc):
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * dom/Document.cpp:
+        (WebCore::nodeOrItsAncestorNeedsStyleRecalc): Deleted.
+        (WebCore::Document::updateStyleIfNeededForNode): Deleted.
+        * dom/Document.h:
+        * editing/htmlediting.cpp:
+        (WebCore::isEditablePosition):
+        * html/TextFieldInputType.cpp:
+        (WebCore::TextFieldInputType::forwardEvent):
+
+2014-12-09  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Fix iOS build after r177035.
+
+        Unreviewed.
+
+        I accidentally added my line to WebCore.exp.in inside an
+        #IF PLATFORM(MAC) block.
+
+        * WebCore.exp.in:
+
+2014-12-09  Jeremy Jones  <jeremyj@apple.com>
+
+        Enable automatic optimized fullscreen mode.
+        https://bugs.webkit.org/show_bug.cgi?id=139437
+
+        Reviewed by Eric Carlson.
+
+        Anticipate transition to optimized video fullscreen mode when entering background.
+
+        * WebCore.exp.in:
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::overrideBackgroundPlaybackRestriction): Add logic for automatic transition detection.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h:
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::mayAutomaticallyShowVideoOptimized): Add logic for automatic transition detection.
+
 2014-12-09  Myles C. Maxfield  <mmaxfield@apple.com>
 
         Delete Node::boundingBox()

@@ -477,8 +477,10 @@ static NSString *pathToPhotoOnDisk(NSString *suggestedFilename)
 {
     RetainPtr<NSMenuItem> copyTextItem = [self _createActionMenuItemForTag:WebActionMenuItemTagCopyText];
     RetainPtr<NSMenuItem> lookupTextItem = [self _createActionMenuItemForTag:WebActionMenuItemTagLookupText];
+    RetainPtr<NSMenuItem> pasteItem = [self _createActionMenuItemForTag:WebActionMenuItemTagPaste];
+    [pasteItem setEnabled:NO];
 
-    return @[ copyTextItem.get(), lookupTextItem.get() ];
+    return @[ copyTextItem.get(), lookupTextItem.get(), pasteItem.get() ];
 }
 
 - (NSArray *)_defaultMenuItemsForEditableText
@@ -587,7 +589,7 @@ static NSString *pathToPhotoOnDisk(NSString *suggestedFilename)
 
 - (void)_copySelection:(id)sender
 {
-    [_webView _executeCoreCommandByName:@"copy" value:nil];
+    [_webView copy:self];
 }
 
 - (void)_lookupText:(id)sender
@@ -602,7 +604,7 @@ static NSString *pathToPhotoOnDisk(NSString *suggestedFilename)
 
 - (void)_paste:(id)sender
 {
-    [_webView _executeCoreCommandByName:@"paste" value:nil];
+    [_webView paste:self];
 }
 
 - (void)_selectLookupText
@@ -685,9 +687,11 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
 
 - (NSArray *)_defaultMenuItemsForWhitespaceInEditableArea
 {
+    RetainPtr<NSMenuItem> copyTextItem = [self _createActionMenuItemForTag:WebActionMenuItemTagCopyText];
     RetainPtr<NSMenuItem> pasteItem = [self _createActionMenuItemForTag:WebActionMenuItemTagPaste];
+    [copyTextItem setEnabled:NO];
 
-    return @[ [NSMenuItem separatorItem], [NSMenuItem separatorItem], pasteItem.get() ];
+    return @[ copyTextItem.get(), [NSMenuItem separatorItem], pasteItem.get() ];
 }
 
 #pragma mark NSSharingServicePickerDelegate implementation

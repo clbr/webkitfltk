@@ -26,13 +26,14 @@
 
 #import "config.h"
 
-#if PLATFORM(IOS) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000
+#if PLATFORM(IOS) && __IPHONE_OS_VERSION_MIN_REQUIRED > 82000
 
 #import "WebVideoFullscreenInterfaceAVKit.h"
 
 #import "AVKitSPI.h"
 #import "Logging.h"
 #import "GeometryUtilities.h"
+#import "WebCoreSystemInterface.h"
 #import "WebVideoFullscreenModel.h"
 #import <AVFoundation/AVTime.h>
 #import <CoreMedia/CMTime.h>
@@ -906,8 +907,12 @@ void WebVideoFullscreenInterfaceAVKit::enterFullscreen()
                         protect = nullptr;
                     }
                 });
-            } stopCompletionHandler:^(AVPlayerViewControllerOptimizedFullscreenStopReason) {
+            } stopCompletionHandler:^(AVPlayerViewControllerOptimizedFullscreenStopReason reason) {
                 m_exitCompleted = true;
+                
+                if (m_fullscreenChangeObserver && reason == AVPlayerViewControllerOptimizedFullscreenStopReasonStopped)
+                    m_fullscreenChangeObserver->fullscreenMayReturnToInline();
+
                 if (m_exitRequested) {
                     [m_videoLayerContainer setBackgroundColor:[[getUIColorClass() clearColor] CGColor]];
                     [[m_playerViewController view] setBackgroundColor:[getUIColorClass() clearColor]];
@@ -1102,6 +1107,9 @@ void WebVideoFullscreenInterfaceAVKit::setIsOptimized(bool active)
     
     [m_window setHidden:m_mode & HTMLMediaElement::VideoFullscreenModeOptimized];
     
+    if (m_fullscreenChangeObserver && ~m_mode & HTMLMediaElement::VideoFullscreenModeOptimized)
+        m_fullscreenChangeObserver->fullscreenMayReturnToInline();
+
     if (!m_exitRequested || active)
         return;
     
@@ -1113,5 +1121,11 @@ void WebVideoFullscreenInterfaceAVKit::setIsOptimized(bool active)
             m_fullscreenChangeObserver->didExitFullscreen();
     });
 }
+
+bool WebVideoFullscreenInterfaceAVKit::mayAutomaticallyShowVideoOptimized()
+{
+    return [m_playerController isPlaying] && m_mode == HTMLMediaElement::VideoFullscreenModeStandard && wkIsOptimizedFullscreenSupported();
+}
+
 
 #endif

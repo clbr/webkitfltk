@@ -699,6 +699,8 @@ namespace JSC {
         MacroAssembler::Call callOperation(J_JITOperation_EJIdc, int, GPRReg, const Identifier*);
         MacroAssembler::Call callOperation(J_JITOperation_EJJ, int, GPRReg, GPRReg);
         MacroAssembler::Call callOperation(J_JITOperation_EJscC, int, GPRReg, JSCell*);
+        MacroAssembler::Call callOperation(C_JITOperation_EJscZ, GPRReg, int32_t);
+        MacroAssembler::Call callOperation(C_JITOperation_EJscZ, int, GPRReg, int32_t);
 #if USE(JSVALUE64)
         MacroAssembler::Call callOperation(WithProfileTag, J_JITOperation_EJJ, int, GPRReg, GPRReg);
 #else
@@ -836,7 +838,7 @@ namespace JSC {
         unsigned m_byValInstructionIndex;
         unsigned m_callLinkInfoIndex;
 
-        OwnPtr<JITDisassembler> m_disassembler;
+        std::unique_ptr<JITDisassembler> m_disassembler;
         RefPtr<Profiler::Compilation> m_compilation;
         WeakRandom m_randomGenerator;
         static CodeRef stringGetByValStubGenerator(VM*);

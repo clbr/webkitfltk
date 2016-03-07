@@ -33,9 +33,18 @@ public:
     static RefPtr<WebStorageNamespaceProvider> create(const String& localStorageDatabasePath);
     virtual ~WebStorageNamespaceProvider();
 
+    static void closeLocalStorage();
+
+    static void clearLocalStorageForAllOrigins();
+    static void clearLocalStorageForOrigin(WebCore::SecurityOrigin*);
+    static void closeIdleLocalStorageDatabases();
+    // DumpRenderTree helper that triggers a StorageArea sync.
+    static void syncLocalStorage();
+
 private:
     explicit WebStorageNamespaceProvider(const String& localStorageDatabasePath);
 
+    virtual RefPtr<WebCore::StorageNamespace> createSessionStorageNamespace(WebCore::Page&, unsigned quota) override;
     virtual RefPtr<WebCore::StorageNamespace> createLocalStorageNamespace(unsigned quota) override;
     virtual RefPtr<WebCore::StorageNamespace> createTransientLocalStorageNamespace(WebCore::SecurityOrigin&, unsigned quota) override;
 

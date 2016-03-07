@@ -56,6 +56,7 @@ list(APPEND WebCore_SOURCES
 
     platform/audio/gstreamer/AudioDestinationGStreamer.cpp
     platform/audio/gstreamer/AudioFileReaderGStreamer.cpp
+    platform/audio/gstreamer/AudioSourceProviderGStreamer.cpp
     platform/audio/gstreamer/FFTFrameGStreamer.cpp
     platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.cpp
 
@@ -222,7 +223,6 @@ list(APPEND WebCorePlatformGTK_SOURCES
     platform/gtk/DragIcon.cpp
     platform/gtk/DragImageGtk.cpp
     platform/gtk/GRefPtrGtk.cpp
-    platform/gtk/GtkClickCounter.cpp
     platform/gtk/GtkUtilities.cpp
     platform/gtk/GtkVersioning.c
     platform/gtk/KeyBindingTranslator.cpp

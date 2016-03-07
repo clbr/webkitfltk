@@ -1671,6 +1671,35 @@ PassRef<MutableStyleProperties> CSSComputedStyleDeclaration::copyProperties() co
     return ComputedStyleExtractor(m_node, m_allowVisitedStyle, m_pseudoElementSpecifier).copyProperties();
 }
 
+static inline bool nodeOrItsAncestorNeedsStyleRecalc(const Node& node)
+{
+    if (node.needsStyleRecalc())
+        return true;
+
+    const Node* currentNode = &node;
+    const Element* ancestor = currentNode->parentOrShadowHostElement();
+    while (ancestor) {
+        if (ancestor->needsStyleRecalc())
+            return true;
+
+        if (ancestor->directChildNeedsStyleRecalc() && currentNode->styleIsAffectedByPreviousSibling())
+            return true;
+
+        currentNode = ancestor;
+        ancestor = currentNode->parentOrShadowHostElement();
+    }
+    return false;
+}
+
+static inline bool updateStyleIfNeededForNode(const Node& node)
+{
+    Document& document = node.document();
+    if (!document.hasPendingForcedStyleRecalc() && !(document.childNeedsStyleRecalc() && nodeOrItsAncestorNeedsStyleRecalc(node)))
+        return false;
+    document.updateStyleIfNeeded();
+    return true;
+}
+
 static inline PassRefPtr<RenderStyle> computeRenderStyleForProperty(Node* styledNode, PseudoId pseudoElementSpecifier, CSSPropertyID propertyID)
 {
     RenderObject* renderer = styledNode->renderer();
@@ -1725,7 +1754,7 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
     if (updateLayout) {
         Document& document = styledNode->document();
 
-        if (document.updateStyleIfNeededForNode(*styledNode)) {
+        if (updateStyleIfNeededForNode(*styledNode)) {
             // The style recalc could have caused the styled node to be discarded or replaced
             // if it was a PseudoElement so we need to update it.
             styledNode = this->styledNode();
@@ -1765,9 +1794,8 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
 
         case CSSPropertyBackgroundColor:
             return cssValuePool().createColorValue(m_allowVisitedStyle? style->visitedDependentColor(CSSPropertyBackgroundColor).rgb() : style->backgroundColor().rgb());
-        case CSSPropertyBackgroundImage:
-        case CSSPropertyWebkitMaskImage: {
-            const FillLayer* layers = propertyID == CSSPropertyWebkitMaskImage ? style->maskLayers() : style->backgroundLayers();
+        case CSSPropertyBackgroundImage: {
+            const FillLayer* layers = style->backgroundLayers();
             if (!layers)
                 return cssValuePool().createIdentifierValue(CSSValueNone);
 
@@ -1782,6 +1810,27 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
             for (const FillLayer* currLayer = layers; currLayer; currLayer = currLayer->next()) {
                 if (currLayer->image())
                     list->append(*currLayer->image()->cssValue());
+                else
+                    list->append(cssValuePool().createIdentifierValue(CSSValueNone));
+            }
+            return list.release();
+        }
+        case CSSPropertyWebkitMaskImage: {
+            const FillLayer* layers = style->maskLayers();
+            if (!layers)
+                return cssValuePool().createIdentifierValue(CSSValueNone);
+
+            if (!layers->next()) {
+                if (layers->maskImage().get())
+                    return layers->maskImage()->cssValue();
+
+                return cssValuePool().createIdentifierValue(CSSValueNone);
+            }
+
+            RefPtr<CSSValueList> list = CSSValueList::createCommaSeparated();
+            for (const FillLayer* currLayer = layers; currLayer; currLayer = currLayer->next()) {
+                if (currLayer->maskImage().get())
+                    list->append(*currLayer->maskImage()->cssValue());
                 else
                     list->append(cssValuePool().createIdentifierValue(CSSValueNone));
             }

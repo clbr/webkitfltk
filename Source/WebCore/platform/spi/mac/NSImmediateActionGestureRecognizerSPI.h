@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2014 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,30 +20,22 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "StorageNamespace.h"
+#if  __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 
-#include "PlatformStrategies.h"
-#include "StorageStrategy.h"
+#import <AppKit/NSGestureRecognizer.h>
 
-namespace WebCore {
+#if __has_include(<AppKit/NSImmediateActionGestureRecognizer.h>)
 
-PassRefPtr<StorageNamespace> StorageNamespace::localStorageNamespace(PageGroup* pageGroup)
-{
-    return platformStrategies()->storageStrategy()->localStorageNamespace(pageGroup);
-}
+#import <AppKit/NSImmediateActionGestureRecognizer.h>
 
-PassRefPtr<StorageNamespace> StorageNamespace::transientLocalStorageNamespace(PageGroup* pageGroup, SecurityOrigin* securityOrigin)
-{
-    return platformStrategies()->storageStrategy()->transientLocalStorageNamespace(pageGroup, securityOrigin);
-}
+#else
 
-PassRefPtr<StorageNamespace> StorageNamespace::sessionStorageNamespace(Page* page)
-{
-    return platformStrategies()->storageStrategy()->sessionStorageNamespace(page);
-}
+@interface NSImmediateActionGestureRecognizer : NSGestureRecognizer
+@end
 
-} // namespace WebCore
+#endif // __has_include(<AppKit/NSImmediateActionGestureRecognizer.h>)
+
+#endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000

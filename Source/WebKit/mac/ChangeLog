@@ -1,3 +1,126 @@
+2014-12-11  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (Async Text Input): Text input method state is not reset when reloading a page
+        https://bugs.webkit.org/show_bug.cgi?id=139504
+        rdar://problem/19034674
+
+        Reviewed by Enrica Casucci.
+
+        Stub out new client calls, this patch does not attempt to make any changes on WebKit1.
+
+        * WebCoreSupport/WebEditorClient.h:
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::discardedComposition):
+
+2014-12-10  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of the storage strategy
+        https://bugs.webkit.org/show_bug.cgi?id=139519
+
+        Reviewed by Antti Koivisto.
+
+        * WebCoreSupport/WebPlatformStrategies.h:
+        * WebCoreSupport/WebPlatformStrategies.mm:
+        (WebPlatformStrategies::createStorageStrategy): Deleted.
+
+2014-12-10  Timothy Horton  <timothy_horton@apple.com>
+
+        Copy and paste action menu items don't work on the Mozilla Midas demo in WebKit1
+        https://bugs.webkit.org/show_bug.cgi?id=139529
+        <rdar://problem/19213620>
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController _copySelection:]):
+        (-[WebActionMenuController _paste:]):
+        Use the copy: and paste: methods on WebView so that we traverse subviews
+        when trying to respond, otherwise these actions don't work in subframes.
+
+2014-12-10  Beth Dakin  <bdakin@apple.com>
+
+        WK1: Add initial support for immediate actions
+        https://bugs.webkit.org/show_bug.cgi?id=139522
+
+        Reviewed by Dan Bernstein.
+
+        This basic implementation of the controller will use the delegate methods to 
+        perform and cache a HitTest when relevant. Future patches will patch 
+        _updateImmediateActionItem to use the HitTestResult to determine if there is any 
+        immediate action that should be taken.
+        * WebView/WebImmediateActionController.h: Added.
+        * WebView/WebImmediateActionController.mm: Added.
+        (-[WebImmediateActionController webViewClosed]):
+        (-[WebImmediateActionController _clearImmediateActionState]):
+        (-[WebImmediateActionController performHitTestAtPoint:]):
+        (-[WebImmediateActionController immediateActionRecognizerWillPrepare:]):
+        (-[WebImmediateActionController immediateActionRecognizerWillBeginAnimation:]):
+        (-[WebImmediateActionController immediateActionRecognizerDidCancelAnimation:]):
+        (-[WebImmediateActionController immediateActionRecognizerDidCompleteAnimation:]):
+        (-[WebImmediateActionController _updateImmediateActionItem]):
+
+        New enum for immediate action types.
+        * WebView/WebUIDelegatePrivate.h:
+
+        Create an NSImmediateActionGestureRecognizer if possible and a controller.
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        (-[WebView _close]):
+        * WebView/WebViewData.h:
+        * WebView/WebViewData.mm:
+        (-[WebViewPrivate dealloc]):
+
+2014-12-08  Anders Carlsson  <andersca@apple.com>
+
+        Use the new storage namespace provider in WebKit1
+        https://bugs.webkit.org/show_bug.cgi?id=139425
+
+        Reviewed by Tim Horton.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        (-[WebView initSimpleHTMLDocumentWithStyle:frame:preferences:groupName:]):
+        Set the storage namespace provider from the web page group.
+
+2014-12-10  Timothy Horton  <timothy_horton@apple.com>
+
+        Should have copy and paste items in all text menus
+        https://bugs.webkit.org/show_bug.cgi?id=139510
+        <rdar://problem/19198388>
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController _defaultMenuItemsForText]):
+        Add a disabled paste menu item into the read-only text menu.
+
+        (-[WebActionMenuController _defaultMenuItemsForWhitespaceInEditableArea]):
+        Add a disabled copy menu item into the editable whitespace text menu.
+
+2014-12-10  Anders Carlsson  <andersca@apple.com>
+
+        Add WebStorageNamespaceProvider::closeLocalStorage
+        https://bugs.webkit.org/show_bug.cgi?id=139502
+
+        Reviewed by Tim Horton.
+
+        * WebView/WebView.mm:
+        (+[WebView _applicationWillTerminate]):
+        Call WebStorageNamespaceProvider::closeLocalStorage.
+
+2014-12-09  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177037.
+        https://bugs.webkit.org/show_bug.cgi?id=139464
+
+        broke ~50 API tests (Requested by thorton on #webkit).
+
+        Reverted changeset:
+
+        "Use the new storage namespace provider in WebKit1"
+        https://bugs.webkit.org/show_bug.cgi?id=139425
+        http://trac.webkit.org/changeset/177037
+
 2014-12-08  Anders Carlsson  <andersca@apple.com>
 
         Use the new storage namespace provider in WebKit1

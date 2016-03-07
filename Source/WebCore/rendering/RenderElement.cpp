@@ -116,6 +116,8 @@ RenderElement::~RenderElement()
         for (const FillLayer* maskLayer = m_style->maskLayers(); maskLayer; maskLayer = maskLayer->next()) {
             if (StyleImage* maskImage = maskLayer->image())
                 maskImage->removeClient(this);
+            else if (maskLayer->maskImage().get())
+                maskLayer->maskImage()->removeRendererImageClient(this);
         }
 
         if (StyleImage* borderImage = m_style->borderImage().image())
@@ -321,18 +323,22 @@ inline bool RenderElement::shouldRepaintForStyleDifference(StyleDifference diff)
 void RenderElement::updateFillImages(const FillLayer* oldLayers, const FillLayer* newLayers)
 {
     // Optimize the common case
-    if (oldLayers && !oldLayers->next() && newLayers && !newLayers->next() && (oldLayers->image() == newLayers->image()))
+    if (oldLayers && !oldLayers->next() && newLayers && !newLayers->next() && oldLayers->image() == newLayers->image() && oldLayers->maskImage() == newLayers->maskImage())
         return;
     
     // Go through the new layers and addClients first, to avoid removing all clients of an image.
     for (const FillLayer* currNew = newLayers; currNew; currNew = currNew->next()) {
-        if (currNew->image())
-            currNew->image()->addClient(this);
+        if (StyleImage* image = currNew->image())
+            image->addClient(this);
+        else if (currNew->maskImage().get())
+            currNew->maskImage()->addRendererImageClient(this);
     }
 
     for (const FillLayer* currOld = oldLayers; currOld; currOld = currOld->next()) {
-        if (currOld->image())
-            currOld->image()->removeClient(this);
+        if (StyleImage* image = currOld->image())
+            image->removeClient(this);
+        else if (currOld->maskImage().get())
+            currOld->maskImage()->removeRendererImageClient(this);
     }
 }
 
@@ -1354,7 +1360,22 @@ static bool shouldRepaintForImageAnimation(const RenderElement& renderer, const 
         return false;
     if (renderer.style().visibility() != VISIBLE)
         return false;
-    if (!renderer.isInsideViewport(&visibleRect))
+    if (renderer.view().frameView().isOffscreen())
+        return false;
+
+    // Use background rect if we are the root or if we are the body and the background is propagated to the root.
+    // FIXME: This is overly conservative as the image may not be a background-image, in which case it will not
+    // be propagated to the root. At this point, we unfortunately don't have access to the image anymore so we
+    // can no longer check if it is a background image.
+    bool backgroundIsPaintedByRoot = renderer.isRoot();
+    if (renderer.isBody()) {
+        // FIXME: Should share body background propagation code.
+        RenderElement* rootObject = renderer.document().documentElement() ? renderer.document().documentElement()->renderer() : nullptr;
+        backgroundIsPaintedByRoot = &rootObject->rendererForRootBackground() == &renderer;
+
+    }
+    LayoutRect backgroundPaintingRect = backgroundIsPaintedByRoot ? renderer.view().backgroundRect(&renderer.view()) : renderer.absoluteClippedOverflowRect();
+    if (!visibleRect.intersects(enclosingIntRect(backgroundPaintingRect)))
         return false;
 
     return true;
@@ -1362,9 +1383,14 @@ static bool shouldRepaintForImageAnimation(const RenderElement& renderer, const 
 
 void RenderElement::newImageAnimationFrameAvailable(CachedImage& image)
 {
+    if (document().inPageCache())
+        return;
     auto& frameView = view().frameView();
     auto visibleRect = frameView.windowToContents(frameView.windowClipRect());
     if (!shouldRepaintForImageAnimation(*this, visibleRect)) {
+        // FIXME: It would be better to pass the image along with the renderer
+        // so that we can be smarter about detecting if the image is inside the
+        // viewport in repaintForPausedImageAnimationsIfNeeded().
         view().addRendererWithPausedImageAnimations(*this);
         return;
     }

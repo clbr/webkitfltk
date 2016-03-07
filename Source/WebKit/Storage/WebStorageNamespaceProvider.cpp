@@ -26,8 +26,16 @@
 #include "WebStorageNamespaceProvider.h"
 
 #include <WebCore/StorageNamespaceImpl.h>
+#include <wtf/NeverDestroyed.h>
 
 using namespace WebCore;
+
+static HashSet<WebStorageNamespaceProvider*>& storageNamespaceProviders()
+{
+    static NeverDestroyed<HashSet<WebStorageNamespaceProvider*>> storageNamespaceProviders;
+
+    return storageNamespaceProviders;
+}
 
 RefPtr<WebStorageNamespaceProvider> WebStorageNamespaceProvider::create(const String& localStorageDatabasePath)
 {
@@ -37,10 +45,58 @@ RefPtr<WebStorageNamespaceProvider> WebStorageNamespaceProvider::create(const St
 WebStorageNamespaceProvider::WebStorageNamespaceProvider(const String& localStorageDatabasePath)
     : m_localStorageDatabasePath(localStorageDatabasePath)
 {
+    storageNamespaceProviders().add(this);
 }
 
 WebStorageNamespaceProvider::~WebStorageNamespaceProvider()
 {
+    ASSERT(storageNamespaceProviders().contains(this));
+    storageNamespaceProviders().remove(this);
+}
+
+void WebStorageNamespaceProvider::closeLocalStorage()
+{
+    for (const auto& storageNamespaceProvider : storageNamespaceProviders()) {
+        if (auto* localStorageNamespace = storageNamespaceProvider->optionalLocalStorageNamespace())
+            localStorageNamespace->close();
+    }
+}
+
+void WebStorageNamespaceProvider::clearLocalStorageForAllOrigins()
+{
+    for (const auto& storageNamespaceProvider : storageNamespaceProviders()) {
+        if (auto* localStorageNamespace = storageNamespaceProvider->optionalLocalStorageNamespace())
+            localStorageNamespace->clearAllOriginsForDeletion();
+    }
+}
+
+void WebStorageNamespaceProvider::clearLocalStorageForOrigin(SecurityOrigin* origin)
+{
+    for (const auto& storageNamespaceProvider : storageNamespaceProviders()) {
+        if (auto* localStorageNamespace = storageNamespaceProvider->optionalLocalStorageNamespace())
+            localStorageNamespace->clearOriginForDeletion(origin);
+    }
+}
+
+void WebStorageNamespaceProvider::closeIdleLocalStorageDatabases()
+{
+    for (const auto& storageNamespaceProvider : storageNamespaceProviders()) {
+        if (auto* localStorageNamespace = storageNamespaceProvider->optionalLocalStorageNamespace())
+            localStorageNamespace->closeIdleLocalStorageDatabases();
+    }
+}
+
+void WebStorageNamespaceProvider::syncLocalStorage()
+{
+    for (const auto& storageNamespaceProvider : storageNamespaceProviders()) {
+        if (auto* localStorageNamespace = storageNamespaceProvider->optionalLocalStorageNamespace())
+            localStorageNamespace->sync();
+    }
+}
+
+RefPtr<StorageNamespace> WebStorageNamespaceProvider::createSessionStorageNamespace(Page&, unsigned quota)
+{
+    return StorageNamespaceImpl::createSessionStorageNamespace(quota);
 }
 
 RefPtr<StorageNamespace> WebStorageNamespaceProvider::createLocalStorageNamespace(unsigned quota)

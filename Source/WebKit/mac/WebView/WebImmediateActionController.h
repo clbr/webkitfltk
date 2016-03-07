@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,30 +23,24 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef StorageStrategy_h
-#define StorageStrategy_h
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 
-#include <wtf/Forward.h>
+#import "WebUIDelegatePrivate.h"
+#import <WebCore/HitTestResult.h>
+#import <wtf/RetainPtr.h>
 
-namespace WebCore {
+@class WebView;
 
-class Page;
-class PageGroup;
-class SecurityOrigin;
-class StorageNamespace;
+@interface WebImmediateActionController : NSObject <NSGestureRecognizerDelegate> {
+@private
+    WebView *_webView;
+    WebImmediateActionType _type;
+    WebCore::HitTestResult _hitTestResult;
+}
 
-class StorageStrategy {
-public:
-    WEBCORE_EXPORT virtual PassRefPtr<StorageNamespace> localStorageNamespace(PageGroup*);
-    WEBCORE_EXPORT virtual PassRefPtr<StorageNamespace> transientLocalStorageNamespace(PageGroup*, SecurityOrigin*);
-    WEBCORE_EXPORT virtual PassRefPtr<StorageNamespace> sessionStorageNamespace(Page*);
+- (instancetype)initWithWebView:(WebView *)webView;
+- (void)webViewClosed;
 
-protected:
-    virtual ~StorageStrategy()
-    {
-    }
-};
+@end
 
-} // namespace WebCore
-
-#endif // StorageStrategy_h
+#endif // PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000

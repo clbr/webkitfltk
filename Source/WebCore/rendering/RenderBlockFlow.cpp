@@ -637,8 +637,7 @@ void RenderBlockFlow::layoutInlineChildren(bool relayoutChildren, LayoutUnit& re
         m_lineLayoutPath = SimpleLineLayout::canUseFor(*this) ? SimpleLinesPath : LineBoxesPath;
 
     if (m_lineLayoutPath == SimpleLinesPath) {
-        deleteLineBoxesBeforeSimpleLineLayout();
-        layoutSimpleLines(repaintLogicalTop, repaintLogicalBottom);
+        layoutSimpleLines(relayoutChildren, repaintLogicalTop, repaintLogicalBottom);
         return;
     }
 
@@ -2217,8 +2216,11 @@ FloatingObject* RenderBlockFlow::insertFloatingObject(RenderBox& floatBox)
         floatBox.setChildNeedsLayout(MarkOnlyThis);
             
     bool needsBlockDirectionLocationSetBeforeLayout = isChildRenderBlock && view().layoutState()->needsBlockDirectionLocationSetBeforeLayout();
-    if (!needsBlockDirectionLocationSetBeforeLayout || isWritingModeRoot()) // We are unsplittable if we're a block flow root.
+    if (!needsBlockDirectionLocationSetBeforeLayout || isWritingModeRoot()) {
+        // We are unsplittable if we're a block flow root.
         floatBox.layoutIfNeeded();
+        floatingObject->setShouldPaint(!floatBox.hasSelfPaintingLayer());
+    }
     else {
         floatBox.updateLogicalWidth();
         floatBox.computeAndSetBlockDirectionMargins(this);
@@ -3484,18 +3486,19 @@ void RenderBlockFlow::invalidateLineLayoutPath()
     ASSERT_NOT_REACHED();
 }
 
-void RenderBlockFlow::layoutSimpleLines(LayoutUnit& repaintLogicalTop, LayoutUnit& repaintLogicalBottom)
+void RenderBlockFlow::layoutSimpleLines(bool relayoutChildren, LayoutUnit& repaintLogicalTop, LayoutUnit& repaintLogicalBottom)
 {
+    bool needsLayout = selfNeedsLayout() || relayoutChildren || !m_simpleLineLayout;
+    if (needsLayout) {
+        deleteLineBoxesBeforeSimpleLineLayout();
+        m_simpleLineLayout = SimpleLineLayout::create(*this);
+    }
     ASSERT(!m_lineBoxes.firstLineBox());
-
-    m_simpleLineLayout = SimpleLineLayout::create(*this);
 
     LayoutUnit lineLayoutHeight = SimpleLineLayout::computeFlowHeight(*this, *m_simpleLineLayout);
     LayoutUnit lineLayoutTop = borderAndPaddingBefore();
-
     repaintLogicalTop = lineLayoutTop;
-    repaintLogicalBottom = lineLayoutTop + lineLayoutHeight;
-
+    repaintLogicalBottom = needsLayout ? repaintLogicalTop + lineLayoutHeight : repaintLogicalTop;
     setLogicalHeight(lineLayoutTop + lineLayoutHeight + borderAndPaddingAfter());
 }
 
