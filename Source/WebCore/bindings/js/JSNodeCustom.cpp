@@ -97,8 +97,8 @@ static inline bool isObservable(JSNode* jsNode, Node* node)
 static inline bool isReachableFromDOM(JSNode* jsNode, Node* node, SlotVisitor& visitor)
 {
     if (!node->inDocument()) {
-        if (node->isElementNode()) {
-            auto& element = toElement(*node);
+        if (is<Element>(node)) {
+            auto& element = downcast<Element>(*node);
 
             // If a wrapper is the last reference to an image element
             // that is loading but not in the document, the wrapper is observable
@@ -219,7 +219,7 @@ static ALWAYS_INLINE JSValue createWrapperInline(ExecState* exec, JSDOMGlobalObj
             break;
         case Node::DOCUMENT_NODE:
             // we don't want to cache the document itself in the per-document dictionary
-            return toJS(exec, globalObject, toDocument(node));
+            return toJS(exec, globalObject, downcast<Document>(node));
         case Node::DOCUMENT_TYPE_NODE:
             wrapper = CREATE_DOM_WRAPPER(globalObject, DocumentType, node);
             break;

@@ -106,7 +106,7 @@ PassRefPtr<Range> Range::create(Document& ownerDocument, const Position& start, 
 
 PassRefPtr<Range> Range::create(ScriptExecutionContext& context)
 {
-    return adoptRef(new Range(toDocument(context)));
+    return adoptRef(new Range(downcast<Document>(context)));
 }
 
 PassRefPtr<Range> Range::create(Document& ownerDocument, const VisiblePosition& visibleStart, const VisiblePosition& visibleEnd)
@@ -1480,7 +1480,7 @@ void Range::surroundContents(PassRefPtr<Node> passNewParent, ExceptionCode& ec)
 
     ec = 0;
     while (Node* n = newParent->firstChild()) {
-        toContainerNode(newParent.get())->removeChild(n, ec);
+        downcast<ContainerNode>(*newParent).removeChild(n, ec);
         if (ec)
             return;
     }
@@ -2224,8 +2224,8 @@ void Range::getBorderAndTextQuads(Vector<FloatQuad>& quads) const
         selectedElementsSet.remove(parent);
 
     for (Node* node = firstNode(); node != stopNode; node = NodeTraversal::next(node)) {
-        if (node->isElementNode() && selectedElementsSet.contains(node) && !selectedElementsSet.contains(node->parentNode())) {
-            if (RenderBoxModelObject* renderBoxModelObject = toElement(node)->renderBoxModelObject()) {
+        if (is<Element>(node) && selectedElementsSet.contains(node) && !selectedElementsSet.contains(node->parentNode())) {
+            if (RenderBoxModelObject* renderBoxModelObject = downcast<Element>(*node).renderBoxModelObject()) {
                 Vector<FloatQuad> elementQuads;
                 renderBoxModelObject->absoluteQuads(elementQuads);
                 ownerDocument().adjustFloatQuadsForScrollAndAbsoluteZoomAndFrameScale(elementQuads, renderBoxModelObject->style());

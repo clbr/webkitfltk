@@ -944,6 +944,11 @@ public:
     // machine registers, and delegate the calling convention specific
     // decision as to how to fill the regsiters to setupArguments* methods.
 
+    JITCompiler::Call callOperation(V_JITOperation_E operation)
+    {
+        m_jit.setupArgumentsExecState();
+        return appendCall(operation);
+    }
     JITCompiler::Call callOperation(P_JITOperation_E operation, GPRReg result)
     {
         m_jit.setupArgumentsExecState();
@@ -1148,6 +1153,11 @@ public:
         return appendCallWithExceptionCheckSetResult(operation, result);
     }
 
+    template<typename FunctionType>
+    JITCompiler::Call callOperation(FunctionType operation, NoResultTag)
+    {
+        return callOperation(operation);
+    }
     template<typename FunctionType, typename ArgumentType1>
     JITCompiler::Call callOperation(FunctionType operation, NoResultTag, ArgumentType1 arg1)
     {
@@ -2690,18 +2700,18 @@ private:
 //
 // These classes lock the result of a call to a C++ helper function.
 
-class GPRResult : public GPRTemporary {
+class GPRFlushedCallResult : public GPRTemporary {
 public:
-    GPRResult(SpeculativeJIT* jit)
+    GPRFlushedCallResult(SpeculativeJIT* jit)
         : GPRTemporary(jit, GPRInfo::returnValueGPR)
     {
     }
 };
 
 #if USE(JSVALUE32_64)
-class GPRResult2 : public GPRTemporary {
+class GPRFlushedCallResult2 : public GPRTemporary {
 public:
-    GPRResult2(SpeculativeJIT* jit)
+    GPRFlushedCallResult2(SpeculativeJIT* jit)
         : GPRTemporary(jit, GPRInfo::returnValueGPR2)
     {
     }

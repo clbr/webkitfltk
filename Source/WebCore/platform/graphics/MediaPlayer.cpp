@@ -890,12 +890,6 @@ void MediaPlayer::currentPlaybackTargetIsWirelessChanged()
     if (m_mediaPlayerClient)
         m_mediaPlayerClient->mediaPlayerCurrentPlaybackTargetIsWirelessChanged(this);
 }
-
-void MediaPlayer::playbackTargetAvailabilityChanged()
-{
-    if (m_mediaPlayerClient)
-        m_mediaPlayerClient->mediaPlayerPlaybackTargetAvailabilityChanged(this);
-}
 #endif
 
 double MediaPlayer::maxFastForwardRate() const

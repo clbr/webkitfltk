@@ -131,18 +131,18 @@ void JSEventListener::handleEvent(ScriptExecutionContext* scriptExecutionContext
 
         globalObject->setCurrentEvent(savedEvent);
 
-        if (scriptExecutionContext->isWorkerGlobalScope()) {
+        if (is<WorkerGlobalScope>(scriptExecutionContext)) {
             bool terminatorCausedException = (exec->hadException() && isTerminatedExecutionException(exec->exception()));
             if (terminatorCausedException || (vm.watchdog && vm.watchdog->didFire()))
-                toWorkerGlobalScope(scriptExecutionContext)->script()->forbidExecution();
+                downcast<WorkerGlobalScope>(*scriptExecutionContext).script()->forbidExecution();
         }
 
         if (exception) {
             event->target()->uncaughtExceptionInEventHandler();
             reportException(exec, exception);
         } else {
-            if (!retval.isUndefinedOrNull() && event->isBeforeUnloadEvent())
-                toBeforeUnloadEvent(event)->setReturnValue(retval.toString(exec)->value(exec));
+            if (!retval.isUndefinedOrNull() && is<BeforeUnloadEvent>(event))
+                downcast<BeforeUnloadEvent>(*event).setReturnValue(retval.toString(exec)->value(exec));
             if (m_isAttribute) {
                 if (retval.isFalse())
                     event->preventDefault();

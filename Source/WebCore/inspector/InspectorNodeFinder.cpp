@@ -85,7 +85,7 @@ void InspectorNodeFinder::searchUsingDOMTreeTraversal(Node* parentNode)
             break;
         }
         case Node::ELEMENT_NODE: {
-            if (matchesElement(*toElement(node)))
+            if (matchesElement(downcast<Element>(*node)))
                 m_results.add(node);
 
             // Search inside frame elements.
@@ -157,11 +157,11 @@ void InspectorNodeFinder::searchUsingXPath(Node* parentNode)
 
 void InspectorNodeFinder::searchUsingCSSSelectors(Node* parentNode)
 {
-    if (!parentNode->isContainerNode())
+    if (!is<ContainerNode>(parentNode))
         return;
 
     ExceptionCode ec = 0;
-    RefPtr<NodeList> nodeList = toContainerNode(parentNode)->querySelectorAll(m_whitespaceTrimmedQuery, ec);
+    RefPtr<NodeList> nodeList = downcast<ContainerNode>(*parentNode).querySelectorAll(m_whitespaceTrimmedQuery, ec);
     if (ec || !nodeList)
         return;
 

@@ -118,6 +118,8 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case GetCallee:
     case GetLocal:
     case SetLocal:
+    case PutLocal:
+    case KillLocal:
     case MovHint:
     case ZombieHint:
     case GetArgument:
@@ -198,6 +200,7 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case Breakpoint:
     case ProfileWillCall:
     case ProfileDidCall:
+    case ProfileType:
     case CheckHasInstance:
     case InstanceOf:
     case IsUndefined:

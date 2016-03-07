@@ -124,6 +124,7 @@ bool doesGC(Graph& graph, Node* node)
     case Breakpoint:
     case ProfileWillCall:
     case ProfileDidCall:
+    case ProfileType:
     case CheckHasInstance:
     case InstanceOf:
     case IsUndefined:
@@ -203,6 +204,8 @@ bool doesGC(Graph& graph, Node* node)
     case PutByOffsetHint:
     case CheckStructureImmediate:
     case PutStructureHint:
+    case PutLocal:
+    case KillLocal:
         return false;
 
     case CreateActivation:

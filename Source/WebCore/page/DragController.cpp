@@ -192,10 +192,10 @@ void DragController::dragExited(DragData& dragData)
         m_page.mainFrame().eventHandler().cancelDragAndDrop(createMouseEvent(dragData), dataTransfer.get());
         dataTransfer->setAccessPolicy(DataTransferAccessPolicy::Numb); // Invalidate dataTransfer here for security.
     }
-    mouseMovedIntoDocument(0);
+    mouseMovedIntoDocument(nullptr);
     if (m_fileInputElementUnderMouse)
         m_fileInputElementUnderMouse->setCanReceiveDroppedFiles(false);
-    m_fileInputElementUnderMouse = 0;
+    m_fileInputElementUnderMouse = nullptr;
 }
 
 DragOperation DragController::dragUpdated(DragData& dragData)
@@ -255,7 +255,7 @@ DragOperation DragController::dragEnteredOrUpdated(DragData& dragData)
 
     m_dragDestinationAction = m_client.actionMaskForDrag(dragData);
     if (m_dragDestinationAction == DragDestinationActionNone) {
-        cancelDrag(); // FIXME: Why not call mouseMovedIntoDocument(0)?
+        cancelDrag(); // FIXME: Why not call mouseMovedIntoDocument(nullptr)?
         return DragOperationNone;
     }
 
@@ -289,13 +289,13 @@ static Element* elementUnderMouse(Document* documentUnderMouse, const IntPoint& 
     HitTestResult result(point);
     documentUnderMouse->renderView()->hitTest(HitTestRequest(), result);
 
-    Node* n = result.innerNode();
-    while (n && !n->isElementNode())
-        n = n->parentNode();
-    if (n)
-        n = n->deprecatedShadowAncestorNode();
+    Node* node = result.innerNode();
+    while (node && !is<Element>(node))
+        node = node->parentNode();
+    if (node)
+        node = node->deprecatedShadowAncestorNode();
 
-    return toElement(n);
+    return downcast<Element>(node);
 }
 
 bool DragController::tryDocumentDrag(DragData& dragData, DragDestinationAction actionMask, DragOperation& dragOperation)

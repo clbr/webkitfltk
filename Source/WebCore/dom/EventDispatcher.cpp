@@ -60,10 +60,10 @@ private:
 WindowEventContext::WindowEventContext(PassRefPtr<Node> node, const EventContext* topEventContext)
 {
     Node* topLevelContainer = topEventContext ? topEventContext->node() : node.get();
-    if (!topLevelContainer->isDocumentNode())
+    if (!is<Document>(topLevelContainer))
         return;
 
-    m_window = toDocument(topLevelContainer)->domWindow();
+    m_window = downcast<Document>(*topLevelContainer).domWindow();
     m_target = topEventContext ? topEventContext->target() : node.get();
 }
 
@@ -342,8 +342,8 @@ bool EventDispatcher::dispatchEvent(Node* origin, PassRefPtr<Event> prpEvent)
     if (EventTarget* relatedTarget = event->relatedTarget())
         eventPath.setRelatedTarget(*node, *relatedTarget);
 #if ENABLE(TOUCH_EVENTS) && !PLATFORM(IOS)
-    if (event->isTouchEvent()) {
-        if (!eventPath.updateTouchLists(*toTouchEvent(event.get())))
+    if (is<TouchEvent>(*event)) {
+        if (!eventPath.updateTouchLists(downcast<TouchEvent>(*event)))
             return true;
     }
 #endif

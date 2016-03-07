@@ -252,6 +252,7 @@ void clobberize(Graph& graph, Node* node, ReadFunctor& read, WriteFunctor& write
          
     case MovHint:
     case ZombieHint:
+    case KillLocal:
     case Upsilon:
     case Phi:
     case PhantomLocal:
@@ -272,6 +273,7 @@ void clobberize(Graph& graph, Node* node, ReadFunctor& read, WriteFunctor& write
     case Breakpoint:
     case ProfileWillCall:
     case ProfileDidCall:
+    case ProfileType:
     case StoreBarrier:
     case StoreBarrierWithNullCheck:
     case PutByOffsetHint:
@@ -395,6 +397,7 @@ void clobberize(Graph& graph, Node* node, ReadFunctor& read, WriteFunctor& write
         return;
         
     case SetLocal:
+    case PutLocal:
         write(AbstractHeap(Variables, node->local()));
         def(HeapLocation(VariableLoc, AbstractHeap(Variables, node->local())), node->child1().node());
         return;

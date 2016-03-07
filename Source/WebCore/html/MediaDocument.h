@@ -56,12 +56,12 @@ private:
     String m_outgoingReferrer;
 };
 
-SPECIALIZE_TYPE_TRAITS_BEGIN(MediaDocument)
-    static bool isMediaDocument(const Document& document) { return document.isMediaDocument(); }
-    static bool isMediaDocument(const Node& node) { return node.isDocumentNode() && isMediaDocument(toDocument(node)); }
-SPECIALIZE_TYPE_TRAITS_END()
+} // namespace WebCore
 
-}
+SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::MediaDocument)
+    static bool isType(const WebCore::Document& document) { return document.isMediaDocument(); }
+    static bool isType(const WebCore::Node& node) { return is<WebCore::Document>(node) && isType(downcast<WebCore::Document>(node)); }
+SPECIALIZE_TYPE_TRAITS_END()
 
 #endif
 #endif

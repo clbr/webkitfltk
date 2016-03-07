@@ -1,3 +1,567 @@
+2014-10-01  Daniel Bates  <dabates@apple.com>
+
+        Clean up: Move XPC forward declarations in JavaScriptCore to WTF SPI wrapper header
+        https://bugs.webkit.org/show_bug.cgi?id=137277
+
+        Reviewed by Alexey Proskuryakov.
+
+        Use wtf/spi/darwin/XPCSPI.h instead of including the corresponding XPC headers/
+        forward declaring XPC functions.
+
+        * inspector/remote/RemoteInspector.mm:
+        * inspector/remote/RemoteInspectorXPCConnection.h:
+        * inspector/remote/RemoteInspectorXPCConnection.mm:
+
+2014-10-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed build gardening.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters: Show files in the appropriate
+        folders in Visual Studio.
+
+2014-10-01  Filip Pizlo  <fpizlo@apple.com>
+
+        Object allocation sinking is broken for escaping sites in loops
+        https://bugs.webkit.org/show_bug.cgi?id=137310
+
+        Reviewed by Michael Saboff.
+        
+        I tried to do this clever forward-flow based materialization point placement, and I messed up loops. Disabling
+        the phase for now and landing a test to demonstrate what it going on.
+
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * runtime/Options.h:
+        * tests/stress/object-escapes-in-loop.js: Added.
+        (foo):
+        (bar):
+
+2014-10-01  Saam Barati  <saambarati1@gmail.com>
+
+        Support the type profiler in the DFG
+        https://bugs.webkit.org/show_bug.cgi?id=136712
+
+        Reviewed by Filip Pizlo.
+
+        This patch implements op_profile_type inside the DFG as the node: ProfileType.
+        The DFG will convert the ProfileType node into a Check node in the cases where
+        passing a type check is equivalent to writing to the TypeProfilerLog. This
+        gives the DFG the potential to optimize out multiple ProfileType nodes into
+        a single Check node.
+
+        When the DFG doesn't convert ProfileType into a Check node, it will generate
+        the same inline code as the baseline JIT does for writing an entry to the
+        TypeProfilerLog.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGCapabilities.cpp:
+        (JSC::DFG::capabilityLevel):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGDriver.cpp:
+        (JSC::DFG::compileImpl):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::typeLocation):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * runtime/TypeProfiler.cpp:
+        (JSC::TypeProfiler::logTypesForTypeLocation):
+        * runtime/TypeSet.cpp:
+        (JSC::TypeSet::dumpTypes):
+        (JSC::TypeSet::doesTypeConformTo):
+        Make this method public so others can reason about the types a TypeSet has seen.
+        (JSC::TypeSet::seenTypes): Deleted.
+        (JSC::TypeSet::dumpSeenTypes): Deleted.
+        Renamed to dumpTypes so the method seenTypes can be used as a public getter.
+        * runtime/TypeSet.h:
+        (JSC::TypeSet::seenTypes):
+        * tests/typeProfiler/dfg-jit-optimizations.js: Added.
+        (tierUpToDFG):
+        (funcs):
+        (.return):
+
+2014-10-01  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix 32-bit.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2014-09-30  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG SSA should use PutLocal/KillLocal instead of SetLocal to communicate what is flushed to the stack and when
+        https://bugs.webkit.org/show_bug.cgi?id=137242
+
+        Reviewed by Geoffrey Garen.
+        
+        OSR availability has to do with telling you the various ways that you could go about getting
+        the value of a bytecode variable. It can give you two options: node availability means that
+        there is a node in the DFG IR that has the right value, and flush availability tells you
+        that the value was already stored to the stack. The clients of OSR availability would
+        typically prefer flush over node availability.
+        
+        Previously OSR availability was affected thusly by the various local-related nodes: SetLocal
+        set both the node and flush availability, MovHint set node availability and cleared flush
+        availability, GetArgument set both, and ZombieHint cleared both.
+        
+        A MovHint could be turned into a ZombieHint if its source value was DCEd.
+        
+        The fact that each node affected both node and flush availability caused weirdness. For
+        example it meant that we could not insert MovHints in areas of the CFG where a SetLocal's
+        variable was still live, because then those parts of the code would forget that they had an
+        availability flush. This meant that if a flush was available, we wouldn't insert MovHints,
+        and so we would forget that a node was in fact available. This kind of "either-or" picking
+        was not only hackish but it led to interesting problems for IR transformation: for example
+        if you tried to do any kind of code motion on SetLocals, you had to be super careful because
+        you might violate the rule that "MovHints must exist for a live local if a flush is
+        unavailable".
+        
+        The right thing to do is to have independent nodes for flushing and making nodes available.
+        They shouldn't interact with each other. This patch accomplishes this:
+        
+        - PutLocal means that that a value is to be stored to the stack. It makes a flush available.
+        - KillLocal means that the value stored to the stack is no longer available for the purposes
+          of OSR (i.e. it no longer accurately corresponds to what that actual bytecode variable
+          would have been, so you have to fall back on node availability).
+        - MovHint means that a node is available. It has no effect on flush availability.
+        - ZombieHint means that a node is not available. It has no effect on flush availability.
+        
+        This means that we will see a lot of KillLocals and MovHints right next to each other. It's
+        a bit verbose, but at least it's precise.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGAvailability.h:
+        (JSC::DFG::Availability::setFlush):
+        (JSC::DFG::Availability::setNode):
+        (JSC::DFG::Availability::setNodeUnavailable):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.cpp:
+        (JSC::DFG::Node::hasVariableAccessData):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::hasUnlinkedLocal):
+        (JSC::DFG::Node::willHaveCodeGenOrOSR):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOSRAvailabilityAnalysisPhase.cpp:
+        (JSC::DFG::LocalOSRAvailabilityCalculator::executeNode):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGStackLayoutPhase.cpp:
+        (JSC::DFG::StackLayoutPhase::run):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compilePutLocal):
+        (JSC::FTL::LowerDFGToLLVM::compileSetLocal): Deleted.
+
+2014-10-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] 32-bit JavaScriptCore should limit itself to the C loop
+        https://bugs.webkit.org/show_bug.cgi?id=137304
+        <rdar://problem/18375370>
+
+        Reviewed by Michael Saboff.
+
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.pl:
+        Use the C loop for 32-bit builds.
+
+2014-09-30  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: ErrorString should be passed by reference
+        https://bugs.webkit.org/show_bug.cgi?id=137257
+
+        Reviewed by Joseph Pecoraro.
+
+        Pass the leading ErrorString argument by reference, since it is always an out parameter.
+        Clean up callsites where the error message is written.
+
+        * inspector/InjectedScript.cpp:
+        (Inspector::InjectedScript::evaluate):
+        (Inspector::InjectedScript::callFunctionOn):
+        (Inspector::InjectedScript::evaluateOnCallFrame):
+        (Inspector::InjectedScript::getFunctionDetails):
+        (Inspector::InjectedScript::getProperties):
+        (Inspector::InjectedScript::getInternalProperties):
+        * inspector/InjectedScript.h:
+        * inspector/InjectedScriptBase.cpp:
+        (Inspector::InjectedScriptBase::makeEvalCall):
+        * inspector/InjectedScriptBase.h:
+        * inspector/agents/InspectorAgent.cpp:
+        (Inspector::InspectorAgent::willDestroyFrontendAndBackend):
+        (Inspector::InspectorAgent::enable):
+        (Inspector::InspectorAgent::disable):
+        (Inspector::InspectorAgent::initialized):
+        * inspector/agents/InspectorAgent.h:
+        * inspector/agents/InspectorConsoleAgent.cpp:
+        (Inspector::InspectorConsoleAgent::willDestroyFrontendAndBackend):
+        (Inspector::InspectorConsoleAgent::enable):
+        (Inspector::InspectorConsoleAgent::disable):
+        (Inspector::InspectorConsoleAgent::clearMessages):
+        (Inspector::InspectorConsoleAgent::reset):
+        (Inspector::InspectorConsoleAgent::addMessageToConsole):
+        * inspector/agents/InspectorConsoleAgent.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::enable):
+        (Inspector::InspectorDebuggerAgent::disable):
+        (Inspector::InspectorDebuggerAgent::setBreakpointsActive):
+        (Inspector::InspectorDebuggerAgent::breakpointActionsFromProtocol):
+        (Inspector::InspectorDebuggerAgent::setBreakpointByUrl):
+        (Inspector::parseLocation):
+        (Inspector::InspectorDebuggerAgent::setBreakpoint):
+        (Inspector::InspectorDebuggerAgent::removeBreakpoint):
+        (Inspector::InspectorDebuggerAgent::continueToLocation):
+        (Inspector::InspectorDebuggerAgent::searchInContent):
+        (Inspector::InspectorDebuggerAgent::getScriptSource):
+        (Inspector::InspectorDebuggerAgent::getFunctionDetails):
+        (Inspector::InspectorDebuggerAgent::pause):
+        (Inspector::InspectorDebuggerAgent::resume):
+        (Inspector::InspectorDebuggerAgent::stepOver):
+        (Inspector::InspectorDebuggerAgent::stepInto):
+        (Inspector::InspectorDebuggerAgent::stepOut):
+        (Inspector::InspectorDebuggerAgent::setPauseOnExceptions):
+        (Inspector::InspectorDebuggerAgent::evaluateOnCallFrame):
+        (Inspector::InspectorDebuggerAgent::setOverlayMessage):
+        (Inspector::InspectorDebuggerAgent::didParseSource):
+        (Inspector::InspectorDebuggerAgent::clearInspectorBreakpointState):
+        (Inspector::InspectorDebuggerAgent::assertPaused):
+        * inspector/agents/InspectorDebuggerAgent.h:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::parse):
+        (Inspector::InspectorRuntimeAgent::evaluate):
+        (Inspector::InspectorRuntimeAgent::callFunctionOn):
+        (Inspector::InspectorRuntimeAgent::getProperties):
+        (Inspector::InspectorRuntimeAgent::releaseObject):
+        (Inspector::InspectorRuntimeAgent::releaseObjectGroup):
+        (Inspector::InspectorRuntimeAgent::run):
+        (Inspector::InspectorRuntimeAgent::getRuntimeTypesForVariablesAtOffsets):
+        (Inspector::InspectorRuntimeAgent::enableTypeProfiler):
+        (Inspector::InspectorRuntimeAgent::disableTypeProfiler):
+        * inspector/agents/InspectorRuntimeAgent.h:
+        * inspector/agents/JSGlobalObjectConsoleAgent.cpp:
+        (Inspector::JSGlobalObjectConsoleAgent::setMonitoringXHREnabled):
+        (Inspector::JSGlobalObjectConsoleAgent::addInspectedNode):
+        * inspector/agents/JSGlobalObjectConsoleAgent.h:
+        * inspector/agents/JSGlobalObjectDebuggerAgent.cpp:
+        (Inspector::JSGlobalObjectDebuggerAgent::injectedScriptForEval):
+        * inspector/agents/JSGlobalObjectDebuggerAgent.h:
+        * inspector/agents/JSGlobalObjectRuntimeAgent.cpp:
+        (Inspector::JSGlobalObjectRuntimeAgent::injectedScriptForEval):
+        * inspector/agents/JSGlobalObjectRuntimeAgent.h:
+        * inspector/scripts/codegen/generate_backend_dispatcher_header.py:
+        (BackendDispatcherHeaderGenerator._generate_handler_declaration_for_command):
+        (BackendDispatcherHeaderGenerator._generate_async_handler_declaration_for_command):
+        * inspector/scripts/codegen/generate_backend_dispatcher_implementation.py:
+        (BackendDispatcherImplementationGenerator._generate_dispatcher_implementation_for_command):
+        * inspector/scripts/tests/expected/commands-with-async-attribute.json-result:
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+        * inspector/scripts/tests/expected/domains-with-varying-command-sizes.json-result:
+        * inspector/scripts/tests/expected/generate-domains-with-feature-guards.json-result:
+
+2014-09-30  Mark Lam  <mark.lam@apple.com>
+
+        Label some asserts as having security implications.
+        <https://webkit.org/b/137260>
+
+        Reviewed by Filip Pizlo.
+
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::handleAssertionFailure):
+        * runtime/JSCell.h:
+        (JSC::jsCast):
+        * runtime/StructureIDTable.h:
+        (JSC::StructureIDTable::get):
+
+2014-09-30  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION (r174025): Invalid cast in JSC::asString
+        https://bugs.webkit.org/show_bug.cgi?id=137224
+
+        Reviewed by Geoffrey Garen.
+        
+        Store barrier elision in fixup depends on checking the type of the value being stored. It's very important that
+        when we speak of "the value being stored" we are really referring to the right value.
+        
+        The bug here was that the PutClosureVar case was assuming that child2 is the value being stored. It's actually
+        child3. So we were incorrectly removing all barriers from PutClosureVar.
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+
+2014-09-30  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Replay: use static Strings instead of AtomicStrings for replay input type tags
+        https://bugs.webkit.org/show_bug.cgi?id=137086
+
+        Reviewed by Joseph Pecoraro.
+
+        This pattern doesn't work when we want to define some inputs in WebKit2.
+        The ReplayInputTypes class was generated from WebCore inputs only. This
+        patch moves all input traits to use static local Strings as type tags.
+
+        * replay/scripts/CodeGeneratorReplayInputs.py: Remove configuration of how
+        type tags are generated, since all framework targets now generate the same code.
+
+        * replay/NondeterministicInput.h:
+        * replay/scripts/CodeGeneratorReplayInputs.py: Simplify and rebase test results.
+        (Generator.generate_input_trait_implementation):
+        * replay/scripts/CodeGeneratorReplayInputsTemplates.py: Simplify templates.
+
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers-with-guarded-values.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::SavedMouseButton>::type):
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers-with-guarded-values.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::SavedMouseButton>::type):
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enum-with-guard.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::HandleWheelEvent>::type):
+        * replay/scripts/tests/expected/generate-enum-with-guard.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enums-with-same-base-name.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::FormCombo>::type):
+        * replay/scripts/tests/expected/generate-enums-with-same-base-name.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-input-with-guard.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::GetCurrentTime>::type):
+        (JSC::InputTraits<Test::SetRandomSeed>::type):
+        * replay/scripts/tests/expected/generate-input-with-guard.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-input-with-vector-members.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::ArrayOfThings>::type):
+        (JSC::InputTraits<Test::SavedHistory>::type):
+        * replay/scripts/tests/expected/generate-input-with-vector-members.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-inputs-with-flags.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::ScalarInput1>::type):
+        (JSC::InputTraits<Test::ScalarInput2>::type):
+        * replay/scripts/tests/expected/generate-inputs-with-flags.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-memoized-type-modes.json-TestReplayInputs.cpp:
+        (JSC::InputTraits<Test::ScalarInput>::type):
+        (JSC::InputTraits<Test::MapInput>::type):
+        * replay/scripts/tests/expected/generate-memoized-type-modes.json-TestReplayInputs.h:
+
+2014-09-30  Daniel Bates  <dabates@apple.com>
+
+        REGRESSION (r172532): JSBase.h declares NSMapTable functions that are SPI
+        https://bugs.webkit.org/show_bug.cgi?id=137170
+        <rdar://problem/18477384>
+
+        Reviewed by Geoffrey Garen.
+
+        Move conditional include of header Foundation/NSMapTablePriv.h and forward declarations
+        of NSMapTable SPI from file JavaScriptCore/API/JSBase.h to WTF/wtf/spi/cocoa/NSMapTableSPI.h.
+
+        * API/JSBase.h:
+        * API/JSManagedValue.mm: Include header WTF/wtf/spi/cocoa/NSMapTableSPI.h.
+        * API/JSVirtualMachine.mm: Ditto.
+        * API/JSVirtualMachineInternal.h: Forward declare class NSMapTable.
+        * API/JSWrapperMap.mm: Include header WTF/wtf/spi/cocoa/NSMapTableSPI.h. Also, order
+        #include directives such that they are sorted in alphabetical order.
+
+2014-09-30  Oliver Hunt  <oliver@apple.com>
+
+        Fix C API header
+        https://bugs.webkit.org/show_bug.cgi?id=137254
+        <rdar://problem/18487528>
+
+        Build fix
+
+        Guard extern "C" behind __cplusplus ifdef
+
+        * API/JSBase.h:
+
+2014-09-29  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: InjectedScripts should not be profiled or displayed in Timeline
+        https://bugs.webkit.org/show_bug.cgi?id=136806
+
+        Reviewed by Timothy Hatcher.
+
+        It doesn't make sense to show profile nodes for injected scripts when profiling user content.
+        For now, omit nodes by suspending profiling before and after executing injected scripts.
+
+        * profiler/LegacyProfiler.cpp:
+        (JSC::LegacyProfiler::suspendProfiling): Added.
+        (JSC::LegacyProfiler::unsuspendProfiling): Added.
+        * profiler/LegacyProfiler.h:
+        * profiler/ProfileGenerator.cpp: Add isSuspended() flag, remove unused typedef.
+        (JSC::ProfileGenerator::ProfileGenerator):
+        (JSC::ProfileGenerator::willExecute):
+        (JSC::ProfileGenerator::didExecute):
+        * profiler/ProfileGenerator.h:
+        (JSC::ProfileGenerator::setIsSuspended): Added.
+
+2014-09-29  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: InspectorValues should use references for out parameters
+        https://bugs.webkit.org/show_bug.cgi?id=137190
+
+        Reviewed by Joseph Pecoraro.
+
+        Use references for out parameters in asType() and getType() methods.
+        Also convert to references in some miscellaneous code where we don't
+        expect or handle null values.
+
+        Remove variants of asObject() and asArray() that return a nullable RefPtr.
+        Now, client code is forced to use out parameters and check for cast failure.
+
+        Iron out control flow in some functions and fix some style issues.
+
+        * inspector/InjectedScript.cpp:
+        (Inspector::InjectedScript::getFunctionDetails):
+        (Inspector::InjectedScript::wrapObject):
+        (Inspector::InjectedScript::wrapTable):
+        * inspector/InjectedScriptBase.cpp:
+        (Inspector::InjectedScriptBase::makeEvalCall):
+        * inspector/InjectedScriptManager.cpp:
+        (Inspector::InjectedScriptManager::injectedScriptForObjectId): Simplify control flow.
+        * inspector/InspectorBackendDispatcher.cpp:
+        (Inspector::InspectorBackendDispatcher::dispatch):
+        (Inspector::getPropertyValue):
+        (Inspector::AsMethodBridges::asInteger):
+        (Inspector::AsMethodBridges::asDouble):
+        (Inspector::AsMethodBridges::asString):
+        (Inspector::AsMethodBridges::asBoolean):
+        (Inspector::AsMethodBridges::asObject):
+        (Inspector::AsMethodBridges::asArray):
+        * inspector/InspectorProtocolTypes.h:
+        (Inspector::Protocol::BindingTraits<Protocol::Array<T>>::runtimeCast):
+        (Inspector::Protocol::BindingTraits<Protocol::Array<T>>::assertValueHasExpectedType):
+        * inspector/InspectorValues.cpp: Use more by-reference out parameters. Add more spacing.
+        (Inspector::InspectorValue::asBoolean):
+        (Inspector::InspectorValue::asDouble):
+        (Inspector::InspectorValue::asInteger):
+        (Inspector::InspectorValue::asString):
+        (Inspector::InspectorValue::asValue):
+        (Inspector::InspectorValue::asObject):
+        (Inspector::InspectorValue::asArray):
+        (Inspector::InspectorValue::parseJSON):
+        (Inspector::InspectorValue::toJSONString):
+        (Inspector::InspectorValue::writeJSON):
+        (Inspector::InspectorBasicValue::asBoolean):
+        (Inspector::InspectorBasicValue::asDouble):
+        (Inspector::InspectorBasicValue::asInteger):
+        (Inspector::InspectorBasicValue::writeJSON):
+        (Inspector::InspectorString::asString):
+        (Inspector::InspectorString::writeJSON):
+        (Inspector::InspectorObjectBase::asObject):
+        (Inspector::InspectorObjectBase::openAccessors):
+        (Inspector::InspectorObjectBase::getBoolean):
+        (Inspector::InspectorObjectBase::getString):
+        (Inspector::InspectorObjectBase::getObject):
+        (Inspector::InspectorObjectBase::getArray):
+        (Inspector::InspectorObjectBase::writeJSON):
+        (Inspector::InspectorArrayBase::asArray):
+        (Inspector::InspectorArrayBase::writeJSON):
+        * inspector/InspectorValues.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::breakpointActionsFromProtocol):
+        (Inspector::InspectorDebuggerAgent::setBreakpointByUrl):
+        (Inspector::parseLocation):
+        (Inspector::InspectorDebuggerAgent::setBreakpoint):
+        (Inspector::InspectorDebuggerAgent::continueToLocation):
+        (Inspector::InspectorDebuggerAgent::didParseSource):
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::getRuntimeTypesForVariablesAtOffsets):
+        * inspector/scripts/codegen/generate_protocol_types_implementation.py:
+        (ProtocolTypesImplementationGenerator):
+        (ProtocolTypesImplementationGenerator._generate_assertion_for_enum):
+        * inspector/scripts/codegen/generator_templates.py:
+        * inspector/scripts/tests/expected/type-requiring-runtime-casts.json-result:
+        * replay/EncodedValue.cpp:
+        (JSC::EncodedValue::asObject):
+        (JSC::EncodedValue::asArray):
+        (JSC::EncodedValue::convertTo<bool>):
+        (JSC::EncodedValue::convertTo<double>):
+        (JSC::EncodedValue::convertTo<float>):
+        (JSC::EncodedValue::convertTo<int32_t>):
+        (JSC::EncodedValue::convertTo<int64_t>):
+        (JSC::EncodedValue::convertTo<uint32_t>):
+        (JSC::EncodedValue::convertTo<uint64_t>):
+        (JSC::EncodedValue::convertTo<String>):
+
+2014-09-29  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG HasStructureProperty codegen should use one fewer registers
+        https://bugs.webkit.org/show_bug.cgi?id=137235
+
+        Reviewed by Andreas Kling.
+        
+        This was an obvious source of inefficiency and it was causing us to run out of registers on
+        x86-32.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2014-09-29  Filip Pizlo  <fpizlo@apple.com>
+
+        Don't use GPRResult unless you're flushing registers and making a runtime function call
+        https://bugs.webkit.org/show_bug.cgi?id=137234
+
+        Rubber stamped by Andreas Kling.
+
+        Rename GPRResult to GPRFlushedCallResult, in an attempt to dissuade people from using it for results in the
+        general case.
+        
+        Replace GPRResult with GPRTemporary in those places where it was causing bugs: particularly in GetDirectPname it
+        would cause us to spill the register that has the base, and the code was assuming (rightly) that the base and the
+        result were in different registers. That's a valid assumption when using GPRTemporary but not with GPRResult.
+        Also this code wasn't getting any benefit from using GPRResult because it wasn't doing flushRegisters().
+        
+        I don't know how to test this. A test would require setting up a particularly awkward register allocation state.
+        
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileIn):
+        (JSC::DFG::SpeculativeJIT::compileNewFunctionNoCheck):
+        (JSC::DFG::SpeculativeJIT::compileNewFunctionExpression):
+        (JSC::DFG::SpeculativeJIT::compileRegExpExec):
+        (JSC::DFG::SpeculativeJIT::compileAllocatePropertyStorage):
+        (JSC::DFG::SpeculativeJIT::compileReallocatePropertyStorage):
+        (JSC::DFG::SpeculativeJIT::compileToStringOnCell):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::GPRFlushedCallResult::GPRFlushedCallResult):
+        (JSC::DFG::GPRFlushedCallResult2::GPRFlushedCallResult2):
+        (JSC::DFG::GPRResult::GPRResult): Deleted.
+        (JSC::DFG::GPRResult2::GPRResult2): Deleted.
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranch):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompare):
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranch):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompare):
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        (JSC::DFG::SpeculativeJIT::speculateDoubleRepMachineInt):
+
 2014-09-29  Diego Pino Garcia  <dpino@igalia.com>
 
         Missing changes from r174049

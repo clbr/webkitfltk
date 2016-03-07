@@ -2378,7 +2378,7 @@ bool Editor::isSpellCheckingEnabledFor(Node* node) const
 {
     if (!node)
         return false;
-    const Element* focusedElement = node->isElementNode() ? toElement(node) : node->parentElement();
+    const Element* focusedElement = is<Element>(node) ? downcast<Element>(node) : node->parentElement();
     if (!focusedElement)
         return false;
     return focusedElement->isSpellCheckingEnabled();
@@ -2468,7 +2468,7 @@ static bool isAutomaticTextReplacementType(TextCheckingType type)
 
 static void correctSpellcheckingPreservingTextCheckingParagraph(TextCheckingParagraph& paragraph, PassRefPtr<Range> rangeToReplace, const String& replacement, int resultLocation, int resultLength)
 {
-    ContainerNode* scope = toContainerNode(highestAncestor(paragraph.paragraphRange()->startContainer()));
+    ContainerNode* scope = downcast<ContainerNode>(highestAncestor(paragraph.paragraphRange()->startContainer()));
 
     size_t paragraphLocation;
     size_t paragraphLength;
@@ -3100,7 +3100,7 @@ void Editor::applyEditingStyleToBodyElement() const
     RefPtr<NodeList> list = document().getElementsByTagName("body");
     unsigned len = list->length();
     for (unsigned i = 0; i < len; i++)
-        applyEditingStyleToElement(toElement(list->item(i)));
+        applyEditingStyleToElement(downcast<Element>(list->item(i)));
 }
 
 void Editor::applyEditingStyleToElement(Element* element) const

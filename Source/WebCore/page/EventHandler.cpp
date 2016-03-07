@@ -2189,7 +2189,7 @@ static bool hasDropZoneType(DataTransfer& dataTransfer, const String& keyword)
 
 static bool findDropZone(Node* target, DataTransfer* dataTransfer)
 {
-    Element* element = target->isElementNode() ? toElement(target) : target->parentElement();
+    Element* element = is<Element>(target) ? downcast<Element>(target) : target->parentElement();
     for (; element; element = element->parentElement()) {
         bool matched = false;
         String dropZoneStr = element->fastGetAttribute(webkitdropzoneAttr);
@@ -2236,10 +2236,10 @@ bool EventHandler::updateDragAndDrop(const PlatformMouseEvent& event, DataTransf
     RefPtr<Element> newTarget;
     if (Node* targetNode = mouseEvent.targetNode()) {
         // Drag events should never go to non-element nodes (following IE, and proper mouseover/out dispatch)
-        if (!targetNode->isElementNode())
+        if (!is<Element>(targetNode))
             newTarget = targetNode->parentOrShadowHostElement();
         else
-            newTarget = toElement(targetNode);
+            newTarget = downcast<Element>(targetNode);
     }
 
     m_autoscrollController->updateDragAndDrop(newTarget.get(), event.position(), event.timestamp());
@@ -2397,10 +2397,10 @@ void EventHandler::updateMouseEventTargetNode(Node* targetNode, const PlatformMo
         targetElement = m_capturingMouseEventsElement.get();
     else if (targetNode) {
         // If the target node is a non-element, dispatch on the parent. <rdar://problem/4196646>
-        if (!targetNode->isElementNode())
+        if (!is<Element>(targetNode))
             targetElement = targetNode->parentOrShadowHostElement();
         else
-            targetElement = toElement(targetNode);
+            targetElement = downcast<Element>(targetNode);
     }
 
     m_elementUnderMouse = targetElement;
@@ -3526,7 +3526,7 @@ bool EventHandler::handleTextInputEvent(const String& text, Event* underlyingEve
 {
     // Platforms should differentiate real commands like selectAll from text input in disguise (like insertNewline),
     // and avoid dispatching text input events from keydown default handlers.
-    ASSERT(!underlyingEvent || !underlyingEvent->isKeyboardEvent() || toKeyboardEvent(underlyingEvent)->type() == eventNames().keypressEvent);
+    ASSERT(!underlyingEvent || !is<KeyboardEvent>(underlyingEvent) || downcast<KeyboardEvent>(*underlyingEvent).type() == eventNames().keypressEvent);
 
     EventTarget* target;
     if (underlyingEvent)

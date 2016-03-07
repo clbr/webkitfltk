@@ -1,3 +1,122 @@
+2014-10-01  Daniel Bates  <dabates@apple.com>
+
+        Another attempt to fix the Mac build after <https://trac.webkit.org/changeset/174180>
+        (https://bugs.webkit.org/show_bug.cgi?id=137277)
+
+        Include header AvailabilityMacros.h instead of Availability.h, which actually defines the
+        macro __MAC_OS_X_VERSION_MIN_REQUIRED.
+
+        * wtf/spi/darwin/XPCSPI.h:
+
+2014-10-01  Daniel Bates  <dabates@apple.com>
+
+        Attempt to fix the build after <https://trac.webkit.org/changeset/174180>
+        (https://bugs.webkit.org/show_bug.cgi?id=137277)
+
+        Include header <Availability.h> for the definition of __MAC_OS_X_VERSION_MIN_REQUIRED.
+        Also, we want to define CONST_ON_OR_AFTER_MAC_OS_X_VERSION_1090 to be const when building
+        on iOS.
+
+        * wtf/spi/darwin/XPCSPI.h:
+
+2014-10-01  Daniel Bates  <dabates@apple.com>
+
+        Clean up: Move XPC forward declarations in JavaScriptCore to WTF SPI wrapper header
+        https://bugs.webkit.org/show_bug.cgi?id=137277
+
+        Reviewed by Alexey Proskuryakov.
+
+        Towards centralizing the declarations of XPC functions used in JavaScriptCore
+        and WebKit2, add a header that wraps these function declarations called XPCSPI.h
+        and use it instead of including the corresponding XPC API/SPI headers/forward
+        declaring XPC functions. This will also aid in the effort to make WebKit2 build
+        for iOS with the public iOS SDK.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/spi/darwin/XPCSPI.h: Added.
+
+2014-10-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] 32-bit JavaScriptCore should limit itself to the C loop
+        https://bugs.webkit.org/show_bug.cgi?id=137304
+        <rdar://problem/18375370>
+
+        Reviewed by Michael Saboff.
+
+        * wtf/Platform.h: Force the C loop when building for 32-bit Windows.
+
+2014-09-30  Christophe Dumez  <cdumez@apple.com>
+
+        Generalize is<>() / downcast<>() support to all types
+        https://bugs.webkit.org/show_bug.cgi?id=137243
+
+        Reviewed by Benjamin Poulain.
+
+        Generalize is<>() / downcast<>() support to all types, not just Nodes.
+
+        * wtf/Assertions.h:
+        * wtf/TypeCasts.h: Added.
+        (WTF::is):
+        (WTF::downcast):
+
+2014-09-30  Anders Carlsson  <andersca@apple.com>
+
+        Get the STRING_STATS codepath compiling again, and add calls to ref/deref
+        https://bugs.webkit.org/show_bug.cgi?id=137259
+
+        Reviewed by Andreas Kling.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringStats::removeString):
+        (WTF::StringStats::printStats):
+        (WTF::StringImpl::~StringImpl):
+        * wtf/text/StringImpl.h:
+        (WTF::StringImpl::StringImpl):
+        (WTF::StringImpl::isSubString):
+        (WTF::StringImpl::ref):
+        (WTF::StringImpl::deref):
+        (WTF::StringStats::addUpconvertedString): Deleted.
+
+2014-09-30  Daniel Bates  <dabates@apple.com>
+
+        REGRESSION (r172532): JSBase.h declares NSMapTable functions that are SPI
+        https://bugs.webkit.org/show_bug.cgi?id=137170
+        <rdar://problem/18477384>
+
+        Reviewed by Geoffrey Garen.
+
+        Add SPI wrapper header, NSMapTableSPI.h.
+
+        Additionally, define convenience macro EXTERN_C that can be used to specify the C linkage
+        convention for a declaration. For example, the declaration "EXTERN_C const int x;" will
+        expand to:
+
+        extern const int x;
+
+        and
+
+        extern "C" const int x;
+
+        when used in a C and C++ file, respectively.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/Compiler.h:
+        * wtf/spi/cocoa/NSMapTableSPI.h: Added.
+
+2014-09-29  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r174045.
+        https://bugs.webkit.org/show_bug.cgi?id=137231
+
+        Introduced a crash during page loading tests on Mac (Requested
+        by rniwa on #webkit).
+
+        Reverted changeset:
+
+        "Replace OSObjectPtr with RetainPtr/adoptOS"
+        https://bugs.webkit.org/show_bug.cgi?id=137158
+        http://trac.webkit.org/changeset/174045
+
 2014-09-26  Sam Weinig  <sam@webkit.org>
 
         Replace OSObjectPtr with RetainPtr/adoptOS

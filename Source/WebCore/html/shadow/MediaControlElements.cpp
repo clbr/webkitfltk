@@ -221,8 +221,8 @@ void MediaControlPanelElement::defaultEventHandler(Event* event)
 {
     MediaControlDivElement::defaultEventHandler(event);
 
-    if (event->isMouseEvent()) {
-        LayoutPoint location = toMouseEvent(event)->absoluteLocation();
+    if (is<MouseEvent>(event)) {
+        LayoutPoint location = downcast<MouseEvent>(*event).absoluteLocation();
         if (event->type() == eventNames().mousedownEvent && event->target() == this) {
             startDrag(location);
             event->setDefaultHandled();
@@ -337,12 +337,12 @@ RenderPtr<RenderElement> MediaControlVolumeSliderContainerElement::createElement
 
 void MediaControlVolumeSliderContainerElement::defaultEventHandler(Event* event)
 {
-    if (!event->isMouseEvent() || event->type() != eventNames().mouseoutEvent)
+    if (!is<MouseEvent>(event) || event->type() != eventNames().mouseoutEvent)
         return;
 
     // Poor man's mouseleave event detection.
-    MouseEvent* mouseEvent = toMouseEvent(event);
-    EventTarget* relatedTarget = mouseEvent->relatedTarget();
+    MouseEvent& mouseEvent = downcast<MouseEvent>(*event);
+    EventTarget* relatedTarget = mouseEvent.relatedTarget();
     if (!relatedTarget || !relatedTarget->toNode())
         return;
 
@@ -689,7 +689,7 @@ void MediaControlClosedCaptionsTrackListElement::defaultEventHandler(Event* even
 #if ENABLE(VIDEO_TRACK)
     if (event->type() == eventNames().clickEvent) {
         Node* target = event->target()->toNode();
-        if (!target || !target->isElementNode())
+        if (!target || !is<Element>(target))
             return;
 
         // When we created the elements in the track list, we gave them a custom
@@ -698,7 +698,7 @@ void MediaControlClosedCaptionsTrackListElement::defaultEventHandler(Event* even
         // tell the HTMLMediaElement to enable that track.
 
         RefPtr<TextTrack> textTrack;
-        MenuItemToTrackMap::iterator iter = m_menuToTrackMap.find(toElement(target));
+        MenuItemToTrackMap::iterator iter = m_menuToTrackMap.find(downcast<Element>(target));
         if (iter != m_menuToTrackMap.end())
             textTrack = iter->value;
         m_menuToTrackMap.clear();
@@ -851,7 +851,7 @@ PassRefPtr<MediaControlTimelineElement> MediaControlTimelineElement::create(Docu
 void MediaControlTimelineElement::defaultEventHandler(Event* event)
 {
     // Left button is 0. Rejects mouse events not from left button.
-    if (event->isMouseEvent() && toMouseEvent(event)->button())
+    if (is<MouseEvent>(event) && downcast<MouseEvent>(*event).button())
         return;
 
     if (!renderer())

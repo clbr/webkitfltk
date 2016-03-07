@@ -72,6 +72,7 @@
 #include <inspector/IdentifiersFactory.h>
 #include <inspector/InspectorBackendDispatcher.h>
 #include <inspector/agents/InspectorAgent.h>
+#include <profiler/LegacyProfiler.h>
 #include <runtime/JSLock.h>
 
 #if ENABLE(REMOTE_INSPECTOR)
@@ -362,8 +363,8 @@ void InspectorController::dispatchMessageFromFrontend(const String& message)
 
 void InspectorController::hideHighlight()
 {
-    ErrorString error;
-    m_domAgent->hideHighlight(&error);
+    ErrorString unused;
+    m_domAgent->hideHighlight(unused);
 }
 
 Node* InspectorController::highlightedNode() const
@@ -390,20 +391,22 @@ bool InspectorController::profilerEnabled() const
 
 void InspectorController::setProfilerEnabled(bool enable)
 {
+    ErrorString unused;
+
     if (enable) {
         m_instrumentingAgents->setPersistentInspectorTimelineAgent(m_timelineAgent);
-        m_timelineAgent->start();
+        m_timelineAgent->start(unused);
     } else {
         m_instrumentingAgents->setPersistentInspectorTimelineAgent(nullptr);
-        m_timelineAgent->stop();
+        m_timelineAgent->stop(unused);
     }
 }
 
 void InspectorController::resume()
 {
     if (m_debuggerAgent) {
-        ErrorString error;
-        m_debuggerAgent->resume(&error);
+        ErrorString unused;
+        m_debuggerAgent->resume(unused);
     }
 }
 
@@ -432,19 +435,14 @@ InspectorEvaluateHandler InspectorController::evaluateHandler() const
     return WebCore::evaluateHandlerFromAnyThread;
 }
 
-void InspectorController::willCallInjectedScriptFunction(JSC::ExecState* scriptState, const String& scriptName, int scriptLine)
+void InspectorController::willCallInjectedScriptFunction(JSC::ExecState* scriptState, const String&, int)
 {
-    ScriptExecutionContext* scriptExecutionContext = scriptExecutionContextFromExecState(scriptState);
-    InspectorInstrumentationCookie cookie = InspectorInstrumentation::willCallFunction(scriptExecutionContext, scriptName, scriptLine);
-    m_injectedScriptInstrumentationCookies.append(cookie);
+    LegacyProfiler::profiler()->suspendProfiling(scriptState);
 }
 
 void InspectorController::didCallInjectedScriptFunction(JSC::ExecState* scriptState)
 {
-    ASSERT(!m_injectedScriptInstrumentationCookies.isEmpty());
-    ScriptExecutionContext* scriptExecutionContext = scriptExecutionContextFromExecState(scriptState);
-    InspectorInstrumentationCookie cookie = m_injectedScriptInstrumentationCookies.takeLast();
-    InspectorInstrumentation::didCallFunction(cookie, scriptExecutionContext);
+    LegacyProfiler::profiler()->unsuspendProfiling(scriptState);
 }
 
 void InspectorController::frontendInitialized()
