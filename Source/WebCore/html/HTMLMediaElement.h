@@ -29,6 +29,7 @@
 #if ENABLE(VIDEO)
 #include "HTMLElement.h"
 #include "ActiveDOMObject.h"
+#include "AudioProducer.h"
 #include "GenericEventQueue.h"
 #include "HTMLMediaSession.h"
 #include "MediaCanStartListener.h"
@@ -94,7 +95,7 @@ class MediaStream;
 
 class HTMLMediaElement
     : public HTMLElement
-    , private MediaPlayerClient, public MediaPlayerSupportsTypeClient, private MediaCanStartListener, public ActiveDOMObject, public MediaControllerInterface , public MediaSessionClient
+    , private MediaPlayerClient, public MediaPlayerSupportsTypeClient, private MediaCanStartListener, public ActiveDOMObject, public MediaControllerInterface , public MediaSessionClient, private AudioProducer
 #if ENABLE(VIDEO_TRACK)
     , private AudioTrackClient
     , private TextTrackClient
@@ -390,8 +391,11 @@ public:
     
     WEBCORE_EXPORT virtual bool isFullscreen() const override;
     void toggleFullscreenState();
+    enum VideoFullscreenMode { VideoFullscreenModeNone, VideoFullscreenModeStandard, VideoFullscreenModeOptimized };
+    void enterFullscreen(VideoFullscreenMode);
     virtual void enterFullscreen() override;
     WEBCORE_EXPORT void exitFullscreen();
+    void enterFullscreenOptimized();
 
     virtual bool hasClosedCaptions() const override;
     virtual bool closedCaptionsVisible() const override;
@@ -466,7 +470,7 @@ protected:
     DisplayMode displayMode() const { return m_displayMode; }
     virtual void setDisplayMode(DisplayMode mode) { m_displayMode = mode; }
     
-    virtual bool isMediaElement() const override { return true; }
+    virtual bool isMediaElement() const override final { return true; }
 
 #if ENABLE(VIDEO_TRACK)
     bool ignoreTrackDisplayUpdateRequests() const { return m_ignoreTrackDisplayUpdate > 0 || !m_textTracks || !m_cueTree.size(); }
@@ -707,6 +711,9 @@ private:
     virtual bool hasMediaCharacteristics(MediaSession::MediaCharacteristics) const override;
     virtual void mediaStateDidChange() override;
 
+    // AudioProducer overrides
+    virtual bool isPlayingAudio() override;
+
     void registerWithDocument(Document&);
     void unregisterWithDocument(Document&);
 
@@ -764,6 +771,7 @@ private:
     RefPtr<HTMLSourceElement> m_currentSourceNode;
     RefPtr<Node> m_nextChildNodeToConsider;
 
+    VideoFullscreenMode m_videoFullscreenMode;
 #if PLATFORM(IOS)
     RetainPtr<PlatformLayer> m_videoFullscreenLayer;
     FloatRect m_videoFullscreenFrame;
@@ -827,7 +835,6 @@ private:
     // support progress events so setting m_sendProgressEvents disables them 
     bool m_sendProgressEvents : 1;
 
-    bool m_isInVideoFullscreen : 1;
     bool m_closedCaptionsVisible : 1;
     bool m_webkitLegacyClosedCaptionOverride : 1;
     bool m_completelyLoaded : 1;

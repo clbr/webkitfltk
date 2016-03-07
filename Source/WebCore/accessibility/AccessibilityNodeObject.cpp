@@ -300,7 +300,9 @@ AccessibilityRole AccessibilityNodeObject::determineAccessibilityRole()
             return buttonRoleType();
         if (input.isRangeControl())
             return SliderRole;
-
+        if (input.isInputTypeHidden())
+            return IgnoredRole;
+        
 #if ENABLE(INPUT_TYPE_COLOR)
         const AtomicString& type = input.getAttribute(typeAttr);
         if (equalIgnoringCase(type, "color"))
@@ -434,6 +436,9 @@ bool AccessibilityNodeObject::computeAccessibilityIsIgnored() const
     if (isDescendantOfBarrenParent())
         return true;
 
+    if (roleValue() == IgnoredRole)
+        return true;
+    
     return m_role == UnknownRole;
 }
 
@@ -452,11 +457,6 @@ bool AccessibilityNodeObject::canvasHasFallbackContent() const
 bool AccessibilityNodeObject::isImageButton() const
 {
     return isNativeImage() && isButton();
-}
-
-bool AccessibilityNodeObject::isAnchor() const
-{
-    return !isNativeImage() && isLink();
 }
 
 bool AccessibilityNodeObject::isNativeTextControl() const
@@ -957,7 +957,7 @@ Element* AccessibilityNodeObject::anchorElement() const
     // search up the DOM tree for an anchor element
     // NOTE: this assumes that any non-image with an anchor is an HTMLAnchorElement
     for ( ; node; node = node->parentNode()) {
-        if (is<HTMLAnchorElement>(*node) || (node->renderer() && cache->getOrCreate(node->renderer())->isAnchor()))
+        if (is<HTMLAnchorElement>(*node) || (node->renderer() && cache->getOrCreate(node->renderer())->isLink()))
             return downcast<Element>(node);
     }
 

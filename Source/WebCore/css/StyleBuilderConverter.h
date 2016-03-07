@@ -30,6 +30,7 @@
 #include "CSSCalculationValue.h"
 #include "CSSPrimitiveValue.h"
 #include "Length.h"
+#include "Pair.h"
 #include "StyleResolver.h"
 
 namespace WebCore {
@@ -43,6 +44,12 @@ public:
     template <typename T> static T convertComputedLength(StyleResolver&, CSSValue&);
     template <typename T> static T convertLineWidth(StyleResolver&, CSSValue&);
     static float convertSpacing(StyleResolver&, CSSValue&);
+    static LengthSize convertRadius(StyleResolver&, CSSValue&);
+    static TextDecoration convertTextDecoration(StyleResolver&, CSSValue&);
+    template <typename T> static T convertNumber(StyleResolver&, CSSValue&);
+
+private:
+    static Length convertToRadiusLength(CSSToLengthConversionData&, CSSPrimitiveValue&);
 };
 
 inline Length StyleBuilderConverter::convertLength(StyleResolver& styleResolver, CSSValue& value)
@@ -152,6 +159,51 @@ inline float StyleBuilderConverter::convertSpacing(StyleResolver& styleResolver,
         styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(1.0f)
         : styleResolver.state().cssToLengthConversionData();
     return primitiveValue.computeLength<float>(conversionData);
+}
+
+inline Length StyleBuilderConverter::convertToRadiusLength(CSSToLengthConversionData& conversionData, CSSPrimitiveValue& value)
+{
+    if (value.isPercentage())
+        return Length(value.getDoubleValue(), Percent);
+    if (value.isCalculatedPercentageWithLength())
+        return Length(value.cssCalcValue()->createCalculationValue(conversionData));
+    return value.computeLength<Length>(conversionData);
+}
+
+inline LengthSize StyleBuilderConverter::convertRadius(StyleResolver& styleResolver, CSSValue& value)
+{
+    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+    Pair* pair = primitiveValue.getPairValue();
+    if (!pair || !pair->first() || !pair->second())
+        return LengthSize(Length(0, Fixed), Length(0, Fixed));
+
+    CSSToLengthConversionData conversionData = styleResolver.state().cssToLengthConversionData();
+    Length radiusWidth = convertToRadiusLength(conversionData, *pair->first());
+    Length radiusHeight = convertToRadiusLength(conversionData, *pair->second());
+
+    ASSERT(!radiusWidth.isNegative());
+    ASSERT(!radiusHeight.isNegative());
+    if (radiusWidth.isZero() || radiusHeight.isZero())
+        return LengthSize(Length(0, Fixed), Length(0, Fixed));
+
+    return LengthSize(radiusWidth, radiusHeight);
+}
+
+inline TextDecoration StyleBuilderConverter::convertTextDecoration(StyleResolver&, CSSValue& value)
+{
+    TextDecoration result = RenderStyle::initialTextDecoration();
+    for (CSSValueListIterator it(&value); it.hasMore(); it.advance())
+        result |= downcast<CSSPrimitiveValue>(*it.value());
+    return result;
+}
+
+template <typename T>
+inline T StyleBuilderConverter::convertNumber(StyleResolver&, CSSValue& value)
+{
+    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+    if (primitiveValue.getValueID() == CSSValueAuto)
+        return -1;
+    return primitiveValue.getValue<T>(CSSPrimitiveValue::CSS_NUMBER);
 }
 
 } // namespace WebCore

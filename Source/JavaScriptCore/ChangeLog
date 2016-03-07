@@ -1,3 +1,142 @@
+2014-10-28  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r175249.
+        https://bugs.webkit.org/show_bug.cgi?id=138138
+
+        Appears to be failing some JS tests (Requested by mlam_ on
+        #webkit).
+
+        Reverted changeset:
+
+        "Holes are not copied properly when Arrays change shape to
+        ArrayStorage type."
+        https://bugs.webkit.org/show_bug.cgi?id=138118
+        http://trac.webkit.org/changeset/175249
+
+2014-10-27  Mark Lam  <mark.lam@apple.com>
+
+        Holes are not copied properly when Arrays change shape to ArrayStorage type.
+        <https://webkit.org/b/138118>
+
+        Reviewed by Mark Hahnenberg.
+
+        When we convert non-ArrayStorage typed arrays into ArrayStorage typed arrays,
+        we skipped the holes.  As a result, the slots in the ArrayStorage vector that
+        corresponds to those holes are uninitialize.  This is now fixed.
+
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::convertUndecidedToArrayStorage):
+        (JSC::JSObject::convertInt32ToArrayStorage):
+        (JSC::JSObject::convertDoubleToArrayStorage):
+        (JSC::JSObject::convertContiguousToArrayStorage):
+
+2014-10-27  Mark Lam  <mark.lam@apple.com>
+
+        Crash when attempting to perform array iteration on a non-array with numeric keys not initialized.
+        <https://webkit.org/b/137814>
+
+        Reviewed by Geoffrey Garen.
+
+        The arrayIteratorNextThunkGenerator() thunk was not checking for the case where
+        the butterfly may be NULL.  This was the source of the crash, and is now fixed.
+
+        In addition, it is also not checking for the case where a property named "length"
+        may have been set on the iterated object.  The thunk only checks the butterfly's
+        publicLength for its iteration operation.  Array objects will work fine with this
+        because it always updates its butterfly's publicLength when its length changes.
+        In the case of iterable non-Array objects, the "length" property will require a
+        look up outside of the scope of this thunk.  The fix is simply to limit the fast
+        case checks in this thunk to Array objects.
+
+        * jit/ThunkGenerators.cpp:
+        (JSC::arrayIteratorNextThunkGenerator):
+
+2014-10-27  Mark Lam  <mark.lam@apple.com>
+
+        Simplified some JSObject methods for converting arrays to ArrayStorage shape.
+        <https://webkit.org/b/138119>
+
+        Reviewed by Filip Pizlo.
+
+        Currently, for each Undecided, Int32, Double, and Contiguous array shapes,
+        there are 3 JSObject methods to convert them to ArrayStorage shape:
+            ArrayStorage* convert<shape>ToArrayStorage(VM&, NonPropertyTransition, unsigned neededLength);
+            ArrayStorage* convert<shape>ToArrayStorage(VM&, NonPropertyTransition);
+            ArrayStorage* convert<shape>ToArrayStorage(VM&);
+
+        However, the neededLength that is passed is always m_butterfly->vectorLength().
+        Hence, the method that takes a neededLength is really not needed.  This patch
+        removes this unneeded verbosity.
+
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::convertUndecidedToArrayStorage):
+        (JSC::JSObject::convertInt32ToArrayStorage):
+        - Also reordered the placement of the DeferGC statement so this Int32 function
+          will look more similar to the others.
+        (JSC::JSObject::convertDoubleToArrayStorage):
+        (JSC::JSObject::convertContiguousToArrayStorage):
+        * runtime/JSObject.h:
+
+2014-10-25  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: timelines should not count time elapsed while paused in the debugger
+        https://bugs.webkit.org/show_bug.cgi?id=136351
+
+        Unreviewed, follow-up fix after r175203. The debugger agent should not assume
+        that the inspector environment's stopwatch has already been started.
+
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::didPause): Check if the stopwatch isActive() before stopping.
+
+2014-10-18  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: timelines should not count time elapsed while paused in the debugger
+        https://bugs.webkit.org/show_bug.cgi?id=136351
+
+        Reviewed by Timothy Hatcher.
+
+        Now that we have a stopwatch to provide pause-aware timing data, we can remove the
+        profiler's handling of debugger pause/continue callbacks. The debugger agent accounts
+        for suspended execution by pausing and resuming the stopwatch.
+
+        * API/JSProfilerPrivate.cpp:
+        (JSStartProfiling): Use a fresh stopwatch when profiling from the JSC API.
+        * inspector/InspectorEnvironment.h:
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::JSGlobalObjectInspectorController):
+        (Inspector::JSGlobalObjectInspectorController::executionStopwatch):
+        * inspector/JSGlobalObjectInspectorController.h:
+        * inspector/ScriptDebugServer.cpp:
+        (Inspector::ScriptDebugServer::handlePause):
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::didPause):
+        (Inspector::InspectorDebuggerAgent::breakpointActionProbe):
+        (Inspector::InspectorDebuggerAgent::didContinue):
+        * inspector/agents/InspectorDebuggerAgent.h:
+        * profiler/LegacyProfiler.cpp:
+        (JSC::LegacyProfiler::profiler): Use nullptr.
+        (JSC::LegacyProfiler::startProfiling): Hand off a stopwatch to the profile generator.
+        (JSC::LegacyProfiler::stopProfiling): Use nullptr.
+        (JSC::LegacyProfiler::didPause): Deleted.
+        (JSC::LegacyProfiler::didContinue): Deleted.
+        * profiler/LegacyProfiler.h:
+        * profiler/Profile.cpp: The root node should always have a start time of 0.0.
+        (JSC::Profile::Profile):
+        * profiler/ProfileGenerator.cpp: Remove debugger pause/continue callbacks and the
+        timestamp member that was used to track time elapsed by the debugger. Just use the
+        stopwatch's elapsed times to generate start/elapsed times for function calls.
+
+        (JSC::ProfileGenerator::create):
+        (JSC::ProfileGenerator::ProfileGenerator):
+        (JSC::AddParentForConsoleStartFunctor::operator()): The parent node of |console.profile|
+        should have a start time of 0.0, since it represents the starting node of profiling.
+
+        (JSC::ProfileGenerator::beginCallEntry):
+        (JSC::ProfileGenerator::endCallEntry):
+        (JSC::ProfileGenerator::didPause): Deleted.
+        (JSC::ProfileGenerator::didContinue): Deleted.
+        * profiler/ProfileGenerator.h:
+
 2014-10-24  Mark Lam  <mark.lam@apple.com>
 
         Simplified IndexingType's hasAnyArrayStorage().

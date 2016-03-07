@@ -81,15 +81,6 @@ void RenderInline::willBeDestroyed()
     // Make sure to destroy anonymous children first while they are still connected to the rest of the tree, so that they will
     // properly dirty line boxes that they are removed from.  Effects that do :before/:after only on hover could crash otherwise.
     destroyLeftoverChildren();
-
-    // Destroy our continuation before anything other than anonymous children.
-    // The reason we don't destroy it before anonymous children is that they may
-    // have continuations of their own that are anonymous children of our continuation.
-    RenderBoxModelObject* continuation = this->continuation();
-    if (continuation) {
-        continuation->destroy();
-        setContinuation(nullptr);
-    }
     
     if (!documentBeingDestroyed()) {
         if (firstLineBox()) {
@@ -1306,15 +1297,15 @@ void RenderInline::updateDragState(bool dragOn)
         continuation->updateDragState(dragOn);
 }
 
-void RenderInline::childBecameNonInline(RenderObject* child)
+void RenderInline::childBecameNonInline(RenderElement& child)
 {
     // We have to split the parent flow.
     RenderBlock* newBox = containingBlock()->createAnonymousBlock();
     RenderBoxModelObject* oldContinuation = continuation();
     setContinuation(newBox);
-    RenderObject* beforeChild = child->nextSibling();
-    removeChildInternal(*child, NotifyChildren);
-    splitFlow(beforeChild, newBox, child, oldContinuation);
+    RenderObject* beforeChild = child.nextSibling();
+    removeChildInternal(child, NotifyChildren);
+    splitFlow(beforeChild, newBox, &child, oldContinuation);
 }
 
 void RenderInline::updateHitTestResult(HitTestResult& result, const LayoutPoint& point)
