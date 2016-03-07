@@ -1,3 +1,93 @@
+2014-09-25  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove WinCE port from trunk
+        https://bugs.webkit.org/show_bug.cgi?id=136951
+
+        Reviewed by Alex Christensen.
+
+        * config.h:
+        * wtf/Assertions.cpp:
+        * wtf/Assertions.h:
+        * wtf/Atomics.h:
+        (WTF::weakCompareAndSwap):
+        * wtf/CurrentTime.cpp:
+        (WTF::lowResUTCTime):
+        * wtf/DataLog.cpp:
+        * wtf/DateMath.cpp:
+        (WTF::getLocalTime):
+        (WTF::calculateDSTOffset):
+        * wtf/FastMalloc.cpp:
+        * wtf/FeatureDefines.h:
+        * wtf/OSAllocator.h:
+        (WTF::OSAllocator::decommitAndRelease):
+        * wtf/Platform.h:
+        * wtf/PlatformWin.cmake:
+        * wtf/RAMSize.cpp:
+        (WTF::computeRAMSize):
+        * wtf/RandomNumberSeed.h:
+        (WTF::initializeRandomNumberGenerator):
+        * wtf/StackBounds.cpp:
+        (WTF::StackBounds::initialize):
+        * wtf/StackBounds.h:
+        (WTF::StackBounds::isGrowingDownward):
+        * wtf/StdLibExtras.h:
+        (wtf_bsearch): Deleted.
+        * wtf/StringExtras.h:
+        (strnicmp): Deleted.
+        (stricmp): Deleted.
+        (strdup): Deleted.
+        * wtf/ThreadSpecific.h:
+        * wtf/ThreadingWin.cpp:
+        (WTF::createThreadInternal):
+        * wtf/WindowsExtras.h:
+        (WTF::getRegistryValue):
+        (WTF::getWindowPointer):
+        (WTF::setWindowPointer):
+        * wtf/dtoa/utils.h:
+        * wtf/text/WTFString.cpp:
+        (WTF::String::format):
+
+2014-09-24  Geoffrey Garen  <ggaren@apple.com>
+
+        Do the bmalloc.
+        https://bugs.webkit.org/show_bug.cgi?id=132629
+
+        Reviewed by Gavin Barraclough.
+
+        64-bit only for now, just to try it out.
+
+        * wtf/FastMalloc.cpp:
+
+2014-09-23  Geoffrey Garen  <ggaren@apple.com>
+
+        Rolled out r173346.
+
+            bmalloc should honor the FastMalloc statistics API
+            https://bugs.webkit.org/show_bug.cgi?id=136592
+
+        This didn't really work. Because we allow ranges with and without
+        physical pages to merge, and we allow double-committing and
+        double-decommitting, we can't rely on commit actions to track memory
+        footprint.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::fastMallocStatistics):
+
+2014-09-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Should be able to attach a debugger to a JSContext before anything is executed
+        https://bugs.webkit.org/show_bug.cgi?id=136893
+
+        Reviewed by Timothy Hatcher.
+
+        Currently automatic inspection only happens in processes that have a
+        debugger attached. That condition may change in the future, but this
+        function can stand on its own in WTF. It may be useful in the future
+        to perhaps continue though ASSERTs if you have a debugger attached.
+
+        * wtf/Assertions.cpp:
+        * wtf/Assertions.h:
+
 2014-09-22  Sam Weinig  <sam@webkit.org>
 
         Eliminate redundant PtrHash specializations

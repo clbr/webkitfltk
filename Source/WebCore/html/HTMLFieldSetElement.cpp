@@ -58,8 +58,8 @@ PassRefPtr<HTMLFieldSetElement> HTMLFieldSetElement::create(const QualifiedName&
 static void updateFromControlElementsAncestorDisabledStateUnder(HTMLElement& startNode, bool isDisabled)
 {
     HTMLFormControlElement* control;
-    if (isHTMLFormControlElement(startNode))
-        control = &toHTMLFormControlElement(startNode);
+    if (is<HTMLFormControlElement>(startNode))
+        control = &downcast<HTMLFormControlElement>(startNode);
     else
         control = Traversal<HTMLFormControlElement>::firstWithin(&startNode);
     while (control) {
@@ -166,9 +166,9 @@ void HTMLFieldSetElement::refreshElementsIfNeeded() const
 
     for (auto& element : descendantsOfType<Element>(const_cast<HTMLFieldSetElement&>(*this))) {
         if (element.hasTagName(objectTag))
-            m_associatedElements.append(&toHTMLObjectElement(element));
-        else if (element.isFormControlElement())
-            m_associatedElements.append(&toHTMLFormControlElement(element));
+            m_associatedElements.append(&downcast<HTMLObjectElement>(element));
+        else if (is<HTMLFormControlElement>(element))
+            m_associatedElements.append(&downcast<HTMLFormControlElement>(element));
     }
 }
 

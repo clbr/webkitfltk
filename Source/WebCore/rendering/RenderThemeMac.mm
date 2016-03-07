@@ -516,6 +516,11 @@ Color RenderThemeMac::systemColor(CSSValueID cssValueId) const
     case CSSValueButtontext:
         color = convertNSColorToColor([NSColor controlTextColor]);
         break;
+    case CSSValueActivebuttontext:
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+        color = 0xC0FFFFFF;
+#endif
+        break;
     case CSSValueCaptiontext:
         color = convertNSColorToColor([NSColor textColor]);
         break;
@@ -1678,7 +1683,7 @@ bool RenderThemeMac::paintSearchFieldCancelButton(const RenderObject& o, const P
 
     NSSearchFieldCell* search = this->search();
 
-    if (!input->isDisabledFormControl() && (input->isTextFormControl() && !toHTMLTextFormControlElement(input)->isReadOnly()))
+    if (!input->isDisabledFormControl() && (input->isTextFormControl() && !toHTMLTextFormControlElement(*input).isReadOnly()))
         updatePressedState([search cancelButtonCell], o);
     else if ([[search cancelButtonCell] isHighlighted])
         [[search cancelButtonCell] setHighlighted:NO];
@@ -1861,13 +1866,13 @@ bool RenderThemeMac::paintSnapshottedPluginOverlay(const RenderObject& o, const 
     if (!plugInElement->isPlugInImageElement())
         return true;
 
-    HTMLPlugInImageElement* plugInImageElement = toHTMLPlugInImageElement(plugInElement);
+    HTMLPlugInImageElement& plugInImageElement = toHTMLPlugInImageElement(*plugInElement);
 
-    Image* snapshot = plugInImageElement->snapshotImage();
+    Image* snapshot = plugInImageElement.snapshotImage();
     if (!snapshot)
         return true;
 
-    RenderSnapshottedPlugIn* plugInRenderer = toRenderSnapshottedPlugIn(plugInImageElement->renderer());
+    RenderSnapshottedPlugIn* plugInRenderer = toRenderSnapshottedPlugIn(plugInImageElement.renderer());
     FloatPoint snapshotAbsPos = plugInRenderer->localToAbsolute();
     snapshotAbsPos.move(plugInRenderer->borderLeft() + plugInRenderer->paddingLeft(), plugInRenderer->borderTop() + plugInRenderer->paddingTop());
 

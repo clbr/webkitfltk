@@ -77,7 +77,7 @@ void isMathMLElement(const MathMLElement&); // Catch unnecessary runtime check o
 inline bool isMathMLElement(const Node& node) { return node.isMathMLElement(); }
 
 template <typename ArgType>
-struct ElementTypeCastTraits<const MathMLElement, ArgType> {
+struct NodeTypeCastTraits<const MathMLElement, ArgType> {
     static bool is(ArgType& node) { return isMathMLElement(node); }
 };
 
@@ -85,7 +85,7 @@ NODE_TYPE_CASTS(MathMLElement)
 
 inline bool Node::hasTagName(const MathMLQualifiedName& name) const
 {
-    return isMathMLElement() && toMathMLElement(*this).hasTagName(name);
+    return isMathMLElement() && downcast<MathMLElement>(*this).hasTagName(name);
 }
 
 } // namespace WebCore

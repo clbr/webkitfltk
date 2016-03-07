@@ -770,8 +770,6 @@ VisiblePosition FrameSelection::modifyMovingRight(TextGranularity granularity)
             pos = VisiblePosition(m_selection.extent(), m_selection.affinity()).right(true);
         break;
     case WordGranularity: {
-        // Visual word movement relies on isWordTextBreak which is not implemented in WinCE and QT.
-        // https://bugs.webkit.org/show_bug.cgi?id=81136.
         bool skipsSpaceWhenMovingRight = m_frame && m_frame->editor().behavior().shouldSkipSpaceWhenMovingRight();
         pos = rightWordPosition(VisiblePosition(m_selection.extent(), m_selection.affinity()), skipsSpaceWhenMovingRight);
         break;
@@ -1589,16 +1587,16 @@ void FrameSelection::debugRenderer(RenderObject* r, bool selected) const
 
 bool FrameSelection::contains(const LayoutPoint& point)
 {
-    Document* document = m_frame->document();
-    
     // Treat a collapsed selection like no selection.
     if (!isRange())
         return false;
-    if (!document->renderView()) 
+    
+    RenderView* renderView = m_frame->contentRenderer();
+    if (!renderView)
         return false;
     
     HitTestResult result(point);
-    document->renderView()->hitTest(HitTestRequest(), result);
+    renderView->hitTest(HitTestRequest(), result);
     Node* innerNode = result.innerNode();
     if (!innerNode || !innerNode->renderer())
         return false;
@@ -1670,16 +1668,16 @@ void FrameSelection::selectAll()
     Document* document = m_frame->document();
 
     Element* focusedElement = document->focusedElement();
-    if (focusedElement && focusedElement->hasTagName(selectTag)) {
-        HTMLSelectElement* selectElement = toHTMLSelectElement(document->focusedElement());
-        if (selectElement->canSelectAll()) {
-            selectElement->selectAll();
+    if (focusedElement && is<HTMLSelectElement>(focusedElement)) {
+        HTMLSelectElement& selectElement = downcast<HTMLSelectElement>(*focusedElement);
+        if (selectElement.canSelectAll()) {
+            selectElement.selectAll();
             return;
         }
     }
 
-    RefPtr<Node> root = 0;
-    Node* selectStartTarget = 0;
+    RefPtr<Node> root;
+    Node* selectStartTarget = nullptr;
     if (m_selection.isContentEditable()) {
         root = highestEditableRoot(m_selection.start());
         if (Node* shadowRoot = m_selection.nonBoundaryShadowTreeRootNode())
@@ -1689,7 +1687,7 @@ void FrameSelection::selectAll()
     } else {
         if (m_selection.isNone() && focusedElement) {
             if (focusedElement->isTextFormControl()) {
-                toHTMLTextFormControlElement(focusedElement)->select();
+                toHTMLTextFormControlElement(*focusedElement).select();
                 return;
             }
             root = focusedElement->nonBoundaryShadowTreeRootNode();
@@ -2024,9 +2022,9 @@ static HTMLFormElement* scanForForm(Element* start)
     for (auto it = descendants.from(*start), end = descendants.end(); it != end; ++it) {
         HTMLElement& element = *it;
         if (isHTMLFormElement(&element))
-            return toHTMLFormElement(&element);
-        if (isHTMLFormControlElement(element))
-            return toHTMLFormControlElement(element).form();
+            return downcast<HTMLFormElement>(&element);
+        if (is<HTMLFormControlElement>(element))
+            return downcast<HTMLFormControlElement>(element).form();
         if (isHTMLFrameElementBase(element)) {
             Document* contentDocument = toHTMLFrameElementBase(element).contentDocument();
             if (!contentDocument)

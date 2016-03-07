@@ -221,8 +221,8 @@ inline EventTarget& eventTargetRespectingTargetRules(Node& referenceNode)
     // At this time, SVG nodes are not supported in non-<use> shadow trees.
     if (!shadowHostElement || !shadowHostElement->hasTagName(SVGNames::useTag))
         return referenceNode;
-    SVGUseElement* useElement = toSVGUseElement(shadowHostElement);
-    if (SVGElementInstance* instance = useElement->instanceForShadowTreeElement(&referenceNode))
+    SVGUseElement& useElement = downcast<SVGUseElement>(*shadowHostElement);
+    if (SVGElementInstance* instance = useElement.instanceForShadowTreeElement(&referenceNode))
         return *instance;
 
     return referenceNode;
@@ -356,8 +356,8 @@ bool EventDispatcher::dispatchEvent(Node* origin, PassRefPtr<Event> prpEvent)
     WindowEventContext windowEventContext(node.get(), eventPath.lastContextIfExists());
 
     InputElementClickState clickHandlingState;
-    if (isHTMLInputElement(node.get()))
-        toHTMLInputElement(*node).willDispatchEvent(*event, clickHandlingState);
+    if (is<HTMLInputElement>(node.get()))
+        downcast<HTMLInputElement>(*node).willDispatchEvent(*event, clickHandlingState);
 
     // Middle-clicking on links does not toggle JS.
     if (isHTMLAnchorElement(node.get()) && event->isMouseEvent() &&
@@ -368,11 +368,11 @@ bool EventDispatcher::dispatchEvent(Node* origin, PassRefPtr<Event> prpEvent)
         dispatchEventInDOM(*event, eventPath, windowEventContext);
 
     event->setTarget(&eventTargetRespectingTargetRules(*node));
-    event->setCurrentTarget(0);
+    event->setCurrentTarget(nullptr);
     event->setEventPhase(0);
 
     if (clickHandlingState.stateful)
-        toHTMLInputElement(*node).didDispatchClickEvent(*event, clickHandlingState);
+        downcast<HTMLInputElement>(*node).didDispatchClickEvent(*event, clickHandlingState);
 
     // Call default event handlers. While the DOM does have a concept of preventing
     // default handling, the detail of which handlers are called is an internal

@@ -552,6 +552,9 @@ static inline FunctionType addPseudoClassType(const CSSSelector& selector, Selec
             if (!selector.parseNth())
                 return FunctionType::CannotMatchAnything;
 
+            if (selector.selectorList())
+                return FunctionType::CannotCompile;
+
             int a = selector.nthA();
             int b = selector.nthB();
 
@@ -2907,13 +2910,6 @@ static void setElementChildIndex(Element* element, int index)
     element->setChildIndex(index);
 }
 
-static void setElementChildIndexAndUpdateStyle(Element* element, int index)
-{
-    element->setChildIndex(index);
-    if (RenderStyle* childStyle = element->renderStyle())
-        childStyle->setUnique();
-}
-
 void SelectorCodeGenerator::generateElementIsNthChild(Assembler::JumpList& failureCases, const SelectorFragment& fragment)
 {
     {
@@ -2981,21 +2977,11 @@ void SelectorCodeGenerator::generateElementIsNthChild(Assembler::JumpList& failu
         LocalRegister checkingContext(m_registerAllocator);
         Assembler::Jump notResolvingStyle = jumpIfNotResolvingStyle(checkingContext);
 
-        if (fragmentMatchesTheRightmostElement(m_selectorContext, fragment)) {
-            addFlagsToElementStyleFromContext(checkingContext, RenderStyle::NonInheritedFlags::flagIsUnique());
-
-            Assembler::RegisterID elementAddress = elementAddressRegister;
-            FunctionCall functionCall(m_assembler, m_registerAllocator, m_stackAllocator, m_functionCalls);
-            functionCall.setFunctionAddress(setElementChildIndex);
-            functionCall.setTwoArguments(elementAddress, elementCounter);
-            functionCall.call();
-        } else {
-            Assembler::RegisterID elementAddress = elementAddressRegister;
-            FunctionCall functionCall(m_assembler, m_registerAllocator, m_stackAllocator, m_functionCalls);
-            functionCall.setFunctionAddress(setElementChildIndexAndUpdateStyle);
-            functionCall.setTwoArguments(elementAddress, elementCounter);
-            functionCall.call();
-        }
+        Assembler::RegisterID elementAddress = elementAddressRegister;
+        FunctionCall functionCall(m_assembler, m_registerAllocator, m_stackAllocator, m_functionCalls);
+        functionCall.setFunctionAddress(setElementChildIndex);
+        functionCall.setTwoArguments(elementAddress, elementCounter);
+        functionCall.call();
 
         notResolvingStyle.link(&m_assembler);
     }

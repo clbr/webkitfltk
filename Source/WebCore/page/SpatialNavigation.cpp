@@ -67,13 +67,13 @@ FocusCandidate::FocusCandidate(Node* node, FocusDirection direction)
     ASSERT(node->isElementNode());
 
     if (isHTMLAreaElement(node)) {
-        HTMLAreaElement* area = toHTMLAreaElement(node);
-        HTMLImageElement* image = area->imageElement();
+        HTMLAreaElement& area = downcast<HTMLAreaElement>(*node);
+        HTMLImageElement* image = area.imageElement();
         if (!image || !image->renderer())
             return;
 
         visibleNode = image;
-        rect = virtualRectForAreaElementAndDirection(area, direction);
+        rect = virtualRectForAreaElementAndDirection(&area, direction);
     } else {
         if (!node->renderer())
             return;
@@ -448,7 +448,7 @@ bool canScrollInDirection(const Node* container, FocusDirection direction)
 {
     ASSERT(container);
 
-    if (isHTMLSelectElement(container))
+    if (is<HTMLSelectElement>(container))
         return false;
 
     if (container->isDocumentNode())

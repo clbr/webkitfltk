@@ -160,7 +160,7 @@ int HTMLOptionElement::index() const
     const Vector<HTMLElement*>& items = selectElement->listItems();
     size_t length = items.size();
     for (size_t i = 0; i < length; ++i) {
-        if (!isHTMLOptionElement(items[i]))
+        if (!is<HTMLOptionElement>(items[i]))
             continue;
         if (items[i] == this)
             return optionIndex;
@@ -257,23 +257,23 @@ void HTMLOptionElement::childrenChanged(const ChildChange& change)
 HTMLDataListElement* HTMLOptionElement::ownerDataListElement() const
 {
     for (ContainerNode* parent = parentNode(); parent ; parent = parent->parentNode()) {
-        if (parent->hasTagName(datalistTag))
-            return toHTMLDataListElement(parent);
+        if (isHTMLDataListElement(parent))
+            return downcast<HTMLDataListElement>(parent);
     }
-    return 0;
+    return nullptr;
 }
 #endif
 
 HTMLSelectElement* HTMLOptionElement::ownerSelectElement() const
 {
     ContainerNode* select = parentNode();
-    while (select && !select->hasTagName(selectTag))
+    while (select && !is<HTMLSelectElement>(select))
         select = select->parentNode();
 
     if (!select)
-        return 0;
+        return nullptr;
 
-    return toHTMLSelectElement(select);
+    return downcast<HTMLSelectElement>(select);
 }
 
 String HTMLOptionElement::label() const

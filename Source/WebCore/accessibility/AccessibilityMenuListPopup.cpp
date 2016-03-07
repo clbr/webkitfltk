@@ -70,7 +70,7 @@ bool AccessibilityMenuListPopup::computeAccessibilityIsIgnored() const
 
 AccessibilityMenuListOption* AccessibilityMenuListPopup::menuListOptionAccessibilityObject(HTMLElement* element) const
 {
-    if (!element || !isHTMLOptionElement(element) || !element->inRenderedDocument())
+    if (!element || !is<HTMLOptionElement>(element) || !element->inRenderedDocument())
         return nullptr;
 
     AccessibilityObject* object = document()->axObjectCache()->getOrCreate(MenuListOptionRole);
@@ -102,7 +102,7 @@ void AccessibilityMenuListPopup::addChildren()
 
     m_haveChildren = true;
 
-    for (const auto& listItem : toHTMLSelectElement(selectNode)->listItems()) {
+    for (const auto& listItem : downcast<HTMLSelectElement>(*selectNode).listItems()) {
         AccessibilityMenuListOption* option = menuListOptionAccessibilityObject(listItem);
         if (option) {
             option->setParent(this);

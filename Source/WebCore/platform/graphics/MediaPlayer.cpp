@@ -66,9 +66,6 @@
 #include "MediaPlayerPrivateMediaSourceAVFObjC.h"
 #endif
 #endif
-#elif OS(WINCE)
-#include "MediaPlayerPrivateWinCE.h"
-#define PlatformMediaEngineClassName MediaPlayerPrivate
 #elif PLATFORM(WIN) && !USE(GSTREAMER)
 #if USE(AVFOUNDATION)
 #include "MediaPlayerPrivateAVFoundationCF.h"
@@ -886,11 +883,6 @@ bool MediaPlayer::wirelessVideoPlaybackDisabled() const
 void MediaPlayer::setWirelessVideoPlaybackDisabled(bool disabled)
 {
     m_private->setWirelessVideoPlaybackDisabled(disabled);
-}
-
-void MediaPlayer::setHasPlaybackTargetAvailabilityListeners(bool hasListeners)
-{
-    m_private->setHasPlaybackTargetAvailabilityListeners(hasListeners);
 }
 
 void MediaPlayer::currentPlaybackTargetIsWirelessChanged()

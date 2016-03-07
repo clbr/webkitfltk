@@ -105,6 +105,10 @@
 #endif
 #endif
 
+#if (PLATFORM(COCOA) && (CPU(X86_64) || CPU(ARM64)))
+#define USE_BMALLOC 1
+#endif
+
 #if !(defined(USE_SYSTEM_MALLOC) && USE_SYSTEM_MALLOC) && defined(NDEBUG)
 #define FORCE_SYSTEM_MALLOC 0
 #else
@@ -121,11 +125,6 @@
 namespace WTF {
 
 #if OS(WINDOWS)
-
-// TLS_OUT_OF_INDEXES is not defined on WinCE.
-#ifndef TLS_OUT_OF_INDEXES
-#define TLS_OUT_OF_INDEXES 0xffffffff
-#endif
 
 static DWORD isForibiddenTlsIndex = TLS_OUT_OF_INDEXES;
 static const LPVOID kTlsAllowValue = reinterpret_cast<LPVOID>(0); // Must be zero.
@@ -481,11 +480,7 @@ void releaseFastMallocFreeMemory()
 
 FastMallocStatistics fastMallocStatistics()
 {
-    FastMallocStatistics statistics;
-    statistics.committedVMBytes = bmalloc::api::heapSize();
-    statistics.reservedVMBytes = bmalloc::api::heapCapacity();
-    statistics.freeListBytes = 0; // bmalloc doesn't really have free lists.
-
+    FastMallocStatistics statistics = { 0, 0, 0 };
     return statistics;
 }
 

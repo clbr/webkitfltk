@@ -47,8 +47,8 @@ PassRefPtr<SVGGlyphElement> SVGGlyphElement::create(const QualifiedName& tagName
 void SVGGlyphElement::invalidateGlyphCache()
 {
     ContainerNode* fontNode = parentNode();
-    if (fontNode && isSVGFontElement(fontNode))
-        toSVGFontElement(fontNode)->invalidateGlyphCache();
+    if (fontNode && is<SVGFontElement>(fontNode))
+        downcast<SVGFontElement>(*fontNode).invalidateGlyphCache();
 }
 
 void SVGGlyphElement::parseAttribute(const QualifiedName& name, const AtomicString& value)

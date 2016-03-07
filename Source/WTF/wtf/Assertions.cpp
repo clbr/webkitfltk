@@ -55,12 +55,17 @@
 #endif
 #endif // USE(CF)
 
-#if COMPILER(MSVC) && !OS(WINCE)
+#if COMPILER(MSVC)
 #include <crtdbg.h>
 #endif
 
 #if OS(WINDOWS)
 #include <windows.h>
+#endif
+
+#if OS(DARWIN)
+#include <sys/sysctl.h>
+#include <unistd.h>
 #endif
 
 #if OS(DARWIN) || (defined(__GLIBC__) && !defined(__UCLIBC__))
@@ -122,20 +127,7 @@ static void vprintf_stderr_common(const char* format, va_list args)
                 break;
 
             if (_vsnprintf(buffer, size, format, args) != -1) {
-#if OS(WINCE)
-                // WinCE only supports wide chars
-                wchar_t* wideBuffer = (wchar_t*)malloc(size * sizeof(wchar_t));
-                if (wideBuffer == NULL)
-                    break;
-                for (unsigned int i = 0; i < size; ++i) {
-                    if (!(wideBuffer[i] = buffer[i]))
-                        break;
-                }
-                OutputDebugStringW(wideBuffer);
-                free(wideBuffer);
-#else
                 OutputDebugStringA(buffer);
-#endif
                 free(buffer);
                 break;
             }
@@ -196,7 +188,7 @@ static void printf_stderr_common(const char* format, ...)
 
 static void printCallSite(const char* file, int line, const char* function)
 {
-#if OS(WINDOWS) && !OS(WINCE) && defined(_DEBUG)
+#if OS(WINDOWS) && defined(_DEBUG)
     _CrtDbgReport(_CRT_WARN, file, line, NULL, "%s\n", function);
 #else
     // By using this format, which matches the format used by MSVC for compiler errors, developers
@@ -235,7 +227,7 @@ void WTFGetBacktrace(void** stack, int* size)
 {
 #if OS(DARWIN) || (defined(__GLIBC__) && !defined(__UCLIBC__))
     *size = backtrace(stack, *size);
-#elif OS(WINDOWS) && !OS(WINCE)
+#elif OS(WINDOWS)
     // The CaptureStackBackTrace function is available in XP, but it is not defined
     // in the Windows Server 2003 R2 Platform SDK. So, we'll grab the function
     // through GetProcAddress.
@@ -382,6 +374,20 @@ void WTFInstallReportBacktraceOnCrashHook()
     // in case we hit an assertion.
     WTFSetCrashHook(&resetSignalHandlersForFatalErrors);
     installSignalHandlersForFatalErrors(&dumpBacktraceSignalHandler);
+#endif
+}
+
+bool WTFIsDebuggerAttached()
+{
+#if OS(DARWIN)
+    struct kinfo_proc info;
+    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid() };
+    size_t size = sizeof(info);
+    if (sysctl(mib, sizeof(mib) / sizeof(mib[0]), &info, &size, nullptr, 0) == -1)
+        return false;
+    return info.kp_proc.p_flag & P_TRACED;
+#else
+    return false;
 #endif
 }
 

@@ -74,8 +74,6 @@ public:
     void setInstanceUpdatesBlocked(bool);
     virtual AffineTransform localCoordinateSpaceTransform(SVGLocatable::CTMScope) const;
 
-    SVGDocumentExtensions* accessDocumentSVGExtensions();
-
     virtual bool isSVGGraphicsElement() const { return false; }
     virtual bool isFilterEffect() const { return false; }
     virtual bool isGradientStop() const { return false; }
@@ -227,7 +225,7 @@ void isSVGElement(const SVGElement&); // Catch unnecessary runtime check of type
 inline bool isSVGElement(const Node& node) { return node.isSVGElement(); }
 
 template <typename ArgType>
-struct ElementTypeCastTraits<const SVGElement, ArgType> {
+struct NodeTypeCastTraits<const SVGElement, ArgType> {
     static bool is(ArgType& node) { return isSVGElement(node); }
 };
 
@@ -235,7 +233,7 @@ NODE_TYPE_CASTS(SVGElement)
 
 inline bool Node::hasTagName(const SVGQualifiedName& name) const
 {
-    return isSVGElement() && toSVGElement(*this).hasTagName(name);
+    return isSVGElement() && downcast<SVGElement>(*this).hasTagName(name);
 }
 
 } // namespace WebCore

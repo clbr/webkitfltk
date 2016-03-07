@@ -2035,15 +2035,15 @@ BOOL HTMLConverter::_processElement(Element& element, NSInteger depth)
             listStyleType = "decimal";
         list = adoptNS([[PlatformNSTextList alloc] initWithMarkerFormat:String("{" + listStyleType + "}") options:0]);
         if (isHTMLOListElement(element)) {
-            NSInteger startingItemNumber = toHTMLOListElement(element).start();;
+            NSInteger startingItemNumber = downcast<HTMLOListElement>(element).start();
             [list setStartingItemNumber:startingItemNumber];
         }
         [_textLists addObject:list.get()];
     } else if (element.hasTagName(qTag)) {
         _addQuoteForElement(element, YES, _quoteLevel++);
     } else if (element.hasTagName(inputTag)) {
-        if (isHTMLInputElement(element)) {
-            HTMLInputElement& inputElement = toHTMLInputElement(element);
+        if (is<HTMLInputElement>(element)) {
+            HTMLInputElement& inputElement = downcast<HTMLInputElement>(element);
             if (inputElement.type() == "text") {
                 NSString *value = inputElement.value();
                 if (value && [value length] > 0)
@@ -2051,8 +2051,8 @@ BOOL HTMLConverter::_processElement(Element& element, NSInteger depth)
             }
         }
     } else if (element.hasTagName(textareaTag)) {
-        if (isHTMLTextAreaElement(element)) {
-            HTMLTextAreaElement& textAreaElement = toHTMLTextAreaElement(element);
+        if (is<HTMLTextAreaElement>(element)) {
+            HTMLTextAreaElement& textAreaElement = downcast<HTMLTextAreaElement>(element);
             NSString *value = textAreaElement.value();
             if (value && [value length] > 0)
                 _addValue(value, element);

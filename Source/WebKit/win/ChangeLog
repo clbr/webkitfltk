@@ -1,3 +1,141 @@
+2014-09-24  Christophe Dumez  <cdumez@apple.com>
+
+        Add initial is<>() / downcast<>() support for any type of Nodes
+        https://bugs.webkit.org/show_bug.cgi?id=137056
+
+        Reviewed by Benjamin Poulain.
+
+        Use is<HTMLFormControlElement>() / downcast<HTMLFormControlElement>()
+        instead of isFormControlElement() / toHTMLFormControlElement().
+
+        * WebFrame.cpp:
+        (WebFrame::elementWithName):
+
+2014-09-24  Christophe Dumez  <cdumez@apple.com>
+
+        Unreviewed build fix after r173932.
+
+        Unreviewed build fix after r173932 for Windows. Use WebCore:: namespace
+        explicitely in DOMCoreClasses.cpp.
+
+        * DOMCoreClasses.cpp:
+        (DOMElement::createInstance):
+
+2014-09-24  Christophe Dumez  <cdumez@apple.com>
+
+        Use is<HTML*Element>() instead of isHTML*Element() - Part 1
+        https://bugs.webkit.org/show_bug.cgi?id=137068
+
+        Reviewed by Ryosuke Niwa.
+
+        Start using is<HTML*Element>() instead of isHTML*Element().
+        Remaining usages will be updated in a follow-up patch to
+        reduce the size of the change.
+
+        * DOMCoreClasses.cpp:
+        (DOMElement::createInstance):
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLOptionElement::text):
+        (DOMHTMLOptionElement::label):
+        (DOMHTMLInputElement::form):
+        (DOMHTMLInputElement::disabled):
+        (DOMHTMLInputElement::readOnly):
+        (DOMHTMLInputElement::setType):
+        (DOMHTMLInputElement::value):
+        (DOMHTMLInputElement::setValue):
+        (DOMHTMLInputElement::setValueForUser):
+        (DOMHTMLInputElement::select):
+        (DOMHTMLInputElement::setSelectionStart):
+        (DOMHTMLInputElement::selectionStart):
+        (DOMHTMLInputElement::setSelectionEnd):
+        (DOMHTMLInputElement::selectionEnd):
+        (DOMHTMLInputElement::isTextField):
+        (DOMHTMLInputElement::rectOnScreen):
+        (DOMHTMLInputElement::replaceCharactersInRange):
+        (DOMHTMLInputElement::selectedRange):
+        (DOMHTMLInputElement::setAutofilled):
+        (DOMHTMLInputElement::isAutofilled):
+        (DOMHTMLInputElement::isUserEdited):
+        (DOMHTMLTextAreaElement::form):
+        (DOMHTMLTextAreaElement::value):
+        (DOMHTMLTextAreaElement::setValue):
+        (DOMHTMLTextAreaElement::select):
+        (DOMHTMLTextAreaElement::isUserEdited):
+        * WebFrame.cpp:
+        (inputElementFromDOMElement):
+
+2014-09-21  Timothy Hatcher  <timothy@apple.com>
+
+        Make the Web Inspector use a separate web process.
+
+        https://bugs.webkit.org/show_bug.cgi?id=135120
+
+        Reviewed by Anders Carlsson.
+
+        * WebCoreSupport/WebInspectorClient.cpp:
+        (WebInspectorClient::openInspectorFrontend):
+        * WebCoreSupport/WebInspectorClient.h:
+        (WebInspectorClient::frontendClient):
+        Own WebInspectorFrontendClient instead of moving it.
+
+2014-09-23  Christophe Dumez  <cdumez@apple.com>
+
+        Unreviewed build fix after r173893.
+
+        Partial revert of r173893 to fix debug builds.
+
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLDocument::URL):
+        (DOMHTMLDocument::body):
+        (DOMHTMLDocument::forms):
+
+2014-09-23  Chris Dumez  <cdumez@apple.com>
+
+        Use downcast<HTML*Element>() instead of toHTML*Element()
+        https://bugs.webkit.org/show_bug.cgi?id=137007
+
+        Reviewed by Benjamin Poulain.
+
+        Use downcast<HTML*Element>() instead of toHTML*Element().
+
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLDocument::URL):
+        (DOMHTMLDocument::body):
+        (DOMHTMLDocument::forms):
+        (DOMHTMLFormElement::action):
+        (DOMHTMLFormElement::method):
+        (DOMHTMLSelectElement::options):
+        (DOMHTMLSelectElement::activateItemAtIndex):
+        (DOMHTMLOptionElement::text):
+        (DOMHTMLOptionElement::label):
+        (DOMHTMLInputElement::form):
+        (DOMHTMLInputElement::disabled):
+        (DOMHTMLInputElement::readOnly):
+        (DOMHTMLInputElement::setType):
+        (DOMHTMLInputElement::value):
+        (DOMHTMLInputElement::setValue):
+        (DOMHTMLInputElement::setValueForUser):
+        (DOMHTMLInputElement::select):
+        (DOMHTMLInputElement::setSelectionStart):
+        (DOMHTMLInputElement::selectionStart):
+        (DOMHTMLInputElement::setSelectionEnd):
+        (DOMHTMLInputElement::selectionEnd):
+        (DOMHTMLInputElement::isTextField):
+        (DOMHTMLInputElement::replaceCharactersInRange):
+        (DOMHTMLInputElement::selectedRange):
+        (DOMHTMLInputElement::setAutofilled):
+        (DOMHTMLInputElement::isAutofilled):
+        (DOMHTMLInputElement::isUserEdited):
+        (DOMHTMLTextAreaElement::form):
+        (DOMHTMLTextAreaElement::value):
+        (DOMHTMLTextAreaElement::setValue):
+        (DOMHTMLTextAreaElement::select):
+        (DOMHTMLTextAreaElement::isUserEdited):
+        (DOMHTMLIFrameElement::contentFrame):
+        * WebFrame.cpp:
+        (formElementFromDOMElement):
+        (inputElementFromDOMElement):
+
 2014-09-21  Chris Dumez  <cdumez@apple.com>
 
         Generate Element casting helper functions

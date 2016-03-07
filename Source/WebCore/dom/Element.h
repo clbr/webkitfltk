@@ -285,7 +285,7 @@ public:
     void setBooleanAttribute(const QualifiedName& name, bool);
 
     // For exposing to DOM only.
-    NamedNodeMap* attributes() const;
+    NamedNodeMap& attributes() const;
 
     enum AttributeModificationReason {
         ModifiedDirectly,
@@ -670,39 +670,10 @@ inline bool isElement(const Node& node) { return node.isElementNode(); }
 
 NODE_TYPE_CASTS(Element)
 
-template <typename ExpectedType, typename ArgType>
-struct ElementTypeCastTraits {
-    static bool is(ArgType&);
-};
-
-// This is needed so that the compiler can deduce the second template parameter (ArgType).
-template <typename ExpectedType, typename ArgType>
-inline bool isElementOfType(const ArgType& node) { return ElementTypeCastTraits<ExpectedType, const ArgType>::is(node); }
-
 template <>
-struct ElementTypeCastTraits<const Element, const Node> {
+struct NodeTypeCastTraits<const Element, const Node> {
     static bool is(const Node& node) { return node.isElementNode(); }
 };
-
-template <typename ExpectedType>
-struct ElementTypeCastTraits<ExpectedType, ExpectedType> {
-    static bool is(ExpectedType&) { return true; }
-};
-
-// Downcasting functions for Element types.
-template<typename Target, typename Source>
-inline typename std::conditional<std::is_const<Source>::value, const Target&, Target&>::type downcast(Source& source)
-{
-    static_assert(!std::is_base_of<Target, Source>::value, "Unnecessary cast");
-    ASSERT_WITH_SECURITY_IMPLICATION(isElementOfType<const Target>(source));
-    return static_cast<typename std::conditional<std::is_const<Source>::value, const Target&, Target&>::type>(source);
-}
-template<typename Target, typename Source> inline typename std::conditional<std::is_const<Source>::value, const Target*, Target*>::type downcast(Source* source)
-{
-    static_assert(!std::is_base_of<Target, Source>::value, "Unnecessary cast");
-    ASSERT_WITH_SECURITY_IMPLICATION(!source || isElementOfType<const Target>(*source));
-    return static_cast<typename std::conditional<std::is_const<Source>::value, const Target*, Target*>::type>(source);
-}
 
 inline bool Node::hasAttributes() const
 {
@@ -711,7 +682,7 @@ inline bool Node::hasAttributes() const
 
 inline NamedNodeMap* Node::attributes() const
 {
-    return isElementNode() ? toElement(this)->attributes() : nullptr;
+    return isElementNode() ? &toElement(this)->attributes() : nullptr;
 }
 
 inline Element* Node::parentElement() const

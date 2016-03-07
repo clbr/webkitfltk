@@ -44,10 +44,11 @@
 #include "RenderBlockFlow.h"
 #include "RenderImage.h"
 #include "RenderInline.h"
-#include "Scrollbar.h"
-#include "ShadowRoot.h"
+#include "SVGAElement.h"
 #include "SVGImageElement.h"
 #include "SVGNames.h"
+#include "Scrollbar.h"
+#include "ShadowRoot.h"
 #include "UserGestureIndicator.h"
 #include "XLinkNames.h"
 
@@ -272,14 +273,14 @@ String HitTestResult::altDisplayString() const
     if (!m_innerNonSharedNode)
         return String();
     
-    if (isHTMLImageElement(m_innerNonSharedNode.get())) {
-        HTMLImageElement* image = toHTMLImageElement(m_innerNonSharedNode.get());
-        return displayString(image->fastGetAttribute(altAttr), m_innerNonSharedNode.get());
+    if (isHTMLImageElement(*m_innerNonSharedNode)) {
+        HTMLImageElement& image = downcast<HTMLImageElement>(*m_innerNonSharedNode);
+        return displayString(image.fastGetAttribute(altAttr), m_innerNonSharedNode.get());
     }
     
-    if (isHTMLInputElement(m_innerNonSharedNode.get())) {
-        HTMLInputElement* input = toHTMLInputElement(m_innerNonSharedNode.get());
-        return displayString(input->alt(), m_innerNonSharedNode.get());
+    if (is<HTMLInputElement>(*m_innerNonSharedNode)) {
+        HTMLInputElement& input = downcast<HTMLInputElement>(*m_innerNonSharedNode);
+        return displayString(input.alt(), m_innerNonSharedNode.get());
     }
 
     return String();
@@ -316,14 +317,12 @@ URL HitTestResult::absoluteImageURL() const
         return URL();
 
     AtomicString urlString;
-    if (m_innerNonSharedNode->hasTagName(embedTag)
-        || isHTMLImageElement(m_innerNonSharedNode.get())
-        || isHTMLInputElement(m_innerNonSharedNode.get())
-        || m_innerNonSharedNode->hasTagName(objectTag)
-        || isSVGImageElement(m_innerNonSharedNode.get())) 
-        {
-        Element* element = toElement(m_innerNonSharedNode.get());
-        urlString = element->imageSourceURL();
+    if (is<HTMLEmbedElement>(*m_innerNonSharedNode)
+        || is<HTMLImageElement>(*m_innerNonSharedNode)
+        || is<HTMLInputElement>(*m_innerNonSharedNode)
+        || is<HTMLObjectElement>(*m_innerNonSharedNode)
+        || is<SVGImageElement>(*m_innerNonSharedNode)) {
+        urlString = toElement(*m_innerNonSharedNode).imageSourceURL();
     } else
         return URL();
 
@@ -335,15 +334,15 @@ URL HitTestResult::absolutePDFURL() const
     if (!m_innerNonSharedNode)
         return URL();
 
-    if (!m_innerNonSharedNode->hasTagName(embedTag) && !m_innerNonSharedNode->hasTagName(objectTag))
+    if (!is<HTMLEmbedElement>(*m_innerNonSharedNode) && !is<HTMLObjectElement>(*m_innerNonSharedNode))
         return URL();
 
-    HTMLPlugInImageElement* element = toHTMLPlugInImageElement(m_innerNonSharedNode.get());
-    URL url = m_innerNonSharedNode->document().completeURL(stripLeadingAndTrailingHTMLSpaces(element->url()));
+    HTMLPlugInImageElement& element = toHTMLPlugInImageElement(*m_innerNonSharedNode);
+    URL url = m_innerNonSharedNode->document().completeURL(stripLeadingAndTrailingHTMLSpaces(element.url()));
     if (!url.isValid())
         return URL();
 
-    if (element->serviceType() == "application/pdf" || (element->serviceType().isEmpty() && url.path().lower().endsWith(".pdf")))
+    if (element.serviceType() == "application/pdf" || (element.serviceType().isEmpty() && url.path().endsWith(".pdf", false)))
         return url;
     return URL();
 }
@@ -424,12 +423,12 @@ void HitTestResult::toggleMediaFullscreenState() const
 void HitTestResult::enterFullscreenForVideo() const
 {
 #if ENABLE(VIDEO)
-    HTMLMediaElement* mediaElt(mediaElement());
-    if (mediaElt && isHTMLVideoElement(mediaElt)) {
-        HTMLVideoElement* videoElt = toHTMLVideoElement(mediaElt);
-        if (!videoElt->isFullscreen() && mediaElt->supportsFullscreen()) {
+    HTMLMediaElement* mediaElement(this->mediaElement());
+    if (mediaElement && isHTMLVideoElement(mediaElement)) {
+        HTMLVideoElement& videoElement = downcast<HTMLVideoElement>(*mediaElement);
+        if (!videoElement.isFullscreen() && mediaElement->supportsFullscreen()) {
             UserGestureIndicator indicator(DefinitelyProcessingUserGesture);
-            videoElt->enterFullscreen();
+            videoElement.enterFullscreen();
         }
     }
 #endif
@@ -438,8 +437,8 @@ void HitTestResult::enterFullscreenForVideo() const
 bool HitTestResult::mediaControlsEnabled() const
 {
 #if ENABLE(VIDEO)
-    if (HTMLMediaElement* mediaElt = mediaElement())
-        return mediaElt->controls();
+    if (HTMLMediaElement* mediaElement = this->mediaElement())
+        return mediaElement->controls();
 #endif
     return false;
 }
@@ -517,10 +516,10 @@ bool HitTestResult::isLiveLink() const
     if (!m_innerURLElement)
         return false;
 
-    if (isHTMLAnchorElement(m_innerURLElement.get()))
-        return toHTMLAnchorElement(m_innerURLElement.get())->isLiveLink();
+    if (isHTMLAnchorElement(*m_innerURLElement))
+        return downcast<HTMLAnchorElement>(*m_innerURLElement).isLiveLink();
 
-    if (m_innerURLElement->hasTagName(SVGNames::aTag))
+    if (is<SVGAElement>(*m_innerURLElement))
         return m_innerURLElement->isLink();
 
     return false;
@@ -555,11 +554,11 @@ bool HitTestResult::isContentEditable() const
     if (!m_innerNonSharedNode)
         return false;
 
-    if (isHTMLTextAreaElement(m_innerNonSharedNode.get()))
+    if (is<HTMLTextAreaElement>(*m_innerNonSharedNode))
         return true;
 
-    if (isHTMLInputElement(m_innerNonSharedNode.get()))
-        return toHTMLInputElement(m_innerNonSharedNode.get())->isTextField();
+    if (is<HTMLInputElement>(*m_innerNonSharedNode))
+        return downcast<HTMLInputElement>(*m_innerNonSharedNode).isTextField();
 
     return m_innerNonSharedNode->hasEditableStyle();
 }

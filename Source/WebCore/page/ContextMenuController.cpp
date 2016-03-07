@@ -49,6 +49,7 @@
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "FrameSelection.h"
+#include "HTMLFormControlElement.h"
 #include "HTMLFormElement.h"
 #include "HitTestRequest.h"
 #include "HitTestResult.h"
@@ -836,7 +837,7 @@ void ContextMenuController::populate()
     if (!node)
         return;
 #if PLATFORM(GTK)
-    if (!m_context.hitTestResult().isContentEditable() && (node->isElementNode() && toElement(node)->isFormControlElement()))
+    if (!m_context.hitTestResult().isContentEditable() && is<HTMLFormControlElement>(node))
         return;
 #endif
     Frame* frame = node->document().frame();

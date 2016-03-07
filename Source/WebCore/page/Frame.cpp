@@ -389,7 +389,7 @@ String Frame::searchForLabelsBeforeElement(const Vector<String>& labels, Element
     Node* n;
     for (n = NodeTraversal::previous(element); n && lengthSearched < charsSearchedThreshold; n = NodeTraversal::previous(n)) {
         // We hit another form element or the start of the form - bail out
-        if (isHTMLFormElement(n) || (n->isHTMLElement() && toElement(n)->isFormControlElement()))
+        if (is<HTMLFormElement>(n) || is<HTMLFormControlElement>(n))
             break;
 
         if (n->hasTagName(tdTag) && !startingTableCell) {
@@ -727,7 +727,7 @@ void Frame::injectUserScriptsForWorld(DOMWrapperWorld& world, const UserScriptVe
 
 RenderView* Frame::contentRenderer() const
 {
-    return document() ? document()->renderView() : 0;
+    return document() ? document()->renderView() : nullptr;
 }
 
 RenderWidget* Frame::ownerRenderer() const
@@ -968,7 +968,7 @@ void Frame::setPageAndTextZoomFactors(float pageZoomFactor, float textZoomFactor
     // Respect SVGs zoomAndPan="disabled" property in standalone SVG documents.
     // FIXME: How to handle compound documents + zoomAndPan="disabled"? Needs SVG WG clarification.
     if (document->isSVGDocument()) {
-        if (!toSVGDocument(document)->zoomAndPanEnabled())
+        if (!toSVGDocument(*document).zoomAndPanEnabled())
             return;
     }
 

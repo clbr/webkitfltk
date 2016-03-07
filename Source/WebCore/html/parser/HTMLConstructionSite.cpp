@@ -61,7 +61,7 @@ static bool hasImpliedEndTag(const HTMLStackItem* item)
     return item->hasTagName(ddTag)
         || item->hasTagName(dtTag)
         || item->hasTagName(liTag)
-        || isHTMLOptionElement(item->node())
+        || is<HTMLOptionElement>(item->node())
         || isHTMLOptGroupElement(item->node())
         || item->hasTagName(pTag)
         || item->hasTagName(rbTag)
@@ -85,8 +85,8 @@ static inline bool isAllWhitespace(const String& string)
 static inline void insert(HTMLConstructionSiteTask& task)
 {
 #if ENABLE(TEMPLATE_ELEMENT)
-    if (task.parent->hasTagName(templateTag))
-        task.parent = toHTMLTemplateElement(task.parent.get())->content();
+    if (isHTMLTemplateElement(*task.parent))
+        task.parent = downcast<HTMLTemplateElement>(*task.parent).content();
 #endif
 
     if (ContainerNode* parent = task.child->parentNode())
@@ -529,8 +529,8 @@ void HTMLConstructionSite::insertTextNode(const String& characters, WhitespaceMo
         findFosterSite(task);
 
 #if ENABLE(TEMPLATE_ELEMENT)
-    if (task.parent->hasTagName(templateTag))
-        task.parent = toHTMLTemplateElement(task.parent.get())->content();
+    if (isHTMLTemplateElement(*task.parent))
+        task.parent = downcast<HTMLTemplateElement>(*task.parent).content();
 #endif
 
     // Strings composed entirely of whitespace are likely to be repeated.
@@ -616,8 +616,8 @@ PassRefPtr<Element> HTMLConstructionSite::createElement(AtomicHTMLToken* token, 
 inline Document& HTMLConstructionSite::ownerDocumentForCurrentNode()
 {
 #if ENABLE(TEMPLATE_ELEMENT)
-    if (currentNode()->hasTagName(templateTag))
-        return toHTMLTemplateElement(currentElement())->content()->document();
+    if (isHTMLTemplateElement(currentNode()))
+        return downcast<HTMLTemplateElement>(*currentElement()).content()->document();
 #endif
     return currentNode()->document();
 }
@@ -720,7 +720,7 @@ void HTMLConstructionSite::findFosterSite(HTMLConstructionSiteTask& task)
         // and instead use the DocumentFragment as a root node. So we must treat the root node (DocumentFragment) as if it is a html element here.
         bool parentCanBeFosterParent = parent && (parent->isElementNode() || (m_isParsingFragment && parent == m_openElements.rootNode()));
 #if ENABLE(TEMPLATE_ELEMENT)
-        parentCanBeFosterParent = parentCanBeFosterParent || (parent && parent->isDocumentFragment() && toDocumentFragment(parent)->isTemplateContent());
+        parentCanBeFosterParent = parentCanBeFosterParent || (parent && is<DocumentFragment>(parent) && downcast<DocumentFragment>(parent)->isTemplateContent());
 #endif
         if (parentCanBeFosterParent) {
             task.parent = parent;

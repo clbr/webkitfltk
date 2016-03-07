@@ -159,9 +159,9 @@ bool SVGFontData::applySVGGlyphSelection(WidthIterator& iterator, GlyphData& gly
         if (Element* parentRendererElement = parentRenderer->element()) {
             language = parentRendererElement->getAttribute(XMLNames::langAttr);
 
-            if (isSVGAltGlyphElement(parentRendererElement)) {
-                SVGAltGlyphElement* altGlyph = toSVGAltGlyphElement(parentRendererElement);
-                if (!altGlyph->hasValidGlyphElements(altGlyphNames))
+            if (is<SVGAltGlyphElement>(parentRendererElement)) {
+                SVGAltGlyphElement& altGlyph = downcast<SVGAltGlyphElement>(*parentRendererElement);
+                if (!altGlyph.hasValidGlyphElements(altGlyphNames))
                     altGlyphNames.clear();
             }
         }

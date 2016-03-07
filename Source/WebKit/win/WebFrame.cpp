@@ -194,7 +194,7 @@ static Element *elementFromDOMElement(IDOMElement *element)
 static HTMLFormElement *formElementFromDOMElement(IDOMElement *element)
 {
     if (!element)
-        return 0;
+        return nullptr;
 
     IDOMElementPrivate* elePriv;
     HRESULT hr = element->QueryInterface(IID_IDOMElementPrivate, (void**) &elePriv);
@@ -203,15 +203,15 @@ static HTMLFormElement *formElementFromDOMElement(IDOMElement *element)
         hr = elePriv->coreElement((void**)&ele);
         elePriv->Release();
         if (SUCCEEDED(hr) && ele && isHTMLFormElement(ele))
-            return toHTMLFormElement(ele);
+            return downcast<HTMLFormElement>(ele);
     }
-    return 0;
+    return nullptr;
 }
 
 static HTMLInputElement* inputElementFromDOMElement(IDOMElement* element)
 {
     if (!element)
-        return 0;
+        return nullptr;
 
     IDOMElementPrivate* elePriv;
     HRESULT hr = element->QueryInterface(IID_IDOMElementPrivate, (void**) &elePriv);
@@ -219,10 +219,10 @@ static HTMLInputElement* inputElementFromDOMElement(IDOMElement* element)
         Element* ele;
         hr = elePriv->coreElement((void**)&ele);
         elePriv->Release();
-        if (SUCCEEDED(hr) && ele && isHTMLInputElement(ele))
-            return toHTMLInputElement(ele);
+        if (SUCCEEDED(hr) && ele && is<HTMLInputElement>(ele))
+            return downcast<HTMLInputElement>(ele);
     }
-    return 0;
+    return nullptr;
 }
 
 // WebFramePrivate ------------------------------------------------------------
@@ -1101,12 +1101,12 @@ HRESULT WebFrame::elementWithName(BSTR name, IDOMElement* form, IDOMElement** el
         const Vector<FormAssociatedElement*>& elements = formElement->associatedElements();
         AtomicString targetName((UChar*)name, SysStringLen(name));
         for (unsigned int i = 0; i < elements.size(); i++) {
-            if (!elements[i]->isFormControlElement())
+            if (!is<HTMLFormControlElement>(elements[i]))
                 continue;
-            HTMLFormControlElement* elt = toHTMLFormControlElement(elements[i]);
+            HTMLFormControlElement& elt = downcast<HTMLFormControlElement>(*elements[i]);
             // Skip option elements, other duds
-            if (elt->name() == targetName) {
-                *element = DOMElement::createInstance(elt);
+            if (elt.name() == targetName) {
+                *element = DOMElement::createInstance(&elt);
                 return S_OK;
             }
         }

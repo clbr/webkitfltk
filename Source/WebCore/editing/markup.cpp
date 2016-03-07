@@ -234,7 +234,7 @@ String StyledMarkupAccumulator::takeResults()
 
 void StyledMarkupAccumulator::appendText(StringBuilder& out, const Text& text)
 {    
-    const bool parentIsTextarea = text.parentElement() && isHTMLTextAreaElement(text.parentElement());
+    const bool parentIsTextarea = text.parentElement() && is<HTMLTextAreaElement>(text.parentElement());
     const bool wrappingSpan = shouldApplyWrappingStyle(text) && !parentIsTextarea;
     if (wrappingSpan) {
         RefPtr<EditingStyle> wrappingStyle = m_wrappingStyle->copy();
@@ -743,10 +743,10 @@ static void fillContainerFromString(ContainerNode* paragraph, const String& stri
 
 bool isPlainTextMarkup(Node* node)
 {
-    if (!isHTMLDivElement(node))
+    if (!is<HTMLDivElement>(node))
         return false;
 
-    HTMLDivElement& element = toHTMLDivElement(*node);
+    HTMLDivElement& element = downcast<HTMLDivElement>(*node);
     if (element.hasAttributes())
         return false;
 
@@ -884,7 +884,7 @@ PassRefPtr<DocumentFragment> createFragmentForInnerOuterHTML(const String& marku
     Document* document = &contextElement->document();
 #if ENABLE(TEMPLATE_ELEMENT)
     if (contextElement->hasTagName(templateTag))
-        document = document->ensureTemplateDocument();
+        document = &document->ensureTemplateDocument();
 #endif
     RefPtr<DocumentFragment> fragment = DocumentFragment::create(*document);
 
@@ -929,7 +929,7 @@ static Vector<Ref<HTMLElement>> collectElementsToRemoveFromFragment(ContainerNod
 {
     Vector<Ref<HTMLElement>> toRemove;
     for (auto& element : childrenOfType<HTMLElement>(container)) {
-        if (isHTMLHtmlElement(element)) {
+        if (is<HTMLHtmlElement>(element)) {
             toRemove.append(element);
             collectElementsToRemoveFromFragment(element);
             continue;
