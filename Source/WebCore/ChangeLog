@@ -1,3 +1,725 @@
+2014-07-16  Zalan Bujtas  <zalan@apple.com>
+
+        Subpixel rendering: Adjust cliprect with devicePixelFractionFromRenderer() before painting.
+        https://bugs.webkit.org/show_bug.cgi?id=134950
+        <rdar://problem/17617994>
+
+        Reviewed by Simon Fraser.
+
+        The cliprect coming from the graphics layer needs to be adjusted with the subpixel gap
+        from renderer. This is symmetric with the offsetting we do, when the dirty rect is sent off to the GraphicsLayer.
+        It puts us back to the correct coordinating system for intersecting with renderers.
+
+        Test: compositing/hidpi-compositing-layer-with-tile-layers-on-subpixel-position.html
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::beginTransparencyLayers):
+        (WebCore::RenderLayer::clipToRect):
+
+2014-07-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix a typo noticed by Darin.
+        
+        * rendering/RenderBox.cpp:
+        (WebCore::shouldApplyContainersClipAndOffset):
+        (WebCore::RenderBox::computeRectForRepaint):
+        (WebCore::shouldAppyContainersClipAndOffset): Deleted.
+
+2014-07-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Improve showTree() logging
+        https://bugs.webkit.org/show_bug.cgi?id=134997
+
+        Reviewed by Tim Horton.
+
+        Have the debug showTree(), which dumps the Node/Element tree, show which nodes need
+        style recalc, and print element renderers.
+
+        * dom/Node.cpp:
+        (WebCore::Node::showNode):
+
+2014-07-16  Simon Fraser  <simon.fraser@apple.com>
+
+        [iOS] Expose the points on WebEventRegion
+        https://bugs.webkit.org/show_bug.cgi?id=134978
+
+        Reviewed by Tim Horton.
+
+        Expose WebEventRegion's points so that UIKit can get at them.
+
+        * page/ios/WebEventRegion.h:
+        * page/ios/WebEventRegion.mm:
+        (-[WebEventRegion p1]):
+        (-[WebEventRegion p2]):
+        (-[WebEventRegion p3]):
+        (-[WebEventRegion p4]):
+
+2014-07-16  Brady Eidson  <beidson@apple.com>
+
+        Add WebSecurityOrigin "webSecurityOriginFromDatabaseIdentifier" SPI and change _websiteDataURLForContainerWithURL: SPI
+        <rdar://problem/17454712> and https://bugs.webkit.org/show_bug.cgi?id=134984
+
+        Reviewed by Dan Bernstein.
+
+        Change _websiteDataURLForContainerWithURL: SPI to include an optional bundle identifier argument:
+        * UIProcess/API/Cocoa/WKProcessPool.mm:
+        (+[WKProcessPool _websiteDataURLForContainerWithURL:bundleIdentifierIfNotInContainer:]):
+        (+[WKProcessPool _websiteDataURLForContainerWithURL:]): Deleted.
+        * UIProcess/API/Cocoa/WKProcessPoolPrivate.h:
+
+        Add a big shiny comment in a few key places:
+        * DatabaseProcess/DatabaseProcess.cpp:
+        (WebKit::DatabaseProcess::initializeDatabaseProcess):
+        * DatabaseProcess/IndexedDB/UniqueIDBDatabase.cpp:
+        (WebKit::UniqueIDBDatabase::UniqueIDBDatabase):
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::applyPlatformSpecificConfigurationDefaults):
+        (WebKit::WebContext::ensureDatabaseProcess):
+
+2014-07-16  Roger Fong  <roger_fong@apple.com>
+
+        Captions container should not clip content.
+        https://bugs.webkit.org/show_bug.cgi?id=134840.
+        <rdar://problem/14553608>.
+
+        Reviewed by Simon Fraser.
+
+        Tests: media/track/track-in-band-subtitles-too-large.html
+               media/track/track-long-word-container-sizing.html
+
+        * Modules/mediacontrols/mediaControlsApple.css:
+        (video::-webkit-media-text-track-container):
+        Set word break property of WebCTT cues to normal to make it consistent with in-band cues.
+        * html/track/TextTrackCueGeneric.cpp:
+        (WebCore::TextTrackCueGenericBoxElement::applyCSSProperties):
+        Set -webkit-min-content on min-width/min-height property of the text track display.
+        * html/track/VTTCue.cpp:
+        (WebCore::VTTCueBox::applyCSSProperties):
+        Do the same for WebVTT cues.
+
+2014-07-16  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] replace AVPlayerItem on the main thread
+        https://bugs.webkit.org/show_bug.cgi?id=134983
+
+        Reviewed by Jer Noble.
+
+        No new tests, this fixes a problem with a thread configuration not present in the
+        test environment.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setAVPlayerItem): New, when called off of 
+            the main thread, dispatch to the main thread before setting AVPlayerItem.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayer): Call setAVPlayerItem.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayerItem): Ditto.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setShouldBufferData): Ditto.
+
+2014-07-16  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] http/tests/media/media-source/mediasource-buffered.html is flakey
+        https://bugs.webkit.org/show_bug.cgi?id=134949
+
+        Reviewed by Eric Carlson.
+
+        Depending on which SourceBuffer is successfully parsed first, the order of activeSourceBuffers
+        may change from run to run, breaking the http/tests/media/media-source/mediasource-buffered.html
+        test. Make the order of activeSourceBuffers the same as (a subset of) sourceBuffers, by replacing
+        calls to activeSourceBuffers->add() and with a new call to regenerateActiveSourceBuffers(), which
+        swaps the contents of the SourceBufferList with a new, ordered Vector.
+
+        * Modules/mediasource/MediaSource.cpp:
+        (WebCore::MediaSource::addSourceBuffer):
+        (WebCore::MediaSource::sourceBufferDidChangeAcitveState):
+        (WebCore::MediaSource::regenerateActiveSourceBuffers):
+        * Modules/mediasource/MediaSource.h:
+        * Modules/mediasource/SourceBufferList.cpp:
+        (WebCore::SourceBufferList::swap):
+        * Modules/mediasource/SourceBufferList.h:
+
+2014-07-16  Mike West  <mkwst@chromium.org>
+
+        CSP: Drop 'script-nonce' directive.
+        https://bugs.webkit.org/show_bug.cgi?id=134926
+
+        Reviewed by Darin Adler.
+
+        This patch drops the outdated 'script-nonce' Content Security
+        Policy directive. It was removed from the spec, and replaced in
+        CSP2 with a new 'script-src' syntax. We should implement that
+        instead.
+
+        Until then, removing the outdated syntax will ensure that no one
+        ends up relying on it in WebKit's implementation.
+
+        This should have limited web-visible impact, as the feature is
+        behind the CSP_NEXT flag, which is not enabled by default.
+
+        * dom/ScriptElement.cpp:
+        (WebCore::ScriptElement::requestScript):
+        (WebCore::ScriptElement::executeScript):
+        * page/ContentSecurityPolicy.cpp:
+        (WebCore::CSPDirectiveList::allowJavaScriptURLs):
+        (WebCore::CSPDirectiveList::allowInlineEventHandlers):
+        (WebCore::CSPDirectiveList::addDirective):
+        (WebCore::NonceDirective::NonceDirective): Deleted.
+        (WebCore::NonceDirective::allows): Deleted.
+        (WebCore::NonceDirective::parse): Deleted.
+        (WebCore::CSPDirectiveList::checkNonce): Deleted.
+        (WebCore::CSPDirectiveList::checkNonceAndReportViolation): Deleted.
+        (WebCore::CSPDirectiveList::allowScriptNonce): Deleted.
+        (WebCore::isAllowedByAllWithNonce): Deleted.
+        (WebCore::ContentSecurityPolicy::allowScriptNonce): Deleted.
+        (WebCore::ContentSecurityPolicy::reportInvalidNonce): Deleted.
+        * page/ContentSecurityPolicy.h:
+
+2014-07-16  Jer Noble  <jer.noble@apple.com>
+
+        REGRESSION(r171069) 75% repro crash in WebCore::AudioHardwareListenerMac::processIsRunningChanged()
+        https://bugs.webkit.org/show_bug.cgi?id=134986
+
+        Reviewed by Eric Carlson.
+
+        Add a WeakPtrFactory to AudioHardwareListenerMac, so that if CoreAudio calls our block after
+        being unregistered, we can bail early instead of calling into a deleted object.
+
+        * platform/audio/mac/AudioHardwareListenerMac.cpp:
+        (WebCore::AudioHardwareListenerMac::AudioHardwareListenerMac):
+        * platform/audio/mac/AudioHardwareListenerMac.h:
+
+2014-07-16  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] REGRESSION(r171033): ASSERT in WebCore::MediaSource::onReadyStateChange()
+        https://bugs.webkit.org/show_bug.cgi?id=134941
+
+        Reviewed by Eric Carlson.
+
+        Only do our modified-order change of the readyState if the error parameter is empty,
+        as that's the only case where a duration change will cause an inadvertant readyState
+        change.
+
+        * Modules/mediasource/MediaSource.cpp:
+        (WebCore::MediaSource::streamEndedWithError):
+
+2014-07-16  Alexey Proskuryakov  <ap@apple.com>
+
+        Remove svn:executable property erroneously added in <http://trac.webkit.org/changeset/171144> somehow.
+
+        * ChangeLog: Removed property svn:executable.
+        * svg/SVGSVGElement.h: Removed property svn:executable.
+        * svg/animation/SVGSMILElement.h: Removed property svn:executable.
+
+2014-07-16  Daniel Bates  <dabates@apple.com>
+
+        Substitute CGRectZero for NSZeroRect in -[DOMNode hrefFrame].
+
+        Rubber-stamped by Zalan Bujtas.
+
+        The method -[DOMNode hrefFrame] returns a CGRect. So, when we don't have a renderer
+        we should return CGRectZero instead of a NSZeroRect.
+
+        * bindings/objc/DOM.mm:
+        (-[DOMNode hrefFrame]): Also, fix up some code style issues.
+
+2014-07-16  Jeongeun Kim  <je_julie.kim@samsung.com>
+
+        mutable pointers from const methods, timeContainer().
+        https://bugs.webkit.org/show_bug.cgi?id=134757
+
+        Reviewed by Alexey Proskuryakov.
+
+        Avoid return mutable pointers from const methods.
+        No new tests, no behavior change.
+
+        * svg/SVGSVGElement.h:
+        * svg/animation/SVGSMILElement.h:
+        (WebCore::SVGSMILElement::timeContainer):
+
+2014-07-15  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        CSS: Generalize CSS First Letter treatment
+        https://bugs.webkit.org/show_bug.cgi?id=134936
+
+        Reviewed by Benjamin Poulain.
+
+        first-letter pseudo element rule is handled differently from the other rules
+        such as first-line. This patch removes this special handling in SelectorChecker
+        and handles it in RulesFeatureSet.
+
+        * css/RuleFeature.cpp:
+        (WebCore::RuleFeatureSet::collectFeaturesFromSelector):
+        (WebCore::RuleFeatureSet::add):
+        (WebCore::RuleFeatureSet::clear):
+        * css/RuleFeature.h:
+        (WebCore::RuleFeatureSet::RuleFeatureSet):
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::matchRecursively):
+        * css/StyleResolver.h:
+        (WebCore::StyleResolver::usesFirstLetterRules):
+        * dom/DocumentStyleSheetCollection.cpp:
+        (WebCore::DocumentStyleSheetCollection::combineCSSFeatureFlags):
+        (WebCore::DocumentStyleSheetCollection::resetCSSFeatureFlags):
+        * dom/DocumentStyleSheetCollection.h:
+        (WebCore::DocumentStyleSheetCollection::setUsesFirstLetterRules): Deleted.
+
+2014-07-15  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix non-iOS builds.
+
+        * rendering/RenderBox.cpp:
+        (WebCore::shouldAppyContainersClipAndOffset):
+
+2014-07-15  Simon Fraser  <simon.fraser@apple.com>
+
+        [iOS] Fix touches inside accelerated overflow:scroll
+        https://bugs.webkit.org/show_bug.cgi?id=134961
+        <rdar://problem/16088789>
+
+        Reviewed by Benjamin Poulain.
+
+        When individual elements inside an overflow:scroll with -webkit-overflow-scrolling: touch
+        had touch event listeners, we would fail to take the scroll offset into account when
+        building the touch event region, causing touches on those elements to fail after scrolling.
+        
+        Touch event region building uses RenderObject::absoluteClippedOverflowRect(), and that
+        code path tries to fix up repaint rects to work correctly in composited overflow:scroll.
+        However, that broke the touch region computation.
+        
+        Fix by only ignoring the scroll offset for calls to computeRectForRepaint() which
+        have a non-null repaintContainer (which indicates that we're doing a repaint in the
+        compositing layer), and for which the repaintContainer is the containing block
+        which is using composited scrolling. This restores correct behavior to the event region
+        code which always calls this with a null repaintContainer.
+
+        * rendering/RenderBox.cpp:
+        (WebCore::shouldAppyContainersClipAndOffset):
+        (WebCore::RenderBox::computeRectForRepaint):
+
+2014-07-15  Simon Fraser  <simon.fraser@apple.com>
+
+        [iOS] Fix issues drawing subsampled image elements and CSS images
+        https://bugs.webkit.org/show_bug.cgi?id=134944
+        <rdar://problem/17634095>
+
+        Reviewed by Dean Jackson.
+
+        After r170675 it is important for BitmapImage::draw() to be given a srcRect computed
+        using the original size of the image, not the subsampled size.
+        
+        So fix various code paths that end up in image drawing to use the originalSize(),
+        which requires giving Image a virtual function that just returns size(), and hence has
+        a FloatSize return value.
+        
+        Tested by setting a very low subsampling threshold and browsing various sites.
+        
+        A better longterm fix will happen via bug 134916.
+
+        * platform/graphics/BitmapImage.cpp:
+        (WebCore::BitmapImage::originalSize):
+        * platform/graphics/BitmapImage.h:
+        * platform/graphics/GraphicsContext.cpp:
+        (WebCore::GraphicsContext::drawImage):
+        * platform/graphics/Image.cpp:
+        (WebCore::Image::drawTiled):
+        (WebCore::Image::computeIntrinsicDimensions):
+        * platform/graphics/Image.h:
+        (WebCore::Image::originalSize):
+        * platform/graphics/cg/BitmapImageCG.cpp:
+        (WebCore::BitmapImage::BitmapImage): Just use m_size for initializing the other members.
+        (WebCore::BitmapImage::draw):
+        * platform/graphics/cg/GraphicsContext3DCG.cpp:
+        (WebCore::GraphicsContext3D::ImageExtractor::extractImage):
+        * platform/graphics/cg/ImageCG.cpp:
+        (WebCore::Image::drawPattern):
+
+2014-07-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed build fix after r171069.
+
+        Add missing AudioHardwareListener implementation on Windows.
+
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+
+2014-07-15  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION (r155957): Invalid cast in WebCore::RenderNamedFlowThread::getRanges
+        https://bugs.webkit.org/show_bug.cgi?id=134888
+
+        Reviewed by Mihnea Ovidenie.
+
+        Test: fast/regions/flowthread-getranges-box-cast.html
+
+        * rendering/RenderNamedFlowThread.cpp:
+        (WebCore::RenderNamedFlowThread::getRanges): Test the type before casting.
+
+2014-07-15  Carlos Alberto Lopez Perez  <clopez@igalia.com>
+
+        [GTK] Update GObject DOM bindings symbols file after r171014.
+        https://bugs.webkit.org/show_bug.cgi?id=134907
+
+        Reviewed by Philippe Normand.
+
+        * bindings/gobject/webkitdom.symbols: Update to the current API.
+
+2014-07-15  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        Unreviwed fix wrong indentation from r171082.
+
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::placeAutoMajorAxisItemOnGrid):
+
+2014-07-14  Zalan Bujtas  <zalan@apple.com>
+
+        Subpixel rendering: Zero sized compositing container's content positioned off by one device pixel.
+        https://bugs.webkit.org/show_bug.cgi?id=134903
+
+        Reviewed by Simon Fraser.
+
+        The compositing layer boundaries are calculated using its renderer()'s and the renderer()'s
+        descendants' bounds. However when the renderer() is zero sized, its bounds are omitted.
+        In such cases, when the child content has offset from the renderer(), the subpixel adjustment
+        of the compositing layer becomes negative (-meaning that the compositing layer is to the right/bottom
+        direction from its renderer()). Remove fabs() to be able to express such direction.
+
+        Test: compositing/hidpi-compositing-layer-with-zero-sized-container.html
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateGeometry):
+
+2014-07-14  Jeremy Jones  <jeremyj@apple.com>
+
+        Fix crash on WebVideoFullscreenManagerProxy construction.
+        https://bugs.webkit.org/show_bug.cgi?id=134909
+
+        Unreviewed fix crash from r171089
+
+        Remove unnecessary dispatch to main queue since it can happen during construction.
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::setWebVideoFullscreenModel): remove dispatch_async
+
+2014-07-14  Jeremy Jones  <jeremyj@apple.com>
+
+        WebVideoFullscreenInterfaceAVKit should only call the UI from main thread.
+        https://bugs.webkit.org/show_bug.cgi?id=134890
+
+        Reviewed by Eric Carlson.
+
+        dispatch_async to the main thread before setting properties that would affect the UI.
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::setWebVideoFullscreenModel): wrap in call to dispatch_async
+        (WebVideoFullscreenInterfaceAVKit::setDuration): ditto
+        (WebVideoFullscreenInterfaceAVKit::setCurrentTime): ditto
+        (WebVideoFullscreenInterfaceAVKit::setRate): ditto
+        (WebVideoFullscreenInterfaceAVKit::setVideoDimensions): ditto
+        (WebVideoFullscreenInterfaceAVKit::setSeekableRanges): ditto
+        (WebVideoFullscreenInterfaceAVKit::setAudioMediaSelectionOptions): ditto
+        (WebVideoFullscreenInterfaceAVKit::setLegibleMediaSelectionOptions): ditto
+        (WebVideoFullscreenInterfaceAVKit::setExternalPlayback): ditto
+
+2014-07-14  Tibor Meszaros  <tmeszaros.u-szeged@partner.samsung.com>
+
+        Fix the !ENABLE(FILTERS) && !ENABLE(CSS_FILTERS) build after r167497
+        https://bugs.webkit.org/show_bug.cgi?id=134679
+
+        Reviewed by Darin Adler.
+
+        * html/ImageData.cpp:
+        * platform/graphics/cairo/ImageBufferCairo.cpp:
+
+2014-07-14  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Grid Layout] Support sparse in auto-placement algorithm
+        https://bugs.webkit.org/show_bug.cgi?id=134544
+
+        Reviewed by Sergio Villar Senin.
+
+        This patch implements sparse mode for auto-placement algorithm, which is
+        the default mode in the new grid-auto-flow syntax. It keeps track of the
+        auto-placement cursor in
+        RenderGrid::placeAutoMajorAxisItemsOnGrid() and updates it accordingly
+        when auto-positioned items are placed.
+        If we're in dense mode it resets the cursor after each item (which keeps
+        the old behavior that was using dense mode by default).
+
+        GridIterator has been adapted to look for empty areas from a given
+        position in both directions.
+
+        Test: fast/css-grid-layout/grid-auto-flow-sparse.html
+
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::GridIterator::GridIterator): Modify constructor to
+        add an optional argument for the varying index. This allows to look for
+        empty areas in both axis.
+        (WebCore::RenderGrid::placeAutoMajorAxisItemsOnGrid): Defined the
+        auto-placement cursor and rested after each item if we're in dense mode.
+        (WebCore::RenderGrid::placeAutoMajorAxisItemOnGrid): Use auto-placement
+        cursor to look for empty areas from the last auto-positioned item
+        placed.
+        * rendering/RenderGrid.h: Modify placeAutoMajorAxisItemOnGrid() header
+        to receive the auto-placement cursor.
+
+2014-07-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [iOS] Some videos play as inline audio-only content
+        https://bugs.webkit.org/show_bug.cgi?id=134898.
+        <rdar://problem/17629379>
+
+        Reviewed by Eric Carlson.
+
+        Add a new 'presentationType' accessor that indicates if the media
+        element is playing in 'audio' mode. This can happen if a video
+        element plays an HLS stream that starts off in audio-only mode.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::presentationType): Added.
+        * html/HTMLMediaElement.h:
+        * platform/audio/MediaSession.cpp:
+        (WebCore::MediaSession::presentationType): Added.
+        * platform/audio/MediaSession.h:
+        * platform/audio/MediaSessionManager.cpp: 
+        (WebCore::MediaSessionManager::sessionRestrictsInlineVideoPlayback):
+        Use the presentationType, rather than the mediaType to control
+        inline playback behavior.
+        * platform/audio/ios/AudioDestinationIOS.h:
+        (WebCore::AudioDestinationMac::presentationType): Add presentationType.
+        * platform/audio/mac/AudioDestinationMac.h:
+        (WebCore::AudioDestinationMac::presentationType): Ditto.
+
+2014-07-14  Bear Travis  <betravis@adobe.com>
+
+        [Feature Queries] Enable Feature Queries on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=134404
+
+        Reviewed by Antti Koivisto.
+
+        Enable Feature Queries on Mac and resume running the
+        feature tests.
+
+        * Configurations/FeatureDefines.xcconfig: Turn on
+        ENABLE_CSS3_CONDITIONAL_RULES.
+
+2014-07-11  David Hyatt  <hyatt@apple.com>
+
+        <rdar://problem/17305458> Cannot interact with video controls in ePubs
+        Bug 134836 - [New Multicolumn] Crawl to check for compositing between us and the enclosingPaginationLayer
+        https://bugs.webkit.org/show_bug.cgi?id=134836
+
+        Reviewed by Dean Jackson.
+
+        The paginatedAndComposited bit being set in updateLayerPositions just didn't work, since compositing states
+        can change without triggering that function. This patch just gets rid of the bit and does a crawl every time
+        to check. This ensures that changes in compositing states don't necessitate any changes in pagination,
+        since the lookup will always check the current compositing state.
+        
+        The new function that does this check is hasCompositedLayerInEnclosingPaginationChain.
+        
+        I have been unable to reproduce this issue, and this is therefore a purely speculative fix. I have no test
+        case to provide because of this.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::RenderLayer):
+        (WebCore::RenderLayer::updateLayerPositions):
+        (WebCore::RenderLayer::hasCompositedLayerInEnclosingPaginationChain):
+        (WebCore::RenderLayer::updatePagination):
+        * rendering/RenderLayer.h:
+
+2014-07-14  Zalan Bujtas  <zalan@apple.com>
+
+        Move composite bounds calculation to RenderLayerBacking.
+        https://bugs.webkit.org/show_bug.cgi?id=134864
+
+        Reviewed by Darin Adler.
+
+        No change in functionality.
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateCompositedBounds):
+        * rendering/RenderLayerCompositor.cpp: it was just proxying the calculateLayerBounds()
+        to the RenderLayer.
+        (WebCore::RenderLayerCompositor::calculateCompositedBounds): Deleted.
+        * rendering/RenderLayerCompositor.h:
+
+2014-07-14  Tim Horton  <timothy_horton@apple.com>
+
+        Fix the build.
+
+        * platform/audio/MediaSessionManager.h:
+
+2014-07-14  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] don't enable low power audio mode on external output devices
+        https://bugs.webkit.org/show_bug.cgi?id=134877
+
+        Reviewed by Sam Weinig.
+
+        No new tests, this deals with changes to the audio hardware at runtime.
+
+        * WebCore.xcodeproj/project.pbxproj: Remove AudioSessionListener.h.
+        * WebCore.vcxproj/WebCore.vcxproj: Ditto.
+
+        * platform/audio/AudioHardwareListener.cpp:
+        (WebCore::AudioHardwareListener::AudioHardwareListener): Initialize m_outputDeviceSupportsLowPowerMode
+            to true on iOS.
+        * platform/audio/AudioHardwareListener.h:
+        (WebCore::AudioHardwareListener::outputDeviceSupportsLowPowerMode): New accessor.
+        (WebCore::AudioHardwareListener::setHardwareActivity): New setter for derived classes.
+        (WebCore::AudioHardwareListener::setOutputDeviceSupportsLowPowerMode): Ditto.
+
+        Remove AudioSessionListener interface, it wasn't being used.
+        * platform/audio/AudioSession.cpp:
+        (WebCore::AudioSession::addListener): Deleted.
+        (WebCore::AudioSession::removeListener): Deleted.
+        (WebCore::AudioSession::beganAudioInterruption): Deleted.
+        (WebCore::AudioSession::endedAudioInterruption): Deleted.
+        * platform/audio/AudioSession.h:
+        * platform/audio/AudioSessionListener.h: Removed.
+
+        * platform/audio/MediaSessionManager.cpp:
+        (WebCore::MediaSessionManager::addSession): Allocate the AudioHardwareListener if necessary.
+        (WebCore::MediaSessionManager::removeSession): Free the AudioHardwareListener if necessary.
+        (WebCore::MediaSessionManager::audioOutputDeviceChanged): AudioHardwareListener client interface
+            called when the output device changes, call updateSessionState to make sure we are using
+            the correct buffer size.
+        * platform/audio/MediaSessionManager.h:
+
+        * platform/audio/ios/AudioDestinationIOS.h:
+        * platform/audio/ios/AudioSessionIOS.mm:
+        (WebCore::AudioSessionPrivate::AudioSessionPrivate): Drive-by cleanup, remove ObjC helper object
+            that was used to listen for OS notifications, it is no longer used.
+        (SOFT_LINK_POINTER): Deleted.
+        (-[WebAudioSessionHelper initWithCallback:]): Deleted.
+        (-[WebAudioSessionHelper dealloc]): Deleted.
+        (-[WebAudioSessionHelper interruption:]): Deleted.
+
+        * platform/audio/mac/AudioHardwareListenerMac.cpp:
+        (WebCore::currentDeviceSupportsLowPowerBufferSize): New, return true only if using build-in 
+            transport device.
+        (WebCore::processIsRunningPropertyDescriptor): Return reference to static AudioObjectPropertyAddress
+            for kAudioHardwarePropertyProcessIsRunning instead of declaring one in every method
+            that needs one.
+        (WebCore::outputDevicePropertyDescriptor): Return reference to static AudioObjectPropertyAddress
+            for kAudioHardwarePropertyDefaultOutputDevice.
+        (WebCore::AudioHardwareListenerMac::AudioHardwareListenerMac): Restructure and add audio object
+            listener for default output device.
+        (WebCore::AudioHardwareListenerMac::~AudioHardwareListenerMac): *Remove* listener audio object
+            property listener instead of *Adding* a new one. Remove new listener.
+        (WebCore::AudioHardwareListenerMac::propertyChanged): Enumerate the properties that changed,
+            call appropriate method.
+        (WebCore::AudioHardwareListenerMac::processIsRunningChanged): Renamed from setHardwareActive, 
+            cleanup.
+        (WebCore::AudioHardwareListenerMac::outputDeviceChanged): New, call client.audioHardwareOutputDeviceChanged.
+        (WebCore::AudioHardwareListenerMac::setHardwareActive): Deleted, renamed processIsRunningChanged.
+        * platform/audio/mac/AudioHardwareListenerMac.h:
+
+        * platform/audio/mac/MediaSessionManagerMac.cpp:
+        (MediaSessionManager::updateSessionState): Only set the output buffer size to 4K when hardware
+            supports it.
+
+2014-07-13  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove SelectorCheckerFastPath from the style resolution algorithm
+        https://bugs.webkit.org/show_bug.cgi?id=134866
+
+        Reviewed by Antti Koivisto.
+
+        SelectorCheckerFastPath is now pure overhead because it can almost never match
+        if the CSS JIT was unable to compile.
+
+        * css/ElementRuleCollector.cpp:
+        (WebCore::ElementRuleCollector::ruleMatches):
+        The "pre-filter" behind fastCheckableSelector had two parts:
+        1) Filtering the pseudoID.
+        2) Filtering on the rule hash.
+
+        The first part has been generalized (RuleDatacanMatchPseudoElement())
+        and moved to collectMatchingRulesForList(). 
+
+        (WebCore::ElementRuleCollector::collectMatchingRulesForList):
+        * css/RuleSet.cpp:
+        (WebCore::selectorCanMatchPseudoElement):
+        (WebCore::RuleData::RuleData):
+        (WebCore::RuleSet::addRegionRule):
+        (WebCore::RuleSet::addRulesFromSheet):
+        * css/RuleSet.h:
+        (WebCore::RuleData::canMatchPseudoElement):
+        (WebCore::RuleData::hasFastCheckableSelector): Deleted.
+        * css/StyleResolver.cpp:
+
+2014-07-13  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove an useless check from SelectorChecker
+        https://bugs.webkit.org/show_bug.cgi?id=134868
+
+        Reviewed by Darin Adler.
+
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::matchRecursively):
+        The condition of this if() branch can never be met for the mode "QueryingRules".
+
+        The next condition in that if() is "dynamicPseudo != NOPSEUDO", which implies
+        a pseudo element was matched prior to the current context/simple selector.
+        This cannot happen with QueryingRules, since we never match pseudo elements for
+        SelectorQuery.
+
+2014-07-12  Nikos Andronikos  <nikos.andronikos-webkit@cisra.canon.com.au>
+
+        Elements with rendering disabled due to dimensions should not contribute to parent bounding box
+        https://bugs.webkit.org/show_bug.cgi?id=134184
+
+        Reviewed by Dirk Schulze.
+
+        SVG elements that have rendering disabled should not contribute to any ancestor elements bounding box.
+        Examples of elements with rendering disabled:
+        - basic shape with width <= 0 or height <= 0
+        - path with no path data (d attribute missing or empty)
+        - polyline or polygon element with no point data (points attribute missing or empty)
+
+        To achieve this a method (isRenderingDisabled) was added to RenderSVGShape and it's derived classes.
+        This is used to determine if an element is included when creating the union of child bounding boxes
+        in a container element.
+
+        Tests: svg/custom/GetBBox-path-nodata.html
+               svg/custom/GetBBox-polygon-nodata.html
+               svg/custom/GetBBox-polyline-nodata.html
+               svg/custom/getBBox-container-hiddenchild.html
+
+        * rendering/svg/RenderSVGEllipse.cpp:
+        (WebCore::RenderSVGEllipse::isRenderingDisabled):
+        New method added. Checks bounding box to determine if rendering is disabled.
+        * rendering/svg/RenderSVGEllipse.h:
+        * rendering/svg/RenderSVGPath.cpp:
+        (WebCore::RenderSVGPath::isRenderingDisabled):
+        New method added. Checks bounding box to determine if rendering is disabled.
+        * rendering/svg/RenderSVGPath.h:
+        * rendering/svg/RenderSVGRect.cpp:
+        (WebCore::RenderSVGRect::isRenderingDisabled):
+        New method added. Checks bounding box to determine if rendering is disabled.
+        * rendering/svg/RenderSVGRect.h:
+        * rendering/svg/RenderSVGShape.h:
+        (WebCore::RenderSVGShape::isRenderingDisabled):
+        New method added. Always returns false so that derived classes that do not
+        implement this method retain the existing behaviour.
+        * rendering/svg/SVGRenderSupport.cpp:
+        (WebCore::SVGRenderSupport::computeContainerBoundingBoxes):
+        For each element potentially being included in the unioned bounding box of
+        a container, check isRenderingDisabled and skip that element if true.
+
+        * rendering/svg/RenderSVGEllipse.cpp:
+        (WebCore::RenderSVGEllipse::isRenderingDisabled):
+        * rendering/svg/RenderSVGEllipse.h:
+        * rendering/svg/RenderSVGPath.cpp:
+        (WebCore::RenderSVGPath::isRenderingDisabled):
+        * rendering/svg/RenderSVGPath.h:
+        * rendering/svg/RenderSVGRect.cpp:
+        (WebCore::RenderSVGRect::isRenderingDisabled):
+        * rendering/svg/RenderSVGRect.h:
+        * rendering/svg/RenderSVGShape.h:
+        * rendering/svg/SVGRenderSupport.cpp:
+        (WebCore::SVGRenderSupport::computeContainerBoundingBoxes):
+
 2014-07-12  Benjamin Poulain  <benjamin@webkit.org>
 
         Rename selectorListContainsUncommonAttributeSelector() to selectorListContainsAttributeSelector()

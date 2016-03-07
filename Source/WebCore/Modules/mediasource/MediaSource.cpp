@@ -453,7 +453,16 @@ void MediaSource::streamEndedWithError(const AtomicString& error, ExceptionCode&
 
         // 2. Notify the media element that it now has all of the media data.
         m_private->markEndOfStream(MediaSourcePrivate::EosNoError);
-    } else if (error == network) {
+    }
+
+    // NOTE: Do steps 1 & 2 after step 3 (with an empty error) to avoid the MediaSource's readyState being re-opened by a
+    // remove() operation resulting from a duration change.
+    // FIXME: Re-number or update this section once <https://www.w3.org/Bugs/Public/show_bug.cgi?id=26316> is resolved.
+    // 1. Change the readyState attribute value to "ended".
+    // 2. Queue a task to fire a simple event named sourceended at the MediaSource.
+    setReadyState(endedKeyword());
+
+    if (error == network) {
         // ↳ If error is set to "network"
         ASSERT(m_mediaElement);
         if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING) {
@@ -484,18 +493,11 @@ void MediaSource::streamEndedWithError(const AtomicString& error, ExceptionCode&
             //    NOTE: This step is handled by HTMLMediaElement::mediaLoadingFailedFatally().
             m_mediaElement->mediaLoadingFailedFatally(MediaPlayer::DecodeError);
         }
-    } else {
+    } else if (!error.isEmpty()) {
         // ↳ Otherwise
         //   Throw an INVALID_ACCESS_ERR exception.
         ec = INVALID_ACCESS_ERR;
     }
-
-    // NOTE: Do steps 1 & 2 after step 3 to avoid the MediaSource's readyState being re-opened by a
-    // remove() operation resulting from a duration change.
-    // FIXME: Re-number or update this section once <https://www.w3.org/Bugs/Public/show_bug.cgi?id=26316> is resolved.
-    // 1. Change the readyState attribute value to "ended".
-    // 2. Queue a task to fire a simple event named sourceended at the MediaSource.
-    setReadyState(endedKeyword());
 }
 
 SourceBuffer* MediaSource::addSourceBuffer(const String& type, ExceptionCode& ec)
@@ -538,9 +540,8 @@ SourceBuffer* MediaSource::addSourceBuffer(const String& type, ExceptionCode& ec
     RefPtr<SourceBuffer> buffer = SourceBuffer::create(sourceBufferPrivate.releaseNonNull(), this);
     // 6. Add the new object to sourceBuffers and fire a addsourcebuffer on that object.
     m_sourceBuffers->add(buffer);
+    regenerateActiveSourceBuffers();
 
-    if (buffer->active())
-        m_activeSourceBuffers->add(buffer);
     // 7. Return the new object to the caller.
     return buffer.get();
 }
@@ -743,12 +744,9 @@ void MediaSource::close()
     setReadyState(closedKeyword());
 }
 
-void MediaSource::sourceBufferDidChangeAcitveState(SourceBuffer* sourceBuffer, bool active)
+void MediaSource::sourceBufferDidChangeAcitveState(SourceBuffer*, bool)
 {
-    if (active && !m_activeSourceBuffers->contains(sourceBuffer))
-        m_activeSourceBuffers->add(sourceBuffer);
-    else if (!active && m_activeSourceBuffers->contains(sourceBuffer))
-        m_activeSourceBuffers->remove(sourceBuffer);
+    regenerateActiveSourceBuffers();
 }
 
 bool MediaSource::attachToElement(HTMLMediaElement* element)
@@ -865,6 +863,16 @@ EventTargetInterface MediaSource::eventTargetInterface() const
 URLRegistry& MediaSource::registry() const
 {
     return MediaSourceRegistry::registry();
+}
+
+void MediaSource::regenerateActiveSourceBuffers()
+{
+    Vector<RefPtr<SourceBuffer>> newList;
+    for (auto& sourceBuffer : *m_sourceBuffers) {
+        if (sourceBuffer->active())
+            newList.append(sourceBuffer);
+    }
+    m_activeSourceBuffers->swap(newList);
 }
 
 }

@@ -1,3 +1,46 @@
+2014-07-15  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r171107.
+        https://bugs.webkit.org/show_bug.cgi?id=134959
+
+        This was not the problem! (Requested by kling on #webkit).
+
+        Reverted changeset:
+
+        "Revert: Run the FastMalloc scavenger thread on iOS as well."
+        https://bugs.webkit.org/show_bug.cgi?id=134927
+        http://trac.webkit.org/changeset/171107
+
+2014-07-15  Andreas Kling  <akling@apple.com>
+
+        Revert: Run the FastMalloc scavenger thread on iOS as well.
+        <https://webkit.org/b/134927>
+        <rdar://problem/17485079>
+
+        This appears to be the cause of some elusive crashes, and since I don't
+        have a way to reproduce them, let's just go back to not running the
+        scavenger thread on iOS.
+
+        Reviewed by Antti Koivisto.
+
+        * wtf/FastMalloc.cpp:
+
+2014-07-13  Filip Pizlo  <fpizlo@apple.com>
+
+        HashMap should have removeIf()
+        https://bugs.webkit.org/show_bug.cgi?id=134870
+
+        Reviewed by Sam Weinig.
+        
+        Expose a new HashMap method, called removeIf(), which allows you to do an efficient
+        pass over the map and remove a bunch of things at once. This is used by DFG GCSE as
+        part of https://bugs.webkit.org/show_bug.cgi?id=134677.
+
+        * wtf/HashMap.h:
+        (WTF::X>::removeIf):
+        * wtf/HashTable.h:
+        (WTF::KeyTraits>::removeIf):
+
 2014-07-11  peavo@outlook.com  <peavo@outlook.com>
 
         [Win] Enable DFG JIT.
