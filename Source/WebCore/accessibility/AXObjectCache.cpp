@@ -397,6 +397,11 @@ AccessibilityObject* AXObjectCache::getOrCreate(Node* node)
     if (!inCanvasSubtree && !isHidden && !insideMeterElement)
         return nullptr;
 
+    // Fallback content is only focusable as long as the canvas is displayed and visible.
+    // Update the style before Element::isFocusable() gets called.
+    if (inCanvasSubtree)
+        node->document().updateStyleIfNeeded();
+
     RefPtr<AccessibilityObject> newObj = createFromNode(node);
 
     // Will crash later if we have two objects for the same node.
@@ -911,6 +916,9 @@ void AXObjectCache::showIntent(const AXTextStateChangeIntent &intent)
         case AXTextEditTypePaste:
             dataLog("Paste");
             break;
+        case AXTextEditTypeAttributesChange:
+            dataLog("AttributesChange");
+            break;
         }
         break;
     case AXTextStateChangeTypeSelectionMove:
@@ -1337,6 +1345,8 @@ AXTextChange AXObjectCache::textChangeForEditType(AXTextEditType type)
     case AXTextEditTypeTyping:
     case AXTextEditTypePaste:
         return AXTextInserted;
+    case AXTextEditTypeAttributesChange:
+        return AXTextAttributesChanged;
     case AXTextEditTypeUnknown:
         break;
     }

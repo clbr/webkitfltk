@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Igalia S.L. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,18 +23,41 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-WebInspector.ChartDetailsSectionLegendRow = class ChartDetailsSectionLegendRow extends WebInspector.DetailsSectionSimpleRow
-{
-    constructor(label, value, color)
+#ifndef CSSContentDistributionValue_h
+#define CSSContentDistributionValue_h
+
+#include "CSSValue.h"
+#include "CSSValuePool.h"
+#include <wtf/RefPtr.h>
+
+namespace WebCore {
+
+class CSSContentDistributionValue : public CSSValue {
+public:
+    static Ref<CSSContentDistributionValue> create(CSSValueID distribution, CSSValueID position, CSSValueID overflow)
     {
-        super(label, value);
-
-        this.element.classList.add("legend-item");
-
-        var colorSwatchElement = document.createElement("div");
-        colorSwatchElement.className = "color-swatch";
-        colorSwatchElement.style.backgroundColor = color;
-
-        this._labelElement.appendChild(colorSwatchElement);
+        return adoptRef(*new CSSContentDistributionValue(distribution, position, overflow));
     }
+    ~CSSContentDistributionValue();
+
+    Ref<CSSPrimitiveValue> distribution() const { return cssValuePool().createIdentifierValue(m_distribution); }
+    Ref<CSSPrimitiveValue> position() const { return cssValuePool().createIdentifierValue(m_position); }
+    Ref<CSSPrimitiveValue> overflow() const { return cssValuePool().createIdentifierValue(m_overflow); }
+
+    String customCSSText() const;
+
+    bool equals(const CSSContentDistributionValue&) const;
+
+private:
+    CSSContentDistributionValue(CSSValueID distribution, CSSValueID position, CSSValueID overflow);
+
+    CSSValueID m_distribution;
+    CSSValueID m_position;
+    CSSValueID m_overflow;
 };
+
+} // namespace WebCore
+
+SPECIALIZE_TYPE_TRAITS_CSS_VALUE(CSSContentDistributionValue, isContentDistributionValue())
+
+#endif // CSSContentDistributionValue_h
