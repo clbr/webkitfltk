@@ -458,6 +458,9 @@ void FrameView::setFrameRect(const IntRect& newRect)
 
     if (frame().isMainFrame())
         frame().mainFrame().pageOverlayController().didChangeViewSize();
+
+    // The frame view was resized, check if we should resume animated images.
+    resumeVisibleImageAnimationsIncludingSubframes();
 }
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
@@ -1152,7 +1155,7 @@ void FrameView::layout(bool allowSubtree)
     if (isPainting())
         return;
 
-    InspectorInstrumentationCookie cookie = InspectorInstrumentation::willLayout(&frame());
+    InspectorInstrumentationCookie cookie = InspectorInstrumentation::willLayout(frame());
     AnimationUpdateBlock animationUpdateBlock(&frame().animation());
     
     if (!allowSubtree && m_layoutRoot) {
@@ -1186,7 +1189,7 @@ void FrameView::layout(bool allowSubtree)
         if (!styleResolver || styleResolver->hasMediaQueriesAffectedByViewportChange()) {
             document.styleResolverChanged(DeferRecalcStyle);
             // FIXME: This instrumentation event is not strictly accurate since cached media query results do not persist across StyleResolver rebuilds.
-            InspectorInstrumentation::mediaQueryResultChanged(&document);
+            InspectorInstrumentation::mediaQueryResultChanged(document);
         } else
             document.evaluateMediaQueryList();
 
@@ -1454,7 +1457,7 @@ String FrameView::mediaType() const
 {
     // See if we have an override type.
     String overrideType = frame().loader().client().overrideMediaType();
-    InspectorInstrumentation::applyEmulatedMedia(&frame(), &overrideType);
+    InspectorInstrumentation::applyEmulatedMedia(frame(), overrideType);
     if (!overrideType.isNull())
         return overrideType;
     return m_mediaType;
@@ -2446,7 +2449,7 @@ void FrameView::scheduleRelayout()
         return;
     if (!frame().document()->shouldScheduleLayout())
         return;
-    InspectorInstrumentation::didInvalidateLayout(&frame());
+    InspectorInstrumentation::didInvalidateLayout(frame());
     // When frame flattening is enabled, the contents of the frame could affect the layout of the parent frames.
     // Also invalidate parent frame starting from the owner element of this frame.
     if (frame().ownerRenderer() && isInChildFrameWithFrameFlattening())
@@ -2495,7 +2498,7 @@ void FrameView::scheduleRelayoutOfSubtree(RenderElement& newRelayoutRoot)
         std::chrono::milliseconds delay = renderView.document().minimumLayoutDelay();
         ASSERT(!newRelayoutRoot.container() || !newRelayoutRoot.container()->needsLayout());
         m_layoutRoot = &newRelayoutRoot;
-        InspectorInstrumentation::didInvalidateLayout(&frame());
+        InspectorInstrumentation::didInvalidateLayout(frame());
         m_delayedLayout = delay.count();
         m_layoutTimer.startOneShot(delay);
         return;
@@ -2507,7 +2510,7 @@ void FrameView::scheduleRelayoutOfSubtree(RenderElement& newRelayoutRoot)
     if (!m_layoutRoot) {
         // Just relayout the subtree.
         newRelayoutRoot.markContainingBlocksForLayout(false);
-        InspectorInstrumentation::didInvalidateLayout(&frame());
+        InspectorInstrumentation::didInvalidateLayout(frame());
         return;
     }
 
@@ -2523,7 +2526,7 @@ void FrameView::scheduleRelayoutOfSubtree(RenderElement& newRelayoutRoot)
         m_layoutRoot->markContainingBlocksForLayout(false, &newRelayoutRoot);
         m_layoutRoot = &newRelayoutRoot;
         ASSERT(!m_layoutRoot->container() || !m_layoutRoot->container()->needsLayout());
-        InspectorInstrumentation::didInvalidateLayout(&frame());
+        InspectorInstrumentation::didInvalidateLayout(frame());
         return;
     }
 
@@ -2531,7 +2534,7 @@ void FrameView::scheduleRelayoutOfSubtree(RenderElement& newRelayoutRoot)
     m_layoutRoot->markContainingBlocksForLayout(false);
     m_layoutRoot = 0;
     newRelayoutRoot.markContainingBlocksForLayout(false);
-    InspectorInstrumentation::didInvalidateLayout(&frame());
+    InspectorInstrumentation::didInvalidateLayout(frame());
 }
 
 bool FrameView::layoutPending() const

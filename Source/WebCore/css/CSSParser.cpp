@@ -1597,6 +1597,8 @@ bool CSSParser::validateCalculationUnit(ValueWithCalculation& valueWithCalculati
         isValid = (unitFlags & FNumber);
         if (!isValid && (unitFlags & FInteger) && calculation->isInt())
             isValid = true;
+        if (!isValid && (unitFlags & FPositiveInteger) && calculation->isInt() && calculation->isPositive())
+            isValid = true;
         if (isValid && mustBeNonNegative && calculation->isNegative())
             isValid = false;
         break;
@@ -4731,8 +4733,7 @@ PassRefPtr<CSSValue> CSSParser::parseAnimationTimingFunction()
         ValueWithCalculation argumentWithCalculation(*argument);
         if (!validateUnit(argumentWithCalculation, FInteger))
             return nullptr;
-        // FIXME: This doesn't handle calculated values.
-        numSteps = clampToInteger(argument->fValue);
+        numSteps = clampToInteger(parsedDouble(argumentWithCalculation));
         if (numSteps < 1)
             return nullptr;
         argument = args->next();
@@ -5314,11 +5315,9 @@ bool CSSParser::parseGridTrackRepeatFunction(CSSValueList& list)
     if (!validateUnit(firstValueWithCalculation, FPositiveInteger) || !isComma(arguments->valueAt(1)))
         return false;
 
-    // FIXME: This doesn't handle calculated values.
-    ASSERT(firstValueWithCalculation.value().fValue > 0);
     // If arguments->valueAt(0)->fValue > SIZE_MAX then repetitions becomes 0 during the type casting, that's why we
     // clamp it down to kGridMaxTracks before the type casting.
-    unsigned repetitions = clampTo<unsigned>(firstValueWithCalculation.value().fValue, 0, kGridMaxTracks);
+    unsigned repetitions = clampTo<unsigned>(parsedDouble(firstValueWithCalculation), 0, kGridMaxTracks);
 
     RefPtr<CSSValueList> repeatedValues = CSSValueList::createSpaceSeparated();
     arguments->next(); // Skip the repetition count.
@@ -5416,12 +5415,12 @@ PassRefPtr<CSSPrimitiveValue> CSSParser::parseGridBreadth(CSSParserValue& value)
 
 static inline bool isValidGridAutoFlowId(CSSValueID id)
 {
-    return (id == CSSValueRow || id == CSSValueColumn || id == CSSValueDense || id == CSSValueStack);
+    return (id == CSSValueRow || id == CSSValueColumn || id == CSSValueDense);
 }
 
 PassRefPtr<CSSValue> CSSParser::parseGridAutoFlow(CSSParserValueList& inputList)
 {
-    // [ row | column ] && dense? | stack && [ row | column ]?
+    // [ row | column ] || dense
     CSSParserValue* value = inputList.current();
     if (!value)
         return nullptr;
@@ -5438,9 +5437,6 @@ PassRefPtr<CSSValue> CSSParser::parseGridAutoFlow(CSSParserValueList& inputList)
     value = inputList.next();
     if (!value || !isValidGridAutoFlowId(value->id)) {
         if (firstId == CSSValueDense)
-            return nullptr;
-
-        if (firstId == CSSValueStack)
             parsedValues->append(cssValuePool().createIdentifierValue(CSSValueRow));
 
         parsedValues->append(cssValuePool().createIdentifierValue(firstId));
@@ -5451,13 +5447,12 @@ PassRefPtr<CSSValue> CSSParser::parseGridAutoFlow(CSSParserValueList& inputList)
     case CSSValueRow:
     case CSSValueColumn:
         parsedValues->append(cssValuePool().createIdentifierValue(firstId));
-        if (value->id == CSSValueDense || value->id == CSSValueStack) {
+        if (value->id == CSSValueDense) {
             parsedValues->append(cssValuePool().createIdentifierValue(value->id));
             inputList.next();
         }
         break;
     case CSSValueDense:
-    case CSSValueStack:
         if (value->id == CSSValueRow || value->id == CSSValueColumn) {
             parsedValues->append(cssValuePool().createIdentifierValue(value->id));
             inputList.next();
@@ -9358,19 +9353,18 @@ PassRefPtr<WebKitCSSFilterValue> CSSParser::parseBuiltinFilterArguments(CSSParse
             ValueWithCalculation argumentWithCalculation(*args.current());
             if (!validateUnit(argumentWithCalculation, FNumber | FPercent | FNonNeg, CSSStrictMode))
                 return nullptr;
-                
-            // FIXME: This does not handle calculated values.
-            double amount = argumentWithCalculation.value().fValue;
-            
+
+            auto primitiveValue = createPrimitiveNumericValue(argumentWithCalculation);
+
             // Saturate and Contrast allow values over 100%.
             if (filterType != WebKitCSSFilterValue::SaturateFilterOperation
                 && filterType != WebKitCSSFilterValue::ContrastFilterOperation) {
-                double maxAllowed = argumentWithCalculation.value().unit == CSSPrimitiveValue::CSS_PERCENTAGE ? 100.0 : 1.0;
-                if (amount > maxAllowed)
+                double maxAllowed = primitiveValue->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE ? 100.0 : 1.0;
+                if (primitiveValue->getDoubleValue() > maxAllowed)
                     return nullptr;
             }
 
-            filterValue->append(cssValuePool().createValue(amount, static_cast<CSSPrimitiveValue::UnitTypes>(argumentWithCalculation.value().unit)));
+            filterValue->append(WTF::move(primitiveValue));
         }
         break;
     }

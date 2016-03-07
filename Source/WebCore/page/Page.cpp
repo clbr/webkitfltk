@@ -29,6 +29,7 @@
 #include "ClientRectList.h"
 #include "ContextMenuClient.h"
 #include "ContextMenuController.h"
+#include "DatabaseProvider.h"
 #include "DocumentLoader.h"
 #include "DocumentMarkerController.h"
 #include "DocumentStyleSheetCollection.h"
@@ -65,7 +66,7 @@
 #include "PageThrottler.h"
 #include "PlugInClient.h"
 #include "PluginData.h"
-#include "PluginView.h"
+#include "PluginViewBase.h"
 #include "PointerLockController.h"
 #include "ProgressTracker.h"
 #include "RenderLayerCompositor.h"
@@ -204,6 +205,7 @@ Page::Page(PageConfiguration& pageConfiguration)
 #endif
     , m_lastSpatialNavigationCandidatesCount(0) // NOTE: Only called from Internals for Spatial Navigation testing.
     , m_framesHandlingBeforeUnloadEvent(0)
+    , m_databaseProvider(*WTF::move(pageConfiguration.databaseProvider))
     , m_storageNamespaceProvider(*WTF::move(pageConfiguration.storageNamespaceProvider))
     , m_userContentController(WTF::move(pageConfiguration.userContentController))
     , m_visitedLinkStore(*WTF::move(pageConfiguration.visitedLinkStore))
@@ -636,20 +638,20 @@ void Page::findStringMatchingRanges(const String& target, FindOptions options, i
     }
 }
 
-PassRefPtr<Range> Page::rangeOfString(const String& target, Range* referenceRange, FindOptions options)
+RefPtr<Range> Page::rangeOfString(const String& target, Range* referenceRange, FindOptions options)
 {
     if (target.isEmpty())
-        return 0;
+        return nullptr;
 
     if (referenceRange && referenceRange->ownerDocument().page() != this)
-        return 0;
+        return nullptr;
 
     bool shouldWrap = options & WrapAround;
     Frame* frame = referenceRange ? referenceRange->ownerDocument().frame() : &mainFrame();
     Frame* startFrame = frame;
     do {
         if (RefPtr<Range> resultRange = frame->editor().rangeOfString(target, frame == startFrame ? referenceRange : 0, options & ~WrapAround))
-            return resultRange.release();
+            return resultRange;
 
         frame = incrementFrame(frame, !(options & Backwards), shouldWrap);
     } while (frame && frame != startFrame);
@@ -658,10 +660,10 @@ PassRefPtr<Range> Page::rangeOfString(const String& target, Range* referenceRang
     // We cheat a bit and just search again with wrap on.
     if (shouldWrap && referenceRange) {
         if (RefPtr<Range> resultRange = startFrame->editor().rangeOfString(target, referenceRange, options | WrapAround | StartInSelection))
-            return resultRange.release();
+            return resultRange;
     }
 
-    return 0;
+    return nullptr;
 }
 
 unsigned Page::findMatchesForText(const String& target, FindOptions options, unsigned maxMatchCount, ShouldHighlightMatches shouldHighlightMatches, ShouldMarkMatches shouldMarkMatches)
@@ -1097,9 +1099,9 @@ StorageNamespace* Page::sessionStorage(bool optionalCreate)
     return m_sessionStorage.get();
 }
 
-void Page::setSessionStorage(PassRefPtr<StorageNamespace> newStorage)
+void Page::setSessionStorage(RefPtr<StorageNamespace>&& newStorage)
 {
-    m_sessionStorage = newStorage;
+    m_sessionStorage = WTF::move(newStorage);
 }
 
 bool Page::hasCustomHTMLTokenizerTimeDelay() const

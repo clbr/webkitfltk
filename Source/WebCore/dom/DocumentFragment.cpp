@@ -41,14 +41,9 @@ Ref<DocumentFragment> DocumentFragment::create(Document& document)
     return adoptRef(*new DocumentFragment(document, Node::CreateDocumentFragment));
 }
 
-Ref<DocumentFragment> DocumentFragment::create(ScriptExecutionContext& context)
-{
-    return adoptRef(*new DocumentFragment(downcast<Document>(context), Node::CreateDocumentFragment));
-}
-
 String DocumentFragment::nodeName() const
 {
-    return "#document-fragment";
+    return ASCIILiteral("#document-fragment");
 }
 
 Node::NodeType DocumentFragment::nodeType() const
@@ -87,7 +82,8 @@ RefPtr<Node> DocumentFragment::cloneNodeInternal(Document& targetDocument, Cloni
 
 void DocumentFragment::parseHTML(const String& source, Element* contextElement, ParserContentPolicy parserContentPolicy)
 {
-    HTMLDocumentParser::parseDocumentFragment(source, *this, contextElement, parserContentPolicy);
+    ASSERT(contextElement);
+    HTMLDocumentParser::parseDocumentFragment(source, *this, *contextElement, parserContentPolicy);
 }
 
 bool DocumentFragment::parseXML(const String& source, Element* contextElement, ParserContentPolicy parserContentPolicy)

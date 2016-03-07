@@ -818,7 +818,6 @@ set(WebCore_SOURCES
     Modules/indexeddb/IDBDatabaseMetadata.cpp
     Modules/indexeddb/IDBEventDispatcher.cpp
     Modules/indexeddb/IDBFactory.cpp
-    Modules/indexeddb/IDBFactoryBackendInterface.cpp
     Modules/indexeddb/IDBIndex.cpp
     Modules/indexeddb/IDBKey.cpp
     Modules/indexeddb/IDBKeyData.cpp
@@ -834,7 +833,6 @@ set(WebCore_SOURCES
     Modules/indexeddb/IDBTransactionBackendOperations.cpp
     Modules/indexeddb/IDBTransactionCoordinator.cpp
     Modules/indexeddb/IDBVersionChangeEvent.cpp
-    Modules/indexeddb/PageGroupIndexedDatabase.cpp
     Modules/indexeddb/WorkerGlobalScopeIndexedDatabase.cpp
 
     Modules/mediacontrols/MediaControlsHost.cpp
@@ -1254,7 +1252,6 @@ set(WebCore_SOURCES
     css/CSSValueList.cpp
     css/CSSValuePool.cpp
     css/DOMWindowCSS.cpp
-    css/DeprecatedStyleBuilder.cpp
     css/DocumentRuleSets.cpp
     css/ElementRuleCollector.cpp
     css/FontLoader.cpp
@@ -1894,6 +1891,7 @@ set(WebCore_SOURCES
     page/DOMWindow.cpp
     page/DOMWindowExtension.cpp
     page/DOMWindowProperty.cpp
+    page/DatabaseProvider.cpp
     page/DebugPageOverlays.cpp
     page/DeviceController.cpp
     page/DiagnosticLoggingKeys.cpp
@@ -2077,7 +2075,6 @@ set(WebCore_SOURCES
     platform/graphics/FontGlyphs.cpp
     platform/graphics/GeneratedImage.cpp
     platform/graphics/GeometryUtilities.cpp
-    platform/graphics/GlyphPageTreeNode.cpp
     platform/graphics/Gradient.cpp
     platform/graphics/GradientImage.cpp
     platform/graphics/GraphicsContext.cpp
@@ -2772,12 +2769,6 @@ if (ENABLE_SQL_DATABASE)
 
     list(APPEND WebCore_IDL_FILES
         Modules/webdatabase/WorkerGlobalScopeWebDatabase.idl
-    )
-endif ()
-
-if (NOT ENABLE_NETSCAPE_PLUGIN_API)
-    list(APPEND WebCore_SOURCES
-        plugins/PluginViewNone.cpp
     )
 endif ()
 

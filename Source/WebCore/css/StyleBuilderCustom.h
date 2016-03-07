@@ -31,7 +31,9 @@
 #include "CSSCursorImageValue.h"
 #include "CSSShadowValue.h"
 #include "CursorList.h"
+#include "ElementAncestorIterator.h"
 #include "Frame.h"
+#include "HTMLElement.h"
 #include "LocaleToScriptMapping.h"
 #include "Rect.h"
 #include "SVGElement.h"
@@ -61,6 +63,7 @@ public:
     DECLARE_PROPERTY_CUSTOM_HANDLERS(CounterReset);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(Cursor);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(FontFamily);
+    DECLARE_PROPERTY_CUSTOM_HANDLERS(FontSize);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(FontWeight);
 #if ENABLE(CSS_IMAGE_RESOLUTION)
     DECLARE_PROPERTY_CUSTOM_HANDLERS(ImageResolution);
@@ -75,6 +78,11 @@ public:
     DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitAspectRatio);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitBoxShadow);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitFontVariantLigatures);
+#if ENABLE(CSS_GRID_LAYOUT)
+    DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitGridTemplateAreas);
+    DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitGridTemplateColumns);
+    DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitGridTemplateRows);
+#endif // ENABLE(CSS_GRID_LAYOUT)
     DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitMaskBoxImageOutset);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitMaskBoxImageRepeat);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitMaskBoxImageSlice);
@@ -94,15 +102,11 @@ public:
     static void applyValueVerticalAlign(StyleResolver&, CSSValue&);
     static void applyValueWebkitJustifySelf(StyleResolver&, CSSValue&);
     static void applyValueWebkitLocale(StyleResolver&, CSSValue&);
-    static void applyValueWebkitMarqueeIncrement(StyleResolver&, CSSValue&);
-    static void applyValueWebkitPerspective(StyleResolver&, CSSValue&);
     static void applyValueWebkitTextOrientation(StyleResolver&, CSSValue&);
     static void applyValueWebkitWritingMode(StyleResolver&, CSSValue&);
-    static void applyValueWordSpacing(StyleResolver&, CSSValue&);
 
 private:
     static void resetEffectiveZoom(StyleResolver&);
-    static CSSToLengthConversionData csstoLengthConversionDataWithTextZoomFactor(StyleResolver&);
     static bool convertLineHeight(StyleResolver&, const CSSValue&, Length&, float multiplier = 1.f);
 
     static Length mmLength(double mm);
@@ -118,31 +122,11 @@ private:
     static void applyInheritCounter(StyleResolver&);
     template <CounterBehavior counterBehavior>
     static void applyValueCounter(StyleResolver&, CSSValue&);
-};
 
-inline void StyleBuilderCustom::applyValueWebkitMarqueeIncrement(StyleResolver& styleResolver, CSSValue& value)
-{
-    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
-    Length marqueeLength(Undefined);
-    switch (primitiveValue.getValueID()) {
-    case CSSValueSmall:
-        marqueeLength = Length(1, Fixed); // 1px.
-        break;
-    case CSSValueNormal:
-        marqueeLength = Length(6, Fixed); // 6px. The WinIE default.
-        break;
-    case CSSValueLarge:
-        marqueeLength = Length(36, Fixed); // 36px.
-        break;
-    case CSSValueInvalid:
-        marqueeLength = primitiveValue.convertToLength<FixedIntegerConversion | PercentConversion | CalculatedConversion>(styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
-        break;
-    default:
-        break;
-    }
-    if (!marqueeLength.isUndefined())
-        styleResolver.style()->setMarqueeIncrement(marqueeLength);
-}
+    static float largerFontSize(float size);
+    static float smallerFontSize(float size);
+    static float determineRubyTextSizeMultiplier(StyleResolver&);
+};
 
 inline void StyleBuilderCustom::applyValueDirection(StyleResolver& styleResolver, CSSValue& value)
 {
@@ -548,14 +532,6 @@ DEFINE_BORDER_IMAGE_MODIFIER_HANDLER(WebkitMaskBoxImage, Repeat)
 DEFINE_BORDER_IMAGE_MODIFIER_HANDLER(WebkitMaskBoxImage, Slice)
 DEFINE_BORDER_IMAGE_MODIFIER_HANDLER(WebkitMaskBoxImage, Width)
 
-inline CSSToLengthConversionData StyleBuilderCustom::csstoLengthConversionDataWithTextZoomFactor(StyleResolver& styleResolver)
-{
-    if (Frame* frame = styleResolver.document().frame())
-        return styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(styleResolver.style()->effectiveZoom() * frame->textZoomFactor());
-
-    return styleResolver.state().cssToLengthConversionData();
-}
-
 inline bool StyleBuilderCustom::convertLineHeight(StyleResolver& styleResolver, const CSSValue& value, Length& length, float multiplier)
 {
     auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
@@ -564,7 +540,7 @@ inline bool StyleBuilderCustom::convertLineHeight(StyleResolver& styleResolver, 
         return true;
     }
     if (primitiveValue.isLength()) {
-        length = primitiveValue.computeLength<Length>(csstoLengthConversionDataWithTextZoomFactor(styleResolver));
+        length = primitiveValue.computeLength<Length>(StyleBuilderConverter::csstoLengthConversionDataWithTextZoomFactor(styleResolver));
         if (multiplier != 1.f)
             length = Length(length.value() * multiplier, Fixed);
         return true;
@@ -580,24 +556,6 @@ inline bool StyleBuilderCustom::convertLineHeight(StyleResolver& styleResolver, 
         return true;
     }
     return false;
-}
-
-inline void StyleBuilderCustom::applyValueWordSpacing(StyleResolver& styleResolver, CSSValue& value)
-{
-    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
-
-    Length wordSpacing;
-    if (primitiveValue.getValueID() == CSSValueNormal)
-        wordSpacing = RenderStyle::initialWordSpacing();
-    else if (primitiveValue.isLength())
-        wordSpacing = primitiveValue.computeLength<Length>(csstoLengthConversionDataWithTextZoomFactor(styleResolver));
-    else if (primitiveValue.isPercentage())
-        wordSpacing = Length(clampTo<float>(primitiveValue.getDoubleValue(), minValueForCssLength, maxValueForCssLength), Percent);
-    else if (primitiveValue.isNumber())
-        wordSpacing = Length(primitiveValue.getDoubleValue(), Fixed);
-    else
-        return;
-    styleResolver.style()->setWordSpacing(wordSpacing);
 }
 
 #if ENABLE(IOS_TEXT_AUTOSIZING)
@@ -731,31 +689,6 @@ inline void StyleBuilderCustom::applyValueWebkitJustifySelf(StyleResolver& style
         styleResolver.style()->setJustifySelf(primitiveValue);
 }
 
-inline void StyleBuilderCustom::applyValueWebkitPerspective(StyleResolver& styleResolver, CSSValue& value)
-{
-    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
-
-    if (primitiveValue.getValueID() == CSSValueNone) {
-        styleResolver.style()->setPerspective(0);
-        return;
-    }
-
-    float perspectiveValue;
-    if (primitiveValue.isLength())
-        perspectiveValue = primitiveValue.computeLength<float>(styleResolver.state().cssToLengthConversionData());
-    else if (primitiveValue.isNumber()) {
-        // For backward compatibility, treat valueless numbers as px.
-        Ref<CSSPrimitiveValue> value(CSSPrimitiveValue::create(primitiveValue.getDoubleValue(), CSSPrimitiveValue::CSS_PX));
-        perspectiveValue = value.get().computeLength<float>(styleResolver.state().cssToLengthConversionData());
-    } else {
-        ASSERT_NOT_REACHED();
-        return;
-    }
-
-    if (perspectiveValue >= 0.0f)
-        styleResolver.style()->setPerspective(perspectiveValue);
-}
-
 template <CSSPropertyID id>
 inline void StyleBuilderCustom::applyTextOrBoxShadowValue(StyleResolver& styleResolver, CSSValue& value)
 {
@@ -842,8 +775,10 @@ inline void StyleBuilderCustom::applyInitialFontFamily(StyleResolver& styleResol
     FontDescription initialDesc = FontDescription();
 
     // We need to adjust the size to account for the generic family change from monospace to non-monospace.
-    if (fontDescription.keywordSize() && fontDescription.useFixedDefaultSize())
-        styleResolver.setFontSize(fontDescription, Style::fontSizeForKeyword(CSSValueXxSmall + fontDescription.keywordSize() - 1, false, styleResolver.document()));
+    if (fontDescription.useFixedDefaultSize()) {
+        if (CSSValueID sizeIdentifier = fontDescription.keywordSizeAsIdentifier())
+            styleResolver.setFontSize(fontDescription, Style::fontSizeForKeyword(sizeIdentifier, false, styleResolver.document()));
+    }
     if (!initialDesc.firstFamily().isEmpty())
         fontDescription.setFamilies(initialDesc.families());
 
@@ -923,8 +858,10 @@ inline void StyleBuilderCustom::applyValueFontFamily(StyleResolver& styleResolve
         return;
     fontDescription.setFamilies(families);
 
-    if (fontDescription.keywordSize() && fontDescription.useFixedDefaultSize() != oldFamilyUsedFixedDefaultSize)
-        styleResolver.setFontSize(fontDescription, Style::fontSizeForKeyword(CSSValueXxSmall + fontDescription.keywordSize() - 1, !oldFamilyUsedFixedDefaultSize, styleResolver.document()));
+    if (fontDescription.useFixedDefaultSize() != oldFamilyUsedFixedDefaultSize) {
+        if (CSSValueID sizeIdentifier = fontDescription.keywordSizeAsIdentifier())
+            styleResolver.setFontSize(fontDescription, Style::fontSizeForKeyword(sizeIdentifier, !oldFamilyUsedFixedDefaultSize, styleResolver.document()));
+    }
 
     styleResolver.setFontDescription(fontDescription);
 }
@@ -1267,6 +1204,227 @@ inline void StyleBuilderCustom::applyValueWebkitFontVariantLigatures(StyleResolv
     fontDescription.setHistoricalLigaturesState(historicalLigaturesState);
     styleResolver.setFontDescription(fontDescription);
 }
+
+inline void StyleBuilderCustom::applyInitialFontSize(StyleResolver& styleResolver)
+{
+    FontDescription fontDescription = styleResolver.style()->fontDescription();
+    float size = Style::fontSizeForKeyword(CSSValueMedium, fontDescription.useFixedDefaultSize(), styleResolver.document());
+
+    if (size < 0)
+        return;
+
+    fontDescription.setKeywordSizeFromIdentifier(CSSValueMedium);
+    styleResolver.setFontSize(fontDescription, size);
+    styleResolver.setFontDescription(fontDescription);
+}
+
+inline void StyleBuilderCustom::applyInheritFontSize(StyleResolver& styleResolver)
+{
+    const FontDescription& parentFontDescription = styleResolver.parentStyle()->fontDescription();
+    float size = parentFontDescription.specifiedSize();
+
+    if (size < 0)
+        return;
+
+    FontDescription fontDescription = styleResolver.style()->fontDescription();
+    fontDescription.setKeywordSize(parentFontDescription.keywordSize());
+    styleResolver.setFontSize(fontDescription, size);
+    styleResolver.setFontDescription(fontDescription);
+}
+
+// When the CSS keyword "larger" is used, this function will attempt to match within the keyword
+// table, and failing that, will simply multiply by 1.2.
+inline float StyleBuilderCustom::largerFontSize(float size)
+{
+    // FIXME: Figure out where we fall in the size ranges (xx-small to xxx-large) and scale up to
+    // the next size level.
+    return size * 1.2f;
+}
+
+// Like the previous function, but for the keyword "smaller".
+inline float StyleBuilderCustom::smallerFontSize(float size)
+{
+    // FIXME: Figure out where we fall in the size ranges (xx-small to xxx-large) and scale down to
+    // the next size level.
+    return size / 1.2f;
+}
+
+inline float StyleBuilderCustom::determineRubyTextSizeMultiplier(StyleResolver& styleResolver)
+{
+    if (styleResolver.style()->rubyPosition() != RubyPositionInterCharacter)
+        return 0.5f;
+
+    // FIXME: This hack is to ensure tone marks are the same size as
+    // the bopomofo. This code will go away if we make a special renderer
+    // for the tone marks eventually.
+    if (auto* element = styleResolver.state().element()) {
+        for (auto& ancestor : ancestorsOfType<HTMLElement>(*element)) {
+            if (ancestor.hasTagName(HTMLNames::rtTag))
+                return 1.0f;
+        }
+    }
+    return 0.25f;
+}
+
+inline void StyleBuilderCustom::applyValueFontSize(StyleResolver& styleResolver, CSSValue& value)
+{
+    FontDescription fontDescription = styleResolver.style()->fontDescription();
+    fontDescription.setKeywordSizeFromIdentifier(CSSValueInvalid);
+
+    float parentSize = 0;
+    bool parentIsAbsoluteSize = false;
+    if (auto* parentStyle = styleResolver.parentStyle()) {
+        parentSize = parentStyle->fontDescription().specifiedSize();
+        parentIsAbsoluteSize = parentStyle->fontDescription().isAbsoluteSize();
+    }
+
+    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+    float size;
+    if (CSSValueID ident = primitiveValue.getValueID()) {
+        fontDescription.setIsAbsoluteSize(parentIsAbsoluteSize && (ident == CSSValueLarger || ident == CSSValueSmaller || ident == CSSValueWebkitRubyText));
+
+        // Keywords are being used.
+        switch (ident) {
+        case CSSValueXxSmall:
+        case CSSValueXSmall:
+        case CSSValueSmall:
+        case CSSValueMedium:
+        case CSSValueLarge:
+        case CSSValueXLarge:
+        case CSSValueXxLarge:
+        case CSSValueWebkitXxxLarge:
+            size = Style::fontSizeForKeyword(ident, fontDescription.useFixedDefaultSize(), styleResolver.document());
+            fontDescription.setKeywordSizeFromIdentifier(ident);
+            break;
+        case CSSValueLarger:
+            size = largerFontSize(parentSize);
+            break;
+        case CSSValueSmaller:
+            size = smallerFontSize(parentSize);
+            break;
+        case CSSValueWebkitRubyText:
+            size = determineRubyTextSizeMultiplier(styleResolver) * parentSize;
+            break;
+        default:
+            return;
+        }
+    } else {
+        fontDescription.setIsAbsoluteSize(parentIsAbsoluteSize || !(primitiveValue.isPercentage() || primitiveValue.isFontRelativeLength()));
+        if (primitiveValue.isLength()) {
+            size = primitiveValue.computeLength<float>(CSSToLengthConversionData(styleResolver.parentStyle(), styleResolver.rootElementStyle(), styleResolver.document().renderView(), 1.0f, true));
+            styleResolver.state().setFontSizeHasViewportUnits(primitiveValue.isViewportPercentageLength());
+        } else if (primitiveValue.isPercentage())
+            size = (primitiveValue.getFloatValue() * parentSize) / 100.0f;
+        else if (primitiveValue.isCalculatedPercentageWithLength())
+            size = primitiveValue.cssCalcValue()->createCalculationValue(styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(1.0f))->evaluate(parentSize);
+        else
+            return;
+    }
+
+    if (size < 0)
+        return;
+
+    styleResolver.setFontSize(fontDescription, std::min(maximumAllowedFontSize, size));
+    styleResolver.setFontDescription(fontDescription);
+}
+
+#if ENABLE(CSS_GRID_LAYOUT)
+inline void StyleBuilderCustom::applyInitialWebkitGridTemplateAreas(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setNamedGridArea(RenderStyle::initialNamedGridArea());
+    styleResolver.style()->setNamedGridAreaRowCount(RenderStyle::initialNamedGridAreaCount());
+    styleResolver.style()->setNamedGridAreaColumnCount(RenderStyle::initialNamedGridAreaCount());
+}
+
+inline void StyleBuilderCustom::applyInheritWebkitGridTemplateAreas(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setNamedGridArea(styleResolver.parentStyle()->namedGridArea());
+    styleResolver.style()->setNamedGridAreaRowCount(styleResolver.parentStyle()->namedGridAreaRowCount());
+    styleResolver.style()->setNamedGridAreaColumnCount(styleResolver.parentStyle()->namedGridAreaColumnCount());
+}
+
+inline void StyleBuilderCustom::applyValueWebkitGridTemplateAreas(StyleResolver& styleResolver, CSSValue& value)
+{
+    if (is<CSSPrimitiveValue>(value)) {
+        ASSERT(downcast<CSSPrimitiveValue>(value).getValueID() == CSSValueNone);
+        return;
+    }
+
+    auto& gridTemplateAreasValue = downcast<CSSGridTemplateAreasValue>(value);
+    const NamedGridAreaMap& newNamedGridAreas = gridTemplateAreasValue.gridAreaMap();
+
+    NamedGridLinesMap namedGridColumnLines = styleResolver.style()->namedGridColumnLines();
+    NamedGridLinesMap namedGridRowLines = styleResolver.style()->namedGridRowLines();
+    StyleBuilderConverter::createImplicitNamedGridLinesFromGridArea(newNamedGridAreas, namedGridColumnLines, ForColumns);
+    StyleBuilderConverter::createImplicitNamedGridLinesFromGridArea(newNamedGridAreas, namedGridRowLines, ForRows);
+    styleResolver.style()->setNamedGridColumnLines(namedGridColumnLines);
+    styleResolver.style()->setNamedGridRowLines(namedGridRowLines);
+
+    styleResolver.style()->setNamedGridArea(gridTemplateAreasValue.gridAreaMap());
+    styleResolver.style()->setNamedGridAreaRowCount(gridTemplateAreasValue.rowCount());
+    styleResolver.style()->setNamedGridAreaColumnCount(gridTemplateAreasValue.columnCount());
+}
+
+inline void StyleBuilderCustom::applyInitialWebkitGridTemplateColumns(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setGridColumns(RenderStyle::initialGridColumns());
+    styleResolver.style()->setNamedGridColumnLines(RenderStyle::initialNamedGridColumnLines());
+    styleResolver.style()->setOrderedNamedGridColumnLines(RenderStyle::initialOrderedNamedGridColumnLines());
+}
+
+inline void StyleBuilderCustom::applyInheritWebkitGridTemplateColumns(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setGridColumns(styleResolver.parentStyle()->gridColumns());
+    styleResolver.style()->setNamedGridColumnLines(styleResolver.parentStyle()->namedGridColumnLines());
+    styleResolver.style()->setOrderedNamedGridColumnLines(styleResolver.parentStyle()->orderedNamedGridColumnLines());
+}
+
+inline void StyleBuilderCustom::applyValueWebkitGridTemplateColumns(StyleResolver& styleResolver, CSSValue& value)
+{
+    Vector<GridTrackSize> trackSizes;
+    NamedGridLinesMap namedGridLines;
+    OrderedNamedGridLinesMap orderedNamedGridLines;
+    if (!StyleBuilderConverter::createGridTrackList(value, trackSizes, namedGridLines, orderedNamedGridLines, styleResolver))
+        return;
+    const NamedGridAreaMap& namedGridAreas = styleResolver.style()->namedGridArea();
+    if (!namedGridAreas.isEmpty())
+        StyleBuilderConverter::createImplicitNamedGridLinesFromGridArea(namedGridAreas, namedGridLines, ForColumns);
+
+    styleResolver.style()->setGridColumns(trackSizes);
+    styleResolver.style()->setNamedGridColumnLines(namedGridLines);
+    styleResolver.style()->setOrderedNamedGridColumnLines(orderedNamedGridLines);
+}
+
+inline void StyleBuilderCustom::applyInitialWebkitGridTemplateRows(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setGridRows(RenderStyle::initialGridRows());
+    styleResolver.style()->setNamedGridRowLines(RenderStyle::initialNamedGridRowLines());
+    styleResolver.style()->setOrderedNamedGridRowLines(RenderStyle::initialOrderedNamedGridRowLines());
+}
+
+inline void StyleBuilderCustom::applyInheritWebkitGridTemplateRows(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setGridRows(styleResolver.parentStyle()->gridRows());
+    styleResolver.style()->setNamedGridRowLines(styleResolver.parentStyle()->namedGridRowLines());
+    styleResolver.style()->setOrderedNamedGridRowLines(styleResolver.parentStyle()->orderedNamedGridRowLines());
+}
+
+inline void StyleBuilderCustom::applyValueWebkitGridTemplateRows(StyleResolver& styleResolver, CSSValue& value)
+{
+    Vector<GridTrackSize> trackSizes;
+    NamedGridLinesMap namedGridLines;
+    OrderedNamedGridLinesMap orderedNamedGridLines;
+    if (!StyleBuilderConverter::createGridTrackList(value, trackSizes, namedGridLines, orderedNamedGridLines, styleResolver))
+        return;
+    const NamedGridAreaMap& namedGridAreas = styleResolver.style()->namedGridArea();
+    if (!namedGridAreas.isEmpty())
+        StyleBuilderConverter::createImplicitNamedGridLinesFromGridArea(namedGridAreas, namedGridLines, ForRows);
+
+    styleResolver.style()->setGridRows(trackSizes);
+    styleResolver.style()->setNamedGridRowLines(namedGridLines);
+    styleResolver.style()->setOrderedNamedGridRowLines(orderedNamedGridLines);
+}
+#endif // ENABLE(CSS_GRID_LAYOUT)
 
 } // namespace WebCore
 

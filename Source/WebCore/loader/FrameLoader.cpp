@@ -2500,7 +2500,7 @@ void FrameLoader::detachFromParent()
     // handlers might start a new subresource load in this frame.
     stopAllLoaders();
 
-    InspectorInstrumentation::frameDetachedFromParent(&m_frame);
+    InspectorInstrumentation::frameDetachedFromParent(m_frame);
 
     detachViewsAndDocumentLoader();
 
@@ -3034,14 +3034,14 @@ void FrameLoader::loadedResourceFromMemoryCache(CachedResource* resource, Resour
         return;
 
     if (!page->areMemoryCacheClientCallsEnabled()) {
-        InspectorInstrumentation::didLoadResourceFromMemoryCache(page, m_documentLoader.get(), resource);
+        InspectorInstrumentation::didLoadResourceFromMemoryCache(*page, m_documentLoader.get(), resource);
         m_documentLoader->recordMemoryCacheLoadForFutureClientNotification(resource->resourceRequest());
         m_documentLoader->didTellClientAboutLoad(resource->url());
         return;
     }
 
     if (m_client.dispatchDidLoadResourceFromMemoryCache(m_documentLoader.get(), newRequest, resource->response(), resource->encodedSize())) {
-        InspectorInstrumentation::didLoadResourceFromMemoryCache(page, m_documentLoader.get(), resource);
+        InspectorInstrumentation::didLoadResourceFromMemoryCache(*page, m_documentLoader.get(), resource);
         m_documentLoader->didTellClientAboutLoad(resource->url());
         return;
     }
@@ -3049,7 +3049,7 @@ void FrameLoader::loadedResourceFromMemoryCache(CachedResource* resource, Resour
     unsigned long identifier;
     ResourceError error;
     requestFromDelegate(newRequest, identifier, error);
-    InspectorInstrumentation::markResourceAsCached(page, identifier);
+    InspectorInstrumentation::markResourceAsCached(*page, identifier);
     notifier().sendRemainingDelegateMessages(m_documentLoader.get(), identifier, newRequest, resource->response(), 0, resource->encodedSize(), 0, error);
 }
 
@@ -3324,10 +3324,10 @@ void FrameLoader::dispatchDidClearWindowObjectInWorld(DOMWrapperWorld& world)
 
 #if ENABLE(INSPECTOR)
     if (Page* page = m_frame.page())
-        page->inspectorController().didClearWindowObjectInWorld(&m_frame, world);
+        page->inspectorController().didClearWindowObjectInWorld(m_frame, world);
 #endif
 
-    InspectorInstrumentation::didClearWindowObjectInWorld(&m_frame, world);
+    InspectorInstrumentation::didClearWindowObjectInWorld(m_frame, world);
 }
 
 void FrameLoader::dispatchGlobalObjectAvailableInAllWorlds()
@@ -3384,7 +3384,7 @@ void FrameLoader::dispatchDidCommitLoad()
         m_frame.page()->resetSeenMediaEngines();
     }
 
-    InspectorInstrumentation::didCommitLoad(&m_frame, m_documentLoader.get());
+    InspectorInstrumentation::didCommitLoad(m_frame, m_documentLoader.get());
 
 #if ENABLE(REMOTE_INSPECTOR)
     if (m_frame.isMainFrame())

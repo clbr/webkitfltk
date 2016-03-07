@@ -55,7 +55,6 @@ void computeUsesForBytecodeOffset(
     case op_touch_entry:
     case op_profile_control_flow:
         return;
-    case op_create_lexical_environment:
     case op_get_scope:
     case op_create_arguments:
     case op_to_this:
@@ -114,6 +113,7 @@ void computeUsesForBytecodeOffset(
         functor(codeBlock, instruction, opcodeID, instruction[4].u.operand);
         return;
     }
+    case op_create_lexical_environment:
     case op_get_enumerable_length:
     case op_new_func_exp:
     case op_to_index_string:

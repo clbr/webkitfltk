@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2010, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2010, 2013-2015 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,7 +34,6 @@
 
 namespace WebCore {
 
-class GlyphPageTreeNode;
 class GraphicsContext;
 class IntRect;
 class FontDescription;
@@ -46,8 +45,6 @@ const int cAllFamiliesScanned = -1;
 class FontGlyphs : public RefCounted<FontGlyphs> {
     WTF_MAKE_NONCOPYABLE(FontGlyphs);
 public:
-    typedef HashMap<int, GlyphPageTreeNode*, DefaultHash<int>::Hash> GlyphPages;
-
     static Ref<FontGlyphs> create(PassRefPtr<FontSelector> fontSelector) { return adoptRef(*new FontGlyphs(fontSelector)); }
     static Ref<FontGlyphs> createForPlatformFont(const FontPlatformData& platformData) { return adoptRef(*new FontGlyphs(platformData)); }
 
@@ -55,7 +52,7 @@ public:
 
     bool isForPlatformFont() const { return m_isForPlatformFont; }
 
-    GlyphData glyphDataForCharacter(const FontDescription&, UChar32, bool mirror, FontDataVariant);
+    GlyphData glyphDataForCharacter(UChar32, const FontDescription&, FontDataVariant);
 
     bool isFixedPitch(const FontDescription&);
     void determinePitch(const FontDescription&);
@@ -70,22 +67,26 @@ public:
     WidthCache& widthCache() { return m_widthCache; }
     const WidthCache& widthCache() const { return m_widthCache; }
 
-    const SimpleFontData* primarySimpleFontData(const FontDescription&);
-    const FontData* primaryFontData(const FontDescription& description) { return realizeFontDataAt(description, 0); }
+    const SimpleFontData& primarySimpleFontData(const FontDescription&);
     WEBCORE_EXPORT const FontData* realizeFontDataAt(const FontDescription&, unsigned index);
 
 private:
     FontGlyphs(PassRefPtr<FontSelector>);
     FontGlyphs(const FontPlatformData&);
 
-    GlyphData glyphDataForSystemFallback(UChar32, const FontDescription&, FontDataVariant, unsigned pageNumber, GlyphPageTreeNode&);
-    GlyphData glyphDataForVariant(UChar32, const FontDescription&, FontDataVariant, unsigned pageNumber, GlyphPageTreeNode*&);
+    GlyphData glyphDataForSystemFallback(UChar32, const FontDescription&, FontDataVariant);
+    GlyphData glyphDataForNormalVariant(UChar32, const FontDescription&);
+    GlyphData glyphDataForVariant(UChar32, const FontDescription&, FontDataVariant, unsigned fallbackLevel);
 
     WEBCORE_EXPORT void releaseFontData();
     
     Vector<RefPtr<FontData>, 1> m_realizedFontData;
-    GlyphPages m_pages;
-    GlyphPageTreeNode* m_pageZero;
+
+    RefPtr<GlyphPage> m_cachedPageZero;
+    HashMap<int, RefPtr<GlyphPage>> m_cachedPages;
+
+    HashSet<RefPtr<SimpleFontData>> m_systemFallbackFontDataSet;
+
     const SimpleFontData* m_cachedPrimarySimpleFontData;
     RefPtr<FontSelector> m_fontSelector;
     WidthCache m_widthCache;
@@ -104,12 +105,16 @@ inline bool FontGlyphs::isFixedPitch(const FontDescription& description)
     return m_pitch == FixedPitch;
 };
 
-inline const SimpleFontData* FontGlyphs::primarySimpleFontData(const FontDescription& description)
+inline const SimpleFontData& FontGlyphs::primarySimpleFontData(const FontDescription& description)
 {
     ASSERT(isMainThread());
-    if (!m_cachedPrimarySimpleFontData)
-        m_cachedPrimarySimpleFontData = primaryFontData(description)->fontDataForCharacter(' ');
-    return m_cachedPrimarySimpleFontData;
+    if (!m_cachedPrimarySimpleFontData) {
+        auto& fontData = *realizeFontDataAt(description, 0);
+        m_cachedPrimarySimpleFontData = fontData.simpleFontDataForCharacter(' ');
+        if (!m_cachedPrimarySimpleFontData)
+            m_cachedPrimarySimpleFontData = &fontData.simpleFontDataForFirstRange();
+    }
+    return *m_cachedPrimarySimpleFontData;
 }
 
 }

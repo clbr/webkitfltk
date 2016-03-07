@@ -67,6 +67,7 @@ class ClientRectList;
 class Color;
 class ContextMenuClient;
 class ContextMenuController;
+class DatabaseProvider;
 class DragCaretController;
 class DragClient;
 class DragController;
@@ -219,7 +220,7 @@ public:
 
     WEBCORE_EXPORT bool findString(const String&, FindOptions);
 
-    WEBCORE_EXPORT PassRefPtr<Range> rangeOfString(const String&, Range*, FindOptions);
+    WEBCORE_EXPORT RefPtr<Range> rangeOfString(const String&, Range*, FindOptions);
 
     WEBCORE_EXPORT unsigned countFindMatches(const String&, FindOptions, unsigned maxMatchCount);
     WEBCORE_EXPORT unsigned markAllMatchesForText(const String&, FindOptions, bool shouldHighlight, unsigned maxMatchCount);
@@ -234,8 +235,8 @@ public:
     enum { NoMatchAfterUserSelection = -1 };
     WEBCORE_EXPORT void findStringMatchingRanges(const String&, FindOptions, int maxCount, Vector<RefPtr<Range>>&, int& indexForSelection);
 #if PLATFORM(COCOA)
-    WEBCORE_EXPORT void addSchedulePair(PassRefPtr<SchedulePair>);
-    WEBCORE_EXPORT void removeSchedulePair(PassRefPtr<SchedulePair>);
+    WEBCORE_EXPORT void addSchedulePair(Ref<SchedulePair>&&);
+    WEBCORE_EXPORT void removeSchedulePair(Ref<SchedulePair>&&);
     SchedulePairHashSet* scheduledRunLoopPairs() { return m_scheduledRunLoopPairs.get(); }
 
     std::unique_ptr<SchedulePairHashSet> m_scheduledRunLoopPairs;
@@ -324,7 +325,7 @@ public:
     WEBCORE_EXPORT void invalidateStylesForLink(LinkHash);
 
     StorageNamespace* sessionStorage(bool optionalCreate = true);
-    void setSessionStorage(PassRefPtr<StorageNamespace>);
+    void setSessionStorage(RefPtr<StorageNamespace>&&);
 
     bool hasCustomHTMLTokenizerTimeDelay() const;
     double customHTMLTokenizerTimeDelay() const;
@@ -402,6 +403,8 @@ public:
     bool isAnyFrameHandlingBeforeUnloadEvent();
     void setLastSpatialNavigationCandidateCount(unsigned count) { m_lastSpatialNavigationCandidatesCount = count; }
     unsigned lastSpatialNavigationCandidateCount() const { return m_lastSpatialNavigationCandidatesCount; }
+
+    DatabaseProvider& databaseProvider() { return m_databaseProvider; }
 
     StorageNamespaceProvider& storageNamespaceProvider() { return m_storageNamespaceProvider.get(); }
     void setStorageNamespaceProvider(Ref<StorageNamespaceProvider>&&);
@@ -575,6 +578,7 @@ private:
     unsigned m_lastSpatialNavigationCandidatesCount;
     unsigned m_framesHandlingBeforeUnloadEvent;
 
+    Ref<DatabaseProvider> m_databaseProvider;
     Ref<StorageNamespaceProvider> m_storageNamespaceProvider;
     RefPtr<UserContentController> m_userContentController;
     Ref<VisitedLinkStore> m_visitedLinkStore;

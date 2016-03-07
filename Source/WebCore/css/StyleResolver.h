@@ -64,7 +64,6 @@ class CSSStyleSheet;
 class CSSValue;
 class ContainerNode;
 class Document;
-class DeprecatedStyleBuilder;
 class Element;
 class Frame;
 class FrameView;
@@ -237,7 +236,7 @@ public:
 
     void clearCachedPropertiesAffectedByViewportUnits();
 
-    bool createFilterOperations(CSSValue* inValue, FilterOperations& outOperations);
+    bool createFilterOperations(CSSValue& inValue, FilterOperations& outOperations);
     bool createMaskImageOperations(CSSValue* inValue, Vector<RefPtr<MaskImageOperation>>& outOperations);
     void loadPendingSVGDocuments();
 
@@ -506,11 +505,6 @@ private:
     bool classNamesAffectedByRules(const SpaceSplitString&) const;
     bool sharingCandidateHasIdenticalStyleAffectingAttributes(StyledElement*) const;
 
-    Length parseSnapCoordinate(CSSPrimitiveValue&);
-    Length parseSnapCoordinate(CSSValueList&, unsigned offset);
-    LengthSize parseSnapCoordinatePair(CSSValueList&, unsigned offset);
-    ScrollSnapPoints parseSnapPoints(CSSValue&);
-
     unsigned m_matchedPropertiesCacheAdditionsSinceLastSweep;
 
     typedef HashMap<unsigned, MatchedPropertiesCacheItem> MatchedPropertiesCache;
@@ -533,14 +527,11 @@ private:
     RefPtr<ViewportStyleResolver> m_viewportStyleResolver;
 #endif
 
-    const DeprecatedStyleBuilder& m_deprecatedStyleBuilder;
-
     CSSToStyleMap m_styleMap;
     InspectorCSSOMWrappers m_inspectorCSSOMWrappers;
 
     State m_state;
 
-    friend class DeprecatedStyleBuilder;
     friend bool operator==(const MatchedProperties&, const MatchedProperties&);
     friend bool operator!=(const MatchedProperties&, const MatchedProperties&);
     friend bool operator==(const MatchRanges&, const MatchRanges&);

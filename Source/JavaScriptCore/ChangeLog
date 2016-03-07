@@ -1,3 +1,75 @@
+2015-01-06  Alexey Proskuryakov  <ap@apple.com>
+
+        ADDRESS_SANITIZER macro is overloaded
+        https://bugs.webkit.org/show_bug.cgi?id=140130
+
+        Reviewed by Anders Carlsson.
+
+        * interpreter/JSStack.cpp: (JSC::JSStack::sanitizeStack): Use the new macro.
+        This code is nearly unused (only compiled in when JIT is disabled at build time),
+        however I've been told that it's best to keep it.
+
+2015-01-06  Mark Lam  <mark.lam@apple.com>
+
+        Fix Use details for op_create_arguments.
+        <https://webkit.org/b/140110>
+
+        Rubber stamped by Filip Pizlo.
+
+        The previous patch was wrong about op_create_arguments not using its 1st operand.
+        It does read from it (hence, used) to check if the Arguments object has already
+        been created or not.  This patch reverts the change for op_create_arguments.
+
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset):
+
+2015-01-06  Mark Lam  <mark.lam@apple.com>
+
+        Fix Use details for op_create_lexical_environment and op_create_arguments.
+        <https://webkit.org/b/140110>
+
+        Reviewed by Filip Pizlo.
+
+        The current "Use" details for op_create_lexical_environment and
+        op_create_arguments are wrong.  op_create_argument uses nothing instead of the
+        1st operand (the output local).  op_create_lexical_environment uses its 2nd
+        operand (the scope chain) instead of the 1st (the output local).
+        This patch fixes them to specify the proper uses.
+
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset):
+
+2015-01-06  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Implement ES6 String.prototype.repeat(count)
+        https://bugs.webkit.org/show_bug.cgi?id=140047
+
+        Reviewed by Darin Adler.
+
+        Introducing ES6 String.prototype.repeat(count) function.
+
+        * runtime/JSString.h:
+        * runtime/StringPrototype.cpp:
+        (JSC::StringPrototype::finishCreation):
+        (JSC::repeatSmallString):
+        (JSC::stringProtoFuncRepeat):
+
+2015-01-03  Michael Saboff  <msaboff@apple.com>
+
+        Crash in operationNewFunction when scrolling on Google+
+        https://bugs.webkit.org/show_bug.cgi?id=140033
+
+        Reviewed by Oliver Hunt.
+
+        In DFG code, the scope register can be eliminated because all uses have been
+        dead code eliminated.  In the case where one of the uses was creating a function
+        that is never used, the baseline code will still create the function.  If we OSR
+        exit to a path where that function gets created, check the scope register value
+        and set the new, but dead, function to undefined instead of creating a new function.
+
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_new_func_exp):
+
 2015-01-01  Yusuke Suzuki  <utatane.tea@gmail.com>
 
         String includes methods perform toString on searchString before toInt32 on a offset
