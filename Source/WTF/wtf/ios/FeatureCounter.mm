@@ -1,18 +1,15 @@
 /*
- * Copyright (C) 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1.  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer. 
+ *     notice, this list of conditions and the following disclaimer.
  * 2.  Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution. 
- * 3.  Neither the name of Apple Inc. ("Apple") nor the names of
- *     its contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission. 
+ *     documentation and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -26,28 +23,26 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "WebCoreObjCExtras.h"
+#import "config.h"
+#import "FeatureCounter.h"
 
-#include <utility>
-#include <wtf/Assertions.h>
-#include <wtf/MainThread.h>
-#include <wtf/ObjcRuntimeExtras.h>
-#include <wtf/Threading.h>
+#if PLATFORM(IOS) && USE(APPLE_INTERNAL_SDK)
+#import <AppSupport/CPAggregateDictionary.h>
 
-bool WebCoreObjCScheduleDeallocateOnMainThread(Class cls, id object)
+namespace WTF {
+
+void incrementFeatureCounterKey(const char* const key)
 {
-    ASSERT([object isKindOfClass:cls]);
-
-    if (isMainThread())
-        return false;
-
-    callOnMainThread([cls, object] {
-        Method method = class_getInstanceMethod(cls, @selector(dealloc));
-        IMP imp = method_getImplementation(method);
-        wtfCallIMP<void>(imp, object, @selector(dealloc));
-    });
-
-    return true;
+    NSString *nsKey = [[NSString alloc] initWithCharactersNoCopy:reinterpret_cast<unichar*>(const_cast<char*>(key)) length:strlen(key) freeWhenDone:NO];
+    [[CPAggregateDictionary sharedAggregateDictionary] incrementKey:nsKey];
 }
 
+void setFeatureCounterKey(const char* const key, int64_t value)
+{
+    NSString *nsKey = [[NSString alloc] initWithCharactersNoCopy:reinterpret_cast<unichar*>(const_cast<char*>(key)) length:strlen(key) freeWhenDone:NO];
+    [[CPAggregateDictionary sharedAggregateDictionary] setValue:value forScalarKey:nsKey];
+}
+
+} // namespace WTF
+
+#endif // PLATFORM(IOS) && USE(APPLE_INTERNAL_SDK)

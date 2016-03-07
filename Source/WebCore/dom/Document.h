@@ -465,6 +465,9 @@ public:
 
     String suggestedMIMEType() const;
 
+    void overrideMIMEType(const String&);
+    String contentType() const;
+
     String contentLanguage() const { return m_contentLanguage; }
     void setContentLanguage(const String&);
 
@@ -1308,7 +1311,7 @@ private:
     virtual String nodeName() const override final;
     virtual NodeType nodeType() const override final;
     virtual bool childTypeAllowed(NodeType) const override final;
-    virtual RefPtr<Node> cloneNode(bool deep) override final;
+    virtual RefPtr<Node> cloneNodeInternal(Document&, CloningOperation) override final;
     void cloneDataFromDocument(const Document&);
 
     virtual void refScriptExecutionContext() override final { ref(); }
@@ -1407,6 +1410,9 @@ private:
     String m_documentURI;
 
     String m_baseTarget;
+
+    // MIME type of the document in case it was cloned or created by XHR.
+    String m_overriddenMIMEType;
 
     std::unique_ptr<DOMImplementation> m_implementation;
 
@@ -1677,7 +1683,7 @@ private:
     bool m_didDispatchViewportPropertiesChanged;
 #endif
 
-    typedef HashMap<AtomicString, OwnPtr<Locale>> LocaleIdentifierToLocaleMap;
+    typedef HashMap<AtomicString, std::unique_ptr<Locale>> LocaleIdentifierToLocaleMap;
     LocaleIdentifierToLocaleMap m_localeCache;
 
 #if ENABLE(TEMPLATE_ELEMENT)

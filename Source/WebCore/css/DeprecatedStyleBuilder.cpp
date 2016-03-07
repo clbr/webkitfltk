@@ -626,94 +626,6 @@ public:
     }
 };
 
-class ApplyPropertyCursor {
-public:
-    static void applyInheritValue(CSSPropertyID, StyleResolver* styleResolver)
-    {
-        styleResolver->style()->setCursor(styleResolver->parentStyle()->cursor());
-        styleResolver->style()->setCursorList(styleResolver->parentStyle()->cursors());
-    }
-
-    static void applyInitialValue(CSSPropertyID, StyleResolver* styleResolver)
-    {
-        styleResolver->style()->clearCursorList();
-        styleResolver->style()->setCursor(RenderStyle::initialCursor());
-    }
-
-    static void applyValue(CSSPropertyID, StyleResolver* styleResolver, CSSValue* value)
-    {
-        styleResolver->style()->clearCursorList();
-        if (is<CSSValueList>(*value)) {
-            CSSValueList& list = downcast<CSSValueList>(*value);
-            int length = list.length();
-            styleResolver->style()->setCursor(CursorAuto);
-            for (int i = 0; i < length; i++) {
-                CSSValue* item = list.itemWithoutBoundsCheck(i);
-                if (is<CSSCursorImageValue>(*item)) {
-                    CSSCursorImageValue& image = downcast<CSSCursorImageValue>(*item);
-                    if (image.updateIfSVGCursorIsUsed(styleResolver->element())) // Elements with SVG cursors are not allowed to share style.
-                        styleResolver->style()->setUnique();
-                    styleResolver->style()->addCursor(styleResolver->styleImage(CSSPropertyCursor, image), image.hotSpot());
-                } else if (is<CSSPrimitiveValue>(*item)) {
-                    CSSPrimitiveValue& primitiveValue = downcast<CSSPrimitiveValue>(*item);
-                    if (primitiveValue.isValueID())
-                        styleResolver->style()->setCursor(primitiveValue);
-                }
-            }
-        } else if (is<CSSPrimitiveValue>(*value)) {
-            CSSPrimitiveValue& primitiveValue = downcast<CSSPrimitiveValue>(*value);
-            if (primitiveValue.isValueID() && styleResolver->style()->cursor() != ECursor(primitiveValue))
-                styleResolver->style()->setCursor(primitiveValue);
-        }
-    }
-
-    static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
-};
-
-static TextDecorationSkip valueToDecorationSkip(CSSPrimitiveValue& primitiveValue)
-{
-    ASSERT(primitiveValue.isValueID());
-
-    switch (primitiveValue.getValueID()) {
-    case CSSValueAuto:
-        return TextDecorationSkipAuto;
-    case CSSValueNone:
-        return TextDecorationSkipNone;
-    case CSSValueInk:
-        return TextDecorationSkipInk;
-    case CSSValueObjects:
-        return TextDecorationSkipObjects;
-    default:
-        break;
-    }
-
-    ASSERT_NOT_REACHED();
-    return TextDecorationSkipNone;
-}
-
-class ApplyPropertyTextDecorationSkip {
-public:
-    static void applyValue(CSSPropertyID, StyleResolver* styleResolver, CSSValue* value)
-    {
-        if (is<CSSPrimitiveValue>(*value)) {
-            styleResolver->style()->setTextDecorationSkip(valueToDecorationSkip(downcast<CSSPrimitiveValue>(*value)));
-            return;
-        }
-
-        TextDecorationSkip skip = RenderStyle::initialTextDecorationSkip();
-        if (is<CSSValueList>(*value)) {
-            for (auto& currentValue : downcast<CSSValueList>(*value))
-                skip |= valueToDecorationSkip(downcast<CSSPrimitiveValue>(currentValue.get()));
-        }
-        styleResolver->style()->setTextDecorationSkip(skip);
-    }
-    static PropertyHandler createHandler()
-    {
-        PropertyHandler handler = ApplyPropertyDefaultBase<TextDecorationSkip, &RenderStyle::textDecorationSkip, TextDecorationSkip, &RenderStyle::setTextDecorationSkip, TextDecorationSkip, &RenderStyle::initialTextDecorationSkip>::createHandler();
-        return PropertyHandler(handler.inheritFunction(), handler.initialFunction(), &applyValue);
-    }
-};
-
 template <typename T,
           T (Animation::*getterFunction)() const,
           void (Animation::*setterFunction)(T),
@@ -818,7 +730,6 @@ DeprecatedStyleBuilder::DeprecatedStyleBuilder()
     setPropertyHandler(CSSPropertyBorderRightColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::borderRightColor, &RenderStyle::setBorderRightColor, &RenderStyle::setVisitedLinkBorderRightColor, &RenderStyle::color>::createHandler());
     setPropertyHandler(CSSPropertyBorderTopColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::borderTopColor, &RenderStyle::setBorderTopColor, &RenderStyle::setVisitedLinkBorderTopColor, &RenderStyle::color>::createHandler());
     setPropertyHandler(CSSPropertyColor, ApplyPropertyColor<InheritFromParent, &RenderStyle::color, &RenderStyle::setColor, &RenderStyle::setVisitedLinkColor, &RenderStyle::invalidColor, RenderStyle::initialColor>::createHandler());
-    setPropertyHandler(CSSPropertyCursor, ApplyPropertyCursor::createHandler());
     setPropertyHandler(CSSPropertyFontSize, ApplyPropertyFontSize::createHandler());
     setPropertyHandler(CSSPropertyFontStyle, ApplyPropertyFont<FontItalic, &FontDescription::italic, &FontDescription::setItalic, FontItalicOff>::createHandler());
     setPropertyHandler(CSSPropertyFontVariant, ApplyPropertyFont<FontSmallCaps, &FontDescription::smallCaps, &FontDescription::setSmallCaps, FontSmallCapsOff>::createHandler());
@@ -827,7 +738,6 @@ DeprecatedStyleBuilder::DeprecatedStyleBuilder()
     setPropertyHandler(CSSPropertyOrphans, ApplyPropertyAuto<short, &RenderStyle::orphans, &RenderStyle::setOrphans, &RenderStyle::hasAutoOrphans, &RenderStyle::setHasAutoOrphans>::createHandler());
     setPropertyHandler(CSSPropertyOutlineColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::outlineColor, &RenderStyle::setOutlineColor, &RenderStyle::setVisitedLinkOutlineColor, &RenderStyle::color>::createHandler());
     setPropertyHandler(CSSPropertyWebkitTextDecorationColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::textDecorationColor, &RenderStyle::setTextDecorationColor, &RenderStyle::setVisitedLinkTextDecorationColor, &RenderStyle::color>::createHandler());
-    setPropertyHandler(CSSPropertyWebkitTextDecorationSkip, ApplyPropertyTextDecorationSkip::createHandler());
     setPropertyHandler(CSSPropertyTextRendering, ApplyPropertyFont<TextRenderingMode, &FontDescription::textRenderingMode, &FontDescription::setTextRenderingMode, AutoTextRendering>::createHandler());
 
     setPropertyHandler(CSSPropertyAnimationDelay, ApplyPropertyAnimation<double, &Animation::delay, &Animation::setDelay, &Animation::isDelaySet, &Animation::clearDelay, &Animation::initialAnimationDelay, &CSSToStyleMap::mapAnimationDelay, &RenderStyle::accessAnimations, &RenderStyle::animations>::createHandler());

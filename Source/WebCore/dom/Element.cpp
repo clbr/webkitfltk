@@ -289,21 +289,29 @@ DEFINE_VIRTUAL_ATTRIBUTE_EVENT_LISTENER(Element, error);
 DEFINE_VIRTUAL_ATTRIBUTE_EVENT_LISTENER(Element, focus);
 DEFINE_VIRTUAL_ATTRIBUTE_EVENT_LISTENER(Element, load);
 
-RefPtr<Node> Element::cloneNode(bool deep)
+RefPtr<Node> Element::cloneNodeInternal(Document& targetDocument, CloningOperation type)
 {
-    return deep ? cloneElementWithChildren() : cloneElementWithoutChildren();
+    switch (type) {
+    case CloningOperation::OnlySelf:
+    case CloningOperation::SelfWithTemplateContent:
+        return cloneElementWithoutChildren(targetDocument);
+    case CloningOperation::Everything:
+        return cloneElementWithChildren(targetDocument);
+    }
+    ASSERT_NOT_REACHED();
+    return nullptr;
 }
 
-RefPtr<Element> Element::cloneElementWithChildren()
+RefPtr<Element> Element::cloneElementWithChildren(Document& targetDocument)
 {
-    RefPtr<Element> clone = cloneElementWithoutChildren();
+    RefPtr<Element> clone = cloneElementWithoutChildren(targetDocument);
     cloneChildNodes(clone.get());
     return clone.release();
 }
 
-RefPtr<Element> Element::cloneElementWithoutChildren()
+RefPtr<Element> Element::cloneElementWithoutChildren(Document& targetDocument)
 {
-    RefPtr<Element> clone = cloneElementWithoutAttributesAndChildren();
+    RefPtr<Element> clone = cloneElementWithoutAttributesAndChildren(targetDocument);
     // This will catch HTML elements in the wrong namespace that are not correctly copied.
     // This is a sanity check as HTML overloads some of the DOM methods.
     ASSERT(isHTMLElement() == clone->isHTMLElement());
@@ -312,9 +320,9 @@ RefPtr<Element> Element::cloneElementWithoutChildren()
     return clone.release();
 }
 
-RefPtr<Element> Element::cloneElementWithoutAttributesAndChildren()
+RefPtr<Element> Element::cloneElementWithoutAttributesAndChildren(Document& targetDocument)
 {
-    return document().createElement(tagQName(), false);
+    return targetDocument.createElement(tagQName(), false);
 }
 
 RefPtr<Attr> Element::detachAttribute(unsigned index)
@@ -1992,36 +2000,34 @@ void Element::blur()
     }
 }
 
-void Element::dispatchFocusInEvent(const AtomicString& eventType, PassRefPtr<Element> oldFocusedElement)
+void Element::dispatchFocusInEvent(const AtomicString& eventType, RefPtr<Element>&& oldFocusedElement)
 {
     ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
     ASSERT(eventType == eventNames().focusinEvent || eventType == eventNames().DOMFocusInEvent);
-    dispatchScopedEvent(FocusEvent::create(eventType, true, false, document().defaultView(), 0, oldFocusedElement));
+    dispatchScopedEvent(FocusEvent::create(eventType, true, false, document().defaultView(), 0, WTF::move(oldFocusedElement)));
 }
 
-void Element::dispatchFocusOutEvent(const AtomicString& eventType, PassRefPtr<Element> newFocusedElement)
+void Element::dispatchFocusOutEvent(const AtomicString& eventType, RefPtr<Element>&& newFocusedElement)
 {
     ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
     ASSERT(eventType == eventNames().focusoutEvent || eventType == eventNames().DOMFocusOutEvent);
-    dispatchScopedEvent(FocusEvent::create(eventType, true, false, document().defaultView(), 0, newFocusedElement));
+    dispatchScopedEvent(FocusEvent::create(eventType, true, false, document().defaultView(), 0, WTF::move(newFocusedElement)));
 }
 
-void Element::dispatchFocusEvent(PassRefPtr<Element> oldFocusedElement, FocusDirection)
+void Element::dispatchFocusEvent(RefPtr<Element>&& oldFocusedElement, FocusDirection)
 {
     if (document().page())
         document().page()->chrome().client().elementDidFocus(this);
 
-    RefPtr<FocusEvent> event = FocusEvent::create(eventNames().focusEvent, false, false, document().defaultView(), 0, oldFocusedElement);
-    EventDispatcher::dispatchEvent(this, event.release());
+    EventDispatcher::dispatchEvent(this, FocusEvent::create(eventNames().focusEvent, false, false, document().defaultView(), 0, WTF::move(oldFocusedElement)));
 }
 
-void Element::dispatchBlurEvent(PassRefPtr<Element> newFocusedElement)
+void Element::dispatchBlurEvent(RefPtr<Element>&& newFocusedElement)
 {
     if (document().page())
         document().page()->chrome().client().elementDidBlur(this);
 
-    RefPtr<FocusEvent> event = FocusEvent::create(eventNames().blurEvent, false, false, document().defaultView(), 0, newFocusedElement);
-    EventDispatcher::dispatchEvent(this, event.release());
+    EventDispatcher::dispatchEvent(this, FocusEvent::create(eventNames().blurEvent, false, false, document().defaultView(), 0, WTF::move(newFocusedElement)));
 }
 
 void Element::mergeWithNextTextNode(Text& node, ExceptionCode& ec)

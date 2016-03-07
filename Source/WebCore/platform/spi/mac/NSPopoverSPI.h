@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,55 +23,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "Cache.h"
-#include "Heap.h"
-#include "Inline.h"
-#include "PerProcess.h"
+#if  __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 
-namespace bmalloc {
+#import "NSImmediateActionGestureRecognizerSPI.h"
 
-void* Cache::operator new(size_t size)
-{
-    return vmAllocate(vmSize(size));
-}
+// FIXME: This header should include system headers when possible.
 
-void Cache::operator delete(void* p, size_t size)
-{
-    vmDeallocate(p, vmSize(size));
-}
+@interface NSPopoverAnimationController : NSObject <NSImmediateActionAnimationController>
++ (instancetype)popoverAnimationControllerWithPopover:(NSPopover *)popover;
 
-void Cache::scavenge()
-{
-    Cache* cache = PerThread<Cache>::getFastCase();
-    if (!cache)
-        return;
+@property (readonly) NSPopover *popover;
+@property NSRectEdge preferredEdge;
+@property (weak) NSView *anchorView;
+@property NSRect positioningRect;
+@end
 
-    cache->allocator().scavenge();
-    cache->deallocator().scavenge();
-
-    std::unique_lock<StaticMutex> lock(PerProcess<Heap>::mutex());
-    PerProcess<Heap>::get()->scavenge(lock, std::chrono::milliseconds(0));
-}
-
-Cache::Cache()
-    : m_deallocator(PerProcess<Heap>::get())
-    , m_allocator(PerProcess<Heap>::get(), m_deallocator)
-{
-}
-
-NO_INLINE void* Cache::allocateSlowCaseNullCache(size_t size)
-{
-    return PerThread<Cache>::getSlowCase()->allocator().allocate(size);
-}
-
-NO_INLINE void Cache::deallocateSlowCaseNullCache(void* object)
-{
-    PerThread<Cache>::getSlowCase()->deallocator().deallocate(object);
-}
-
-NO_INLINE void* Cache::reallocateSlowCaseNullCache(void* object, size_t newSize)
-{
-    return PerThread<Cache>::getSlowCase()->allocator().reallocate(object, newSize);
-}
-
-} // namespace bmalloc
+#endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000

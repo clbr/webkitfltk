@@ -886,12 +886,13 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     [frameView release];
 
 #if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
-    if ([self respondsToSelector:@selector(setActionMenu:)]) {
+    // FIXME: Temporarily disable action menu installation.
+    /*if ([self respondsToSelector:@selector(setActionMenu:)]) {
         RetainPtr<NSMenu> actionMenu = adoptNS([[NSMenu alloc] init]);
         self.actionMenu = actionMenu.get();
         _private->actionMenuController = [[WebActionMenuController alloc] initWithWebView:self];
         self.actionMenu.autoenablesItems = NO;
-    }
+    }*/
 
     if (Class gestureClass = NSClassFromString(@"NSImmediateActionGestureRecognizer")) {
         RetainPtr<NSImmediateActionGestureRecognizer> recognizer = adoptNS([(NSImmediateActionGestureRecognizer *)[gestureClass alloc] initWithTarget:nil action:NULL]);
@@ -8604,6 +8605,37 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
 - (WebActionMenuController *)_actionMenuController
 {
     return _private->actionMenuController;
+}
+
+- (WebImmediateActionController *)_immediateActionController
+{
+    return _private->immediateActionController;
+}
+
+- (id)_animationControllerForDictionaryLookupPopupInfo:(const DictionaryPopupInfo&)dictionaryPopupInfo
+{
+    if (!dictionaryPopupInfo.attributedString)
+        return nil;
+
+    NSPoint textBaselineOrigin = dictionaryPopupInfo.origin;
+
+    // Convert to screen coordinates.
+    textBaselineOrigin = [self.window convertRectToScreen:NSMakeRect(textBaselineOrigin.x, textBaselineOrigin.y, 0, 0)].origin;
+
+    if (canLoadLUTermOptionDisableSearchTermIndicator() && canLoadLUNotificationPopoverWillClose()) {
+        if (!_private->hasInitializedLookupObserver) {
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_dictionaryLookupPopoverWillClose:) name:getLUNotificationPopoverWillClose() object:nil];
+            _private->hasInitializedLookupObserver = YES;
+        }
+
+        RetainPtr<NSMutableDictionary> mutableOptions = adoptNS([dictionaryPopupInfo.options mutableCopy]);
+        if (!mutableOptions)
+            mutableOptions = adoptNS([[NSMutableDictionary alloc] init]);
+        [mutableOptions setObject:@YES forKey:getLUTermOptionDisableSearchTermIndicator()];
+        return [getLULookupDefinitionModuleClass() lookupAnimationControllerForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:mutableOptions.get()];
+    }
+
+    return [getLULookupDefinitionModuleClass() lookupAnimationControllerForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:dictionaryPopupInfo.options.get()];
 }
 #endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 

@@ -267,8 +267,8 @@ public:
 
     virtual String nodeName() const override;
 
-    RefPtr<Element> cloneElementWithChildren();
-    RefPtr<Element> cloneElementWithoutChildren();
+    RefPtr<Element> cloneElementWithChildren(Document&);
+    RefPtr<Element> cloneElementWithoutChildren(Document&);
 
     void normalizeAttributes();
     String nodeNamePreservingCase() const;
@@ -532,10 +532,10 @@ public:
     bool dispatchWheelEvent(const PlatformWheelEvent&);
     bool dispatchKeyEvent(const PlatformKeyboardEvent&);
     void dispatchSimulatedClick(Event* underlyingEvent, SimulatedClickMouseEventOptions = SendNoEvents, SimulatedClickVisualOptions = ShowPressedLook);
-    void dispatchFocusInEvent(const AtomicString& eventType, PassRefPtr<Element> oldFocusedElement);
-    void dispatchFocusOutEvent(const AtomicString& eventType, PassRefPtr<Element> newFocusedElement);
-    virtual void dispatchFocusEvent(PassRefPtr<Element> oldFocusedElement, FocusDirection);
-    virtual void dispatchBlurEvent(PassRefPtr<Element> newFocusedElement);
+    void dispatchFocusInEvent(const AtomicString& eventType, RefPtr<Element>&& oldFocusedElement);
+    void dispatchFocusOutEvent(const AtomicString& eventType, RefPtr<Element>&& newFocusedElement);
+    virtual void dispatchFocusEvent(RefPtr<Element>&& oldFocusedElement, FocusDirection);
+    virtual void dispatchBlurEvent(RefPtr<Element>&& newFocusedElement);
 
     virtual bool willRecalcStyle(Style::Change);
     virtual void didRecalcStyle(Style::Change);
@@ -632,8 +632,8 @@ private:
 
     // cloneNode is private so that non-virtual cloneElementWithChildren and cloneElementWithoutChildren
     // are used instead.
-    virtual RefPtr<Node> cloneNode(bool deep) override;
-    virtual RefPtr<Element> cloneElementWithoutAttributesAndChildren();
+    virtual RefPtr<Node> cloneNodeInternal(Document&, CloningOperation) override;
+    virtual RefPtr<Element> cloneElementWithoutAttributesAndChildren(Document&);
 
     void addShadowRoot(PassRefPtr<ShadowRoot>);
     void removeShadowRoot();

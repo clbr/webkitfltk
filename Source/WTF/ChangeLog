@@ -1,3 +1,191 @@
+2014-12-16  Daniel Bates  <dabates@apple.com>
+
+        [iOS] WTF fails to build with public SDK due to missing header CPAggregateDictionary.h
+        https://bugs.webkit.org/show_bug.cgi?id=139695
+
+        Reviewed by Chris Dumez.
+
+        Add USE(APPLE_INTERNAL_SDK)-guard around iOS-specific feature counter implementation
+        as we are only interested in counting features in builds of iOS WebKit that were built
+        with the Apple Internal SDK.
+
+        * wtf/FeatureCounter.cpp:
+        * wtf/ios/FeatureCounter.mm:
+
+2014-12-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Enable FastMalloc in debug builds
+        https://bugs.webkit.org/show_bug.cgi?id=139692
+
+        Reviewed by Alexey Proskuryakov.
+
+        This will give debug builds greater fidelity to the real thing.
+
+        FastMalloc now transparently supports all the malloc debugging APIs I
+        know of by disabling itself at runtime -- and it should be easy to add
+        support for any APIs I missed -- so there's no need to turn it off in
+        debug builds.
+
+        * wtf/FastMalloc.cpp:
+
+2014-12-16  Anders Carlsson  <andersca@apple.com>
+
+        RefPtr::copyRef should be const
+        https://bugs.webkit.org/show_bug.cgi?id=139689
+
+        Reviewed by Andreas Kling.
+
+        copyRef() doesn't modify the original object so it should be const.
+        Also, add a && qualified overload and mark it deleted so that calls to copyRef() where
+        the object is an rvalue will fail to compile.
+
+        * wtf/RefPtr.h:
+
+2014-12-15  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Add feature counting support
+        https://bugs.webkit.org/show_bug.cgi?id=139652
+        <rdar://problem/19255690>
+
+        Reviewed by Gavin Barraclough.
+
+        Add a FeatureCounter API for to log / count when a feature
+        is used. For now, this is only implementated on iOS.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/FeatureCounter.cpp: Added.
+        (WTF::incrementFeatureCounterKey):
+        (WTF::setFeatureCounterKey):
+        * wtf/FeatureCounter.h: Added.
+        * wtf/ios/FeatureCounter.mm: Added.
+        (WTF::incrementFeatureCounterKey):
+        (WTF::setFeatureCounterKey):
+
+2014-12-12  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of the DONT_FINALIZE_ON_MAIN_THREAD #define
+        https://bugs.webkit.org/show_bug.cgi?id=139613
+
+        Reviewed by Sam Weinig.
+
+        * wtf/Platform.h:
+        Remove the #define.
+
+2014-12-15  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177284.
+        https://bugs.webkit.org/show_bug.cgi?id=139658
+
+        "Breaks API tests and LayoutTests on Yosemite Debug"
+        (Requested by msaboff on #webkit).
+
+        Reverted changeset:
+
+        "Make sure range based iteration of Vector<> still receives
+        bounds checking"
+        https://bugs.webkit.org/show_bug.cgi?id=138821
+        http://trac.webkit.org/changeset/177284
+
+2014-12-15  Andreas Kling  <akling@apple.com>
+
+        Purge PassRefPtr from FocusEvent code.
+        <https://webkit.org/b/139647>
+
+        Reviewed by Anders Carlsson.
+
+        Add a RefPtr::copyRef() to use when passing a RefPtr to a RefPtr&& without
+        transferring the ownership.
+
+        * wtf/RefPtr.h:
+
+2014-12-15  Oliver Hunt  <oliver@apple.com>
+
+        Make sure range based iteration of Vector<> still receives bounds checking
+        https://bugs.webkit.org/show_bug.cgi?id=138821
+
+        Reviewed by Mark Lam.
+
+        Add a new IndexedIterator struct to WTF that wraps a
+        Vector type and index to provide pointer like semantics
+        while still performing runtime bounds checking, even in
+        release builds. We store a simple index into the vector
+        which means that this iterator allows vector resizing
+        during iteration. If the vector is resized such that the
+        iterator is out of bounds, then any attempt to dereference
+        the iterator will crash safely.
+
+        For the purpose of retaining semantically equivalent
+        behaviour, the iterator can be moved to m_index == size()
+        as that is the standard "end" terminator for these types.
+        Attempting to dereference at that point will still crash
+        rather than perform an unsafe memory operation.
+
+        By necessity there are many overrides for operator + and - as
+        we otherwise hit many different type promotion ambiguities when
+        performing arithmetic with iterators. These ambiguities are also
+        different for 32- vs. 64-bit, so duplicating the functions
+        and then forwarding to the core implementations that performed
+        the bounds checking and mutation seemed like the right call.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/IndexedIterator.h: Added.
+        (WTF::IndexedIterator::IndexedIterator):
+        (WTF::IndexedIterator::operator->):
+        (WTF::IndexedIterator::operator*):
+        (WTF::IndexedIterator::get):
+        (WTF::IndexedIterator::operator++):
+        (WTF::IndexedIterator::operator--):
+        (WTF::IndexedIterator::operator UnspecifiedBoolType):
+        (WTF::IndexedIterator::operator-):
+        (WTF::IndexedIterator::operator=):
+        (WTF::IndexedIterator::operator==):
+        (WTF::IndexedIterator::operator!=):
+        (WTF::IndexedIterator::operator<):
+        (WTF::IndexedIterator::operator<=):
+        (WTF::IndexedIterator::operator>):
+        (WTF::IndexedIterator::operator>=):
+        (WTF::IndexedIterator::operator const_iterator):
+        (WTF::IndexedIterator::unsafeGet):
+        (WTF::getPtr):
+        (WTF::operator-):
+        (WTF::operator==):
+        (WTF::operator!=):
+        (WTF::operator<=):
+        (WTF::operator>=):
+        (WTF::operator<):
+        (WTF::operator>):
+        (WTF::IndexedIteratorSelector::makeIterator):
+        (WTF::IndexedIteratorSelector::makeConstIterator):
+        * wtf/RefCountedArray.h:
+        (WTF::RefCountedArray::RefCountedArray):
+        * wtf/Vector.h:
+        (WTF::Vector::Vector):
+        (WTF::Vector::begin):
+        (WTF::Vector::end):
+        (WTF::OverflowHandler>::Vector):
+        (WTF::=):
+        (WTF::OverflowHandler>::fill):
+        (WTF::OverflowHandler>::expandCapacity):
+        (WTF::OverflowHandler>::tryExpandCapacity):
+        (WTF::OverflowHandler>::resize):
+        (WTF::OverflowHandler>::shrink):
+        (WTF::OverflowHandler>::grow):
+        (WTF::OverflowHandler>::reserveCapacity):
+        (WTF::OverflowHandler>::tryReserveCapacity):
+        (WTF::OverflowHandler>::shrinkCapacity):
+        (WTF::OverflowHandler>::append):
+        (WTF::OverflowHandler>::tryAppend):
+        (WTF::OverflowHandler>::appendSlowCase):
+        (WTF::OverflowHandler>::uncheckedAppend):
+        (WTF::OverflowHandler>::appendVector):
+        (WTF::OverflowHandler>::insert):
+        (WTF::OverflowHandler>::insertVector):
+        (WTF::OverflowHandler>::remove):
+
 2014-12-14  Andreas Kling  <akling@apple.com>
 
         Minor follow-up tweaks suggested by Darin on bug 139587.

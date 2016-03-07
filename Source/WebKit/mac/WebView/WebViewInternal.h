@@ -66,6 +66,7 @@ class WebSelectionServiceController;
 @class WebActionMenuController;
 @class WebBasePluginPackage;
 @class WebDownload;
+@class WebImmediateActionController;
 @class WebNodeHighlight;
 
 #ifdef __cplusplus
@@ -262,7 +263,9 @@ OBJC_CLASS NSTextAlternatives;
 - (void)_clearTextIndicator;
 - (void)_showDictionaryLookupPopup:(const DictionaryPopupInfo&)dictionaryPopupInfo;
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+- (id)_animationControllerForDictionaryLookupPopupInfo:(const DictionaryPopupInfo&)dictionaryPopupInfo;
 - (WebActionMenuController *)_actionMenuController;
+- (WebImmediateActionController *)_immediateActionController;
 #endif
 #endif
 

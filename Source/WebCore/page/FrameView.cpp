@@ -1153,7 +1153,8 @@ void FrameView::layout(bool allowSubtree)
         return;
 
     InspectorInstrumentationCookie cookie = InspectorInstrumentation::willLayout(&frame());
-
+    AnimationUpdateBlock animationUpdateBlock(&frame().animation());
+    
     if (!allowSubtree && m_layoutRoot) {
         m_layoutRoot->markContainingBlocksForLayout(false);
         m_layoutRoot = 0;
@@ -2018,7 +2019,9 @@ void FrameView::scrollElementToRect(Element* element, const IntRect& rect)
 {
     frame().document()->updateLayoutIgnorePendingStylesheets();
 
-    LayoutRect bounds = rendererAnchorRect(*element);
+    LayoutRect bounds;
+    if (RenderElement* renderer = element->renderer())
+        bounds = renderer->anchorRect();
     int centeringOffsetX = (rect.width() - bounds.width()) / 2;
     int centeringOffsetY = (rect.height() - bounds.height()) / 2;
     setScrollPosition(IntPoint(bounds.x() - centeringOffsetX - rect.x(), bounds.y() - centeringOffsetY - rect.y()));
@@ -2787,8 +2790,8 @@ void FrameView::scrollToAnchor()
         return;
 
     LayoutRect rect;
-    if (anchorNode != frame().document())
-        rect = rendererAnchorRect(*anchorNode.get());
+    if (anchorNode != frame().document() && anchorNode->renderer())
+        rect = anchorNode->renderer()->anchorRect();
 
     // Scroll nested layers and frames to reveal the anchor.
     // Align to the top and to the closest side (this matches other browsers).
@@ -3937,6 +3940,8 @@ void FrameView::updateLayoutAndStyleIfNeededRecursive()
     // it is also incorrect, since if two frames overlap, the first could be excluded from the dirty
     // region but then become included later by the second frame adding rects to the dirty region
     // when it lays out.
+
+    AnimationUpdateBlock animationUpdateBlock(&frame().animation());
 
     frame().document()->updateStyleIfNeeded();
 

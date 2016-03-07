@@ -1,3 +1,154 @@
+2014-12-16  Beth Dakin  <bdakin@apple.com>
+
+        Crash getting default animation controller for some text
+        https://bugs.webkit.org/show_bug.cgi?id=139712
+        -and corresponding-
+        rdar://problem/19271707
+
+        Reviewed by Tim Horton.
+
+        Must null-check the range.
+        * WebView/WebImmediateActionController.mm:
+        (-[WebImmediateActionController _animationControllerForText]):
+
+2014-12-16  Timothy Horton  <timothy_horton@apple.com>
+
+        Immediate action popovers can get stuck open
+        https://bugs.webkit.org/show_bug.cgi?id=139709
+        <rdar://problem/19270279>
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebImmediateActionController.mm:
+        (-[WebImmediateActionController _clearImmediateActionState]):
+        Don't clear the animation controller; it breaks things and was unnecessary.
+
+2014-12-16  Tim Horton  <timothy_horton@apple.com>
+
+        Disable TextIndication for Lookup immediate actions
+        https://bugs.webkit.org/show_bug.cgi?id=139684
+
+        Reviewed by Anders Carlsson.
+
+        * WebView/WebView.mm:
+        (-[WebView _animationControllerForDictionaryLookupPopupInfo:]):
+
+2014-12-15  Beth Dakin  <bdakin@apple.com>
+
+        Build fix.
+
+        * WebView/WebImmediateActionController.mm:
+
+2014-12-15  Beth Dakin  <bdakin@apple.com>
+
+        Speculative build fix.
+
+        * WebView/WebView.mm:
+        (-[WebView _animationControllerForDictionaryLookupPopupInfo:]):
+        * WebView/WebViewInternal.h:
+
+2014-12-15  Beth Dakin  <bdakin@apple.com>
+
+        Make lookup an immediate action instead of an action menu item
+        https://bugs.webkit.org/show_bug.cgi?id=139661
+        -and corresponding-
+        rdar://problem/19198414
+
+        Reviewed by Tim Horton.
+
+        Remove the lookup menu items and non-unused static function associated with 
+        lookup.
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController _defaultMenuItemsForText]):
+        (-[WebActionMenuController _defaultMenuItemsForEditableText]):
+        (-[WebActionMenuController _defaultMenuItemsForEditableTextWithSuggestions]):
+        (-[WebActionMenuController _createActionMenuItemForTag:]):
+        (-[WebActionMenuController _lookupText:]): Deleted.
+        (performDictionaryLookupForSelection): Deleted.
+        (performDictionaryLookupForRange): Deleted.
+
+        Set the defaultAnimationController to the lookup-provided animation controller 
+        when appropriate.
+        * WebView/WebImmediateActionController.mm:
+        (-[WebImmediateActionController _defaultAnimationController]):
+        (dictionaryPopupInfoForRange):
+        (-[WebImmediateActionController _animationControllerForText]):
+
+        New type.
+        * WebView/WebUIDelegatePrivate.h:
+
+        New function to get the lookup animation controller.
+        * WebView/WebView.mm:
+        (-[WebView _animationControllerForDictionaryLookupPopupInfo:]):
+        * WebView/WebViewInternal.h:
+
+2014-12-15  Timothy Horton  <timothy_horton@apple.com>
+
+        Implement Data Detectors immediate actions for Legacy WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=139619
+        <rdar://problem/19198539>
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebImmediateActionController.mm:
+        (-[WebImmediateActionController _menuItemForDataDetectedText]):
+        Note that this action context is only for immediate actions.
+
+2014-12-15  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Addressing post-review comments in r177035
+        https://bugs.webkit.org/show_bug.cgi?id=139557
+
+        Reviewed by Darin Adler.
+
+        * WebView/WebActionMenuController.mm:
+        (elementBoundingBoxInWindowCoordinatesFromNode): Migrate off rendererBoundingBox().
+
+2014-12-15  Timothy Horton  <timothy_horton@apple.com>
+
+        Implement Data Detectors immediate actions for Legacy WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=139619
+        <rdar://problem/19198539>
+
+        Reviewed by Eric Carlson.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView mouseDown:mouseDown:]):
+        Send mouseDown along to the WebImmediateActionController too.
+
+        * WebView/WebImmediateActionController.h:
+        * WebView/WebImmediateActionController.mm:
+        (-[WebImmediateActionController webViewClosed]):
+        (-[WebImmediateActionController webView:willHandleMouseDown:]):
+        (-[WebImmediateActionController _cancelImmediateAction]):
+        (-[WebImmediateActionController _clearImmediateActionState]):
+        (-[WebImmediateActionController immediateActionRecognizerWillPrepare:]):
+        (-[WebImmediateActionController _defaultAnimationController]):
+        (-[WebImmediateActionController _updateImmediateActionItem]):
+        (-[WebImmediateActionController _menuItemForDataDetectedText]):
+        (-[WebImmediateActionController _showTextIndicator]):
+        (-[WebImmediateActionController _hideTextIndicator]):
+        Copy most of the DataDetectors implementation into WebImmediateActionController.
+
+        * WebView/WebUIDelegatePrivate.h:
+        Add a new type.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        Temporarily disable action menus.
+
+        (-[WebView _immediateActionController]):
+        * WebView/WebViewInternal.h:
+
+2014-12-15  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Delete Notation because we don't use it
+        https://bugs.webkit.org/show_bug.cgi?id=139171
+
+        Reviewed by Kent Tamura.
+
+        * MigrateHeaders.make:
+
 2014-12-14  Andreas Kling  <akling@apple.com>
 
         Replace PassRef with Ref/Ref&& across the board.

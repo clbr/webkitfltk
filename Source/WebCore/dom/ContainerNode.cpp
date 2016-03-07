@@ -765,11 +765,12 @@ void ContainerNode::childrenChanged(const ChildChange& change)
     invalidateNodeListAndCollectionCachesInAncestors();
 }
 
-void ContainerNode::cloneChildNodes(ContainerNode *clone)
+void ContainerNode::cloneChildNodes(ContainerNode* clone)
 {
     ExceptionCode ec = 0;
+    Document& targetDocument = clone->document();
     for (Node* child = firstChild(); child && !ec; child = child->nextSibling()) {
-        RefPtr<Node> clonedChild = child->cloneNode(false);
+        RefPtr<Node> clonedChild = child->cloneNodeInternal(targetDocument, CloningOperation::SelfWithTemplateContent);
         clone->appendChild(clonedChild, ec);
 
         if (!ec && is<ContainerNode>(child))
@@ -908,13 +909,6 @@ RefPtr<RadioNodeList> ContainerNode::radioNodeList(const AtomicString& name)
 {
     ASSERT(hasTagName(HTMLNames::formTag) || hasTagName(HTMLNames::fieldsetTag));
     return ensureRareData().ensureNodeLists().addCacheWithAtomicName<RadioNodeList>(*this, name);
-}
-
-LayoutRect rendererAnchorRect(const ContainerNode& node)
-{
-    if (RenderElement* renderer = node.renderer())
-        return renderer->anchorRect();
-    return LayoutRect();
 }
 
 } // namespace WebCore
