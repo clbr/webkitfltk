@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008, 2009, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,12 +24,49 @@
  */
 
 #include "config.h"
-#include "FontData.h"
+#include "FontRanges.h"
+
+#include "SimpleFontData.h"
+#include <wtf/Assertions.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
-FontData::~FontData()
+FontRanges::FontRanges()
 {
+}
+
+FontRanges::FontRanges(RefPtr<SimpleFontData>&& fontData)
+{
+    if (fontData)
+        m_ranges.append(Range { 0, 0x7FFFFFFF, fontData.releaseNonNull() });
+}
+
+FontRanges::~FontRanges()
+{
+}
+
+const SimpleFontData* FontRanges::fontDataForCharacter(UChar32 c) const
+{
+    for (auto& range : m_ranges) {
+        if (range.from() <= c && c <= range.to())
+            return &range.fontData();
+    }
+    return nullptr;
+}
+
+const SimpleFontData& FontRanges::fontDataForFirstRange() const
+{
+    return m_ranges[0].fontData();
+}
+
+bool FontRanges::isLoading() const
+{
+    for (auto& range : m_ranges) {
+        if (range.fontData().isLoading())
+            return true;
+    }
+    return false;
 }
 
 } // namespace WebCore

@@ -540,6 +540,8 @@ set(WebCore_NON_SVG_IDL_FILES
     html/canvas/OESTextureHalfFloat.idl
     html/canvas/OESTextureHalfFloatLinear.idl
     html/canvas/OESVertexArrayObject.idl
+    html/canvas/WebGL1RenderingContext.idl
+    html/canvas/WebGL2RenderingContext.idl
     html/canvas/WebGLActiveInfo.idl
     html/canvas/WebGLBuffer.idl
     html/canvas/WebGLCompressedTextureATC.idl
@@ -555,7 +557,7 @@ set(WebCore_NON_SVG_IDL_FILES
     html/canvas/WebGLLoseContext.idl
     html/canvas/WebGLProgram.idl
     html/canvas/WebGLRenderbuffer.idl
-    html/canvas/WebGLRenderingContext.idl
+    html/canvas/WebGLRenderingContextBase.idl
     html/canvas/WebGLShader.idl
     html/canvas/WebGLShaderPrecisionFormat.idl
     html/canvas/WebGLTexture.idl
@@ -606,8 +608,6 @@ set(WebCore_NON_SVG_IDL_FILES
 
     workers/AbstractWorker.idl
     workers/DedicatedWorkerGlobalScope.idl
-    workers/SharedWorker.idl
-    workers/SharedWorkerGlobalScope.idl
     workers/Worker.idl
     workers/WorkerGlobalScope.idl
     workers/WorkerLocation.idl
@@ -950,8 +950,6 @@ set(WebCore_SOURCES
     Modules/webdatabase/DatabaseAuthorizer.cpp
     Modules/webdatabase/DatabaseBackend.cpp
     Modules/webdatabase/DatabaseBackendBase.cpp
-    Modules/webdatabase/DatabaseBackendContext.cpp
-    Modules/webdatabase/DatabaseBase.cpp
     Modules/webdatabase/DatabaseContext.cpp
     Modules/webdatabase/DatabaseManager.cpp
     Modules/webdatabase/DatabaseServer.cpp
@@ -1131,7 +1129,6 @@ set(WebCore_SOURCES
     bindings/js/JSSVGElementInstanceCustom.cpp
     bindings/js/JSSVGLengthCustom.cpp
     bindings/js/JSSVGPathSegCustom.cpp
-    bindings/js/JSSharedWorkerCustom.cpp
     bindings/js/JSStorageCustom.cpp
     bindings/js/JSStyleSheetCustom.cpp
     bindings/js/JSStyleSheetListCustom.cpp
@@ -1150,7 +1147,9 @@ set(WebCore_SOURCES
     bindings/js/JSTreeWalkerCustom.cpp
     bindings/js/JSVideoTrackCustom.cpp
     bindings/js/JSVideoTrackListCustom.cpp
-    bindings/js/JSWebGLRenderingContextCustom.cpp
+    bindings/js/JSWebGL1RenderingContextCustom.cpp
+    bindings/js/JSWebGL2RenderingContextCustom.cpp
+    bindings/js/JSWebGLRenderingContextBaseCustom.cpp
     bindings/js/JSWebKitPointCustom.cpp
     bindings/js/JSWorkerCustom.cpp
     bindings/js/JSWorkerGlobalScopeBase.cpp
@@ -1216,6 +1215,8 @@ set(WebCore_SOURCES
     css/CSSImportRule.cpp
     css/CSSInheritedValue.cpp
     css/CSSInitialValue.cpp
+    css/CSSKeyframeRule.cpp
+    css/CSSKeyframesRule.cpp
     css/CSSLineBoxContainValue.cpp
     css/CSSMediaRule.cpp
     css/CSSOMUtils.cpp
@@ -1262,7 +1263,6 @@ set(WebCore_SOURCES
     css/RuleSet.cpp
     css/SVGCSSComputedStyleDeclaration.cpp
     css/SVGCSSParser.cpp
-    css/SVGCSSStyleSelector.cpp
     css/SelectorChecker.cpp
     css/SelectorFilter.cpp
     css/SourceSizeList.cpp
@@ -1280,8 +1280,6 @@ set(WebCore_SOURCES
     css/ViewportStyleResolver.cpp
     css/WebKitCSSFilterValue.cpp
     css/WebKitCSSResourceValue.cpp
-    css/CSSKeyframeRule.cpp
-    css/CSSKeyframesRule.cpp
     css/WebKitCSSMatrix.cpp
     css/WebKitCSSRegionRule.cpp
     css/WebKitCSSTransformValue.cpp
@@ -1675,6 +1673,8 @@ set(WebCore_SOURCES
     html/canvas/OESTextureHalfFloat.cpp
     html/canvas/OESTextureHalfFloatLinear.cpp
     html/canvas/OESVertexArrayObject.cpp
+    html/canvas/WebGL1RenderingContext.cpp
+    html/canvas/WebGL2RenderingContext.cpp
     html/canvas/WebGLBuffer.cpp
     html/canvas/WebGLCompressedTextureATC.cpp
     html/canvas/WebGLCompressedTexturePVRTC.cpp
@@ -1694,7 +1694,7 @@ set(WebCore_SOURCES
     html/canvas/WebGLObject.cpp
     html/canvas/WebGLProgram.cpp
     html/canvas/WebGLRenderbuffer.cpp
-    html/canvas/WebGLRenderingContext.cpp
+    html/canvas/WebGLRenderingContextBase.cpp
     html/canvas/WebGLShader.cpp
     html/canvas/WebGLShaderPrecisionFormat.cpp
     html/canvas/WebGLSharedObject.cpp
@@ -2057,12 +2057,12 @@ set(WebCore_SOURCES
     platform/graphics/FloatSize.cpp
     platform/graphics/Font.cpp
     platform/graphics/FontCache.cpp
-    platform/graphics/FontData.cpp
     platform/graphics/FontDescription.cpp
     platform/graphics/FontFastPath.cpp
     platform/graphics/FontFeatureSettings.cpp
     platform/graphics/FontGenericFamilies.cpp
     platform/graphics/FontGlyphs.cpp
+    platform/graphics/FontRanges.cpp
     platform/graphics/GeneratedImage.cpp
     platform/graphics/GeometryUtilities.cpp
     platform/graphics/Gradient.cpp
@@ -2090,7 +2090,6 @@ set(WebCore_SOURCES
     platform/graphics/Region.cpp
     platform/graphics/RoundedRect.cpp
     platform/graphics/SVGGlyph.cpp
-    platform/graphics/SegmentedFontData.cpp
     platform/graphics/ShadowBlur.cpp
     platform/graphics/SimpleFontData.cpp
     platform/graphics/StringTruncator.cpp
@@ -2652,11 +2651,6 @@ set(WebCore_SOURCES
     workers/AbstractWorker.cpp
     workers/DedicatedWorkerGlobalScope.cpp
     workers/DedicatedWorkerThread.cpp
-    workers/DefaultSharedWorkerRepository.cpp
-    workers/SharedWorker.cpp
-    workers/SharedWorkerGlobalScope.cpp
-    workers/SharedWorkerRepository.cpp
-    workers/SharedWorkerThread.cpp
     workers/Worker.cpp
     workers/WorkerEventQueue.cpp
     workers/WorkerGlobalScope.cpp
@@ -2778,6 +2772,8 @@ if (ENABLE_WEBGL)
         html/canvas/OESTextureHalfFloat.cpp
         html/canvas/OESTextureHalfFloatLinear.cpp
         html/canvas/OESVertexArrayObject.cpp
+        html/canvas/WebGL1RenderingContext.cpp
+        html/canvas/WebGL2RenderingContext.cpp
         html/canvas/WebGLBuffer.cpp
         html/canvas/WebGLCompressedTextureATC.cpp
         html/canvas/WebGLCompressedTexturePVRTC.cpp
@@ -2797,7 +2793,7 @@ if (ENABLE_WEBGL)
         html/canvas/WebGLObject.cpp
         html/canvas/WebGLProgram.cpp
         html/canvas/WebGLRenderbuffer.cpp
-        html/canvas/WebGLRenderingContext.cpp
+        html/canvas/WebGLRenderingContextBase.cpp
         html/canvas/WebGLShader.cpp
         html/canvas/WebGLShaderPrecisionFormat.cpp
         html/canvas/WebGLSharedObject.cpp
@@ -2819,6 +2815,8 @@ if (ENABLE_WEBGL)
         html/canvas/OESTextureHalfFloat.idl
         html/canvas/OESTextureHalfFloatLinear.idl
         html/canvas/OESVertexArrayObject.idl
+        html/canvas/WebGL1RenderingContext.idl
+        html/canvas/WebGL2RenderingContext.idl
         html/canvas/WebGLActiveInfo.idl
         html/canvas/WebGLBuffer.idl
         html/canvas/WebGLCompressedTextureATC.idl
@@ -2834,7 +2832,7 @@ if (ENABLE_WEBGL)
         html/canvas/WebGLLoseContext.idl
         html/canvas/WebGLProgram.idl
         html/canvas/WebGLRenderbuffer.idl
-        html/canvas/WebGLRenderingContext.idl
+        html/canvas/WebGLRenderingContextBase.idl
         html/canvas/WebGLShader.idl
         html/canvas/WebGLShaderPrecisionFormat.idl
         html/canvas/WebGLTexture.idl
@@ -3160,7 +3158,6 @@ set(IDL_FILES_TMP ${DERIVED_SOURCES_WEBCORE_DIR}/idl_files.tmp)
 set(SUPPLEMENTAL_DEPENDENCY_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/supplemental_dependency.tmp)
 set(WINDOW_CONSTRUCTORS_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/DOMWindowConstructors.idl)
 set(WORKERGLOBALSCOPE_CONSTRUCTORS_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/WorkerGlobalScopeConstructors.idl)
-set(SHAREDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/SharedWorkerGlobalScopeConstructors.idl)
 set(DEDICATEDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/DedicatedWorkerGlobalScopeConstructors.idl)
 set(IDL_ATTRIBUTES_FILE ${WEBCORE_DIR}/bindings/scripts/IDLAttributes.txt)
 
@@ -3350,16 +3347,15 @@ list(APPEND WebCoreTestSupport_IDL_FILES ${DERIVED_SOURCES_WEBCORE_DIR}/Internal
 file(WRITE ${IDL_FILES_TMP} ${IDL_FILES_LIST})
 
 add_custom_command(
-    OUTPUT ${SUPPLEMENTAL_DEPENDENCY_FILE} ${WINDOW_CONSTRUCTORS_FILE} ${WORKERGLOBALSCOPE_CONSTRUCTORS_FILE} ${SHAREDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE} ${DEDICATEDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
+    OUTPUT ${SUPPLEMENTAL_DEPENDENCY_FILE} ${WINDOW_CONSTRUCTORS_FILE} ${WORKERGLOBALSCOPE_CONSTRUCTORS_FILE} ${DEDICATEDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
     DEPENDS ${WEBCORE_DIR}/bindings/scripts/preprocess-idls.pl ${SCRIPTS_PREPROCESS_IDLS} ${WebCore_IDL_FILES} ${WebCoreTestSupport_IDL_FILES}
     COMMAND ${PERL_EXECUTABLE} -I${WEBCORE_DIR}/bindings/scripts ${WEBCORE_DIR}/bindings/scripts/preprocess-idls.pl --defines "${FEATURE_DEFINES_JAVASCRIPT}" --idlFilesList ${IDL_FILES_TMP} --supplementalDependencyFile ${SUPPLEMENTAL_DEPENDENCY_FILE} --windowConstructorsFile ${WINDOW_CONSTRUCTORS_FILE} --workerGlobalScopeConstructorsFile ${WORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
---sharedWorkerGlobalScopeConstructorsFile ${SHAREDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE} --dedicatedWorkerGlobalScopeConstructorsFile ${DEDICATEDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
+--dedicatedWorkerGlobalScopeConstructorsFile ${DEDICATEDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
     VERBATIM)
 
 set(ADDITIONAL_BINDINGS_DEPENDENCIES
     ${WINDOW_CONSTRUCTORS_FILE}
     ${WORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
-    ${SHAREDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
     ${DEDICATEDWORKERGLOBALSCOPE_CONSTRUCTORS_FILE}
 )
 

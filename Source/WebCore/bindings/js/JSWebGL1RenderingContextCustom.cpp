@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,36 +23,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DatabaseBackendContext_h
-#define DatabaseBackendContext_h
+#include "config.h"
 
-#if ENABLE(SQL_DATABASE)
+#if ENABLE(WEBGL)
+#include "JSWebGL1RenderingContext.h"
 
-#include "DatabaseContext.h"
+using namespace JSC;
 
 namespace WebCore {
 
-class ScriptExecutionContext;
-class SecurityOrigin;
-
-// FIXME: This implementation of DatabaseBackendContext is only a place holder
-// for the split out of the DatabaseContext backend to be done later. This
-// place holder is needed to allow other code that need to reference the
-// DatabaseBackendContext to do so before the proper backend split is
-// available. This should be replaced with the actual implementation later.
-
-class DatabaseBackendContext : public DatabaseContext {
-public:
-    DatabaseContext* frontend();
-
-    ScriptExecutionContext* scriptExecutionContext() const { return m_scriptExecutionContext; }
-    SecurityOrigin* securityOrigin() const;
-
-    bool isContextThread() const;
-};
+void JSWebGL1RenderingContext::visitAdditionalChildren(SlotVisitor& visitor)
+{
+    visitor.addOpaqueRoot(&impl());
+}
 
 } // namespace WebCore
 
-#endif // ENABLE(SQL_DATABASE)
-
-#endif // DatabaseBackendContext_h
+#endif // ENABLE(WEBGL)

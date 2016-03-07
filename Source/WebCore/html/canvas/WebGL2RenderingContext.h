@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2009, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,66 +20,23 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "SegmentedFontData.h"
+#ifndef WebGL2RenderingContext_h
+#define WebGL2RenderingContext_h
 
-#include "SimpleFontData.h"
-#include <wtf/Assertions.h>
-#include <wtf/text/WTFString.h>
+#include "WebGLRenderingContextBase.h"
 
 namespace WebCore {
 
-SegmentedFontData::SegmentedFontData()
-{
-    
-}
-
-SegmentedFontData::~SegmentedFontData()
-{
-}
-
-const SimpleFontData* SegmentedFontData::simpleFontDataForCharacter(UChar32 c) const
-{
-    for (auto& range : m_ranges) {
-        if (range.from() <= c && c <= range.to())
-            return range.fontData().get();
-    }
-    return nullptr;
-}
-
-const SimpleFontData& SegmentedFontData::simpleFontDataForFirstRange() const
-{
-    return *m_ranges[0].fontData();
-}
-
-bool SegmentedFontData::isCustomFont() const
-{
-    // All segmented fonts are custom fonts.
-    return true;
-}
-
-bool SegmentedFontData::isLoading() const
-{
-    for (auto& range : m_ranges) {
-        if (range.fontData()->isLoading())
-            return true;
-    }
-    return false;
-}
-
-bool SegmentedFontData::isSegmented() const
-{
-    return true;
-}
-
-#ifndef NDEBUG
-String SegmentedFontData::description() const
-{
-    return "[segmented font]";
-}
-#endif
+class WebGL2RenderingContext final : public WebGLRenderingContextBase {
+public:
+    WebGL2RenderingContext(HTMLCanvasElement*, GraphicsContext3D::Attributes);
+    WebGL2RenderingContext(HTMLCanvasElement*, PassRefPtr<GraphicsContext3D>, GraphicsContext3D::Attributes);
+    virtual bool isWebGL2() const { return true; }
+};
 
 } // namespace WebCore
+
+#endif

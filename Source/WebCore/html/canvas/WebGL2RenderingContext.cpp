@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,36 +20,25 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
-#include "DatabaseBackendContext.h"
 
-#if ENABLE(SQL_DATABASE)
-
-#include "ScriptExecutionContext.h"
+#if ENABLE(WEBGL)
+#include "WebGL2RenderingContext.h"
 
 namespace WebCore {
 
-DatabaseContext* DatabaseBackendContext::frontend()
+WebGL2RenderingContext::WebGL2RenderingContext(HTMLCanvasElement* passedCanvas, GraphicsContext3D::Attributes attributes)
+    : WebGLRenderingContextBase(passedCanvas, attributes)
 {
-    // FIXME: Currently, we're only simulating the frontend by return the
-    // backend context as its own the frontend. When we split the 2 apart, this
-    // create() function should be changed to return a cached m_frontend.
-    return static_cast<DatabaseContext*>(this);
 }
 
-SecurityOrigin* DatabaseBackendContext::securityOrigin() const
+WebGL2RenderingContext::WebGL2RenderingContext(HTMLCanvasElement* passedCanvas, PassRefPtr<GraphicsContext3D> context,
+    GraphicsContext3D::Attributes attributes) : WebGLRenderingContextBase(passedCanvas, context, attributes)
 {
-    return m_scriptExecutionContext->securityOrigin();
 }
-
-bool DatabaseBackendContext::isContextThread() const
-{
-    return m_scriptExecutionContext->isContextThread();
-}
-
 } // namespace WebCore
 
-#endif // ENABLE(SQL_DATABASE)
+#endif // ENABLE(WEBGL)

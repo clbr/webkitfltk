@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
- * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,38 +23,39 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#ifndef URLFilterParser_h
+#define URLFilterParser_h
 
-#if ENABLE(SHARED_WORKERS)
+#if ENABLE(CONTENT_EXTENSIONS)
 
-#include "SharedWorkerRepository.h"
-
-#include "DefaultSharedWorkerRepository.h"
-#include "MessagePortChannel.h"
-#include "SharedWorker.h"
+#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
-bool SharedWorkerRepository::isAvailable()
-{
-    return DefaultSharedWorkerRepository::instance().isAvailable();
-}
+namespace ContentExtensions {
 
-void SharedWorkerRepository::connect(PassRefPtr<SharedWorker> worker, std::unique_ptr<MessagePortChannel> port, const URL& url, const String& name, ExceptionCode& ec)
-{
-    DefaultSharedWorkerRepository::instance().connectToWorker(worker, WTF::move(port), url, name, ec);
-}
+class NFA;
 
-void SharedWorkerRepository::documentDetached(Document* document)
-{
-    DefaultSharedWorkerRepository::instance().documentDetached(document);
-}
+class URLFilterParser {
+public:
+    void parse(const String& pattern, uint64_t patternId, NFA&);
 
-bool SharedWorkerRepository::hasSharedWorkers(Document* document)
-{
-    return DefaultSharedWorkerRepository::instance().hasSharedWorkers(document);
-}
+    bool hasError() const { return !m_errorMessage.isNull(); }
+    String errorMessage() const { return m_errorMessage; }
 
-}
+private:
+    struct BoundedSubGraph {
+        unsigned start;
+        unsigned end;
+    };
 
-#endif
+    String m_errorMessage;
+};
+
+} // namespace ContentExtensions
+
+} // namespace WebCore
+
+#endif // ENABLE(CONTENT_EXTENSIONS)
+
+#endif // URLFilterParser_h

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,30 +23,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DatabaseBase_h
-#define DatabaseBase_h
+#include "config.h"
 
-#if ENABLE(SQL_DATABASE)
-
-#include <wtf/text/WTFString.h>
+#if ENABLE(WEBGL)
+#include "WebGL1RenderingContext.h"
 
 namespace WebCore {
 
-class ScriptExecutionContext;
+WebGL1RenderingContext::WebGL1RenderingContext(HTMLCanvasElement* passedCanvas, GraphicsContext3D::Attributes attributes)
+    : WebGLRenderingContextBase(passedCanvas, attributes)
+{
+}
 
-class DatabaseBase {
-public:
-    ScriptExecutionContext* scriptExecutionContext() const;
-    void logErrorMessage(const String& message);
-
-protected:
-    DatabaseBase(ScriptExecutionContext*);
-
-    RefPtr<ScriptExecutionContext> m_scriptExecutionContext;
-};
+WebGL1RenderingContext::WebGL1RenderingContext(HTMLCanvasElement* passedCanvas, PassRefPtr<GraphicsContext3D> context,
+    GraphicsContext3D::Attributes attributes) : WebGLRenderingContextBase(passedCanvas, context, attributes)
+{
+}
 
 } // namespace WebCore
 
-#endif // ENABLE(SQL_DATABASE)
-
-#endif // DatabaseBase_h
+#endif // ENABLE(WEBGL)

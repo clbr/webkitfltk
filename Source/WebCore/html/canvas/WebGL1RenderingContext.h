@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,40 +23,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef FontData_h
-#define FontData_h
+#ifndef WebGLRenderingContext_h
+#define WebGLRenderingContext_h
 
-#include <unicode/utypes.h>
-#include <wtf/FastMalloc.h>
-#include <wtf/Forward.h>
-#include <wtf/Noncopyable.h>
-#include <wtf/PassRefPtr.h>
-#include <wtf/RefCounted.h>
+#include "WebGLRenderingContextBase.h"
 
 namespace WebCore {
 
-class SimpleFontData;
-
-class FontData : public RefCounted<FontData> {
-    WTF_MAKE_NONCOPYABLE(FontData); WTF_MAKE_FAST_ALLOCATED;
+class WebGL1RenderingContext final : public WebGLRenderingContextBase {
 public:
-    FontData()
-    {
-    }
-
-    virtual ~FontData();
-
-    virtual const SimpleFontData* simpleFontDataForCharacter(UChar32) const = 0;
-    virtual const SimpleFontData& simpleFontDataForFirstRange() const = 0;
-    virtual bool isCustomFont() const = 0;
-    virtual bool isLoading() const = 0;
-    virtual bool isSegmented() const = 0;
-
-#ifndef NDEBUG
-    virtual String description() const = 0;
-#endif
+    WebGL1RenderingContext(HTMLCanvasElement*, GraphicsContext3D::Attributes);
+    WebGL1RenderingContext(HTMLCanvasElement*, PassRefPtr<GraphicsContext3D>, GraphicsContext3D::Attributes);
+    virtual bool isWebGL1() const { return true; }
 };
-
+    
 } // namespace WebCore
 
-#endif // FontData_h
+#endif

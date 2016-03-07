@@ -50,6 +50,9 @@ public:
     void addEpsilonTransition(unsigned from, unsigned to);
     void setFinal(unsigned node);
 
+    unsigned graphSize() const;
+    void restoreToGraphSize(unsigned);
+
 #ifndef NDEBUG
     void debugPrintDot() const;
 #endif
