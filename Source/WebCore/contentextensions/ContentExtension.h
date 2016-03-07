@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,43 +23,42 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ContentFilter_h
-#define ContentFilter_h
+#ifndef ContentExtension_h
+#define ContentExtension_h
 
-#if ENABLE(CONTENT_FILTERING)
+#include <wtf/Ref.h>
+#include <wtf/RefCounted.h>
+#include <wtf/RefPtr.h>
 
-#include "ContentFilterUnblockHandler.h"
-#include <wtf/Vector.h>
+#if ENABLE(CONTENT_EXTENSIONS)
+
+#include "StyleSheetContents.h"
 
 namespace WebCore {
 
-class ResourceResponse;
+namespace ContentExtensions {
 
-class ContentFilter {
+class CompiledContentExtension;
+
+class ContentExtension : public RefCounted<ContentExtension> {
 public:
-    template <typename T> static void addType() { types().append(type<T>()); }
+    static RefPtr<ContentExtension> create(const String& identifier, Ref<CompiledContentExtension>&&);
 
-    static std::unique_ptr<ContentFilter> createIfNeeded(const ResourceResponse&);
-
-    virtual ~ContentFilter() { }
-    virtual void addData(const char* data, int length) = 0;
-    virtual void finishedAddingData() = 0;
-    virtual bool needsMoreData() const = 0;
-    virtual bool didBlockData() const = 0;
-    virtual const char* getReplacementData(int& length) const = 0;
-    virtual ContentFilterUnblockHandler unblockHandler() const = 0;
+    const String& identifier() const { return m_identifier; }
+    const CompiledContentExtension& compiledExtension() const { return m_compiledExtension.get(); }
+    StyleSheetContents* globalDisplayNoneStyleSheet();
 
 private:
-    struct Type {
-        const std::function<bool(const ResourceResponse&)> canHandleResponse;
-        const std::function<std::unique_ptr<ContentFilter>(const ResourceResponse&)> create;
-    };
-    template <typename T> static Type type() { return { T::canHandleResponse, T::create }; }
-    WEBCORE_EXPORT static Vector<Type>& types();
+    ContentExtension(const String& identifier, Ref<CompiledContentExtension>&&);
+
+    String m_identifier;
+    Ref<CompiledContentExtension> m_compiledExtension;
+    RefPtr<StyleSheetContents> m_globalDisplayNoneStyleSheet;
+    bool m_parsedGlobalDisplayNoneStyleSheet;
 };
 
+} // namespace ContentExtensions
 } // namespace WebCore
 
-#endif // ENABLE(CONTENT_FILTERING)
-
-#endif // ContentFilter_h
+#endif // ENABLE(CONTENT_EXTENSIONS)
+#endif // ContentExtension_h
