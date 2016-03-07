@@ -55,14 +55,6 @@ _FRAMEWORK_CONFIG_MAP = {
 }
 
 
-# FIXME: These should be converted into JSON properties, or renamed.
-_TYPES_NEEDING_RENAME_WORKAROUNDS = {
-    'RGBA': 'Rgba', # RGBA is reported to be conflicting with a define name in Windows CE.
-    # For testing only.
-    'UnpleasantName': 'HappyName'
-}
-
-
 class ParseException(Exception):
     pass
 
@@ -110,7 +102,7 @@ class Frameworks:
 class TypeReference:
     def __init__(self, type_kind, referenced_type_name, enum_values, array_items):
         self.type_kind = type_kind
-        self.referenced_type_name = _TYPES_NEEDING_RENAME_WORKAROUNDS.get(referenced_type_name, referenced_type_name)
+        self.referenced_type_name = referenced_type_name
         self.enum_values = enum_values
         if array_items is None:
             self.array_type_ref = None
@@ -144,7 +136,7 @@ class Type:
         return self.qualified_name().__hash__()
 
     def raw_name(self):
-        return _TYPES_NEEDING_RENAME_WORKAROUNDS.get(self._name, self._name)
+        return self._name
 
     # These methods should be overridden by subclasses.
     def is_enum(self):
@@ -326,7 +318,7 @@ class Protocol:
                 raise ParseException("Malformed domain specification: events is not an array")
             events.extend([self.parse_event(event) for event in json['events']])
 
-        self.domains.append(Domain(json['domain'], json.get('description', ""), isSupplemental, types, commands, events))
+        self.domains.append(Domain(json['domain'], json.get('description', ""), json.get("featureGuard"), isSupplemental, types, commands, events))
 
     def parse_type_declaration(self, json):
         check_for_required_properties(['id', 'type'], json, "type")
@@ -477,9 +469,10 @@ class Protocol:
 
 
 class Domain:
-    def __init__(self, domain_name, description, isSupplemental, type_declarations, commands, events):
+    def __init__(self, domain_name, description, feature_guard, isSupplemental, type_declarations, commands, events):
         self.domain_name = domain_name
         self.description = description
+        self.feature_guard = feature_guard
         self.is_supplemental = isSupplemental
         self.type_declarations = type_declarations
         self.commands = commands
@@ -500,12 +493,12 @@ class Domain:
 
 
 class Domains:
-    GLOBAL = Domain("", "The global domain, in which primitive types are implicitly declared.", True, [], [], [])
+    GLOBAL = Domain("", "The global domain, in which primitive types are implicitly declared.", None, True, [], [], [])
 
 
 class TypeDeclaration:
     def __init__(self, type_name, type_ref, description, type_members):
-        self.type_name = _TYPES_NEEDING_RENAME_WORKAROUNDS.get(type_name, type_name)
+        self.type_name = type_name
         self.type_ref = type_ref
         self.description = description
         self.type_members = type_members
