@@ -1181,13 +1181,13 @@ public:
     
     void pop(RegisterID dest)
     {
-        // store postindexed with writeback
+        // Load postindexed with writeback.
         m_assembler.ldr(dest, ARMRegisters::sp, sizeof(void*), false, true);
     }
 
     void push(RegisterID src)
     {
-        // store preindexed with writeback
+        // Store preindexed with writeback.
         m_assembler.str(src, ARMRegisters::sp, -sizeof(void*), true, true);
     }
 

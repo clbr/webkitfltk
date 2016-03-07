@@ -648,6 +648,8 @@ private:
         OP_ADD_SP_imm_T1    = 0xA800,
         OP_ADD_SP_imm_T2    = 0xB000,
         OP_SUB_SP_imm_T1    = 0xB080,
+        OP_PUSH_T1          = 0xB400,
+        OP_POP_T1           = 0xBC00,
         OP_BKPT             = 0xBE00,
         OP_IT               = 0xBF00,
         OP_NOP_T1           = 0xBF00,
@@ -2771,6 +2773,11 @@ private:
         ALWAYS_INLINE void oneWordOp7Reg3Reg3Reg3(OpcodeID op, RegisterID reg1, RegisterID reg2, RegisterID reg3)
         {
             m_buffer.putShort(op | (reg1 << 6) | (reg2 << 3) | reg3);
+        }
+
+        ALWAYS_INLINE void oneWordOp7Imm9(OpcodeID op, uint16_t imm)
+        {
+            m_buffer.putShort(op | imm);
         }
 
         ALWAYS_INLINE void oneWordOp8Imm8(OpcodeID op, uint8_t imm)
