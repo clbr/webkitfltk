@@ -956,8 +956,6 @@
 		1C2417BA1992C04100EF9938 /* SpellingDot@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1C2417B91992C04100EF9938 /* SpellingDot@3x.png */; };
 		1C26497A0D7E248A00BD10F2 /* DocumentLoaderMac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2649790D7E248A00BD10F2 /* DocumentLoaderMac.cpp */; };
 		1C26497C0D7E24EC00BD10F2 /* PageMac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C26497B0D7E24EC00BD10F2 /* PageMac.cpp */; };
-		1C4C8F020AD85D87009475CE /* DeleteButtonController.h in Headers */ = {isa = PBXBuildFile; fileRef = 1C4C8F000AD85D87009475CE /* DeleteButtonController.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		1C4C8F660AD8655D009475CE /* DeleteButton.h in Headers */ = {isa = PBXBuildFile; fileRef = 1C4C8F640AD8655D009475CE /* DeleteButton.h */; };
 		1C81B95A0E97330800266E07 /* InspectorController.h in Headers */ = {isa = PBXBuildFile; fileRef = 1C81B9560E97330800266E07 /* InspectorController.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		1C81B95B0E97330800266E07 /* InspectorController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C81B9570E97330800266E07 /* InspectorController.cpp */; };
 		1C81B95C0E97330800266E07 /* InspectorClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 1C81B9580E97330800266E07 /* InspectorClient.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -973,8 +971,6 @@
 		1CCA732210ADD44A00FD440D /* DOMHTMLInputElementPrivate.h in Copy Generated Headers */ = {isa = PBXBuildFile; fileRef = 1CCA732110ADD43E00FD440D /* DOMHTMLInputElementPrivate.h */; };
 		1CCDF5BD1990332400BCEBAD /* SVGToOTFFontConversion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CCDF5BB1990332400BCEBAD /* SVGToOTFFontConversion.cpp */; };
 		1CCDF5BE1990332400BCEBAD /* SVGToOTFFontConversion.h in Headers */ = {isa = PBXBuildFile; fileRef = 1CCDF5BC1990332400BCEBAD /* SVGToOTFFontConversion.h */; };
-		1CE83AC30ADAFFD7009354F6 /* DeleteButtonController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C4C8EFF0AD85D87009475CE /* DeleteButtonController.cpp */; };
-		1CE83AC40ADAFFD8009354F6 /* DeleteButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C4C8F630AD8655D009475CE /* DeleteButton.cpp */; };
 		1CF6BDFA0E9BB26A0025E1CD /* ObjCEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 1CF6BDF80E9BB26A0025E1CD /* ObjCEventListener.h */; };
 		1CF6BDFB0E9BB26A0025E1CD /* ObjCEventListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CF6BDF90E9BB26A0025E1CD /* ObjCEventListener.mm */; };
 		1CF6BE140E9BB4670025E1CD /* ObjCNodeFilterCondition.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CF6BE120E9BB4670025E1CD /* ObjCNodeFilterCondition.mm */; };
@@ -2508,6 +2504,8 @@
 		836FBCEC178C117F00B21A15 /* SVGAnimatedProperty.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 836FBCEB178C117F00B21A15 /* SVGAnimatedProperty.cpp */; };
 		8386A96D19F61B2E00E1EC4A /* StyleBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 8386A96C19F61B2E00E1EC4A /* StyleBuilder.h */; };
 		8386A97019F61E4F00E1EC4A /* StyleBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8386A96E19F61E4F00E1EC4A /* StyleBuilder.cpp */; };
+		839AAFEC1A0C0C8D00605F99 /* HTMLWBRElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 839AAFEA1A0C0C8D00605F99 /* HTMLWBRElement.cpp */; };
+		839AAFED1A0C0C8D00605F99 /* HTMLWBRElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 839AAFEB1A0C0C8D00605F99 /* HTMLWBRElement.h */; };
 		83B9687B19F8AB83004EF7AF /* StyleBuilderConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B9687919F8AB83004EF7AF /* StyleBuilderConverter.h */; };
 		83C1D425178D5AB400141E68 /* SVGPathSegArcAbs.h in Headers */ = {isa = PBXBuildFile; fileRef = 83C1D413178D5AB400141E68 /* SVGPathSegArcAbs.h */; };
 		83C1D426178D5AB400141E68 /* SVGPathSegArcRel.h in Headers */ = {isa = PBXBuildFile; fileRef = 83C1D414178D5AB400141E68 /* SVGPathSegArcRel.h */; };
@@ -3150,12 +3148,8 @@
 		930908910AF7EDE40081DF01 /* HitTestRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 930908900AF7EDE40081DF01 /* HitTestRequest.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		930C90DD19CF965300D6C21A /* InlineIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 930C90DC19CF965300D6C21A /* InlineIterator.cpp */; };
 		930FC68A1072B9280045293E /* TextRenderingMode.h in Headers */ = {isa = PBXBuildFile; fileRef = 930FC6891072B9280045293E /* TextRenderingMode.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		93153BCD1417FBBF00FCF5BE /* deleteButton@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 93153BCC1417FBBF00FCF5BE /* deleteButton@2x.png */; };
-		93153BCF1417FBDB00FCF5BE /* deleteButtonPressed@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 93153BCE1417FBDB00FCF5BE /* deleteButtonPressed@2x.png */; };
 		93153BDA14181F7A00FCF5BE /* missingImage@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 93153BD914181F7A00FCF5BE /* missingImage@2x.png */; };
 		93153BDC141959BC00FCF5BE /* textAreaResizeCorner.png in Resources */ = {isa = PBXBuildFile; fileRef = 93153BDB141959BB00FCF5BE /* textAreaResizeCorner.png */; };
-		93153BDE141959F400FCF5BE /* deleteButton.png in Resources */ = {isa = PBXBuildFile; fileRef = 93153BDD141959F400FCF5BE /* deleteButton.png */; };
-		93153BE014195A2800FCF5BE /* deleteButtonPressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 93153BDF14195A2800FCF5BE /* deleteButtonPressed.png */; };
 		93153BE214195A5700FCF5BE /* missingImage.png in Resources */ = {isa = PBXBuildFile; fileRef = 93153BE114195A5700FCF5BE /* missingImage.png */; };
 		931BCC611124DFCB00BE70DD /* MediaCanStartListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 931BCC601124DFCB00BE70DD /* MediaCanStartListener.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		931CBD0C161A44E900E4C874 /* ScrollingStateNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931CBD06161A44E900E4C874 /* ScrollingStateNode.cpp */; };
@@ -7953,10 +7947,6 @@
 		1C2417B91992C04100EF9938 /* SpellingDot@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "SpellingDot@3x.png"; sourceTree = "<group>"; };
 		1C2649790D7E248A00BD10F2 /* DocumentLoaderMac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DocumentLoaderMac.cpp; sourceTree = "<group>"; };
 		1C26497B0D7E24EC00BD10F2 /* PageMac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PageMac.cpp; sourceTree = "<group>"; };
-		1C4C8EFF0AD85D87009475CE /* DeleteButtonController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeleteButtonController.cpp; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
-		1C4C8F000AD85D87009475CE /* DeleteButtonController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeleteButtonController.h; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
-		1C4C8F630AD8655D009475CE /* DeleteButton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeleteButton.cpp; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
-		1C4C8F640AD8655D009475CE /* DeleteButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeleteButton.h; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
 		1C5E980F1A02CEFA002DB55F /* CoreTextSPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CoreTextSPI.h; sourceTree = "<group>"; };
 		1C81B9560E97330800266E07 /* InspectorController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorController.h; sourceTree = "<group>"; };
 		1C81B9570E97330800266E07 /* InspectorController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InspectorController.cpp; sourceTree = "<group>"; };
@@ -9698,6 +9688,8 @@
 		836FBCEB178C117F00B21A15 /* SVGAnimatedProperty.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SVGAnimatedProperty.cpp; sourceTree = "<group>"; };
 		8386A96C19F61B2E00E1EC4A /* StyleBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StyleBuilder.h; sourceTree = "<group>"; };
 		8386A96E19F61E4F00E1EC4A /* StyleBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StyleBuilder.cpp; sourceTree = "<group>"; };
+		839AAFEA1A0C0C8D00605F99 /* HTMLWBRElement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTMLWBRElement.cpp; sourceTree = "<group>"; };
+		839AAFEB1A0C0C8D00605F99 /* HTMLWBRElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTMLWBRElement.h; sourceTree = "<group>"; };
 		83B9687919F8AB83004EF7AF /* StyleBuilderConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StyleBuilderConverter.h; sourceTree = "<group>"; };
 		83C1D413178D5AB400141E68 /* SVGPathSegArcAbs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVGPathSegArcAbs.h; sourceTree = "<group>"; };
 		83C1D414178D5AB400141E68 /* SVGPathSegArcRel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVGPathSegArcRel.h; sourceTree = "<group>"; };
@@ -10310,12 +10302,8 @@
 		930908900AF7EDE40081DF01 /* HitTestRequest.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = HitTestRequest.h; sourceTree = "<group>"; };
 		930C90DC19CF965300D6C21A /* InlineIterator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InlineIterator.cpp; sourceTree = "<group>"; };
 		930FC6891072B9280045293E /* TextRenderingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextRenderingMode.h; sourceTree = "<group>"; };
-		93153BCC1417FBBF00FCF5BE /* deleteButton@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "deleteButton@2x.png"; sourceTree = "<group>"; };
-		93153BCE1417FBDB00FCF5BE /* deleteButtonPressed@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "deleteButtonPressed@2x.png"; sourceTree = "<group>"; };
 		93153BD914181F7A00FCF5BE /* missingImage@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "missingImage@2x.png"; sourceTree = "<group>"; };
 		93153BDB141959BB00FCF5BE /* textAreaResizeCorner.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = textAreaResizeCorner.png; sourceTree = "<group>"; };
-		93153BDD141959F400FCF5BE /* deleteButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = deleteButton.png; sourceTree = "<group>"; };
-		93153BDF14195A2800FCF5BE /* deleteButtonPressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = deleteButtonPressed.png; sourceTree = "<group>"; };
 		93153BE114195A5700FCF5BE /* missingImage.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = missingImage.png; sourceTree = "<group>"; };
 		931BCC601124DFCB00BE70DD /* MediaCanStartListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MediaCanStartListener.h; sourceTree = "<group>"; };
 		931CBD06161A44E900E4C874 /* ScrollingStateNode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScrollingStateNode.cpp; sourceTree = "<group>"; };
@@ -14884,10 +14872,6 @@
 				65998A650E5F5FD3004E097A /* images */,
 				46F9D5DA0B0D60170028EE36 /* aliasCursor.png */,
 				46D4F2460AF97E810035385A /* cellCursor.png */,
-				93153BDD141959F400FCF5BE /* deleteButton.png */,
-				93153BCC1417FBBF00FCF5BE /* deleteButton@2x.png */,
-				93153BDF14195A2800FCF5BE /* deleteButtonPressed.png */,
-				93153BCE1417FBDB00FCF5BE /* deleteButtonPressed@2x.png */,
 				85136C890AED665800F90A3D /* eastResizeCursor.png */,
 				85136C8A0AED665800F90A3D /* eastWestResizeCursor.png */,
 				85136C8B0AED665800F90A3D /* helpCursor.png */,
@@ -17462,10 +17446,6 @@
 				93309D8E099E64910056E581 /* CompositeEditCommand.h */,
 				D0B0556709C6700100307E43 /* CreateLinkCommand.cpp */,
 				D0B0556609C6700100307E43 /* CreateLinkCommand.h */,
-				1C4C8F630AD8655D009475CE /* DeleteButton.cpp */,
-				1C4C8F640AD8655D009475CE /* DeleteButton.h */,
-				1C4C8EFF0AD85D87009475CE /* DeleteButtonController.cpp */,
-				1C4C8F000AD85D87009475CE /* DeleteButtonController.h */,
 				93309D8F099E64910056E581 /* DeleteFromTextNodeCommand.cpp */,
 				93309D90099E64910056E581 /* DeleteFromTextNodeCommand.h */,
 				93309D91099E64910056E581 /* DeleteSelectionCommand.cpp */,
@@ -17965,6 +17945,8 @@
 				E44613980CD6331000FADA75 /* HTMLVideoElement.cpp */,
 				E44613990CD6331000FADA75 /* HTMLVideoElement.h */,
 				E446139A0CD6331000FADA75 /* HTMLVideoElement.idl */,
+				839AAFEA1A0C0C8D00605F99 /* HTMLWBRElement.cpp */,
+				839AAFEB1A0C0C8D00605F99 /* HTMLWBRElement.h */,
 				A77979130D6B9D0C003851B9 /* ImageData.cpp */,
 				A77979140D6B9D0C003851B9 /* ImageData.h */,
 				A77979150D6B9D0C003851B9 /* ImageData.idl */,
@@ -23831,8 +23813,6 @@
 				FD31602C12B0267600C1A359 /* DelayDSPKernel.h in Headers */,
 				FD31602E12B0267600C1A359 /* DelayNode.h in Headers */,
 				FD31603112B0267600C1A359 /* DelayProcessor.h in Headers */,
-				1C4C8F660AD8655D009475CE /* DeleteButton.h in Headers */,
-				1C4C8F020AD85D87009475CE /* DeleteButtonController.h in Headers */,
 				93309DDF099E64920056E581 /* DeleteFromTextNodeCommand.h in Headers */,
 				93309DE1099E64920056E581 /* DeleteSelectionCommand.h in Headers */,
 				FD1660A513787C6D001FFA7B /* DenormalDisabler.h in Headers */,
@@ -26277,6 +26257,7 @@
 				B2227A270D00BF220071B782 /* SVGGElement.h in Headers */,
 				087E0AF713606D0B00FA4BA8 /* SVGGlyph.h in Headers */,
 				B2A1F2AE0CEF0ABF00442F6A /* SVGGlyphElement.h in Headers */,
+				839AAFED1A0C0C8D00605F99 /* HTMLWBRElement.h in Headers */,
 				3744570F0DB05FA500AE0992 /* SVGGlyphMap.h in Headers */,
 				24D912BE13CA9A9700D21915 /* SVGGlyphRefElement.h in Headers */,
 				B2227A2A0D00BF220071B782 /* SVGGradientElement.h in Headers */,
@@ -26956,10 +26937,6 @@
 				46F9D5DD0B0D60170028EE36 /* aliasCursor.png in Resources */,
 				1C2417BA1992C04100EF9938 /* SpellingDot@3x.png in Resources */,
 				46D4F2490AF97E810035385A /* cellCursor.png in Resources */,
-				93153BDE141959F400FCF5BE /* deleteButton.png in Resources */,
-				93153BCD1417FBBF00FCF5BE /* deleteButton@2x.png in Resources */,
-				93153BE014195A2800FCF5BE /* deleteButtonPressed.png in Resources */,
-				93153BCF1417FBDB00FCF5BE /* deleteButtonPressed@2x.png in Resources */,
 				D02B64B214089E56006EFA21 /* DictationPhraseWithAlternativesDot.png in Resources */,
 				D02B64B314089E56006EFA21 /* DictationPhraseWithAlternativesDot@2x.png in Resources */,
 				85136C990AED665900F90A3D /* eastResizeCursor.png in Resources */,
@@ -27514,8 +27491,6 @@
 				FD31602B12B0267600C1A359 /* DelayDSPKernel.cpp in Sources */,
 				FD31602D12B0267600C1A359 /* DelayNode.cpp in Sources */,
 				FD31603012B0267600C1A359 /* DelayProcessor.cpp in Sources */,
-				1CE83AC40ADAFFD8009354F6 /* DeleteButton.cpp in Sources */,
-				1CE83AC30ADAFFD7009354F6 /* DeleteButtonController.cpp in Sources */,
 				93309DDE099E64920056E581 /* DeleteFromTextNodeCommand.cpp in Sources */,
 				93309DE0099E64920056E581 /* DeleteSelectionCommand.cpp in Sources */,
 				E100EE751546EAC100BA11D1 /* DeprecatedStyleBuilder.cpp in Sources */,
@@ -28063,6 +28038,7 @@
 				977B3877122883E900B81FF8 /* HTMLTokenizer.cpp in Sources */,
 				0707568B142262D600414161 /* HTMLTrackElement.cpp in Sources */,
 				977B37251228721700B81FF8 /* HTMLTreeBuilder.cpp in Sources */,
+				839AAFEC1A0C0C8D00605F99 /* HTMLWBRElement.cpp in Sources */,
 				A8EA79F30A1916DF00A8EF5F /* HTMLUListElement.cpp in Sources */,
 				E44613AA0CD6331000FADA75 /* HTMLVideoElement.cpp in Sources */,
 				0B8C56D40F28627F000502E1 /* HTTPHeaderMap.cpp in Sources */,

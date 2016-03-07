@@ -182,7 +182,7 @@ void MediaSession::visibilityChanged()
         m_clientDataBufferingTimer.startOneShot(kClientDataBufferingTimerThrottleDelay);
 }
 
-void MediaSession::clientDataBufferingTimerFired(Timer<WebCore::MediaSession> &)
+void MediaSession::clientDataBufferingTimerFired(Timer &)
 {
     updateClientDataBuffering();
 }

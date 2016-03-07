@@ -23,44 +23,30 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ScrollingCoordinatorIOS_h
-#define ScrollingCoordinatorIOS_h
+#include "config.h"
+#include "HTMLWBRElement.h"
 
-#if ENABLE(ASYNC_SCROLLING)
-
-#include "AsyncScrollingCoordinator.h"
+#include "HTMLNames.h"
+#include "RenderLineBreak.h"
 
 namespace WebCore {
 
-class Scrollbar;
-class ScrollingStateNode;
-class ScrollingStateScrollingNode;
-class ScrollingStateTree;
-class ThreadedScrollingTree;
+using namespace HTMLNames;
 
-class ScrollingCoordinatorIOS : public AsyncScrollingCoordinator {
-public:
-    explicit ScrollingCoordinatorIOS(Page*);
-    virtual ~ScrollingCoordinatorIOS();
+PassRefPtr<HTMLWBRElement> HTMLWBRElement::create(const QualifiedName& tagName, Document& document)
+{
+    return adoptRef(new HTMLWBRElement(tagName, document));
+}
 
-    virtual void pageDestroyed();
+HTMLWBRElement::HTMLWBRElement(const QualifiedName& tagName, Document& document)
+    : HTMLElement(tagName, document)
+{
+    ASSERT(hasTagName(wbrTag));
+}
 
-    virtual void commitTreeStateIfNeeded() override;
-
-    // Handle the wheel event on the scrolling thread. Returns whether the event was handled or not.
-    virtual bool handleWheelEvent(FrameView*, const PlatformWheelEvent&) override { return false; }
-
-private:
-    virtual void scheduleTreeStateCommit() override;
-
-    void scrollingStateTreeCommitterTimerFired(Timer*);
-    void commitTreeState();
-
-    Timer m_scrollingStateTreeCommitterTimer;
-};
+RenderPtr<RenderElement> HTMLWBRElement::createElementRenderer(PassRef<RenderStyle> style)
+{
+    return createRenderer<RenderLineBreak>(*this, WTF::move(style));
+}
 
 } // namespace WebCore
-
-#endif // ENABLE(ASYNC_SCROLLING)
-
-#endif // ScrollingCoordinatorIOS_h

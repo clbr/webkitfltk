@@ -1,3 +1,130 @@
+2014-11-06  Mark Lam  <mark.lam@apple.com>
+
+        slow_path_get_direct_pname() needs to be hardened against a constant baseValue.
+        <https://webkit.org/b/138476>
+
+        Reviewed by Michael Saboff.
+
+        slow_path_get_direct_pname() currently assumes that the baseValue is always a
+        non-constant virtual register.  However, this is not always the case like in the
+        following:
+
+            function foo() {
+                var o = { a:1 };
+                for (var n in o)
+                    0[n];
+            }
+            foo();
+
+        This patch fixes it to also check for constant virtual register indexes.
+
+        * runtime/CommonSlowPaths.cpp:
+        (JSC::SLOW_PATH_DECL):
+
+2014-11-06  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION (r174985-174986): Site display disappears 
+        https://bugs.webkit.org/show_bug.cgi?id=138082
+
+        Reviewed by Geoffrey Garen.
+
+        In support of the change in WebCore, this adds a new functor class to unwind to our
+        caller's frame possibly skipping of intermediate C++ frames.
+
+        * interpreter/StackVisitor.h:
+        (JSC::CallerFunctor::CallerFunctor):
+        (JSC::CallerFunctor::callerFrame):
+        (JSC::CallerFunctor::operator()):
+
+2014-11-06  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Use std::unique_ptr in CodeBlock class
+        https://bugs.webkit.org/show_bug.cgi?id=138395
+
+        Reviewed by Darin Adler.
+
+        * bytecode/CodeBlock.h: Use std::unique_ptr.
+        (JSC::CodeBlock::setJITCodeMap):
+        * jit/CompactJITCodeMap.h: Use std::unique_ptr instead of OwnPtr|PassOwnPtr.
+        (JSC::CompactJITCodeMap::CompactJITCodeMap):
+        (JSC::CompactJITCodeMap::Encoder::finish): Use std::unique_ptr instead of PassOwnPtr.
+
+2014-11-05  Mark Lam  <mark.lam@apple.com>
+
+        PutById inline caches should have a store barrier when it triggers a structure transition.
+        <https://webkit.org/b/138441>
+
+        Reviewed by Geoffrey Garen.
+
+        After r174025, we no longer insert DFG store barriers when the payload of a
+        PutById operation is not a cell.  However, this can lead to a crash when we have
+        PutById inline cache code transitioning the structure and re-allocating the
+        butterfly of an old gen object.  The lack of a store barrier in that inline
+        cache results in the old gen object not being noticed during an eden GC scan.
+        As a result, its newly allocated butterfly will not be kept alive, which leads
+        to a stale butterfly pointer and, eventually, a crash.
+
+        It is also possible that the new structure can be collected by the eden GC if
+        (at GC time):
+        1. It is in the eden gen.
+        2. The inline cache that installed it has been evicted.
+        3. There are no live eden gen objects referring to it.
+
+        The chances of this should be more rare than the butterfly re-allocation, but
+        it is still possible.  Hence, the fix is to always add a store barrier if the
+        inline caches performs a structure transition.
+
+        * jit/Repatch.cpp:
+        (JSC::emitPutTransitionStub):
+        - Added store barrier code based on SpeculativeJIT::storeToWriteBarrierBuffer()'s
+          implementation.
+
+2014-11-05  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Use std::unique_ptr in JSClassRef and JSCallbackObject
+        https://bugs.webkit.org/show_bug.cgi?id=138402
+
+        Reviewed by Geoffrey Garen.
+
+        * API/JSCallbackObject.h: Use std::unique_ptr instead of OwnPtr|PassOwnPtr.
+        (JSC::JSCallbackObjectData::setPrivateProperty): ditto.
+        * API/JSClassRef.cpp: ditto.
+        * API/JSClassRef.h: ditto.
+
+2014-11-05  Michael Saboff  <msaboff@apple.com>
+
+        Disable flakey float32-repeat-out-of-bounds.js and int8-repeat-out-of-bounds.js tests for ARM64
+        https://bugs.webkit.org/show_bug.cgi?id=138381
+
+        Reviewed by Mark Lam.
+
+        Disabled these test for ARM64.  Will address the failures and then re-enable.
+
+        * tests/stress/float32-repeat-out-of-bounds.js:
+        * tests/stress/int8-repeat-out-of-bounds.js:
+
+2014-11-05  Alexey Proskuryakov  <ap@apple.com>
+
+        Incorrect sandbox_check in RemoteInspector.mm
+        https://bugs.webkit.org/show_bug.cgi?id=138408
+
+        Reviewed by Joseph Pecoraro.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::canAccessWebInspectorMachPort):
+
+2014-11-03  Dean Jackson  <dino@apple.com>
+
+        Add ENABLE_FILTERS_LEVEL_2 feature guard.
+        https://bugs.webkit.org/show_bug.cgi?id=138362
+
+        Reviewed by Tim Horton.
+
+        Add a new feature define for Level 2 of CSS Filters.
+        http://dev.w3.org/fxtf/filters-2/
+
+        * Configurations/FeatureDefines.xcconfig:
+
 2014-11-04  Mark Lam  <mark.lam@apple.com>
 
         Rename checkMarkByte() to jumpIfIsRememberedOrInEden().

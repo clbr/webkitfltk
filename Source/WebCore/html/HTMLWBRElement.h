@@ -23,44 +23,24 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ScrollingCoordinatorIOS_h
-#define ScrollingCoordinatorIOS_h
+#ifndef HTMLWBRElement_h
+#define HTMLWBRElement_h
 
-#if ENABLE(ASYNC_SCROLLING)
-
-#include "AsyncScrollingCoordinator.h"
+#include "HTMLElement.h"
 
 namespace WebCore {
 
-class Scrollbar;
-class ScrollingStateNode;
-class ScrollingStateScrollingNode;
-class ScrollingStateTree;
-class ThreadedScrollingTree;
-
-class ScrollingCoordinatorIOS : public AsyncScrollingCoordinator {
+class HTMLWBRElement final : public HTMLElement {
 public:
-    explicit ScrollingCoordinatorIOS(Page*);
-    virtual ~ScrollingCoordinatorIOS();
-
-    virtual void pageDestroyed();
-
-    virtual void commitTreeStateIfNeeded() override;
-
-    // Handle the wheel event on the scrolling thread. Returns whether the event was handled or not.
-    virtual bool handleWheelEvent(FrameView*, const PlatformWheelEvent&) override { return false; }
+    static PassRefPtr<HTMLWBRElement> create(const QualifiedName&, Document&);
 
 private:
-    virtual void scheduleTreeStateCommit() override;
+    HTMLWBRElement(const QualifiedName&, Document&);
 
-    void scrollingStateTreeCommitterTimerFired(Timer*);
-    void commitTreeState();
-
-    Timer m_scrollingStateTreeCommitterTimer;
+    virtual RenderPtr<RenderElement> createElementRenderer(PassRef<RenderStyle>) override;
 };
 
 } // namespace WebCore
 
-#endif // ENABLE(ASYNC_SCROLLING)
+#endif // HTMLWBRElement_h
 
-#endif // ScrollingCoordinatorIOS_h

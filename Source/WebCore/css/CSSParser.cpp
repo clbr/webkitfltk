@@ -1867,7 +1867,7 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
         // close-quote | no-open-quote | no-close-quote ]+ | inherit
         return parseContent(propId, important);
 
-    case CSSPropertyWebkitAlt: // [ <string> | attr(X) ]
+    case CSSPropertyAlt: // [ <string> | attr(X) ]
         return parseAlt(propId, important);
             
     case CSSPropertyClip:                 // <shape> | auto | inherit
@@ -2455,6 +2455,9 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
         validPrimitive = validUnit(value, FInteger | FNonNeg, CSSStrictMode) && value->fValue;
         break;
     case CSSPropertyWebkitFilter:
+#if ENABLE(FILTERS_LEVEL_2)
+    case CSSPropertyWebkitBackdropFilter:
+#endif
         if (id == CSSValueNone)
             validPrimitive = true;
         else {

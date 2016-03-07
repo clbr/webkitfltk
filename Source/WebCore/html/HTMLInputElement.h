@@ -167,7 +167,7 @@ public:
     bool sizeShouldIncludeDecoration(int& preferredSize) const;
     float decorationWidth() const;
 
-    void setType(const String&);
+    void setType(const AtomicString&);
 
     virtual String value() const override;
     void setValue(const String&, ExceptionCode&, TextFieldEventBehavior = DispatchNoEvent);
@@ -258,8 +258,6 @@ public:
 
     void addSearchResult();
     void onSearch();
-
-    void updateClearButtonVisibility();
 
     virtual bool willRespondToMouseClickEvents() override;
 

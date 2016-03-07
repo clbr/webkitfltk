@@ -1,3 +1,88 @@
+2014-11-05  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r175628.
+        https://bugs.webkit.org/show_bug.cgi?id=138451
+
+        Totally borked the web inspector (Requested by smfr on
+        #webkit).
+
+        Reverted changeset:
+
+        "Web Inspector: Add infrastructure for eslint based static
+        analyzer"
+        https://bugs.webkit.org/show_bug.cgi?id=137890
+        http://trac.webkit.org/changeset/175628
+
+2014-11-05  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Specificity not shown for pseudo element styles
+        https://bugs.webkit.org/show_bug.cgi?id=138436
+
+        Reviewed by Benjamin Poulain.
+
+        * UserInterface/Views/CSSStyleDeclarationSection.js:
+        (WebInspector.CSSStyleDeclarationSection.prototype.refresh):
+        Previously we were skipping the pre-selector <span>s when we were
+        not getting a listing of matched selector indices, and missing out
+        on the opportunity to give each selector a specificity. Now, always
+        loop over selectors if we have them.
+
+2014-11-05  Jonathan Wells  <jonowells@apple.com>
+
+        Web Inspector: Add infrastructure for eslint based static analyzer
+        https://bugs.webkit.org/show_bug.cgi?id=137890
+
+        Reviewed by Timothy Hatcher.
+
+        Adding a manager to analyze source code, return warnings (AnalyzerMessages), and cache warnings.
+
+        * UserInterface/Base/Main.js: Create analyzerManager singleton.
+        * UserInterface/Controllers/AnalyzerManager.js: Added.
+        (WebInspector.AnalyzerManager):
+        (set WebInspector.AnalyzerManager.prototype.getAnalyzerMessagesForSourceCode.):
+        (set WebInspector.AnalyzerManager.prototype.getAnalyzerMessagesForSourceCode):
+        (set WebInspector.AnalyzerManager.prototype.set get sourceCodeCanBeAnalyzed):
+        (set WebInspector.AnalyzerManager.prototype._handleSourceCodeContentDidChange):
+        * UserInterface/Main.html: Add new files.
+        * UserInterface/Models/AnalyzerMessage.js: Added.
+        (WebInspector.AnalyzerMessage):
+        (WebInspector.AnalyzerMessage.prototype.get sourceCodeLocation):
+        (WebInspector.AnalyzerMessage.prototype.get sourceCode):
+        (WebInspector.AnalyzerMessage.prototype.get text):
+        (WebInspector.AnalyzerMessage.prototype.get ruleIdentifier):
+        * UserInterface/Models/SourceCode.js: Added call to WebInspector.Object.addConstructorFunctions().
+
+2014-11-04  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Too much whitespace in resource details sidebar in groups
+        https://bugs.webkit.org/show_bug.cgi?id=138386
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/DetailsSection.css:
+        (.details-section > .content > .group:first-child > .row.simple:first-child > *):
+        (body.mac-platform.legacy .details-section > .content > .group:first-child > .row.simple:first-child > *):
+        (body.mac-platform.legacy .details-section > .content > .group > .row.text):
+        (.details-section > .content > .group > .row.properties:not(.empty)):
+        (body.mac-platform.legacy .details-section > .content > .group > .row.properties:not(.empty)):
+        Adjust top and bottom padding.
+
+2014-11-04  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Lots of TimelineDataGridNode asserts on reloads
+        https://bugs.webkit.org/show_bug.cgi?id=138387
+
+        Reviewed by Brian Burg.
+
+        The TimelineRuler.secondsPerPixel in the TimelineOverview is initialized
+        with a non-0 value and saved in a setting. However the TimelineRuler in
+        the OverviewTimelineView is not initialized with this value, and instead
+        initialized to 0. This patch initializes them to the same non-0 value.
+
+        * UserInterface/Views/OverviewTimelineView.js:
+        (WebInspector.OverviewTimelineView.prototype.set secondsPerPixel):
+        * UserInterface/Views/TimelineContentView.js:
+
 2014-11-04  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Pause on exceptions should show the actual exception

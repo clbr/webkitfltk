@@ -425,16 +425,9 @@ void HTMLInputElement::handleBlurEvent()
     m_inputType->handleBlurEvent();
 }
 
-void HTMLInputElement::setType(const String& type)
+void HTMLInputElement::setType(const AtomicString& type)
 {
-    // FIXME: This should just call setAttribute. No reason to handle the empty string specially.
-    // We should write a test case to show that setting to the empty string does not remove the
-    // attribute in other browsers and then fix this. Note that setting to null *does* remove
-    // the attribute and setAttribute implements that.
-    if (type.isEmpty())
-        removeAttribute(typeAttr);
-    else
-        setAttribute(typeAttr, type);
+    setAttribute(typeAttr, type);
 }
 
 void HTMLInputElement::updateType()
@@ -642,7 +635,6 @@ void HTMLInputElement::parseAttribute(const QualifiedName& name, const AtomicStr
         setFormControlValueMatchesRenderer(false);
         setNeedsValidityCheck();
         m_valueAttributeWasUpdatedAfterParsing = !m_parsingInProgress;
-        m_inputType->valueAttributeChanged();
     } else if (name == checkedAttr) {
         // Another radio button in the same group might be checked by state
         // restore. We shouldn't call setChecked() even if this has the checked
@@ -1386,11 +1378,6 @@ void HTMLInputElement::onSearch()
     if (m_inputType)
         static_cast<SearchInputType*>(m_inputType.get())->stopSearchEventTimer();
     dispatchEvent(Event::create(eventNames().searchEvent, true, false));
-}
-
-void HTMLInputElement::updateClearButtonVisibility()
-{
-    m_inputType->updateClearButtonVisibility();
 }
 
 void HTMLInputElement::documentDidResumeFromPageCache()
