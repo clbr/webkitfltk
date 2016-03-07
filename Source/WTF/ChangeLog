@@ -1,3 +1,108 @@
+2014-12-05  Roger Fong  <roger_fong@apple.com>
+
+        [Win] proj files copying over too many resources..
+        https://bugs.webkit.org/show_bug.cgi?id=139315.
+        <rdar://problem/19148278>
+
+        Reviewed by Brent Fulgham.
+
+        * WTF.vcxproj/WTF.proj: Only copy WTF.dll.
+
+2014-12-05  Andreas Kling  <akling@apple.com>
+
+        PassRef should deref on destruction if pointee was not moved.
+        <https://webkit.org/b/139309>
+
+        Reviewed by Antti Koivisto.
+
+        Let PassRef become nullptr internally after having WTF::move()'d the pointee.
+        This means that PassRef is now essentially a PassRefPtr that can only be
+        constructed with a non-null pointee.
+
+        This should make it possible for all ::create()-style construction helpers to
+        return PassRef, removing a branch in each case.
+
+        * wtf/PassRef.h:
+        (WTF::PassRef<T>::PassRef):
+        (WTF::PassRef<T>::~PassRef):
+        (WTF::PassRef<T>::get):
+        (WTF::PassRef<T>::ptr):
+        (WTF::PassRef<T>::leakRef):
+        (WTF::PassRef<T>::dropRef): Deleted.
+
+2014-12-05  Jer Noble  <jer.noble@apple.com>
+
+        [WTF] MediaTime should support round-tripping from and to doubles.
+        https://bugs.webkit.org/show_bug.cgi?id=139248
+
+        Reviewed by Eric Carlson.
+
+        MediaTimes should be able to return precisely the same double value as was used
+        when the MediaTime was created, so long as that MediaTime was not modified in a
+        non-destructive way. This will allow API which accepts floating-point values to
+        return the exact same value when asked, but still be able to store that value
+        as a MediaTime.
+
+        * wtf/MediaTime.cpp:
+        (WTF::MediaTime::createWithFloat): Added; store the floating-point value in a union.
+        (WTF::MediaTime::createWithDouble): Ditto.
+        (WTF::MediaTime::toFloat): If the value is a double, just return it.
+        (WTF::MediaTime::toDouble): Ditto.
+        (WTF::MediaTime::operator+): Special case when one or both sides are doubles.
+        (WTF::MediaTime::operator-): Ditto.
+        (WTF::MediaTime::operator*): Ditto.
+        (WTF::MediaTime::compare): Ditto.
+        (WTF::abs): Ditto.
+        (WTF::MediaTime::setTimeScale): Convert the MediaTime from a double.
+
+2014-12-05  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] WTF project is missing a GStreamer source file.
+        https://bugs.webkit.org/show_bug.cgi?id=139296
+
+        Reviewed by Philippe Normand.
+
+        The WTF project file is missing a GStreamer source file,
+        causing a link error when compiling with GStreamer enabled.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+
+2014-12-04  David Kilzer  <ddkilzer@apple.com>
+
+        REGRESSION (r176683): RefCounter.h is installed outside SDKROOT
+
+        * WTF.xcodeproj/project.pbxproj: Don't mark RefCounter.h as a
+        private header.  WTF headers use a special build phase script to
+        be installed.
+
+2014-12-04  Anders Carlsson  <andersca@apple.com>
+
+        Make API::String copy the underlying strings if needed, for thread safety
+        https://bugs.webkit.org/show_bug.cgi?id=139261
+
+        Reviewed by Sam Weinig.
+
+        * wtf/RefPtr.h:
+        (WTF::RefPtr<T>::leakRef):
+        Add a leakRef() to RefPtr so we don't have to go through PassRefPtr.
+
+        * wtf/text/WTFString.cpp:
+        (WTF::String::isSafeToSendToAnotherThread):
+        Check if the string is empty before checking whether it's in an atomic string table.
+        It's safe to send empty strings to other threads even if they're in the atomic string table
+        since they will never be deallocated.
+
+2014-12-04  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix cast-align warning in StringImpl.h
+        https://bugs.webkit.org/show_bug.cgi?id=139222
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/text/StringImpl.h:
+        (WTF::StringImpl::tailPointer):
+
 2014-12-02  Mark Lam  <mark.lam@apple.com>
 
         Rolling out r176592, r176603, r176616, and r176705 until build and perf issues are resolved.

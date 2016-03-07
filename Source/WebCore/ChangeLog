@@ -1,3 +1,728 @@
+2014-12-07  Dan Bernstein  <mitz@apple.com>
+
+        Introduce and deploy a function that allocates and returns an instance of a soft-linked class
+        https://bugs.webkit.org/show_bug.cgi?id=139348
+
+        Reviewed by Anders Carlsson.
+
+        In [[getFooClass() alloc] init*], the type of the result of +alloc is id, so the compiler
+        picks an arbitrary declaration of init*, not necessarily the Foo one. This can then lead
+        to warnings or errors if the types or attributes don’t match, or to runtime errors if Foo
+        doesn’t even have the expected initializer. The new allocFooInstance() returns a Foo *, thus
+        avoiding the ambiguity.
+
+        * editing/mac/DataDetection.mm:
+        (WebCore::DataDetection::detectItemAroundHitTestResult):
+        * platform/audio/ios/MediaSessionManagerIOS.mm:
+        (-[WebMediaSessionHelper allocateVolumeView]):
+        (-[WebMediaSessionHelper startMonitoringAirPlayRoutes]):
+        * platform/graphics/avfoundation/AudioSourceProviderAVFObjC.mm:
+        (WebCore::AudioSourceProviderAVFObjC::createMix):
+        * platform/graphics/avfoundation/objc/CDMSessionAVFoundationObjC.mm:
+        * platform/graphics/avfoundation/objc/InbandTextTrackPrivateAVFObjC.mm:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayerLayer):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVAssetForURL):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayer):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayerItem):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createVideoOutput):
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateMediaSourceAVFObjC.mm:
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::MediaPlayerPrivateMediaSourceAVFObjC):
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::ensureLayer):
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::streamSession):
+        * platform/graphics/avfoundation/objc/SourceBufferPrivateAVFObjC.mm:
+        (WebCore::SourceBufferPrivateAVFObjC::SourceBufferPrivateAVFObjC):
+        (WebCore::SourceBufferPrivateAVFObjC::abort):
+        (WebCore::SourceBufferPrivateAVFObjC::trackDidChangeEnabled):
+
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        (PlatformCALayerMac::PlatformCALayerMac): Cast the result of +alloc to an instance of the
+        expected class.
+
+        * platform/graphics/mac/FontMac.mm:
+        (WebCore::showLetterpressedGlyphsWithAdvances):
+        * platform/graphics/mac/MediaPlayerPrivateQTKit.mm:
+        (WebCore::MediaPlayerPrivateQTKit::createQTMovie):
+        (WebCore::MediaPlayerPrivateQTKit::createQTMovieLayer):
+        * platform/graphics/mac/PDFDocumentImageMac.mm:
+        (WebCore::PDFDocumentImage::createPDFDocument):
+        * platform/ios/PlatformSpeechSynthesizerIOS.mm:
+        (SOFT_LINK_CONSTANT):
+        (-[WebSpeechSynthesisWrapper speakUtterance:]):
+        * platform/ios/WebCoreMotionManager.mm:
+        (-[WebCoreMotionManager initializeOnMainThread]):
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (-[WebAVPlayerController init]):
+        (WebVideoFullscreenInterfaceAVKit::setupFullscreen):
+        * platform/mac/ContentFilterMac.mm:
+        (WebCore::ContentFilter::ContentFilter):
+
+        * platform/mac/SoftLinking.h: Added alloc##className##instance().
+
+        * platform/mac/WebVideoFullscreenController.mm:
+        (-[WebVideoFullscreenController setVideoElement:]):
+        * platform/mediastream/mac/AVAudioCaptureSource.mm:
+        (WebCore::AVAudioCaptureSource::setupCaptureSession):
+        * platform/mediastream/mac/AVCaptureDeviceManager.mm:
+        (WebCore::AVCaptureDeviceManager::verifyConstraintsForMediaType):
+        * platform/mediastream/mac/AVMediaCaptureSource.mm:
+        (WebCore::AVMediaCaptureSource::setupSession):
+        * platform/mediastream/mac/AVVideoCaptureSource.mm:
+        (WebCore::AVVideoCaptureSource::setupCaptureSession):
+        * platform/network/ios/QuickLook.mm:
+        (WebCore::registerQLPreviewConverterIfNeeded):
+        (WebCore::QuickLookHandle::QuickLookHandle):
+
+2014-12-07  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add Since tags to GObject DOM bindings documentation
+        https://bugs.webkit.org/show_bug.cgi?id=139356
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Now that we have a small stable API, and new symbols are added
+        manually, we can also add the version to the symbols file, that
+        the code generator can ue to add Since tags to the gtk-doc.
+
+        * bindings/gobject/webkitdom.symbols: Add @2.8 to the new symbols
+        added for 2.8.
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GenerateConstants): Add Since tag to gtk-doc if there's a version
+        number for the symbol in the .symbols file.
+        (GenerateFunction): Ditto.
+        (ReadStableSymbols):
+
+2014-12-07  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Missing API detected in GObject DOM bindings after r176630
+        https://bugs.webkit.org/show_bug.cgi?id=139201
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Bring back WebKitDOMDeprecated and add custom versions of the
+        removed symbols as deprecated in favor of the new ones. Also add
+        the new ones as stable API.
+
+        * CMakeLists.txt: Pass a list of additional dependencies to GENERATE_BINDINGS.
+        * PlatformGTK.cmake: Ditto.
+        * PlatformMac.cmake: Ditto.
+        * bindings/gobject/WebKitDOMDeprecated.cpp: Added.
+        (webkit_dom_html_element_get_inner_html):
+        (webkit_dom_html_element_set_inner_html):
+        (webkit_dom_html_element_get_outer_html):
+        (webkit_dom_html_element_set_outer_html):
+        * bindings/gobject/WebKitDOMDeprecated.h: Added.
+        * bindings/gobject/WebKitDOMDeprecated.symbols: Added.
+        * bindings/gobject/webkitdom.symbols:
+
+2014-12-06  Csaba Osztrogonác  <ossy@webkit.org>
+
+        URTBF after r176915.
+
+        DisplayRefreshMonitorClient is the parent class of GraphicsLayerUpdater
+        only if USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR) is true, so override
+        is incorrect if USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR) is false.
+
+        That's why r176915 broke the build on non PLATFORM(COCOA) platforms,
+        such as GTK, EFL, Apple Windows.
+
+        Additionally displayRefreshFired is only used inside USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR)
+        guard, so there is no reason to define it for non COCOA platforms.
+
+        * platform/graphics/GraphicsLayerUpdater.cpp:
+        * platform/graphics/GraphicsLayerUpdater.h:
+
+2014-12-06  Anders Carlsson  <andersca@apple.com>
+
+        Fix build with newer versions of clang.
+        rdar://problem/18978733
+
+        Add a bunch of overrides since we're not disabling the "inconsistent missing override" warning in WebKit.
+
+        * page/scrolling/AsyncScrollingCoordinator.h:
+        * page/scrolling/ScrollingStateFixedNode.h:
+        * page/scrolling/ScrollingStateFrameScrollingNode.h:
+        * page/scrolling/ScrollingStateOverflowScrollingNode.h:
+        * page/scrolling/ScrollingStateStickyNode.h:
+        * page/scrolling/ScrollingTreeFrameScrollingNode.h:
+        (WebCore::ScrollingTreeFrameScrollingNode::updateLayersAfterDelegatedScroll): Deleted.
+        * page/scrolling/ios/ScrollingTreeFrameScrollingNodeIOS.h:
+        * platform/graphics/GraphicsLayerUpdater.h:
+        * platform/mac/ScrollbarThemeMac.h:
+        (WebCore::ScrollbarThemeMac::supportsControlTints): Deleted.
+        (WebCore::ScrollbarThemeMac::maxOverlapBetweenPages): Deleted.
+        * rendering/RenderLayerCompositor.h:
+        * rendering/RenderSnapshottedPlugIn.h:
+
+2014-12-06  Anders Carlsson  <andersca@apple.com>
+
+        Fix build with newer versions of clang.
+        rdar://problem/18978687
+
+        Add a bunch of overrides since we're not disabling the "inconsistent missing override" warning in WebKit.
+
+        * html/HTMLElement.h:
+        * html/HTMLMediaElement.h:
+        * html/track/VTTCue.h:
+        * loader/FrameNetworkingContext.h:
+        (WebCore::FrameNetworkingContext::shouldClearReferrerOnHTTPSToHTTPRedirect): Deleted.
+        * loader/cache/CachedImage.h:
+        * page/SuspendableTimer.h:
+        * platform/Scrollbar.h:
+        * platform/graphics/InbandTextTrackPrivate.h:
+        * rendering/RenderBlockFlow.h:
+
+2014-12-06  Anders Carlsson  <andersca@apple.com>
+
+        Follow-up build fix.
+
+        * Configurations/Base.xcconfig:
+
+2014-12-06  Anders Carlsson  <andersca@apple.com>
+
+        Fix build with newer versions of clang.
+        rdar://problem/18978689
+
+        Disable the "inconsistent missing override" warning due to our use of macros in SVG where it's hard to
+        know whether we can add an override or not.
+
+        Also, cast return values of +alloc to the right type, and add some casts for vector iterator arithmetic.
+
+        * Configurations/Base.xcconfig:
+        * Modules/webdatabase/DatabaseBackendBase.cpp:
+        (WebCore::guidForOriginAndName):
+        * accessibility/ios/WebAccessibilityObjectWrapperIOS.mm:
+        (-[WebAccessibilityObjectWrapper _stringForRange:attributed:]):
+        * editing/cocoa/HTMLConverter.mm:
+        (_shadowForShadowStyle):
+        (HTMLConverter::_addTableForElement):
+        * platform/graphics/SVGGlyph.cpp:
+        (WebCore::isCompatibleArabicForm):
+        * platform/graphics/avfoundation/AudioSourceProviderAVFObjC.mm:
+        (WebCore::AudioSourceProviderAVFObjC::createMix):
+        * platform/graphics/mac/FontMac.mm:
+        (WebCore::showLetterpressedGlyphsWithAdvances):
+        * platform/ios/PlatformSpeechSynthesizerIOS.mm:
+        (-[WebSpeechSynthesisWrapper speakUtterance:]):
+        * platform/ios/WebCoreMotionManager.mm:
+        (-[WebCoreMotionManager initializeOnMainThread]):
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::spannedRows):
+        (WebCore::RenderTableSection::spannedColumns):
+
+2014-12-06  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Compile error, missing guard.
+        https://bugs.webkit.org/show_bug.cgi?id=139338
+
+        Reviewed by Alex Christensen.
+
+        There is missing a ENABLE(CSS_SELECTORS_LEVEL4) guard in CSSParser.cpp.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::realLex):
+
+2014-12-05  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: I cannot activate links on the mobile version of news.google.com
+        https://bugs.webkit.org/show_bug.cgi?id=139330
+
+        Reviewed by Simon Fraser.
+
+        This website only listens for touch events. VoiceOver normally dispatches click and mouse events,
+        so on iOS this falls and VoiceOver is not able to activate anything.
+
+        The solution here is to dispatch simulated touch down/up events.
+
+        Test: platform/ios-simulator/ios-accessibility/press-fires-touch-events.html
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::press):
+        (WebCore::AccessibilityObject::dispatchTouchEvent):
+        * accessibility/AccessibilityObject.h:
+        (WebCore::AccessibilityObject::isDetachedFromParent):
+        * page/EventHandler.h:
+        * page/ios/EventHandlerIOS.mm:
+        (WebCore::EventHandler::dispatchSimulatedTouchEvent):
+        * platform/ios/PlatformEventFactoryIOS.h:
+        * platform/ios/PlatformEventFactoryIOS.mm:
+        (WebCore::PlatformTouchEventBuilder::PlatformTouchEventBuilder):
+        (WebCore::PlatformEventFactory::createPlatformSimulatedTouchEvent):
+
+2014-12-05  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Directional single quotation marks are not rotated in vertical text
+        https://bugs.webkit.org/show_bug.cgi?id=138526
+
+        Reviewed by Darin Adler.
+
+        In vertical text, directional single quotation marks are not rotated along with
+        the rest of the letters.
+
+        Test: fast/text/vertical-quotation-marks.html
+
+        * platform/graphics/FontGlyphs.cpp:
+        (WebCore::shouldIgnoreRotation):
+
+2014-12-05  Dhi Aurrahman  <diorahman@rockybars.com>
+
+        Implement parser for :lang pseudo class selector arguments that contain wildcard '*' subtags
+        https://bugs.webkit.org/show_bug.cgi?id=139014
+
+        Reviewed by Benjamin Poulain.
+
+        Consider each language range in :lang() that consists of an asterisk 
+        immediately followed by an identifier beginning with an ASCII hyphen 
+        as a valid input for the selector as specified in [1].
+
+        [1] http://dev.w3.org/csswg/selectors4/#the-lang-pseudo 
+
+        Test: fast/css/parsing-css-lang.html
+
+        * css/CSSGrammar.y.in:
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::realLex):
+
+2014-12-05  Simon Fraser  <simon.fraser@apple.com>
+
+        Programmatic scrolling and content changes are not always synchronized
+        https://bugs.webkit.org/show_bug.cgi?id=139245
+        rdar://problem/18833612
+
+        Reviewed by Anders Carlsson.
+        
+        For programmatic scrolls, AsyncScrollingCoordinator::requestScrollPositionUpdate()
+        calls updateScrollPositionAfterAsyncScroll(), then dispatches the requested
+        scroll position to the scrolling thread.
+        
+        Once the scrolling thread commits, it calls back to the main thread via
+        scheduleUpdateScrollPositionAfterAsyncScroll(), which schedules a second
+        call to updateScrollPositionAfterAsyncScroll() on a timer. That's a problem,
+        because some other scroll may have happened in the meantime; when the timer
+        fires, it can sometimes restore a stale scroll position.
+        
+        Fix by bailing early from scheduleUpdateScrollPositionAfterAsyncScroll()
+        for programmatic scrolls, since we know that requestScrollPositionUpdate()
+        already did the updateScrollPositionAfterAsyncScroll().
+
+        Test:
+            ManualTests/programmatic-scroll-flicker.html
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::reset): nullptr.
+        (WebCore::FrameView::setScrollPosition): Ditto.
+        (WebCore::FrameView::setWasScrolledByUser): Ditto.
+        * page/scrolling/AsyncScrollingCoordinator.cpp:
+        (WebCore::AsyncScrollingCoordinator::requestScrollPositionUpdate): Use a local variable for
+        isProgrammaticScroll just to make sure we use the same value for the duration of this function.
+        (WebCore::AsyncScrollingCoordinator::scheduleUpdateScrollPositionAfterAsyncScroll): Do nothing
+        if this is a programmatic scroll.
+
+2014-12-05  Timothy Horton  <timothy_horton@apple.com>
+
+        Build fix.
+
+        * platform/spi/mac/TUCallSPI.h:
+
+2014-12-05  Roger Fong  <roger_fong@apple.com>
+
+        [Win] proj files copying over too many resources..
+        https://bugs.webkit.org/show_bug.cgi?id=139315.
+        <rdar://problem/19148278>
+
+        Reviewed by Brent Fulgham.
+
+        * WebCore.vcxproj/WebCore.proj: Don't copy over bin32 build output.
+
+2014-12-05  Timothy Horton  <timothy_horton@apple.com>
+
+        Use the system string for telephone number menu
+        https://bugs.webkit.org/show_bug.cgi?id=139324
+        <rdar://problem/18726471>
+
+        * platform/spi/mac/TUCallSPI.h: Added.
+        Actually add the SPI header from the last commit.
+
+2014-12-05  Tim Horton  <timothy_horton@apple.com>
+
+        Use the system string for telephone number menu
+        https://bugs.webkit.org/show_bug.cgi?id=139324
+        <rdar://problem/18726471>
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/spi/mac/TUCallSPI.h: Added.
+        Add an SPI header.
+
+2014-12-05  Jer Noble  <jer.noble@apple.com>
+
+        [MSE][Mac] Return absolute value of error code from CDMSessionMediaSourceAVFObjC::update().
+        https://bugs.webkit.org/show_bug.cgi?id=139316
+
+        Reviewed by Eric Carlson.
+
+        Similarly to our asynchronous error reporting, return the absolute value of the error code.
+
+        * platform/graphics/avfoundation/objc/CDMSessionMediaSourceAVFObjC.mm:
+        (WebCore::systemCodeForError):
+        (WebCore::CDMSessionMediaSourceAVFObjC::update):
+
+2014-12-05  Anders Carlsson  <andersca@apple.com>
+
+        Fix build on Windows.
+
+        * page/SessionIDHash.h:
+
+2014-12-05  Zalan Bujtas  <zalan@apple.com>
+
+        Issue repaint at setUnavailablePluginIndicatorIsHidden() only when embedded object's indicator status changes.
+        https://bugs.webkit.org/show_bug.cgi?id=139311
+
+        Reviewed by Tim Horton.
+
+        Not testable.
+
+        * rendering/RenderEmbeddedObject.cpp:
+        (WebCore::RenderEmbeddedObject::setUnavailablePluginIndicatorIsHidden):
+
+2014-12-05  Andreas Kling  <akling@apple.com>
+
+        PassRef should deref on destruction if pointee was not moved.
+        <https://webkit.org/b/139309>
+
+        Reviewed by Antti Koivisto.
+
+        Remove calls to PassRef::dropRef() since it's no longer necessary to manually
+        notify PassRef that you didn't move the pointee.
+
+        * rendering/RenderElement.cpp:
+        (WebCore::RenderElement::createFor):
+        (WebCore::RenderElement::setStyle):
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::resolveTree):
+
+2014-12-05  Benjamin Poulain  <bpoulain@apple.com>
+
+        Fix style sharing with the "type" and "readonly" attributes
+        https://bugs.webkit.org/show_bug.cgi?id=139283
+
+        Reviewed by Antti Koivisto.
+
+        There are two bugs adressed with this patch:
+        1) The attributes "type" and "readonly" where only handled correctly
+           for input elements. For everything else, they could incorrectly
+           be ignored for style sharing.
+        2) The handling of attributes was incorrect for selector lists, leading
+           to various bugs (incorrect style sharing in some cases, disabling
+           style sharing on valid cases).
+
+        For [1], the problem was that attribute checking had been limited to
+        StyleResolver::canShareStyleWithControl(). That function is for handling
+        the special states of input element. For any other element, the attributes
+        were simply ignored.
+
+        For [2], there were a bunch of small problems. First, containsUncommonAttributeSelector()
+        was not recursive, which caused it to ignored any nested selector list. This used to be
+        correct but since we have advanced selectors we can no longer assumed selectors are not nested.
+
+        A second issue was that any attribute in a selector list was causing us to fall back
+        to the slow case. Now that we have the fast :matches(), we really don't want that.
+
+        The function containsUncommonAttributeSelector() was transformed into a recursive function
+        tracking where we are in the selector.
+
+        At the entry point, we start with the flag "startsOnRightmostElement" set to true. The flag is then
+        updated on the stack of each recursive call.
+
+        For example, "webkit > is:matches(freaking > awesome)". We evalute "is" with the flag to true, then recurse
+        into evaluating "freaking > awesome" with the flag still set to true. When we evalute ">", the flag
+        is set to false to evaluate any following selectors.
+        After evaluating "freaking > awesome", we go back to our previous stack frame, and the flag
+        is back to true and we can continue evaluating with the curren top level state.
+
+        From some logging, I discovered that the attribute handling is way too aggressive.
+        This is not a regression and I cannot fix that easily so I left a fixme.
+
+        Tests: fast/css/data-attribute-style-sharing-1.html
+               fast/css/data-attribute-style-sharing-2.html
+               fast/css/data-attribute-style-sharing-3.html
+               fast/css/data-attribute-style-sharing-4.html
+               fast/css/data-attribute-style-sharing-5.html
+               fast/css/data-attribute-style-sharing-6.html
+               fast/css/data-attribute-style-sharing-7.html
+               fast/css/readonly-attribute-style-sharing-1.html
+               fast/css/readonly-attribute-style-sharing-2.html
+               fast/css/readonly-attribute-style-sharing-3.html
+               fast/css/readonly-attribute-style-sharing-4.html
+               fast/css/readonly-attribute-style-sharing-5.html
+               fast/css/readonly-attribute-style-sharing-6.html
+               fast/css/readonly-attribute-style-sharing-7.html
+               fast/css/type-attribute-style-sharing-1.html
+               fast/css/type-attribute-style-sharing-2.html
+               fast/css/type-attribute-style-sharing-3.html
+               fast/css/type-attribute-style-sharing-4.html
+               fast/css/type-attribute-style-sharing-5.html
+               fast/css/type-attribute-style-sharing-6.html
+               fast/css/type-attribute-style-sharing-7.html
+
+        * css/RuleSet.cpp:
+        (WebCore::containsUncommonAttributeSelector):
+        (WebCore::RuleData::RuleData):
+        (WebCore::selectorListContainsAttributeSelector): Deleted.
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::canShareStyleWithControl):
+        (WebCore::StyleResolver::canShareStyleWithElement):
+
+2014-12-05  Jer Noble  <jer.noble@apple.com>
+
+        [WTF] MediaTime should support round-tripping from and to doubles.
+        https://bugs.webkit.org/show_bug.cgi?id=139248
+
+        Reviewed by Eric Carlson.
+
+        Check whether the MediaTime's underlying data is floating point before converting
+        to a CMTime or QTTime.
+
+        * platform/graphics/avfoundation/MediaTimeAVFoundation.cpp:
+        (WebCore::toCMTime):
+        * platform/graphics/mac/MediaTimeQTKit.mm:
+        (WebCore::toQTTime):
+
+2014-12-05  Anders Carlsson  <andersca@apple.com>
+
+        Add a private browsing mode to MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=139308
+
+        Reviewed by Sam Weinig.
+
+        Use -1 instead of -2 for the deleted value.
+
+        * page/SessionIDHash.h:
+
+2014-12-05  Chris Dumez  <cdumez@apple.com>
+
+        Move 'text-emphasis-style' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139285
+
+        Reviewed by Sam Weinig.
+
+        Move 'text-emphasis-style' CSS property to the new StyleBuilder by
+        using custom code.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyTextEmphasisStyle::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyTextEmphasisStyle::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyTextEmphasisStyle::applyValue): Deleted.
+        (WebCore::ApplyPropertyTextEmphasisStyle::createHandler): Deleted.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyInitialWebkitTextEmphasisStyle):
+        (WebCore::StyleBuilderCustom::applyInheritWebkitTextEmphasisStyle):
+        (WebCore::StyleBuilderCustom::applyValueWebkitTextEmphasisStyle):
+
+2014-12-05  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] remove "enter optimized fullscreen" gesture
+        https://bugs.webkit.org/show_bug.cgi?id=139301
+
+        Reviewed by Jer Noble.
+
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.handleWrapperTouchStart): Remove gesture recognizer.
+
+2014-12-05  Beth Dakin  <bdakin@apple.com>
+
+        rdar://problem/19156353 Additional build-fixes needed.
+
+        Rubber-stamped by Tim Horton.
+
+        This is a bit unfortunate, but we need to always forward-declare this for now.
+        * platform/spi/mac/QuickLookMacSPI.h:
+
+2014-12-05  David Kilzer  <ddkilzer@apple.com>
+
+        FeatureDefines.xcconfig: Workaround bug in Xcode 5.1.1 when defining ENABLE_WEB_REPLAY
+        <http://webkit.org/b/139286>
+
+        Reviewed by Daniel Bates.
+
+        * Configurations/FeatureDefines.xcconfig: Switch back to using
+        PLATFORM_NAME to workaround a bug in Xcode 5.1.1 on 10.8.
+
+2014-12-05  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] allow host application to opt-out of alternate fullscreen pt. 2
+        https://bugs.webkit.org/show_bug.cgi?id=139227
+
+        Reviewed by Jer Noble and Anders Carlsson
+
+        * WebCore.exp.in: Export HTMLMediaSession::allowsAlternateFullscreen, change the signature of 
+            WebVideoFullscreenInterfaceAVKit::setupFullscreen.
+
+        * platform/ios/WebVideoFullscreenControllerAVKit.mm:
+        (-[WebVideoFullscreenController enterFullscreen:mode:]): Update for
+            WebVideoFullscreenInterfaceAVKit::setupFullscreen change.
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h: Add argument to setupFullscreen.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::setupFullscreen): Ditto.
+
+2014-12-05  Shivakumar JM  <shiva.jm@samsung.com>
+
+        Fix build warning in WebCore/platform/graphics module
+        https://bugs.webkit.org/show_bug.cgi?id=139290
+
+        Reviewed by Carlos Garcia Campos.
+
+        Fix a build warning by removing parameter name from function.
+
+        No new tests, no behavior change.
+
+        * platform/graphics/freetype/FontCacheFreeType.cpp:
+        (WebCore::getFamilyNameStringFromFontDescriptionAndFamily):
+
+2014-12-05  sungmin cho  <sungmin17.cho@lge.com>
+
+        GraphicsLayerTextureMapper: Rename parameter to be more clear
+        https://bugs.webkit.org/show_bug.cgi?id=139288
+
+        Reviewed by Martin Robinson.
+
+        Rename 'media' to 'platformLayer'.
+
+        No new tests, no change in functionality.
+
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+        (WebCore::GraphicsLayerTextureMapper::setContentsToPlatformLayer):
+
+2014-12-04  Mark Rowe  <mrowe@apple.com>
+
+        Fix pre-Yosemite builds.
+
+        The #ifs in two SPI wrapper headers were incorrect, resulting in code being included
+        prior to Yosemite that required Yosemite to compile.
+
+        * platform/spi/mac/NSSharingServicePickerSPI.h:
+        * platform/spi/mac/NSSharingServiceSPI.h:
+
+2014-12-02  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: timeline probe records have inaccurate per-probe hit counts
+        https://bugs.webkit.org/show_bug.cgi?id=138976
+
+        Reviewed by Joseph Pecoraro.
+
+        Update the signature for breakpointActionProbe to take batchId and sampleId.
+        Covered by existing test inspector-protocol/debugger/didSampleProbe-multiple-probes.html.
+
+        * inspector/InspectorTimelineAgent.cpp:
+        (WebCore::InspectorTimelineAgent::breakpointActionProbe):
+        * inspector/InspectorTimelineAgent.h:
+        * inspector/TimelineRecordFactory.cpp:
+        (WebCore::TimelineRecordFactory::createProbeSampleData):
+        * inspector/TimelineRecordFactory.h:
+
+2014-12-04  Adenilson Cavalcanti  <cavalcantii@gmail.com>
+
+        Groove/inset/outset borders show solid if the color is black
+        https://bugs.webkit.org/show_bug.cgi?id=58608
+
+        Reviewed by Simon Fraser.
+
+        Test: fast/borders/mixed-border-style2.html
+
+        This patch will lighten/darken the border side colors, handling
+        border decoration in a similar way as Firefox does.
+
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::drawLineForBoxSide):
+        (WebCore::RenderObject::calculateBorderStyleColor):
+        * rendering/RenderObject.h:
+
+2014-12-04  Chris Dumez  <cdumez@apple.com>
+
+        Move 'webkit-aspect-ratio' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139250
+
+        Reviewed by Sam Weinig.
+
+        Move 'aspect-ratio' CSS property to the new StyleBuilder by
+        using custom code.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyAspectRatio::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyAspectRatio::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyAspectRatio::applyValue): Deleted.
+        (WebCore::ApplyPropertyAspectRatio::createHandler): Deleted.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyInitialWebkitAspectRatio):
+        (WebCore::StyleBuilderCustom::applyInheritWebkitAspectRatio):
+        (WebCore::StyleBuilderCustom::applyValueWebkitAspectRatio):
+
+2014-12-04  Timothy Horton  <timothy_horton@apple.com>
+
+        Further fix the 32-bit build.
+
+        * page/mac/TextIndicatorWindow.mm:
+        (WebCore::TextIndicatorWindow::setTextIndicator):
+
+2014-12-04  Timothy Horton  <timothy_horton@apple.com>
+
+        Fix the 32-bit build.
+
+        * page/mac/TextIndicatorWindow.h:
+        * page/mac/TextIndicatorWindow.mm:
+        (WebCore::TextIndicatorWindow::setTextIndicator):
+
+2014-12-04  Tim Horton  <timothy_horton@apple.com>
+
+        TextIndicator::createWithSelectionInFrame does synchronous IPC in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=139252
+        <rdar://problem/19140827>
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.exp.in:
+        * page/TextIndicator.cpp:
+        (WebCore::TextIndicator::createWithSelectionInFrame):
+        (WebCore::TextIndicator::TextIndicator):
+        * page/TextIndicator.h:
+        (WebCore::TextIndicator::selectionRectInWindowCoordinates):
+        (WebCore::TextIndicator::textBoundingRectInWindowCoordinates):
+        (WebCore::TextIndicator::selectionRectInScreenCoordinates): Deleted.
+        (WebCore::TextIndicator::textBoundingRectInScreenCoordinates): Deleted.
+        Go back to keeping the rects in "window" coordinates.
+
+        * page/mac/TextIndicatorWindow.h:
+        * page/mac/TextIndicatorWindow.mm:
+        (-[WebTextIndicatorView initWithFrame:textIndicator:margin:]):
+        (WebCore::TextIndicatorWindow::setTextIndicator):
+        Let callers pass in the contentRect instead of trying to share the code
+        to compute it, since it needs to be different for legacy and modern WebKit.
+
+2014-12-04  Oliver Hunt  <oliver@apple.com>
+
+        Serialization of MapData object provides unsafe access to internal types
+        https://bugs.webkit.org/show_bug.cgi?id=138653
+
+        Reviewed by Geoffrey Garen.
+
+        We now keep the value portion of the key/value pair in MapData as a
+        separate stack. This allows us to maintain the spec semantic of
+        "atomic" serialisation of the key/value pair without retaining the
+        use of a potentially invalid iterator.
+
+        * bindings/js/SerializedScriptValue.cpp:
+        (WebCore::CloneSerializer::serialize):
+
 2014-12-04  Radu Stavila  <stavila@adobe.com>
 
         [SVG Masking] Add support for referencing <mask> elements from -webkit-mask-image

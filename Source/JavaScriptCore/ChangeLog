@@ -1,3 +1,502 @@
+2014-12-06  Anders Carlsson  <andersca@apple.com>
+
+        Fix build with newer versions of clang.
+        rdar://problem/18978716
+
+        * ftl/FTLJITCode.h:
+        Add missing overrides.
+
+2014-12-05  Roger Fong  <roger_fong@apple.com>
+
+        [Win] proj files copying over too many resources..
+        https://bugs.webkit.org/show_bug.cgi?id=139315.
+        <rdar://problem/19148278>
+
+        Reviewed by Brent Fulgham.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.proj: Only copy resource folders and JavaScriptCore.dll.
+
+2014-12-05  Juergen Ributzka  <juergen@apple.com>
+
+        [JSC][FTL] Add the data layout to the module and fix the pass order.
+        https://bugs.webkit.org/show_bug.cgi?id=138748
+
+        Reviewed by Oliver Hunt.
+
+        This adds the data layout to the module, so it can be used by all
+        optimization passes in the LLVM optimizer pipeline. This also allows
+        FastISel to select more instructions, because less non-legal types are
+        generated.
+        
+        Also fix the order of the alias analysis passes in the optimization
+        pipeline.
+
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::mmAllocateDataSection):
+
+2014-12-05  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed an unused function.
+
+        Reviewed by Michael Saboff.
+
+        Broken out from https://bugs.webkit.org/show_bug.cgi?id=139305.
+
+        * parser/ParserArena.h:
+
+2014-12-05  David Kilzer  <ddkilzer@apple.com>
+
+        FeatureDefines.xcconfig: Workaround bug in Xcode 5.1.1 when defining ENABLE_WEB_REPLAY
+        <http://webkit.org/b/139286>
+
+        Reviewed by Daniel Bates.
+
+        * Configurations/FeatureDefines.xcconfig: Switch back to using
+        PLATFORM_NAME to workaround a bug in Xcode 5.1.1 on 10.8.
+
+2014-12-04  Mark Rowe  <mrowe@apple.com>
+
+        Build fix after r176836.
+
+        Reviewed by Mark Lam.
+
+        * runtime/VM.h:
+        (JSC::VM::controlFlowProfiler): Don't try to export an inline function.
+        Doing so results in a weak external symbol being generated.
+
+2014-12-04  Saam Barati  <saambarati1@gmail.com>
+
+        JavaScript Control Flow Profiler
+        https://bugs.webkit.org/show_bug.cgi?id=137785
+
+        Reviewed by Filip Pizlo.
+
+        This patch introduces a mechanism for JavaScriptCore to profile
+        which basic blocks have executed. This mechanism will then be
+        used by the Web Inspector to indicate which basic blocks
+        have and have not executed.
+        
+        The profiling works by compiling in an op_profile_control_flow
+        at the start of every basic block. Then, whenever this op code 
+        executes, we know that a particular basic block has executed.
+        
+        When we tier up a CodeBlock that contains an op_profile_control_flow
+        that corresponds to an already executed basic block, we don't
+        have to emit code for that particular op_profile_control_flow
+        because the internal data structures used to keep track of 
+        basic block locations has already recorded that the corresponding
+        op_profile_control_flow has executed.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/BytecodeList.json:
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset):
+        (JSC::computeDefsForBytecodeOffset):
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        (JSC::CodeBlock::CodeBlock):
+        * bytecode/Instruction.h:
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedFunctionExecutable::UnlinkedFunctionExecutable):
+        * bytecode/UnlinkedCodeBlock.h:
+        (JSC::UnlinkedCodeBlock::addOpProfileControlFlowBytecodeOffset):
+        (JSC::UnlinkedCodeBlock::opProfileControlFlowBytecodeOffsets):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitProfileControlFlow):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ConditionalNode::emitBytecode):
+        (JSC::IfElseNode::emitBytecode):
+        (JSC::WhileNode::emitBytecode):
+        (JSC::ForNode::emitBytecode):
+        (JSC::ContinueNode::emitBytecode):
+        (JSC::BreakNode::emitBytecode):
+        (JSC::ReturnNode::emitBytecode):
+        (JSC::CaseClauseNode::emitBytecode):
+        (JSC::SwitchNode::emitBytecode):
+        (JSC::ThrowNode::emitBytecode):
+        (JSC::TryNode::emitBytecode):
+        (JSC::ProgramNode::emitBytecode):
+        (JSC::FunctionNode::emitBytecode):
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGCapabilities.cpp:
+        (JSC::DFG::capabilityLevel):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::basicBlockLocation):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::getRuntimeTypesForVariablesAtOffsets):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileMainPass):
+        * jit/JIT.h:
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_profile_control_flow):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_profile_control_flow):
+        * jsc.cpp:
+        (GlobalObject::finishCreation):
+        (functionFindTypeForExpression):
+        (functionReturnTypeFor):
+        (functionDumpBasicBlockExecutionRanges):
+        * llint/LowLevelInterpreter.asm:
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createFunctionExpr):
+        (JSC::ASTBuilder::createGetterOrSetterProperty):
+        (JSC::ASTBuilder::createFuncDeclStatement):
+        (JSC::ASTBuilder::endOffset):
+        (JSC::ASTBuilder::setStartOffset):
+        * parser/NodeConstructors.h:
+        (JSC::Node::Node):
+        * parser/Nodes.h:
+        (JSC::CaseClauseNode::setStartOffset):
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseSwitchClauses):
+        (JSC::Parser<LexerType>::parseSwitchDefaultClause):
+        (JSC::Parser<LexerType>::parseBlockStatement):
+        (JSC::Parser<LexerType>::parseStatement):
+        (JSC::Parser<LexerType>::parseFunctionDeclaration):
+        (JSC::Parser<LexerType>::parseIfStatement):
+        (JSC::Parser<LexerType>::parseExpression):
+        (JSC::Parser<LexerType>::parseConditionalExpression):
+        (JSC::Parser<LexerType>::parseProperty):
+        (JSC::Parser<LexerType>::parseMemberExpression):
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createFunctionExpr):
+        (JSC::SyntaxChecker::createFuncDeclStatement):
+        (JSC::SyntaxChecker::createGetterOrSetterProperty):
+        (JSC::SyntaxChecker::operatorStackPop):
+        * runtime/BasicBlockLocation.cpp: Added.
+        (JSC::BasicBlockLocation::BasicBlockLocation):
+        (JSC::BasicBlockLocation::insertGap):
+        (JSC::BasicBlockLocation::getExecutedRanges):
+        (JSC::BasicBlockLocation::dumpData):
+        (JSC::BasicBlockLocation::emitExecuteCode):
+        * runtime/BasicBlockLocation.h: Added.
+        (JSC::BasicBlockLocation::startOffset):
+        (JSC::BasicBlockLocation::endOffset):
+        (JSC::BasicBlockLocation::setStartOffset):
+        (JSC::BasicBlockLocation::setEndOffset):
+        (JSC::BasicBlockLocation::hasExecuted):
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getGlobalCodeBlock):
+        * runtime/ControlFlowProfiler.cpp: Added.
+        (JSC::ControlFlowProfiler::~ControlFlowProfiler):
+        (JSC::ControlFlowProfiler::getBasicBlockLocation):
+        (JSC::ControlFlowProfiler::dumpData):
+        (JSC::ControlFlowProfiler::getBasicBlocksForSourceID):
+        * runtime/ControlFlowProfiler.h: Added. This class is in 
+        charge of generating BasicBlockLocations and also
+        providing an interface that the Web Inspector can use to ping
+        which basic blocks have executed based on the source id of a script.
+
+        (JSC::BasicBlockKey::BasicBlockKey):
+        (JSC::BasicBlockKey::isHashTableDeletedValue):
+        (JSC::BasicBlockKey::operator==):
+        (JSC::BasicBlockKey::hash):
+        (JSC::BasicBlockKeyHash::hash):
+        (JSC::BasicBlockKeyHash::equal):
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::ProgramExecutable):
+        (JSC::ProgramExecutable::initializeGlobalProperties):
+        * runtime/FunctionHasExecutedCache.cpp:
+        (JSC::FunctionHasExecutedCache::getUnexecutedFunctionRanges):
+        * runtime/FunctionHasExecutedCache.h:
+        * runtime/Options.h:
+        * runtime/TypeProfiler.cpp:
+        (JSC::TypeProfiler::logTypesForTypeLocation):
+        (JSC::TypeProfiler::typeInformationForExpressionAtOffset):
+        (JSC::TypeProfiler::findLocation):
+        (JSC::TypeProfiler::dumpTypeProfilerData):
+        * runtime/TypeProfiler.h:
+        (JSC::TypeProfiler::functionHasExecutedCache): Deleted.
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        (JSC::enableProfilerWithRespectToCount):
+        (JSC::disableProfilerWithRespectToCount):
+        (JSC::VM::enableTypeProfiler):
+        (JSC::VM::disableTypeProfiler):
+        (JSC::VM::enableControlFlowProfiler):
+        (JSC::VM::disableControlFlowProfiler):
+        (JSC::VM::dumpTypeProfilerData):
+        * runtime/VM.h:
+        (JSC::VM::functionHasExecutedCache):
+        (JSC::VM::controlFlowProfiler):
+
+2014-12-04  Filip Pizlo  <fpizlo@apple.com>
+
+        printInternal(PrintStream& out, JSC::JITCode::JITType type) ends up dumping a literal %s
+        https://bugs.webkit.org/show_bug.cgi?id=139274
+
+        Reviewed by Geoffrey Garen.
+
+        * jit/JITCode.cpp:
+        (WTF::printInternal):
+
+2014-12-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed the concept of ParserArenaRefCounted
+        https://bugs.webkit.org/show_bug.cgi?id=139277
+
+        Reviewed by Oliver Hunt.
+
+        This is a step toward a parser speedup.
+
+        Now that we have a clear root node type for each parse tree, there's no
+        need to have a concept for "I might be refcounted or arena allocated".
+        Instead, we can just use unique_ptr to manage the tree as a whole.
+
+        * API/JSScriptRef.cpp:
+        (parseScript):
+        * builtins/BuiltinExecutables.cpp:
+        (JSC::BuiltinExecutables::createBuiltinExecutable): Updated for type change.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::generateFunctionCodeBlock): Use unique_ptr. No need to call
+        destroyData() explicitly: the unique_ptr destructor will do everything
+        we need, as Bjarne intended.
+
+        * parser/NodeConstructors.h:
+        (JSC::ParserArenaRoot::ParserArenaRoot):
+        (JSC::ParserArenaRefCounted::ParserArenaRefCounted): Deleted.
+
+        * parser/Nodes.cpp:
+        (JSC::ScopeNode::ScopeNode):
+        (JSC::ProgramNode::ProgramNode):
+        (JSC::EvalNode::EvalNode):
+        (JSC::FunctionNode::FunctionNode):
+        (JSC::ProgramNode::create): Deleted.
+        (JSC::EvalNode::create): Deleted.
+        (JSC::FunctionNode::create): Deleted. All special create semantics can
+        just go away now that we play by C++ constructor / destructor rules.
+
+        * parser/Nodes.h:
+        (JSC::ParserArenaRoot::parserArena):
+        (JSC::ParserArenaRoot::~ParserArenaRoot): Just a normal class now, which
+        holds onto the whole parse tree by virtue of owning the arena in which
+        all the parsed nodes (except for itself) were allocated.
+
+        (JSC::ProgramNode::closedVariables):
+        (JSC::ParserArenaRefCounted::~ParserArenaRefCounted): Deleted.
+
+        (JSC::ScopeNode::destroyData): Deleted. No need to destroy anything
+        explicitly anymore -- we can just rely on destructors.
+
+        (JSC::ScopeNode::parserArena): Deleted.
+
+        * parser/Parser.h:
+        (JSC::Parser<LexerType>::parse):
+        (JSC::parse): unique_ptr all the things.
+
+        * parser/ParserArena.cpp:
+        (JSC::ParserArena::reset):
+        (JSC::ParserArena::isEmpty):
+        (JSC::ParserArena::contains): Deleted.
+        (JSC::ParserArena::last): Deleted.
+        (JSC::ParserArena::removeLast): Deleted.
+        (JSC::ParserArena::derefWithArena): Deleted.
+        * parser/ParserArena.h:
+        (JSC::ParserArena::swap): Much delete. Such wow.
+
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getGlobalCodeBlock):
+        (JSC::CodeCache::getFunctionExecutableFromGlobalCode):
+        * runtime/Completion.cpp:
+        (JSC::checkSyntax):
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::checkSyntax): unique_ptr all the things.
+
+2014-12-04  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r173188): Text inserted when trying to delete a word from the Twitter message box.
+        <https://webkit.org/b/139076>
+
+        Reviewed by Geoffrey Garen.
+
+        The StringImpl* -> Weak<JSString> cache used by the DOM bindings
+        had a bug where the key could become a stale pointer if the cached
+        JSString had its internal StringImpl atomicized.
+
+        If a new StringImpl was then later constructed at the exact same
+        address as the stale key, before the Weak<JSString> got booted out
+        of the string cache, we'd now have a situation where asking the
+        string cache for that key would return the old JSString.
+
+        Solve this by not allowing JSString::toExistingAtomicString() to
+        change the JSString's internal StringImpl unless it's resolving a
+        rope string. (The StringImpl nullity determines rope state.)
+
+        This means that calling toExistingAtomicString() may now have to
+        query the AtomicString table on each call rather than just once.
+        All clients of this API would be forced to do this regardless,
+        since they return value will be used to key into containers with
+        AtomicStringImpl* keys.
+
+        No test because this relies on malloc putting two StringImpls
+        at the same address at different points in time and we have no
+        mechanism to reliably test that.
+
+        * runtime/JSString.h:
+        (JSC::JSString::toExistingAtomicString):
+
+2014-12-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Marked some final things final.
+
+        Reviewed by Andreas Kling.
+
+        * parser/Nodes.h:
+
+2014-12-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Split out FunctionNode from FunctionBodyNode
+        https://bugs.webkit.org/show_bug.cgi?id=139273
+
+        Reviewed by Andreas Kling.
+
+        This is step toward a parser speedup.
+
+        We used to use FunctionBodyNode for two different purposes:
+
+        (1) "I am the root function you are currently parsing";
+
+        (2) "I am a lazy record of a nested function, which you will parse later".
+
+        This made for awkward lifetime semantics and interfaces.
+
+        Now, case (1) is handled by FunctionBodyNode, and case (2) is handled by
+        a new node named FunctionNode.
+
+        Since case (1) no longer needs to handle being the root of the parse
+        tree, FunctionBodyNode can be a normal arena-allocated node.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::generateFunctionCodeBlock): Use FunctionNode instead of
+        FunctionBodyNode, since we are producing the root of the function parse
+        tree.
+
+        (JSC::UnlinkedFunctionExecutable::UnlinkedFunctionExecutable): Removed
+        some unused data, and default-initialized other data, which isn't filled
+        in meaningfully until recordParse() is called. (The previous values were
+        incorrect / meaningless, since the FunctionBodyNode didn't have
+        meaningful values in this case.)
+
+        * bytecode/UnlinkedCodeBlock.h: Ditto.
+
+        (JSC::UnlinkedFunctionExecutable::forceUsesArguments): Deleted.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator): Use FunctionNode instead of
+        FunctionBodyNode, since we are generating code starting at the root of
+        the parse tree.
+
+        (JSC::BytecodeGenerator::resolveCallee):
+        (JSC::BytecodeGenerator::addCallee):
+        * bytecompiler/BytecodeGenerator.h: Ditto.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::FunctionBodyNode::emitBytecode):
+        (JSC::FunctionNode::emitBytecode): Moved the emitBytecode implementation
+        to FunctionNode, since we never generate code for FunctionBodyNode,
+        since it's just a placeholder in the AST.
+
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createFunctionBody):
+        (JSC::ASTBuilder::setUsesArguments): Deleted. Updated for interface
+        changes.
+
+        * parser/Nodes.cpp:
+        (JSC::FunctionBodyNode::FunctionBodyNode):
+        (JSC::FunctionBodyNode::finishParsing):
+        (JSC::FunctionBodyNode::setEndPosition):
+        (JSC::FunctionNode::FunctionNode):
+        (JSC::FunctionNode::create):
+        (JSC::FunctionNode::finishParsing):
+        (JSC::FunctionBodyNode::create): Deleted.
+
+        * parser/Nodes.h:
+        (JSC::FunctionBodyNode::parameters):
+        (JSC::FunctionBodyNode::source):
+        (JSC::FunctionBodyNode::startStartOffset):
+        (JSC::FunctionBodyNode::isInStrictContext):
+        (JSC::FunctionNode::parameters):
+        (JSC::FunctionNode::ident):
+        (JSC::FunctionNode::functionMode):
+        (JSC::FunctionNode::startColumn):
+        (JSC::FunctionNode::endColumn):
+        (JSC::ScopeNode::setSource): Deleted.
+        (JSC::FunctionBodyNode::parameterCount): Deleted. Split out the differences
+        between FunctionNode and FunctionBodyNode.
+
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createClauseList):
+        (JSC::SyntaxChecker::setUsesArguments): Deleted. Removed setUsesArguments
+        since it wasn't used.
+
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::checkSyntax): Removed a branch that was always
+        false.
+
+2014-12-02  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: timeline probe records have inaccurate per-probe hit counts
+        https://bugs.webkit.org/show_bug.cgi?id=138976
+
+        Reviewed by Joseph Pecoraro.
+
+        Previously, the DebuggerAgent was responsible for assigning unique ids to samples.
+        However, this makes it impossible for the frontend's Timeline manager to associate
+        a Probe Sample timeline record with the corresponding probe sample data. The record
+        only included the probe batchId (misnamed as hitCount in ScriptDebugServer).
+
+        This patch moves both the batchId and sampleId counters into ScriptDebugServer, so
+        any client of ScriptDebugListener will get the correct sampleId for each sample.
+
+        * inspector/ScriptDebugListener.h:
+        * inspector/ScriptDebugServer.cpp:
+        (Inspector::ScriptDebugServer::ScriptDebugServer):
+        (Inspector::ScriptDebugServer::dispatchBreakpointActionProbe):
+        (Inspector::ScriptDebugServer::handleBreakpointHit):
+        * inspector/ScriptDebugServer.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::InspectorDebuggerAgent):
+        (Inspector::InspectorDebuggerAgent::breakpointActionProbe):
+        * inspector/agents/InspectorDebuggerAgent.h:
+
+2014-12-04  Oliver Hunt  <oliver@apple.com>
+
+        Serialization of MapData object provides unsafe access to internal types
+        https://bugs.webkit.org/show_bug.cgi?id=138653
+
+        Reviewed by Geoffrey Garen.
+
+        Converting these ASSERTs into RELEASE_ASSERTs, as it is now obvious
+        that despite trying hard to be safe in all cases it's simply to easy
+        to use an iterator in an unsafe state.
+
+        * runtime/MapData.h:
+        (JSC::MapData::const_iterator::key):
+        (JSC::MapData::const_iterator::value):
+
 2014-12-03  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
 
         Move JavaScriptCore/dfg to std::unique_ptr

@@ -111,16 +111,17 @@ namespace JSC {
         T data;
     };
 
-    class ParserArenaRefCounted : public RefCounted<ParserArenaRefCounted> {
+    class ParserArenaRoot {
         WTF_MAKE_FAST_ALLOCATED;
     protected:
-        ParserArenaRefCounted(ParserArena&);
+        ParserArenaRoot(ParserArena&);
 
     public:
-        virtual ~ParserArenaRefCounted()
-        {
-            ASSERT(deletionHasBegun());
-        }
+        ParserArena& parserArena() { return m_arena; }
+        virtual ~ParserArenaRoot() { }
+
+    protected:
+        ParserArena m_arena;
     };
 
     class Node : public ParserArenaFreeable {
@@ -1404,7 +1405,7 @@ namespace JSC {
         ParameterNode* m_next;
     };
 
-    class ScopeNode : public StatementNode, public ParserArenaRefCounted {
+    class ScopeNode : public StatementNode, public ParserArenaRoot {
     public:
         typedef DeclarationStacks::VarStack VarStack;
         typedef DeclarationStacks::FunctionStack FunctionStack;
@@ -1412,18 +1413,8 @@ namespace JSC {
         ScopeNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, bool inStrictContext);
         ScopeNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, const SourceCode&, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, CodeFeatures, int numConstants);
 
-        using ParserArenaRefCounted::operator new;
+        using ParserArenaRoot::operator new;
 
-        void destroyData()
-        {
-            m_arena.reset();
-            m_varStack.clear();
-            m_functionStack.clear();
-            m_statements = 0;
-            m_capturedVariables.clear();
-        }
-
-        ParserArena& parserArena() { return m_arena; }
         const SourceCode& source() const { return m_source; }
         const String& sourceURL() const { return m_source.provider()->url(); }
         intptr_t sourceID() const { return m_source.providerID(); }
@@ -1466,9 +1457,6 @@ namespace JSC {
         void setClosedVariables(Vector<RefPtr<StringImpl>>&&) { }
 
     protected:
-        void setSource(const SourceCode& source) { m_source = source; }
-        ParserArena m_arena;
-
         int m_startLineNumber;
         unsigned m_startStartOffset;
         unsigned m_startLineStartOffset;
@@ -1485,8 +1473,7 @@ namespace JSC {
 
     class ProgramNode : public ScopeNode {
     public:
-        static const bool isFunctionNode = false;
-        static PassRefPtr<ProgramNode> create(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
+        ProgramNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
 
         unsigned startColumn() const { return m_startColumn; }
         unsigned endColumn() const { return m_endColumn; }
@@ -1495,9 +1482,8 @@ namespace JSC {
 
         void setClosedVariables(Vector<RefPtr<StringImpl>>&&);
         const Vector<RefPtr<StringImpl>>& closedVariables() const { return m_closedVariables; }
-    private:
-        ProgramNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
 
+    private:
         virtual void emitBytecode(BytecodeGenerator&, RegisterID* = 0) override;
         Vector<RefPtr<StringImpl>> m_closedVariables;
         unsigned m_startColumn;
@@ -1506,8 +1492,7 @@ namespace JSC {
 
     class EvalNode : public ScopeNode {
     public:
-        static const bool isFunctionNode = false;
-        static PassRefPtr<EvalNode> create(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
+        EvalNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
 
         ALWAYS_INLINE unsigned startColumn() const { return 0; }
         unsigned endColumn() const { return m_endColumn; }
@@ -1515,8 +1500,6 @@ namespace JSC {
         static const bool scopeIsFunction = false;
 
     private:
-        EvalNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
-
         virtual void emitBytecode(BytecodeGenerator&, RegisterID* = 0) override;
 
         unsigned m_endColumn;
@@ -1541,19 +1524,17 @@ namespace JSC {
         DeconstructionPatternNode* m_storage;
     };
 
-    class FunctionBodyNode : public ScopeNode {
+    class FunctionBodyNode final : public StatementNode, public ParserArenaDeletable {
     public:
-        static const bool isFunctionNode = true;
-        static FunctionBodyNode* create(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, bool isStrictMode);
-        static PassRefPtr<FunctionBodyNode> create(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
+        using ParserArenaDeletable::operator new;
+
+        FunctionBodyNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, bool isInStrictContext);
 
         FunctionParameters* parameters() const { return m_parameters.get(); }
-        size_t parameterCount() const { return m_parameters->size(); }
 
         virtual void emitBytecode(BytecodeGenerator&, RegisterID* = 0) override;
 
         void finishParsing(const SourceCode&, ParameterNode*, const Identifier&, FunctionMode);
-        void finishParsing(PassRefPtr<FunctionParameters>, const Identifier&, FunctionMode);
         
         void overrideName(const Identifier& ident) { m_ident = ident; }
         const Identifier& ident() { return m_ident; }
@@ -1564,22 +1545,55 @@ namespace JSC {
 
         void setFunctionNameStart(int functionNameStart) { m_functionNameStart = functionNameStart; }
         int functionNameStart() const { return m_functionNameStart; }
+        void setFunctionKeywordStart(int functionKeywordStart) { m_functionKeywordStart = functionKeywordStart; }
+        int functionKeywordStart() const { return m_functionKeywordStart; }
         unsigned startColumn() const { return m_startColumn; }
         unsigned endColumn() const { return m_endColumn; }
 
         void setEndPosition(JSTextPosition);
 
-        static const bool scopeIsFunction = true;
+        const SourceCode& source() const { return m_source; }
 
-    private:
-        FunctionBodyNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, bool inStrictContext);
-        FunctionBodyNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
+        int startStartOffset() const { return m_startStartOffset; }
+        bool isInStrictContext() const { return m_isInStrictContext; }
 
+    protected:
         Identifier m_ident;
         Identifier m_inferredName;
         FunctionMode m_functionMode;
         RefPtr<FunctionParameters> m_parameters;
         int m_functionNameStart;
+        int m_functionKeywordStart;
+        unsigned m_startColumn;
+        unsigned m_endColumn;
+        SourceCode m_source;
+        int m_startStartOffset;
+        bool m_isInStrictContext;
+    };
+
+    class FunctionNode final : public ScopeNode {
+    public:
+        FunctionNode(ParserArena&, const JSTokenLocation& start, const JSTokenLocation& end, unsigned startColumn, unsigned endColumn, SourceElements*, VarStack*, FunctionStack*, IdentifierSet&, const SourceCode&, CodeFeatures, int numConstants);
+
+        FunctionParameters* parameters() const { return m_parameters.get(); }
+
+        virtual void emitBytecode(BytecodeGenerator&, RegisterID* = 0) override;
+
+        void finishParsing(PassRefPtr<FunctionParameters>, const Identifier&, FunctionMode);
+        
+        const Identifier& ident() { return m_ident; }
+
+        FunctionMode functionMode() { return m_functionMode; }
+
+        unsigned startColumn() const { return m_startColumn; }
+        unsigned endColumn() const { return m_endColumn; }
+
+        static const bool scopeIsFunction = true;
+
+    private:
+        Identifier m_ident;
+        FunctionMode m_functionMode;
+        RefPtr<FunctionParameters> m_parameters;
         unsigned m_startColumn;
         unsigned m_endColumn;
     };
@@ -1718,10 +1732,12 @@ namespace JSC {
         ExpressionNode* expr() const { return m_expr; }
 
         void emitBytecode(BytecodeGenerator&, RegisterID* destination);
+        void setStartOffset(int offset) { m_startOffset = offset; }
 
     private:
         ExpressionNode* m_expr;
         SourceElements* m_statements;
+        int m_startOffset;
     };
 
     class ClauseListNode : public ParserArenaFreeable {

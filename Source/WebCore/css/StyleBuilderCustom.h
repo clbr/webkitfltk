@@ -28,6 +28,7 @@
 #define StyleBuilderCustom_h
 
 #include "BasicShapeFunctions.h"
+#include "CSSAspectRatioValue.h"
 #include "CSSImageGeneratorValue.h"
 #include "CSSImageSetValue.h"
 #include "CSSImageValue.h"
@@ -124,6 +125,14 @@ public:
 
     static void applyInheritDisplay(StyleResolver&);
     static void applyValueDisplay(StyleResolver&, CSSValue&);
+
+    static void applyInitialWebkitAspectRatio(StyleResolver&);
+    static void applyInheritWebkitAspectRatio(StyleResolver&);
+    static void applyValueWebkitAspectRatio(StyleResolver&, CSSValue&);
+
+    static void applyInitialWebkitTextEmphasisStyle(StyleResolver&);
+    static void applyInheritWebkitTextEmphasisStyle(StyleResolver&);
+    static void applyValueWebkitTextEmphasisStyle(StyleResolver&, CSSValue&);
 
 private:
     static void resetEffectiveZoom(StyleResolver&);
@@ -1003,6 +1012,92 @@ inline void StyleBuilderCustom::applyValueDisplay(StyleResolver& styleResolver, 
     EDisplay display = downcast<CSSPrimitiveValue>(value);
     if (isValidDisplayValue(styleResolver, display))
         styleResolver.style()->setDisplay(display);
+}
+
+inline void StyleBuilderCustom::applyInitialWebkitAspectRatio(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setAspectRatioType(RenderStyle::initialAspectRatioType());
+    styleResolver.style()->setAspectRatioDenominator(RenderStyle::initialAspectRatioDenominator());
+    styleResolver.style()->setAspectRatioNumerator(RenderStyle::initialAspectRatioNumerator());
+}
+
+inline void StyleBuilderCustom::applyInheritWebkitAspectRatio(StyleResolver& styleResolver)
+{
+    if (styleResolver.parentStyle()->aspectRatioType() == AspectRatioAuto)
+        return;
+    styleResolver.style()->setAspectRatioType(styleResolver.parentStyle()->aspectRatioType());
+    styleResolver.style()->setAspectRatioDenominator(styleResolver.parentStyle()->aspectRatioDenominator());
+    styleResolver.style()->setAspectRatioNumerator(styleResolver.parentStyle()->aspectRatioNumerator());
+}
+
+inline void StyleBuilderCustom::applyValueWebkitAspectRatio(StyleResolver& styleResolver, CSSValue& value)
+{
+    if (is<CSSPrimitiveValue>(value)) {
+        auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+
+        if (primitiveValue.getValueID() == CSSValueFromDimensions)
+            return styleResolver.style()->setAspectRatioType(AspectRatioFromDimensions);
+        if (primitiveValue.getValueID() == CSSValueFromIntrinsic)
+            return styleResolver.style()->setAspectRatioType(AspectRatioFromIntrinsic);
+
+        ASSERT(primitiveValue.getValueID() == CSSValueAuto);
+        return styleResolver.style()->setAspectRatioType(AspectRatioAuto);
+    }
+
+    auto& aspectRatioValue = downcast<CSSAspectRatioValue>(value);
+    styleResolver.style()->setAspectRatioType(AspectRatioSpecified);
+    styleResolver.style()->setAspectRatioDenominator(aspectRatioValue.denominatorValue());
+    styleResolver.style()->setAspectRatioNumerator(aspectRatioValue.numeratorValue());
+}
+
+inline void StyleBuilderCustom::applyInitialWebkitTextEmphasisStyle(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setTextEmphasisFill(RenderStyle::initialTextEmphasisFill());
+    styleResolver.style()->setTextEmphasisMark(RenderStyle::initialTextEmphasisMark());
+    styleResolver.style()->setTextEmphasisCustomMark(RenderStyle::initialTextEmphasisCustomMark());
+}
+
+inline void StyleBuilderCustom::applyInheritWebkitTextEmphasisStyle(StyleResolver& styleResolver)
+{
+    styleResolver.style()->setTextEmphasisFill(styleResolver.parentStyle()->textEmphasisFill());
+    styleResolver.style()->setTextEmphasisMark(styleResolver.parentStyle()->textEmphasisMark());
+    styleResolver.style()->setTextEmphasisCustomMark(styleResolver.parentStyle()->textEmphasisCustomMark());
+}
+
+inline void StyleBuilderCustom::applyValueWebkitTextEmphasisStyle(StyleResolver& styleResolver, CSSValue& value)
+{
+    if (is<CSSValueList>(value)) {
+        auto& list = downcast<CSSValueList>(value);
+        ASSERT(list.length() == 2);
+
+        for (auto& item : list) {
+            CSSPrimitiveValue& value = downcast<CSSPrimitiveValue>(item.get());
+            if (value.getValueID() == CSSValueFilled || value.getValueID() == CSSValueOpen)
+                styleResolver.style()->setTextEmphasisFill(value);
+            else
+                styleResolver.style()->setTextEmphasisMark(value);
+        }
+        styleResolver.style()->setTextEmphasisCustomMark(nullAtom);
+        return;
+    }
+
+    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+    if (primitiveValue.isString()) {
+        styleResolver.style()->setTextEmphasisFill(TextEmphasisFillFilled);
+        styleResolver.style()->setTextEmphasisMark(TextEmphasisMarkCustom);
+        styleResolver.style()->setTextEmphasisCustomMark(primitiveValue.getStringValue());
+        return;
+    }
+
+    styleResolver.style()->setTextEmphasisCustomMark(nullAtom);
+
+    if (primitiveValue.getValueID() == CSSValueFilled || primitiveValue.getValueID() == CSSValueOpen) {
+        styleResolver.style()->setTextEmphasisFill(primitiveValue);
+        styleResolver.style()->setTextEmphasisMark(TextEmphasisMarkAuto);
+    } else {
+        styleResolver.style()->setTextEmphasisFill(TextEmphasisFillFilled);
+        styleResolver.style()->setTextEmphasisMark(primitiveValue);
+    }
 }
 
 } // namespace WebCore
