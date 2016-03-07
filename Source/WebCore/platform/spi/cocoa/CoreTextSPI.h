@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,27 +20,27 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "ResourceBuffer.h"
+#ifndef CoreTextSPI_h
+#define CoreTextSPI_h
 
-#include "SharedBuffer.h"
+#include <CoreText/CoreText.h>
 
-namespace WebCore {
+#if USE(APPLE_INTERNAL_SDK)
+#include <CoreText/CTLinePriv.h>
+#endif
 
-RetainPtr<NSData> ResourceBuffer::createNSData()
-{
-    return m_sharedBuffer->createNSData();
+typedef const UniChar* (*CTUniCharProviderCallback)(CFIndex stringIndex, CFIndex* charCount, CFDictionaryRef* attributes, void* refCon);
+typedef void (*CTUniCharDisposeCallback)(const UniChar* chars, void* refCon);
+
+extern "C" {
+
+CGSize CTRunGetInitialAdvance(CTRunRef run);
+CTLineRef CTLineCreateWithUniCharProvider(CTUniCharProviderCallback provide, CTUniCharDisposeCallback dispose, void* refCon);
+CTTypesetterRef CTTypesetterCreateWithUniCharProviderAndOptions(CTUniCharProviderCallback provide, CTUniCharDisposeCallback dispose, void* refCon, CFDictionaryRef options);
+
 }
 
-void ResourceBuffer::tryReplaceSharedBufferContents(SharedBuffer* newContents)
-{
-    if (!m_sharedBuffer)
-        m_sharedBuffer = newContents;
-    else
-        m_sharedBuffer->tryReplaceContentsWithPlatformBuffer(newContents);
-}
-
-} // namespace WebCore
+#endif

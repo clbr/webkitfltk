@@ -547,6 +547,7 @@ private:
 
 #if ENABLE(ENCRYPTED_MEDIA_V2)
     virtual bool mediaPlayerKeyNeeded(MediaPlayer*, Uint8Array*) override;
+    virtual String mediaPlayerMediaKeysStorageDirectory() const override;
 #endif
 
 #if ENABLE(IOS_AIRPLAY)
@@ -650,6 +651,7 @@ private:
 
     void updateVolume();
     void updatePlayState();
+    void setPlaying(bool);
     bool potentiallyPlaying() const;
     bool endedPlayback() const;
     bool stoppedDueToErrors() const;
@@ -708,11 +710,12 @@ private:
     virtual bool canReceiveRemoteControlCommands() const override { return true; }
     virtual void didReceiveRemoteControlCommand(MediaSession::RemoteControlCommandType) override;
     virtual bool overrideBackgroundPlaybackRestriction() const override;
-    virtual bool hasMediaCharacteristics(MediaSession::MediaCharacteristics) const override;
-    virtual void mediaStateDidChange() override;
 
     // AudioProducer overrides
     virtual bool isPlayingAudio() override;
+    virtual void pageMutedStateDidChange() override;
+
+    bool effectiveMuted() const;
 
     void registerWithDocument(Document&);
     void unregisterWithDocument(Document&);

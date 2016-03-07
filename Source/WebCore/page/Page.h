@@ -439,6 +439,8 @@ public:
 
     bool isPlayingAudio() const { return m_isPlayingAudio; }
     void updateIsPlayingAudio();
+    bool isMuted() const { return m_muted; }
+    WEBCORE_EXPORT void setMuted(bool);
 
 private:
     WEBCORE_EXPORT void initGroup();
@@ -518,6 +520,7 @@ private:
     bool m_inLowQualityInterpolationMode;
     bool m_areMemoryCacheClientCallsEnabled;
     float m_mediaVolume;
+    bool m_muted;
 
     float m_pageScaleFactor;
     float m_zoomedOutPageScaleFactor;

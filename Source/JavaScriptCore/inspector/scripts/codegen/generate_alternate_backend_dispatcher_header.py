@@ -75,7 +75,7 @@ class AlternateBackendDispatcherHeaderGenerator(Generator):
             'commandDeclarations': '\n'.join(command_declarations),
         }
 
-        return Generator.wrap_with_guard_for_domain(domain, Template(Templates.AlternateBackendDispatcherHeaderDomainHandlerInterfaceDeclaration).substitute(None, **handler_args))
+        return self.wrap_with_guard_for_domain(domain, Template(Templates.AlternateBackendDispatcherHeaderDomainHandlerInterfaceDeclaration).substitute(None, **handler_args))
 
     def _generate_handler_declaration_for_command(self, command):
         lines = []

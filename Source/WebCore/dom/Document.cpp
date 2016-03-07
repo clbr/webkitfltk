@@ -3304,6 +3304,12 @@ void Document::updateIsPlayingAudio()
         page()->updateIsPlayingAudio();
 }
 
+void Document::pageMutedStateDidChange()
+{
+    for (auto audioProducer : m_audioProducers)
+        audioProducer->pageMutedStateDidChange();
+}
+
 void Document::styleResolverChanged(StyleResolverUpdateFlag updateFlag)
 {
     if (m_optimizedStyleSheetUpdateTimer.isActive())

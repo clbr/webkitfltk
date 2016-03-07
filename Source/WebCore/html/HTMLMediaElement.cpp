@@ -2195,6 +2195,23 @@ bool HTMLMediaElement::mediaPlayerKeyNeeded(MediaPlayer*, Uint8Array* initData)
     return true;
 }
 
+String HTMLMediaElement::mediaPlayerMediaKeysStorageDirectory() const
+{
+    Settings* settings = document().settings();
+    if (!settings)
+        return emptyString();
+
+    String storageDirectory = settings->mediaKeysStorageDirectory();
+    if (storageDirectory.isEmpty())
+        return emptyString();
+
+    SecurityOrigin* origin = document().securityOrigin();
+    if (!origin)
+        return emptyString();
+
+    return pathByAppendingComponent(storageDirectory, origin->databaseIdentifier());
+}
+
 void HTMLMediaElement::setMediaKeys(MediaKeys* mediaKeys)
 {
     if (m_mediaKeys == mediaKeys)
@@ -3001,7 +3018,7 @@ void HTMLMediaElement::setMuted(bool muted)
         // Avoid recursion when the player reports volume changes.
         if (!processingMediaPlayerCallback()) {
             if (m_player) {
-                m_player->setMuted(m_muted);
+                m_player->setMuted(effectiveMuted());
                 if (hasMediaControls())
                     mediaControls()->changedMute();
             }
@@ -3768,7 +3785,7 @@ void HTMLMediaElement::setSelectedTextTrack(TextTrack* trackToSelect)
     if (!captionPreferences)
         return;
 
-    CaptionUserPreferences::CaptionDisplayMode displayMode = captionPreferences->captionDisplayMode();
+    CaptionUserPreferences::CaptionDisplayMode displayMode;
     if (trackToSelect == TextTrack::captionMenuOffItem())
         displayMode = CaptionUserPreferences::ForcedOnly;
     else if (trackToSelect == TextTrack::captionMenuAutomaticItem())
@@ -4470,11 +4487,11 @@ void HTMLMediaElement::updateVolume()
     if (!processingMediaPlayerCallback()) {
         Page* page = document().page();
         double volumeMultiplier = page ? page->mediaVolume() : 1;
-        bool shouldMute = muted();
+        bool shouldMute = effectiveMuted();
 
         if (m_mediaController) {
             volumeMultiplier *= m_mediaController->volume();
-            shouldMute = m_mediaController->muted();
+            shouldMute = m_mediaController->muted() || (page && page->isMuted());
         }
 
         m_player->setMuted(shouldMute);
@@ -4520,7 +4537,7 @@ void HTMLMediaElement::updatePlayState()
             // Set rate, muted before calling play in case they were set before the media engine was setup.
             // The media engine should just stash the rate and muted values since it isn't already playing.
             m_player->setRate(effectivePlaybackRate());
-            m_player->setMuted(muted());
+            m_player->setMuted(effectiveMuted());
 
             m_player->play();
         }
@@ -4531,15 +4548,14 @@ void HTMLMediaElement::updatePlayState()
             m_activityToken = document().page()->pageThrottler().mediaActivityToken();
 
         startPlaybackProgressTimer();
-        m_playing = true;
-
+        setPlaying(true);
     } else {
         if (!playerPaused)
             m_player->pause();
         refreshCachedTime();
 
         m_playbackProgressTimer.stop();
-        m_playing = false;
+        setPlaying(false);
         MediaTime time = currentMediaTime();
         if (time > m_lastSeekTime)
             addPlayedRange(m_lastSeekTime, time);
@@ -4556,6 +4572,15 @@ void HTMLMediaElement::updatePlayState()
 
     if (renderer())
         renderer()->updateFromElement();
+}
+
+void HTMLMediaElement::setPlaying(bool playing)
+{
+    if (m_playing == playing)
+        return;
+    
+    m_playing = playing;
+    document().updateIsPlayingAudio();
 }
 
 void HTMLMediaElement::setPausedInternal(bool b)
@@ -4676,7 +4701,7 @@ void HTMLMediaElement::stop()
     m_inActiveDocument = false;
 
     // Stop the playback without generating events
-    m_playing = false;
+    setPlaying(false);
     setPausedInternal(true);
     m_mediaSession->clientWillPausePlayback();
 
@@ -6028,26 +6053,19 @@ bool HTMLMediaElement::overrideBackgroundPlaybackRestriction() const
     return false;
 }
 
-bool HTMLMediaElement::hasMediaCharacteristics(MediaSession::MediaCharacteristics characteristics) const
-{
-    if ((characteristics & MediaSession::MediaCharacteristicAudible) && !hasAudio())
-        return false;
-    if ((characteristics & MediaSession::MediaCharacteristicVisual) && !hasVideo())
-        return false;
-    if ((characteristics & MediaSession::MediaCharacteristicLegible) && !hasClosedCaptions())
-        return false;
-
-    return true;
-}
-
-void HTMLMediaElement::mediaStateDidChange()
-{
-    document().updateIsPlayingAudio();
-}
-
 bool HTMLMediaElement::isPlayingAudio()
 {
-    return m_mediaSession->state() == MediaSession::Playing && hasAudio();
+    return isPlaying() && hasAudio();
+}
+
+void HTMLMediaElement::pageMutedStateDidChange()
+{
+    updateVolume();
+}
+
+bool HTMLMediaElement::effectiveMuted() const
+{
+    return muted() || (document().page() && document().page()->isMuted());
 }
 
 bool HTMLMediaElement::doesHaveAttribute(const AtomicString& attribute, AtomicString* value) const

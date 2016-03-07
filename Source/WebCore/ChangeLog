@@ -1,3 +1,1255 @@
+2014-10-31  Chris Dumez  <cdumez@apple.com>
+
+        Support throttling of DOMTimers using nested setTimeout() calls
+        https://bugs.webkit.org/show_bug.cgi?id=138262
+
+        Reviewed by Gavin Barraclough.
+
+        Extend DOMTimers throttling support to timers that are using nested
+        setTimeout() calls instead of a setInterval(). To achieve this, this
+        patch introduces a NestedTimersVector singleton class where nested
+        timers are appended, and for which we potentially update the next
+        firing time, after the parent timer is done executing.
+
+        I have verified this helps on cnn.com for example, which has timers
+        interacting with non-visible plugins that are scheduled using nested
+        setTimeout() calls with a frequency of 150 / 200 ms.
+
+        * page/DOMTimer.cpp:
+        (WebCore::NestedTimersVector::NestedTimersVector):
+        (WebCore::NestedTimersVector::~NestedTimersVector):
+        (WebCore::NestedTimersVector::registerTimer):
+        (WebCore::NestedTimersVector::begin):
+        (WebCore::NestedTimersVector::end):
+        (WebCore::DOMTimer::install):
+        (WebCore::DOMTimer::updateThrottlingStateIfNecessary):
+        (WebCore::DOMTimer::fired):
+        * page/DOMTimer.h:
+
+2014-10-31  Chris Dumez  <cdumez@apple.com>
+
+        Move -webkit-marquee-increment property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138208
+
+        Reviewed by Andreas Kling.
+
+        Move -webkit-marquee-increment property from DeprecatedStyleBuilder to
+        the new StyleBuilder so that it is generated from CSSPropertyNames.in.
+        Custom code is used to set the value due to the !length.isUndefined()
+        check before calling setMarqueeIncrement().
+
+        Test: fast/css/webkit-marquee-increment-bad-value.html
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyLength::setValue): Deleted.
+        (WebCore::ApplyPropertyLength::applyValue): Deleted.
+        (WebCore::ApplyPropertyLength::createHandler): Deleted.
+        (WebCore::ApplyPropertyMarqueeIncrement::applyValue): Deleted.
+        (WebCore::ApplyPropertyMarqueeIncrement::createHandler): Deleted.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderFunctions::applyValueWebkitMarqueeIncrement):
+
+2014-10-31  Simon Fraser  <simon.fraser@apple.com>
+
+        Brace cleanup in StyleResolver::adjustRenderStyle()
+        https://bugs.webkit.org/show_bug.cgi?id=138267
+
+        Reviewed by Chris Dumez.
+
+        No braces for single-line clauses.
+
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::adjustRenderStyle):
+
+2014-10-31  Chris Dumez  <cdumez@apple.com>
+
+        Fix several warnings reported by clang static analyzer in WebCore
+        https://bugs.webkit.org/show_bug.cgi?id=138258
+
+        Reviewed by Joseph Pecoraro.
+
+        Fix several warnings reported by clang static analyzer in WebCore
+        related to variable unnecessary assignments and scope.
+
+        No new tests, no behavior change.
+
+        * dom/ContainerNode.cpp:
+        (WebCore::ContainerNode::getUpperLeftCorner):
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::parseAttribute):
+        * inspector/InspectorStyleTextEditor.cpp:
+        (WebCore::InspectorStyleTextEditor::replaceProperty):
+        * page/ContextMenuController.cpp:
+        (WebCore::openNewWindow):
+        * page/DragController.cpp:
+        (WebCore::createMouseEvent):
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::computeInlinePreferredLogicalWidths):
+        * rendering/svg/SVGInlineTextBox.cpp:
+        (WebCore::SVGInlineTextBox::paintSelectionBackground):
+
+2014-10-31  Simon Fraser  <simon.fraser@apple.com>
+
+        Whitespace cleanup in Screen.h
+        https://bugs.webkit.org/show_bug.cgi?id=138265
+
+        Reviewed by Chris Dumez.
+
+        No indent for namespaces. Mark 'final'. Fix * placement.
+
+        * page/Screen.h:
+        (WebCore::Screen::create):
+
+2014-10-31  Simon Fraser  <simon.fraser@apple.com>
+
+        Change the ScrollingThread code to use RunLoop::main().dispatch() rather than callOnMainThread(), which has Obj-C overhead
+        https://bugs.webkit.org/show_bug.cgi?id=138263
+
+        Reviewed by Geoffrey Garen.
+
+        callOnMainThread() uses -performSelector:onMainThread:withObject:waitUntilDone:, so
+        it's slightly more efficient to use RunLoop::main().dispatch().
+
+        * page/scrolling/ThreadedScrollingTree.cpp:
+        (WebCore::ThreadedScrollingTree::invalidate):
+        (WebCore::ThreadedScrollingTree::scrollingTreeNodeDidScroll):
+        (WebCore::ThreadedScrollingTree::handleWheelEventPhase):
+
+2014-10-31  Benjamin Poulain  <bpoulain@apple.com>
+
+        Pseudo classes with an escaped parenthesis generate invalid rules
+        https://bugs.webkit.org/show_bug.cgi?id=138266
+
+        Reviewed by Antti Koivisto.
+
+        Since the functional pseudo classes are part of the list of PseudoClassAndCompatibilityElement,
+        they could be created by the rule
+             pseudo:
+                 ':' IDENT
+        if the parenthesis is escaped. For example, with ":not\\(", the IDENT would be
+        "not(", CSSParserSelector::parsePseudoClassAndCompatibilityElementSelector would
+        find a pseudo class type of PseudoClassNot, and the action would create an invalid
+        CSSSelector for a :not() without nested selector.
+
+        This patch fixes the issue by detecting the function case in
+        CSSParserSelector::parsePseudoClassAndCompatibilityElementSelector().
+
+        An other solution would be to split PseudoClassAndCompatibilityElement into simple pseudo class
+        and functional pseudo classes. We may do that some day but at the moment it is a lot of work with
+        a little benefit.
+
+        Tests: fast/css/crash-on-incomplete-webkit-any.html
+               fast/css/pseudo-escaped-parenthesis.html
+               fast/selectors/invalid-functional-pseudo-class.html
+
+        * css/CSSParserValues.cpp:
+        (WebCore::CSSParserSelector::parsePseudoClassAndCompatibilityElementSelector):
+
+2014-10-31  Chris Dumez  <cdumez@apple.com>
+
+        Make CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement() faster
+        https://bugs.webkit.org/show_bug.cgi?id=138227
+
+        Reviewed by Benjamin Poulain.
+
+        Restructure CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement()
+        a bit to do less if checks. The previous implementation was doing 7 if
+        checks no matter the input value. The new implementation does less
+        if checks depending on the input type.
+
+        Also, the isImageControlsRootElement() was showing in the profiles so
+        I updated the condition to only do this virtual function call if the
+        input is an HTMLDivElement (which we can check more efficiently).
+
+        With the change, I see that we're spending about ~26% less time in
+        this method when running speedometer. However, the impact on the
+        overall score is within noise.
+
+        No new tests, no behavior change.
+
+        * css/CSSDefaultStyleSheets.cpp:
+        (WebCore::CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement):
+
+2014-10-31  Antti Koivisto  <antti@apple.com>
+
+        Fix assertion in CachedResource::addDataBuffer
+
+        * loader/cache/CachedRawResource.cpp:
+        (WebCore::CachedRawResource::addDataBuffer):
+
+            Don't call to base class if buffering mode changed (happens with some special top level document types).
+
+2014-10-31  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        Remove webkit prefix from CSS columns.
+        https://bugs.webkit.org/show_bug.cgi?id=137132.
+
+        Reviewed by Dean Jackson.
+
+        CSS columns properties are ready for un-prefixing. There are still a couple
+        that we haven't implemented, such as the ones starting with "break-", so we're
+        just going to do the ones starting with "column-".  The list of column un-
+        prefixed properties in this change set is:
+            - column-count
+            - column-fill
+            - column-gap
+            - column-progression
+            - column-rule
+            - column-rule-color
+            - column-rule-style
+            - column-rule-width
+            - column-span
+            - column-width
+            - columns
+
+        Tests: fast/multicol/column-box-alignment-rtl.html
+               fast/multicol/multicol-aliases.html
+               imported/w3c/css/multicol/multicol-basic-001.html
+               imported/w3c/css/multicol/multicol-basic-002.html
+               imported/w3c/css/multicol/multicol-basic-003.html
+               imported/w3c/css/multicol/multicol-basic-004.html
+
+        Add new un-prefixed column properties and make the -webkit* ones be aliases
+        to the new ones.
+        * css/CSSPropertyNames.in:
+
+        Use the new enums CSSPropertyColumn* instead of the prefixed ones.
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp:
+        (WebCore::isColorPropertyID):
+        (WebCore::isValidKeywordPropertyAndValue):
+        (WebCore::isKeywordPropertyID):
+        (WebCore::CSSParser::parseValue):
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/StyleProperties.cpp:
+        (WebCore::StyleProperties::getPropertyValue):
+        * css/StylePropertyShorthand.cpp:
+        (WebCore::webkitColumnsShorthand):
+        (WebCore::webkitColumnRuleShorthand):
+        (WebCore::shorthandForProperty):
+        (WebCore::matchingShorthandsForLonghand):
+        * css/StyleResolver.cpp:
+        (WebCore::isValidVisitedLinkProperty):
+        (WebCore::StyleResolver::applyProperty):
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::CSSPropertyAnimationWrapperMap::CSSPropertyAnimationWrapperMap):
+        * rendering/RenderMultiColumnSet.cpp:
+        (WebCore::RenderMultiColumnSet::paintColumnRules):
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::colorIncludingFallback):
+
+2014-10-31  Tim Horton  <timothy_horton@apple.com>
+
+        Remove "Add to iPhoto" from the action menu's sharing menu
+        https://bugs.webkit.org/show_bug.cgi?id=138251
+        <rdar://problem/18837197>
+
+        Reviewed by Anders Carlsson.
+
+        * platform/spi/mac/NSSharingServiceSPI.h:
+        Add 'name' to the NSSharingService SPI header.
+
+2014-10-31  Akos Kiss  <akiss@inf.u-szeged.hu>
+
+        Fix type clash warning in supports_error rule of CSSGrammar.
+        https://bugs.webkit.org/show_bug.cgi?id=138248
+
+        Reviewed by Antti Koivisto.
+
+        Added explicit actions to supports_error rule in CSSGrammar.y.in since
+        the default actions caused bison to emit type clash warnings.
+
+        No new tests because there is no behavior change.
+
+        * css/CSSGrammar.y.in:
+
+2014-10-31  Adrian Perez de Castro  <aperez@igalia.com>
+
+        [GTK] Support script message handlers WebKitUserContentManager
+        https://bugs.webkit.org/show_bug.cgi?id=133730
+
+        Reviewed by Carlos Garcia Campos.
+
+        Support user script message handlers in WebKitUserContentManager.
+        This needs building with ENABLE_USER_MESSAGE_HANDLERS, for which
+        an option is added to the CMake build files. The option is disabled
+        globally by default, and the WebKitGTK port enables it. On the API
+        level, two new methods to register and unregister names are provided
+        in the "window.webkit" namespace, and on message reception the
+        "WebKitUserContentManager::script-message-received" signal is
+        emitted, using the registered names as signal detail.
+
+        * CMakeLists.txt: Conditionally add the needed files to the build
+        when the ENABLE_USER_MESSAGE_HANDLERS feature is enabled.
+
+2014-10-31  Andrzej Badowski  <a.badowski@samsung.com>
+
+        [ATK] Improve AccessibilityTableCell's determineAccessibilityRole function.
+        https://bugs.webkit.org/show_bug.cgi?id=137737
+
+        Reviewed by Chris Fleizach.
+
+        Use of new functions isRowHeaderCell and isColumnHeaderCell (bug 136818)
+        to more accurately determine accessibility role of the table cell.
+
+        Test: accessibility/table-cells-roles.html
+
+        * accessibility/AccessibilityARIAGridCell.cpp:
+        (WebCore::AccessibilityARIAGridCell::rowIndexRange):
+        Change to const.
+        * accessibility/AccessibilityARIAGridCell.h:
+        Change rowIndexRange function to const.
+        * accessibility/AccessibilityTableCell.cpp:
+        (WebCore::AccessibilityTableCell::determineAccessibilityRole):
+        Use of isRowHeaderCell and isColumnHeaderCell to more accurately determine accessibility role (ATK).
+        (WebCore::AccessibilityTableCell::isColumnHeaderCell):
+        Add a case of direct placement a row in the table.
+        (WebCore::AccessibilityTableCell::isRowHeaderCell):
+        Add a case of direct placement a row in the table.
+        (WebCore::AccessibilityTableCell::rowIndexRange):
+        Change to const.
+        * accessibility/AccessibilityTableCell.h:
+        Change rowIndexRange function to const.
+
+2014-10-30  Darin Adler  <darin@apple.com>
+
+        Eliminate ResourceBuffer and use SharedBuffer directly instead
+        https://bugs.webkit.org/show_bug.cgi?id=138174
+
+        Reviewed by Antti Koivisto.
+
+        Refactoring, with test coverage across many existing tests.
+
+        * CMakeLists.txt: Deleted ResourceBuffer.cpp.
+
+        * WebCore.exp.in: Removed ResourceBuffer-related symbols, and updated symbol
+        for one function that used to take a PassRefPtr but now takes a reference instead.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Deleted ResourceBuffer.cpp/.h.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Deleted ResourceBuffer.mm/.cpp/.h.
+
+        * bindings/objc/DOMUIKitExtensions.mm:
+        (-[DOMHTMLImageElement dataRepresentation:]): Use SharedBuffer directly.
+        * editing/ios/EditorIOS.mm:
+        (WebCore::Editor::writeImageToPasteboard): Ditto.
+        * editing/mac/EditorMac.mm:
+        (WebCore::Editor::writeImageToPasteboard): Ditto.
+
+        * html/ImageDocument.cpp:
+        (WebCore::ImageDocument::updateDuringParsing): Use SharedBuffer directly, and
+        also pass a reference only if non-null rather than passing a pointer.
+        (WebCore::ImageDocument::finishedParsing): Ditto. Added a missing null check.
+
+        * inspector/InspectorPageAgent.cpp:
+        (WebCore::InspectorPageAgent::cachedResourceContent): Use SharedBuffer directly.
+        (WebCore::InspectorPageAgent::mainResourceContent): Ditto.
+        * inspector/InspectorResourceAgent.cpp:
+        (WebCore::InspectorResourceAgent::didFinishLoading): Ditto.
+        (WebCore::InspectorResourceAgent::didFailLoading): Ditto.
+
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::mainResourceData): Use SharedBuffer directly,
+        and use the copy function rather than a hand-written alternative.
+        (WebCore::DocumentLoader::maybeCreateArchive): Ditto.
+        (WebCore::DocumentLoader::mainResource): Ditto.
+        (WebCore::DocumentLoader::subresource): Ditto.
+        (WebCore::DocumentLoader::maybeFinishLoadingMultipartContent): Ditto.
+
+        * loader/DocumentLoader.h: Changed mainResourceData to return a
+        PassRefPtr<SharedBuffer>. Would be better if it returned a SharedBuffer&,
+        but it currently returns a newly created buffer when there is substitute
+        data and can also return null, even though many callers assume it will not!
+
+        * loader/MediaResourceLoader.cpp:
+        (WebCore::MediaResourceLoader::dataReceived): Removed call to unused client
+        function bufferReceived.
+        (WebCore::MediaResourceLoader::notifyFinished): Removed unused buffer
+        argument to client function loadFinished.
+
+        * loader/ResourceBuffer.cpp: Removed.
+        * loader/ResourceBuffer.h: Removed.
+
+        * loader/ResourceLoader.cpp:
+        (WebCore::ResourceLoader::addDataOrBuffer): Use SharedBuffer directly.
+
+        * loader/ResourceLoader.h:
+        (WebCore::ResourceLoader::resourceData): Use SharedBuffer.
+
+        * loader/SubresourceLoader.cpp:
+        (WebCore::SubresourceLoader::didReceiveResponse): Use SharedBuffer.
+        (WebCore::SubresourceLoader::didReceiveDataOrBuffer): Ditto.
+
+        * loader/TextTrackLoader.cpp:
+        (WebCore::TextTrackLoader::processNewCueData): Use SharedBuffer.
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::finishedLoadingMainResource): Ditto.
+        * loader/archive/cf/LegacyWebArchive.cpp:
+        (WebCore::LegacyWebArchive::create): Ditto.
+
+        * loader/cache/CachedCSSStyleSheet.cpp:
+        (WebCore::CachedCSSStyleSheet::finishLoading): Use SharedBuffer.
+        * loader/cache/CachedCSSStyleSheet.h: Ditto.
+        * loader/cache/CachedFont.cpp:
+        (WebCore::CachedFont::finishLoading): Ditto.
+        (WebCore::CachedFont::ensureCustomFontData): Ditto.
+        * loader/cache/CachedFont.h: Ditto.
+
+        * loader/cache/CachedImage.cpp:
+        (WebCore::CachedImage::didAddClient): Use SharedBuffer.
+        (WebCore::CachedImage::didRemoveClient): Ditto.
+        (WebCore::CachedImage::addIncrementalDataBuffer): Ditto. Changed to take
+        a reference rather than a pointer.
+        (WebCore::CachedImage::addDataBuffer): Ditto. Also added call through
+        to base class and changed to take a reference rather than a pointer.
+        (WebCore::CachedImage::addData): Ditto. Also added call through to base class.
+        (WebCore::CachedImage::finishLoading): Ditto.
+        * loader/cache/CachedImage.h: Ditto. Also changed the type of some bit fields
+        to be unsigned instead of unsigend char.
+
+        * loader/cache/CachedRawResource.cpp:
+        (WebCore::CachedRawResource::calculateIncrementalDataChunk): Use SharedBuffer.
+        (WebCore::CachedRawResource::addDataBuffer): Ditto. Changed to take
+        a reference rather than a pointer.
+        (WebCore::CachedRawResource::addData): Ditto.
+        (WebCore::CachedRawResource::finishLoading): Ditto.
+        (WebCore::CachedRawResource::canReuse): Ditto.
+        * loader/cache/CachedRawResource.h: Ditto.
+
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::CachedResource): Reordered data members due to change
+        in header.
+        (WebCore::CachedResource::addDataBuffer): Changed argument type.
+        (WebCore::CachedResource::finishLoading): Ditto.
+        (WebCore::CachedResource::didAddClient): Refactored to eliminate one extra hash
+        table lookup by using the return value from the remove function.
+        (WebCore::CachedResource::addClientToSet): Use std::make_unique directly instead
+        of using a function named "schedule" to allocate the callback object.
+        (WebCore::CachedResource::Callback::Callback): Changed function and data member
+        name.
+        (WebCore::CachedResource::Callback::cancel): Ditto.
+        (WebCore::CachedResource::Callback::timerFired): Ditto.
+        (WebCore::CachedResource::tryReplaceEncodedData): Changed to take a SharedBuffer&.
+
+        * loader/cache/CachedResource.h: Changed types to use SharedBuffer. Also made most
+        data members and one function member private instead of protected. Also renamed the
+        CachedResource::CachedResourceCallback function CachedResource::Callback and moved
+        its definition out of the CachedResource class definition.
+
+        * loader/cache/CachedResourceClient.h: Removed unneeded include.
+
+        * loader/cache/CachedSVGDocument.cpp:
+        (WebCore::CachedSVGDocument::finishLoading): Use SharedBuffer.
+
+        * loader/cache/CachedSVGDocument.h: Ditto. Made data members private.
+
+        * loader/cache/CachedScript.cpp:
+        (WebCore::CachedScript::finishLoading): Use SharedBuffer.
+        * loader/cache/CachedScript.h: Ditto. Also fixed indenting and removed unneeded
+        forward declaration.
+
+        * loader/cache/CachedTextTrack.cpp:
+        (WebCore::CachedTextTrack::updateData): Added, so that finishLoading does not
+        call addDataBuffer.
+        (WebCore::CachedTextTrack::addDataBuffer): Take SharedBuffer, call updateData.
+        (WebCore::CachedTextTrack::finishLoading): Ditto.
+        * loader/cache/CachedTextTrack.h: Take out unneeded explicit override of the
+        destructor. Updated for above changes.
+
+        * loader/cache/CachedXSLStyleSheet.cpp:
+        (WebCore::CachedXSLStyleSheet::finishLoading): Updated to use SharedBuffer.
+        * loader/cache/CachedXSLStyleSheet.h: Took out unneeded includes, made everything
+        private rather than protected. Added an explicit virtual constructor so we can
+        compile without knowing how to ref/deref TextResourceDecoder.
+
+        * loader/cf/SubresourceLoaderCF.cpp:
+        (WebCore::SubresourceLoader::didReceiveDataArray): Updated to use SharedBuffer
+        and to call addDataBuffer only if there is a new data buffer.
+
+        * loader/cocoa/DiskCacheMonitorCocoa.h: Use SharedBuffer& instead of PassRefPtr.
+        * loader/cocoa/DiskCacheMonitorCocoa.mm:
+        (WebCore::DiskCacheMonitor::DiskCacheMonitor): Ditto.
+        (WebCore::DiskCacheMonitor::resourceBecameFileBacked): Ditto.
+
+        * loader/icon/IconLoader.cpp:
+        (WebCore::IconLoader::notifyFinished): Use SharedBuffer* instead of
+        RefPtr<ResourceBuffer>.
+
+        * loader/mac/ResourceBuffer.mm: Removed.
+
+        * loader/mac/ResourceLoaderMac.mm:
+        (WebCore::ResourceLoader::didReceiveDataArray): Use SharedBuffer.
+
+        * platform/SharedBuffer.cpp:
+        (WebCore::SharedBuffer::clear): Use a modern for loop.
+        (WebCore::SharedBuffer::copy): Return a PassRef instead of a PassRefPtr, since
+        this never returns null. Use modern for loops.
+        (WebCore::SharedBuffer::copyBufferAndClear): Use a modern for loop.
+
+        * platform/SharedBuffer.h: Changed copy to return PassRef instead of PassRefPtr.
+        Changed tryReplaceContentsWithPlatformBuffer to take a reference rather than
+        a pointer.
+
+        * platform/cf/SharedBufferCF.cpp:
+        (WebCore::SharedBuffer::tryReplaceContentsWithPlatformBuffer): Take a reference
+        instead of a pointer.
+
+        * platform/graphics/PlatformMediaResourceLoader.h: Removed unused function
+        bufferReceived and unneeded buffer argument from loadFinished. Also marked the
+        constructor explicit.
+
+        * platform/graphics/avfoundation/cf/WebCoreAVCFResourceLoader.cpp:
+        Removed include of ResourceBuffer.h.
+        * platform/graphics/avfoundation/objc/WebCoreAVFResourceLoader.mm:
+        (WebCore::WebCoreAVFResourceLoader::fulfillRequestWithResource): Use
+        SharedBuffer directly.
+
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+        (CachedResourceStreamingClient::loadFinished): Updated for change to
+        PlatformMediaResourceLoaderClient.
+
+        * platform/mac/PasteboardMac.mm: Removed include of ResourceBuffer.h.
+
+        * platform/soup/SharedBufferSoup.cpp: Removed unused, unneeded
+        tryReplaceContentsWithPlatformBuffer function.
+
+2014-10-30  Chris Dumez  <cdumez@apple.com>
+
+        Move border-image-source / -webkit-mask-box-image-source to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138209
+
+        Reviewed by Andreas Kling.
+
+        Move border-image-source / -webkit-mask-box-image-source CSS properties
+        from DeprecatedStyleBuilder to the new StyleBuilder so that they are
+        now generated from CSSPropertyNames.in.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyBorderImageSource::applyValue): Deleted.
+        (WebCore::ApplyPropertyBorderImageSource::createHandler): Deleted.
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertBorderImageSource):
+
+2014-10-30  Jer Noble  <jer.noble@apple.com>
+
+        [EME] Add Setting for accessing storage location for MediaKeys data
+        https://bugs.webkit.org/show_bug.cgi?id=138147
+
+        Reviewed by Brady Eidson.
+
+        Allow MediaPlayerPrivateAVFoundationObjC to query for the MediaKeys storage directory
+        by piping that request down from WebKit and WebKit2 into Settings.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::mediaKeysStorageDirectory): Get the location from Settings and
+            append the current origin.
+        * html/HTMLMediaElement.h:
+        * page/Settings.h:
+        (WebCore::Settings::setMediaKeysStorageDirectory): Simple setter.
+        (WebCore::Settings::mediaKeysStorageDirectory): Simple accessor.
+        * platform/graphics/MediaPlayer.cpp:
+        (WebCore::MediaPlayer::mediaKeysStorageDirectory): Pass through to m_client.
+        * platform/graphics/MediaPlayer.h:
+        (WebCore::MediaPlayerClient::mediaPlayerMediaKeysStorageDirectory): Default implementation.
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateMediaSourceAVFObjC.mm:
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::streamSession): Fetch the location from MediaPlayer.
+        (WebCore::sessionStorageDirectory): Deleted.
+
+2014-10-30  Dana Burkart  <dburkart@apple.com>
+
+        <rdar://problem/18821260> Prepare for the mysterious future
+
+        Reviewed by Lucas Forschler.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+
+2014-10-30  Simon Fraser  <simon.fraser@apple.com>
+
+        Short-circuit repaints with empty rects
+        https://bugs.webkit.org/show_bug.cgi?id=138234
+
+        Reviewed by Zalan Bujtas.
+        
+        Repaints with an empty rectangle are common enough that it's worth
+        short-circuiting them.
+
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::repaintUsingContainer):
+
+2014-10-30  Chris Dumez  <cdumez@apple.com>
+
+        Clean up virtual functions in css/
+        https://bugs.webkit.org/show_bug.cgi?id=138230
+
+        Reviewed by Benjamin Poulain.
+
+        Clean up virtual functions in css/ by:
+        - Making virtual functions final when possible
+        - Making classes final when possible
+        - Using 'override' when appropriate
+        - Explicitly marking functions / destructors as virtual when they are
+          inherently virtual
+        - Making isXXX() virtual functions private on XXX classes to avoid
+          unnecessary type checks
+
+        No new tests, no behavior change.
+
+        * WebCore.exp.in:
+        * css/CSSBasicShapes.h:
+        * css/CSSCharsetRule.h:
+        * css/CSSComputedStyleDeclaration.h:
+        * css/CSSCrossfadeValue.h:
+        * css/CSSFilterImageValue.h:
+        * css/CSSFontFaceLoadEvent.h:
+        * css/CSSFontFaceRule.h:
+        * css/CSSFontFaceSource.h:
+        * css/CSSImportRule.h:
+        * css/CSSMediaRule.h:
+        * css/CSSPageRule.h:
+        * css/CSSRuleList.h:
+        (WebCore::StaticCSSRuleList::ref): Deleted.
+        (WebCore::StaticCSSRuleList::styleSheet): Deleted.
+        (WebCore::StaticCSSRuleList::length): Deleted.
+        (WebCore::StaticCSSRuleList::item): Deleted.
+        (WebCore::LiveCSSRuleList::ref): Deleted.
+        (WebCore::LiveCSSRuleList::deref): Deleted.
+        (WebCore::LiveCSSRuleList::length): Deleted.
+        (WebCore::LiveCSSRuleList::item): Deleted.
+        (WebCore::LiveCSSRuleList::styleSheet): Deleted.
+        * css/CSSStyleRule.h:
+        * css/CSSSupportsRule.h:
+        * css/CSSUnknownRule.h:
+        * css/FontLoader.h:
+        * css/PropertySetCSSStyleDeclaration.h:
+        (WebCore::PropertySetCSSStyleDeclaration::parentElement):
+        * css/WebKitCSSKeyframeRule.h:
+        * css/WebKitCSSViewportRule.h:
+
+2014-10-30  Tim Horton  <timothy_horton@apple.com>
+
+        Long spins under rangeExpandedAroundPosition on Yahoo Mail
+        https://bugs.webkit.org/show_bug.cgi?id=138223
+        <rdar://problem/18819547>
+
+        Reviewed by Enrica Casucci.
+
+        * WebCore.exp.in:
+        Export some things.
+
+2014-10-30  Ada Chan  <adachan@apple.com>
+
+        The Page's muted setting should not affect the HTMLMediaElement's 'muted' IDL attribute.
+        https://bugs.webkit.org/show_bug.cgi?id=138215
+
+        Reviewed by Eric Carlson.
+
+        Add m_muted in Page to keep track of the Page's muted state. Change AudioProducer::setMuted()
+        to pageMutedStateDidChange(). When that method is called, the AudioProducer is supposed to
+        update its muted state again taking the Page's muted state into account.
+
+        Add HTMLMediaElement::effectiveMuted(), which returns the effective muted state of the
+        HTMLMediaElement, taking the Page's muted state into account.
+
+        Test: media/video-muted-after-setting-page-muted-state.html
+
+        * dom/Document.cpp:
+        (WebCore::Document::pageMutedStateDidChange):
+        (WebCore::Document::setMuted): Deleted.
+        * dom/Document.h:
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::setMuted):
+        Set the MediaPlayer's muted state to the result of effectiveMuted() rather than m_muted.
+        (WebCore::HTMLMediaElement::updateVolume):
+        Ditto, and also make sure the MediaController's muted state does not override the Page's
+        muted state.
+        (WebCore::HTMLMediaElement::updatePlayState):
+        Set the MediaPlayer's muted state to the result of effectiveMuted() rather than muted().
+        (WebCore::HTMLMediaElement::pageMutedStateDidChange):
+        Call updateVolume(), which will update the MediaPlayer's muted state.
+        (WebCore::HTMLMediaElement::effectiveMuted):
+        Figure out the muted value taking Page's muted state into account.
+        * html/HTMLMediaElement.h:
+        * page/AudioProducer.h:
+        * page/Page.cpp:
+        (WebCore::Page::Page):
+        (WebCore::Page::setMuted):
+        Update m_muted, and only iterate through the frames' documents to call pageMutedStateDidChange()
+        if m_muted changes.
+        * page/Page.h:
+        (WebCore::Page::isMuted):
+        * testing/Internals.cpp:
+        (WebCore::Internals::setPageMuted):
+        Expose a way to set the Page's muted state in Internals for testing.
+        * testing/Internals.h:
+        * testing/Internals.idl:
+
+2014-10-30  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Use references in calculateMinimumPageHeight() for non-optional arguments
+        https://bugs.webkit.org/show_bug.cgi?id=138231
+
+        Reviewed by Dean Jackson.
+
+        No new tests because there is no behavior change.
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::calculateMinimumPageHeight):
+        (WebCore::RenderBlockFlow::adjustLinePositionForPagination):
+
+2014-10-30  Chris Dumez  <cdumez@apple.com>
+
+        Move -webkit-border-image / -webkit-mask-box-image to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138207
+
+        Reviewed by Andreas Kling.
+
+        Move -webkit-border-image / -webkit-mask-box-image CSS properties to
+        the new StyleBuilder so that they are now generated from
+        CSSPropertyNames.in.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyBorderImage::applyValue): Deleted.
+        (WebCore::ApplyPropertyBorderImage::createHandler): Deleted.
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertBorderImage):
+        (WebCore::StyleBuilderConverter::convertBorderMask):
+
+2014-10-30  Chris Dumez  <cdumez@apple.com>
+
+        Optimize HTMLVideoElement / HTMLAudioElement type checks a bit
+        https://bugs.webkit.org/show_bug.cgi?id=138202
+
+        Reviewed by Benjamin Poulain.
+
+        Optimize HTMLVideoElement / HTMLAudioElement type checks a bit by:
+        1. Using is<HTMLMediaElement>() instead of
+           (is<HTMLVideoElement>() || is<HTMLAudioElement>()) if the caller is
+           interested in both video and audio elements. This is faster because
+           it ends up doing:
+               - virtual call to Element::isMediaElement()
+           instead of
+               - Node::isHTMLElement() +
+                 virtual call to HTMLElement::isHTMLUnknownElement() +
+                 2 * HTMLElement::hasTagName()
+        2. Updating HTMLVideoElement / HTMLAudioElement type traits
+           specializations to:
+           - Avoid doing any virtual function call if the input type is an
+             HTMLMediaElement (which is common in the code base).
+           - Speed up check if the input is an Element by doing:
+               - virtual call to Element::isMediaElement() +
+                 HTMLElement::hasTagName()
+             instead of
+               - Node::isHTMLElement() +
+                 virtual call to !HTMLElement::isHTMLUnknownElement() +
+                 HTMLElement::hasTagName()
+             The speed stays the same if the input is a Node or an HTMLElement.
+
+        No new tests, no behavior change.
+
+        * css/CSSDefaultStyleSheets.cpp:
+        (WebCore::CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement):
+        * dom/make_names.pl:
+        (defaultTagPropertyHash):
+        (printTypeHelpers):
+        * html/HTMLAudioElement.h:
+        (isType):
+        * html/HTMLImageLoader.cpp:
+        * html/HTMLTagNames.in:
+        * html/HTMLVideoElement.h:
+        (isType):
+        * page/ChromeClient.h:
+
+2014-10-30  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Migrate ComplexTextControllerCoreText to use SPI instead of WKSI
+        https://bugs.webkit.org/show_bug.cgi?id=138228
+
+        Reviewed by Simon Fraser.
+
+        No new tests because there is no behavior change.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/graphics/mac/ComplexTextControllerCoreText.mm:
+        (WebCore::ComplexTextController::ComplexTextRun::ComplexTextRun):
+        (WebCore::ComplexTextController::collectComplexTextRunsForCharacters):
+        * platform/spi/cocoa/CoreTextSPI.h: Added.
+
+2014-10-30  Eric Carlson  <eric.carlson@apple.com>
+
+        Add diagnostic logging to track page loads.
+        https://bugs.webkit.org/show_bug.cgi?id=138205
+        <rdar://problem/18173017>
+
+        Reviewed by Jer Noble.
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::checkLoadCompleteForThisFrame): Log page load success or failure.
+
+        * page/DiagnosticLoggingKeys.cpp:
+        (WebCore::DiagnosticLoggingKeys::pageLoadedKey): New.
+        * page/DiagnosticLoggingKeys.h:
+
+2014-10-24  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] Video resolution changes trigger a crash in the TextureMapper
+        https://bugs.webkit.org/show_bug.cgi?id=137065
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Switch to GstSample for buffer+caps communication between the
+        video sink and the player. Using a single object type for this
+        avoid issues where the caps might not correctly describe the
+        buffer contents anymore, for example when the video resolution is
+        changed.
+
+        * platform/graphics/gstreamer/ImageGStreamer.h: Use GstSample
+        instead of GstBuffer+GstCaps.
+        (WebCore::ImageGStreamer::createImage):
+        * platform/graphics/gstreamer/ImageGStreamerCairo.cpp: Ditto.
+        (ImageGStreamer::ImageGStreamer):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::mediaPlayerPrivateRepaintCallback): The repaint signal
+        now uses a GstSample instead of a GstBuffer.
+        (WebCore::MediaPlayerPrivateGStreamerBase::MediaPlayerPrivateGStreamerBase):
+        Store the current sample instead of a buffer. Also renamed the
+        mutex protecting access to the sample.
+        (WebCore::MediaPlayerPrivateGStreamerBase::~MediaPlayerPrivateGStreamerBase): Ditto.
+        (WebCore::MediaPlayerPrivateGStreamerBase::naturalSize): Return
+        early if no sample is available. The caps used to get the video
+        size are store in the sample.
+        (WebCore::MediaPlayerPrivateGStreamerBase::updateTexture): Use
+        GstSample instead of GstBuffer.
+        (WebCore::MediaPlayerPrivateGStreamerBase::triggerRepaint): Ditto.
+        (WebCore::MediaPlayerPrivateGStreamerBase::paint): Ditto.
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.h:
+        * platform/graphics/gstreamer/VideoSinkGStreamer.cpp: Now store a
+        GstSample internally. Also removed the now useless current-caps property.
+        (_WebKitVideoSinkPrivate::_WebKitVideoSinkPrivate): Renamed the
+        mutex protecting access to the sample.
+        (_WebKitVideoSinkPrivate::~_WebKitVideoSinkPrivate): Ditto.
+        (webkit_video_sink_init): Disable last-sample in basesink since we
+        already store one in our sink anyway.
+        (webkitVideoSinkTimeoutCallback): Switch to GstSample.
+        (webkitVideoSinkRender): Ditto.
+        (unlockSampleMutex): Ditto.
+        (webkitVideoSinkUnlock): Ditto.
+        (webkitVideoSinkUnlockStop): Ditto.
+        (webkitVideoSinkStop): Ditto!
+        (webkitVideoSinkStart): Ditto.
+        (webkit_video_sink_class_init): Drop current-caps property.
+        (webkitVideoSinkGetProperty): Deleted.
+        (unlockBufferMutex): Deleted.
+
+2014-10-30  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        FormDataBuilder should not use Document
+        https://bugs.webkit.org/show_bug.cgi?id=138172
+
+        Reviewed by Alexey Proskuryakov.
+
+        It's only used by encodingFromAcceptCharset() to fallback to
+        document input encoding. That method is only used by
+        FormSubmission::create(), so it could be moved as a static
+        function to FormSubmission.cpp.
+
+        * loader/FormSubmission.cpp:
+        (WebCore::encodingFromAcceptCharset):
+        (WebCore::FormSubmission::create):
+        * platform/network/FormDataBuilder.cpp:
+        (WebCore::FormDataBuilder::encodingFromAcceptCharset): Deleted.
+        * platform/network/FormDataBuilder.h:
+
+2014-10-29  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        ASSERTION NOT REACHED because RenderStyle::setWordSpacing() does not handle a Length value of type 'Calculated'.
+        https://bugs.webkit.org/show_bug.cgi?id=138054.
+
+        Reviewed by Zalan Bujtas.
+
+        A Length of type 'Calculated' can be generated from blending two lengths of
+        different types. Setting the wordSpacing of the render style should be handled
+        correctly when the type of the new value is 'Calculated'.
+
+        Tests: css3/calculated-word-spacing.html.
+
+        Add a case for setting the render style wordSpacing to a <length> of type 'Calculated'.
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::setWordSpacing):
+
+2014-10-29  Hunseop Jeong  <hs85.jeong@samsung.com>
+
+        [CoordinatedGraphics] Use modern for-loops
+        https://bugs.webkit.org/show_bug.cgi?id=138168
+
+        Reviewed by Andreas Kling.
+
+        No new tests as there is no change in functionality.
+
+        * platform/graphics/texmap/coordinated/CompositingCoordinator.cpp: Use a modern for loop.
+        (WebCore::CompositingCoordinator::renderNextFrame):
+        (WebCore::CompositingCoordinator::paintToSurface):
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp: Use a modern for loop.
+        (WebCore::CoordinatedGraphicsLayer::setShouldUpdateVisibleRect):
+        (WebCore::CoordinatedGraphicsLayer::flushCompositingState):
+        (WebCore::CoordinatedGraphicsLayer::syncChildren):
+        (WebCore::CoordinatedGraphicsLayer::syncPendingStateChangesIncludingSubLayers):
+        (WebCore::CoordinatedGraphicsLayer::findFirstDescendantWithContentsRecursively):
+        (WebCore::CoordinatedGraphicsLayer::updateContentBuffersIncludingSubLayers):
+        * platform/graphics/texmap/coordinated/CoordinatedImageBacking.cpp: Use a modern for loop.
+        (WebCore::CoordinatedImageBacking::updateVisibilityIfNeeded):
+
+2014-10-29  Chris Dumez  <cdumez@apple.com>
+
+        Final-ize more of TextFieldInputType's virtual functions
+        https://bugs.webkit.org/show_bug.cgi?id=138194
+
+        Reviewed by Andreas Kling.
+
+        Final-ize more of TextFieldInputType's virtual functions for
+        performance.
+
+        No new tests, no behavior change.
+
+        * html/TextFieldInputType.h:
+
+2014-10-29  Chris Dumez  <cdumez@apple.com>
+
+        Clean up virtual functions in inspector/
+        https://bugs.webkit.org/show_bug.cgi?id=138190
+
+        Reviewed by Andreas Kling.
+
+        Clean up virtual functions in inspector/ by:
+        - Making virtual functions final when possible
+        - Making classes final when possible
+        - Explicitly marking functions / destructors as virtual when they are
+          inherently virtual
+        - Making isXXX() virtual functions private on XXX classes to avoid
+          unnecessary type checks
+
+        No new tests, no behavior change.
+
+        * inspector/InspectorApplicationCacheAgent.h:
+        (WebCore::InspectorApplicationCacheAgent::~InspectorApplicationCacheAgent): Deleted.
+        * inspector/InspectorCSSAgent.h:
+        * inspector/InspectorDOMAgent.h:
+        * inspector/InspectorDOMDebuggerAgent.h:
+        * inspector/InspectorDOMStorageAgent.h:
+        * inspector/InspectorDatabaseAgent.h:
+        * inspector/InspectorFrontendClientLocal.h:
+        * inspector/InspectorIndexedDBAgent.h:
+        * inspector/InspectorLayerTreeAgent.h:
+        * inspector/InspectorPageAgent.h:
+        * inspector/InspectorReplayAgent.h:
+        * inspector/InspectorResourceAgent.h:
+        * inspector/InspectorStyleSheet.h:
+        * inspector/InspectorTimelineAgent.h:
+        * inspector/InspectorWorkerAgent.h:
+        * inspector/PageConsoleAgent.h:
+        * inspector/WorkerInspectorController.h:
+
+2014-10-29  Andreas Kling  <akling@apple.com>
+
+        Generalize dirtying of parent's line boxes when taking a renderer out of tree.
+        <https://webkit.org/b/138152>
+
+        Reviewed by Antti Koivisto.
+
+        Instead of calling dirtyLinesFromChangedChild() when certain types of renderers
+        are about to be destroyed, always do this in RenderElement::willBeRemovedFromTree().
+
+        This is part of an effort to make render tree teardown less incomprehensible.
+
+        We still don't bother at all if we're in the process of tearing down the entire
+        render tree, since that would be a waste of time.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::willBeDestroyed):
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::willBeDestroyed):
+        * rendering/RenderElement.cpp:
+        (WebCore::RenderElement::willBeRemovedFromTree):
+        * rendering/RenderInline.cpp:
+        (WebCore::RenderInline::willBeDestroyed):
+        * rendering/RenderReplaced.cpp:
+        (WebCore::RenderReplaced::willBeDestroyed): Deleted.
+        * rendering/RenderReplaced.h:
+
+2014-10-28  Ada Chan  <adachan@apple.com>
+
+        Implement WKPageSetMuted(bool).
+        https://bugs.webkit.org/show_bug.cgi?id=138158
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.exp.in:
+        * page/Page.h:
+
+2014-10-29  Alexey Proskuryakov  <ap@apple.com>
+
+        Notify Settings object when its Page object goes away.
+        https://bugs.webkit.org/show_bug.cgi?id=138183
+        rdar://problem/18786900
+
+        Reviewed by Andreas Kling.
+
+        I could not make a test for this issue.
+
+        * page/Page.cpp:
+        (WebCore::Page::~Page):
+        * page/Settings.cpp:
+        (WebCore::setImageLoadingSettings):
+        (WebCore::Settings::Settings):
+        (WebCore::Settings::setTextAutosizingEnabled):
+        (WebCore::Settings::setTextAutosizingWindowSizeOverride):
+        (WebCore::Settings::setTextAutosizingFontScaleFactor):
+        (WebCore::Settings::setMediaTypeOverride):
+        (WebCore::Settings::setScriptEnabled):
+        (WebCore::Settings::setUserStyleSheetLocation):
+        (WebCore::Settings::setMinDOMTimerInterval):
+        (WebCore::Settings::minDOMTimerInterval):
+        (WebCore::Settings::domTimerAlignmentInterval):
+        (WebCore::Settings::setUsesPageCache):
+        (WebCore::Settings::setScreenFontSubstitutionEnabled):
+        (WebCore::Settings::setFontRenderingMode):
+        (WebCore::Settings::setDNSPrefetchingEnabled):
+        (WebCore::Settings::setStorageBlockingPolicy):
+        (WebCore::Settings::setBackgroundShouldExtendBeyondPage):
+        (WebCore::Settings::setScrollingPerformanceLoggingEnabled):
+        (WebCore::Settings::setHiddenPageDOMTimerThrottlingEnabled):
+        (WebCore::Settings::setHiddenPageCSSAnimationSuspensionEnabled):
+        (WebCore::Settings::setFontFallbackPrefersPictographs):
+        * page/Settings.h:
+        (WebCore::Settings::pageDestroyed):
+
+2014-10-29  Zalan Bujtas  <zalan@apple.com>
+
+        Remove invalid float from RootInlineBox.
+        https://bugs.webkit.org/show_bug.cgi?id=137707
+
+        Reviewed by Antti Koivisto.
+
+        In certain cases, floating boxes get attached to the last (root) inline box.
+        When this particular floating box gets destroyed, it also needs to be detached
+        from the last inline box.
+        1. Introduce RootInlineBox::removeFloat() (vs. RootInlineBox::appendFloat())
+        2. Ensure that it is called when the floating box is being destroyed.
+
+        Test: fast/inline/crash-when-inline-box-has-invalid-float.html
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::removeFloatingObject):
+        (WebCore::RenderBlockFlow::markAllDescendantsWithFloatsForLayout): During style recalc, while
+        tearing down the render tree, we can get to a state where a block element has both inline and block children.
+        It happens when the style change on an element makes sibling anonymous block wrappers detached.
+        In that case the markAllDescendantsWithFloatsForLayout() call does not get propagated down on the
+        block child elements as we return early at the childrenInline() check.
+        * rendering/RootInlineBox.h:
+        (WebCore::RootInlineBox::removeFloat):
+
+2014-10-29  Antti Koivisto  <antti@apple.com>
+
+        Factor cache validity computation functions out of CachedResource
+        https://bugs.webkit.org/show_bug.cgi?id=138156
+
+        Reviewed by Andreas Kling.
+
+        These can be used to implement cache logic on WebKit level.
+
+        * CMakeLists.txt:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * loader/CacheValidation.cpp: Added.
+        (WebCore::computeCurrentAge):
+        (WebCore::computeFreshnessLifetimeForHTTPFamily):
+        (WebCore::updateRedirectChainStatus):
+        (WebCore::redirectChainAllowsReuse):
+        * loader/CacheValidation.h: Added.
+        (WebCore::RedirectChainCacheStatus::RedirectChainCacheStatus):
+        * loader/cache/CachedResource.cpp:
+        (WebCore::updateResponseHeadersAfterRevalidation):
+        (WebCore::CachedResource::CachedResource):
+        (WebCore::CachedResource::isExpired):
+        (WebCore::CachedResource::freshnessLifetime):
+        (WebCore::CachedResource::willSendRequest):
+        (WebCore::CachedResource::updateResponseAfterRevalidation):
+        (WebCore::CachedResource::redirectChainAllowsReuse):
+        (WebCore::currentAge): Deleted.
+        * loader/cache/CachedResource.h:
+
+2014-10-29  Antti Koivisto  <antti@apple.com>
+
+        Unreviewed, rolling out r175342.
+
+        a file ended up in a wrong directory
+
+        Reverted changeset:
+
+        "Factor cache validity computation functions out of
+        CachedResource"
+        https://bugs.webkit.org/show_bug.cgi?id=138156
+        http://trac.webkit.org/changeset/175342
+
+2014-10-29  Antti Koivisto  <antti@apple.com>
+
+        Factor cache validity computation functions out of CachedResource
+        https://bugs.webkit.org/show_bug.cgi?id=138156
+
+        Reviewed by Andreas Kling.
+
+        These can be used to implement cache logic on WebKit level.
+
+        * CMakeLists.txt:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * loader/CacheValidation.cpp: Added.
+        (WebCore::computeCurrentAge):
+        (WebCore::computeFreshnessLifetimeForHTTPFamily):
+        (WebCore::updateRedirectChainStatus):
+        (WebCore::redirectChainAllowsReuse):
+        * loader/CacheValidation.h: Added.
+        (WebCore::RedirectChainCacheStatus::RedirectChainCacheStatus):
+        * loader/cache/CachedResource.cpp:
+        (WebCore::updateResponseHeadersAfterRevalidation):
+        (WebCore::CachedResource::CachedResource):
+        (WebCore::CachedResource::isExpired):
+        (WebCore::CachedResource::freshnessLifetime):
+        (WebCore::CachedResource::willSendRequest):
+        (WebCore::CachedResource::updateResponseAfterRevalidation):
+        (WebCore::CachedResource::redirectChainAllowsReuse):
+        (WebCore::currentAge): Deleted.
+        * loader/cache/CachedResource.h:
+
+2014-10-28  Ada Chan  <adachan@apple.com>
+
+        Add API to mute/unmute a page.
+        https://bugs.webkit.org/show_bug.cgi?id=138150
+
+        Reviewed by Eric Carlson.
+
+        No new tests, since it's difficult to test whether the Page has indeed been muted.
+
+        * dom/Document.cpp:
+        (WebCore::Document::setMuted):
+        Go through each AudioProducer and call setMuted() on it.
+        * dom/Document.h:
+        * page/AudioProducer.h:
+        Add setMuted(bool). HTMLMediaElement, the only derived class of AudioProducer so far,
+        has already implemented setMuted().
+        * page/Page.cpp:
+        (WebCore::Page::setMuted):
+        Go through all its frames and call setMuted() on each frame's Document.
+        * page/Page.h:
+
+2014-10-29  Tim Horton  <timothy_horton@apple.com>
+
+        Implement action menus for data detected items
+        https://bugs.webkit.org/show_bug.cgi?id=138178
+        <rdar://problem/18709436>
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.exp.in:
+        Export a symbol from Position that we need.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/spi/mac/DataDetectorsSPI.h:
+        Add a combined SPI header for all of the random bits of DataDetectors that we use.
+
+2014-10-29  Jer Noble  <jer.noble@apple.com>
+
+        [EME] NULL-dereference crash in MediaKeys::setMediaElement().
+        https://bugs.webkit.org/show_bug.cgi?id=138177
+
+        Reviewed by Eric Carlson.
+
+        NULL-check m_mediaElement->player() before using. It may have been cleared if the HTMLMediaElement
+        has previously had stop() called.
+
+        * Modules/encryptedmedia/MediaKeys.cpp:
+        (WebCore::MediaKeys::setMediaElement):
+
+2014-10-29  Jer Noble  <jer.noble@apple.com>
+
+        [EME] MediaKeySession resources persist across page reloads
+        https://bugs.webkit.org/show_bug.cgi?id=138176
+
+        Reviewed by Eric Carlson.
+
+        MediaKeySession is an ActiveDOMObject, so when told to stop() by our execution context,
+        close() the session, releasing all our resources.
+
+        * Modules/encryptedmedia/MediaKeySession.h:
+
+2014-10-29  Jer Noble  <jer.noble@apple.com>
+
+        [EME][Mac] MediaKeySession type "keyrelease" is ignored.
+        https://bugs.webkit.org/show_bug.cgi?id=138175
+
+        Reviewed by Eric Carlson.
+
+        To indicate that they would like to recevie expired session confirmation messages, clients
+        will create a MediaKeySession with a type parameter of "keyrelease". The code which validates
+        this type needs to be updated to recognize "keyrelease" as a valid type.
+
+        Also, the code which validates update() requests needs to allow updates containing the string
+        "acknowledged", so that clients can request the confirmation messages be discarded.
+
+        * platform/graphics/avfoundation/CDMPrivateMediaSourceAVFObjC.mm:
+        (WebCore::CDMPrivateMediaSourceAVFObjC::supportsMIMEType):
+        * platform/graphics/avfoundation/objc/CDMSessionMediaSourceAVFObjC.mm:
+        (WebCore::CDMSessionMediaSourceAVFObjC::update):
+
+2014-10-28  Ada Chan  <adachan@apple.com>
+
+        Remove MediaSessionClient::hasMediaCharacteristics() and MediaSessionClient::mediaStateDidChange().
+        https://bugs.webkit.org/show_bug.cgi?id=138153
+
+        Reviewed by Jer Noble.
+
+        After http://trac.webkit.org/changeset/175273, Document no longer keeps a set of MediaSessions
+        and it doesn't need to query each MediaSession for its characteristics and play state.
+        MediaSessionClient::hasMediaCharacteristics() is no longer needed and MediaSessionClient::mediaStateDidChange()
+        can be removed if HTMLMediaElement calls Document::updateIsPlayingAudio() after m_playing has changed.
+
+        No new tests, no behavior change.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::updatePlayState):
+        Call setPlaying() rather than setting m_playing directly.
+        (WebCore::HTMLMediaElement::setPlaying):
+        Update m_playing. If it has changed, call Document::updateIsPlayingAudio().
+        (WebCore::HTMLMediaElement::setPausedInternal):
+        Call setPlaying() rather than setting m_playing directly.
+        (WebCore::HTMLMediaElement::isPlayingAudio):
+        Call isPlaying() directly rather than checking the MediaSession's state.
+        * html/HTMLMediaElement.h:
+        * platform/audio/MediaSession.cpp:
+        (WebCore::MediaSession::setState):
+        MediaSessionClient::mediaStateDidChange() has been removed.
+        (WebCore::MediaSession::hasMediaCharacteristics): Deleted.
+        * platform/audio/MediaSession.h:
+        (WebCore::MediaSessionClient::mediaStateDidChange): Deleted.
+        * platform/audio/ios/AudioDestinationIOS.h:
+        * platform/audio/mac/AudioDestinationMac.h:
+
 2014-10-29  Chris Dumez  <cdumez@apple.com>
 
         Clean up virtual functions in html/
