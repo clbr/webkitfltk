@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,13 +23,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef FontOrientation_h
-#define FontOrientation_h
+#ifndef ReplaceDeleteFromTextNodeCommand_h
+#define ReplaceDeleteFromTextNodeCommand_h
+
+#include "DeleteFromTextNodeCommand.h"
 
 namespace WebCore {
 
-enum FontOrientation { Horizontal, Vertical };
+class ReplaceDeleteFromTextNodeCommand final : public DeleteFromTextNodeCommand {
+public:
+    static Ref<ReplaceDeleteFromTextNodeCommand> create(RefPtr<Text>&& text, unsigned offset, unsigned count)
+    {
+        return adoptRef(*new ReplaceDeleteFromTextNodeCommand(WTF::move(text), offset, count));
+    }
+
+private:
+    ReplaceDeleteFromTextNodeCommand(RefPtr<Text>&&, unsigned, unsigned);
+    virtual void notifyAccessibilityForTextChange(Node*, AXTextEditType, const String&, const VisiblePosition&) override;
+};
 
 } // namespace WebCore
 
-#endif // FontOrientation_h
+#endif // ReplaceDeleteFromTextNodeCommand_h

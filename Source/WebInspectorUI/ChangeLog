@@ -1,3 +1,119 @@
+2015-04-27  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Cannot scroll Timeline Overview horizontally, scrollbar cannot be interacted with
+        https://bugs.webkit.org/show_bug.cgi?id=144302
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/TimelineOverview.css:
+        (.timeline-overview > .scroll-container):
+        Increase the z-index of the scroll container over anything in the
+        overview so that it can be interacted with.
+
+2015-04-27  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Attempt to workaround exception in TimelineRuler
+        https://bugs.webkit.org/show_bug.cgi?id=144228
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/TimelineRuler.js:
+        (WebInspector.TimelineRuler.prototype.updateLayout):
+        Use firstChild instead of a custom _labelElement property on the dividerElement.
+
+2015-04-27  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Elements tab details sidebar becomes non-expandable after using Console tab
+        https://bugs.webkit.org/show_bug.cgi?id=144212
+
+        Show the DOM tree content view again on main resource change. This better matches what we did
+        in the pre tab user interface with the DOM being off the main resource tree element.
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/ElementsTabContentView.js:
+        (WebInspector.ElementsTabContentView): Listen for main resource change. Call _showDOMTreeContentView.
+        (WebInspector.ElementsTabContentView.prototype.closed): Fix a leak and exception.
+        The removeEventListener was wrong. Add a new removeEventListener for WebInspector.Frame.
+        (WebInspector.ElementsTabContentView.prototype._showDOMTreeContentView): Added.
+        (WebInspector.ElementsTabContentView.prototype._mainFrameDidChange): Call _showDOMTreeContentView.
+        (WebInspector.ElementsTabContentView.prototype._mainResourceDidChange): Added.
+
+2015-04-27  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: TabContentView closed() isn't being called when a tab is closed / removed
+        https://bugs.webkit.org/show_bug.cgi?id=144229
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/ContentViewContainer.js:
+        (WebInspector.ContentViewContainer.prototype._disassociateFromContentView):
+        TabContentViews don't have a representedObject, so returning early and not
+        calling closed() was not correct.
+
+2015-04-26  Matt Baker  <mattbaker@apple.com>
+
+        Web Inspector: Cannot make Timeline time range selection clicking inside Frames Overview
+        https://bugs.webkit.org/show_bug.cgi?id=143744
+
+        Reviewed by Timothy Hatcher.
+
+        Fixed frame rate divider element style so that it is no longer a mouse event target.
+
+        * UserInterface/Views/RenderingFrameTimelineOverviewGraph.css:
+        (.timeline-overview-graph.rendering-frame > .divider):
+
+2015-04-26  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Allow Timeline tab to show resource when a go-to arrow is clicked in a recording
+        https://bugs.webkit.org/show_bug.cgi?id=144240
+
+        Only support showing a resource or script if we have that represented object in the Timeline sidebar.
+
+        Reviewed by Darin Adler.
+
+        * UserInterface/Views/TimelineTabContentView.js:
+        (WebInspector.TimelineTabContentView.prototype.canShowRepresentedObject):
+
+2015-04-26  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Don't use treeElement.revealAndSelect when showing a default content view
+        https://bugs.webkit.org/show_bug.cgi?id=144239
+
+        Using revealAndSelect will end up calling WebInspector.showRepresentedObject. That is not bad
+        is most cases, but if the select tab supports the same represented object, it can end up showing
+        the content view in the wrong tab.
+
+        Reviewed by Darin Adler.
+
+        * UserInterface/Views/ContentBrowserTabContentView.js:
+        (WebInspector.ContentBrowserTabContentView.prototype._revealAndSelectRepresentedObjectInNavigationSidebar):
+        * UserInterface/Views/DebuggerSidebarPanel.js:
+        (WebInspector.DebuggerSidebarPanel.prototype.showDefaultContentView):
+        * UserInterface/Views/NavigationSidebarPanel.js:
+        (WebInspector.NavigationSidebarPanel.prototype.showDefaultContentViewForTreeElement):
+        (WebInspector.NavigationSidebarPanel.prototype._checkElementsForPendingViewStateCookie):
+        (WebInspector.NavigationSidebarPanel):
+        (WebInspector.NavigationSidebarPanel.prototype.showContentViewForCurrentSelection): Deleted.
+        * UserInterface/Views/ResourceSidebarPanel.js:
+        (WebInspector.ResourceSidebarPanel.prototype.showDefaultContentView):
+        (WebInspector.ResourceSidebarPanel.prototype._mainFrameDidChange):
+        (WebInspector.ResourceSidebarPanel.prototype._mainFrameMainResourceDidChange.delayedWork):
+        (WebInspector.ResourceSidebarPanel.prototype._mainFrameMainResourceDidChange):
+
+2015-04-26  Jono Wells  <jonowells@apple.com>
+
+        Web Inspector: Vertically misaligned text in Object Trees
+        https://bugs.webkit.org/show_bug.cgi?id=144029
+
+        Reviewed by Timothy Hatcher.
+
+        Remove top offset for object tree property titles to fix alignment issue since applying -webkit-system-font
+        font family to these (http://trac.webkit.org/changeset/182982).
+
+        * UserInterface/Views/ObjectTreePropertyTreeElement.css:
+        (.object-tree-property > .titles):
+
 2015-04-25  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Uncaught exception ReferenceError: Can't find variable: message LogContentView.js

@@ -178,7 +178,8 @@ private:
         case BitRShift:
         case BitLShift:
         case BitURShift:
-        case ArithIMul: {
+        case ArithIMul:
+        case ArithClz32: {
             changed |= setPrediction(SpecInt32);
             break;
         }
@@ -534,7 +535,6 @@ private:
         case InvalidationPoint:
         case CheckInBounds:
         case ValueToInt32:
-        case MustGenerate:
         case DoubleRep:
         case ValueRep:
         case Int52Rep:

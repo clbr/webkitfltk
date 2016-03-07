@@ -492,6 +492,7 @@ public:
     static Ref<RenderStyle> createStyleInheritingFromPseudoStyle(const RenderStyle& pseudoStyle);
 
     static ItemPosition resolveAlignment(const RenderStyle& parentStyle, const RenderStyle& childStyle, ItemPosition resolvedAutoPositionForRenderer);
+    static ItemPosition resolveJustification(const RenderStyle& parentStyle, const RenderStyle& childStyle, ItemPosition resolvedAutoPositionForLayoutObject);
 
     enum IsAtShadowBoundary {
         AtShadowBoundary,
@@ -1059,6 +1060,11 @@ public:
     EPointerEvents pointerEvents() const { return static_cast<EPointerEvents>(inherited_flags._pointerEvents); }
     const AnimationList* animations() const { return rareNonInheritedData->m_animations.get(); }
     const AnimationList* transitions() const { return rareNonInheritedData->m_transitions.get(); }
+
+    AnimationList* animations() { return rareNonInheritedData->m_animations.get(); }
+    AnimationList* transitions() { return rareNonInheritedData->m_transitions.get(); }
+    
+    bool hasAnimationsOrTransitions() const { return rareNonInheritedData->hasAnimationsOrTransitions(); }
 
     AnimationList& ensureAnimations();
     AnimationList& ensureTransitions();

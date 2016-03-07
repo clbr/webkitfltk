@@ -115,7 +115,6 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
         
     case Identity:
     case Phantom:
-    case MustGenerate:
     case Check:
     case ExtractOSREntryLocal:
     case CheckStructureImmediate:
@@ -129,6 +128,7 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
     case BitURShift:
     case ArithIMul:
     case ArithAbs:
+    case ArithClz32:
     case ArithMin:
     case ArithMax:
     case ArithPow:

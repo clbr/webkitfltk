@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,13 +23,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef TextRenderingMode_h
-#define TextRenderingMode_h
+#ifndef ReplaceInsertIntoTextNodeCommand_h
+#define ReplaceInsertIntoTextNodeCommand_h
+
+#include "InsertIntoTextNodeCommand.h"
 
 namespace WebCore {
 
-    enum TextRenderingMode { AutoTextRendering, OptimizeSpeed, OptimizeLegibility, GeometricPrecision };
-    
+class ReplaceInsertIntoTextNodeCommand final : public InsertIntoTextNodeCommand {
+public:
+    static Ref<ReplaceInsertIntoTextNodeCommand> create(RefPtr<Text>&& node, unsigned offset, const String& text, const String& deletedText, EditAction editingAction)
+    {
+        return adoptRef(*new ReplaceInsertIntoTextNodeCommand(WTF::move(node), offset, text, deletedText, editingAction));
+    }
+
+private:
+    ReplaceInsertIntoTextNodeCommand(RefPtr<Text>&&, unsigned, const String&, const String&, EditAction);
+    virtual void notifyAccessibilityForTextChange(Node*, AXTextEditType, const String&, const VisiblePosition&) override;
+
+    String m_deletedText;
+};
+
 } // namespace WebCore
 
-#endif // TextRenderingMode_h
+#endif // ReplaceInsertIntoTextNodeCommand_h

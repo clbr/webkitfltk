@@ -2153,6 +2153,10 @@ void SpeculativeJIT::compile(Node* node)
     case ArithAdd:
         compileAdd(node);
         break;
+
+    case ArithClz32:
+        compileArithClz32(node);
+        break;
         
     case MakeRope:
         compileMakeRope(node);
@@ -4334,7 +4338,6 @@ void SpeculativeJIT::compile(Node* node)
         break;
 
     case Phantom:
-    case MustGenerate:
     case Check:
         DFG_NODE_DO_TO_CHILDREN(m_jit.graph(), node, speculate);
         noResult(node);

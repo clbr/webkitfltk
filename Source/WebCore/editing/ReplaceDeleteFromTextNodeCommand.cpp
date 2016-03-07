@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,15 +23,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef FontRenderingMode_h
-#define FontRenderingMode_h
+#include "config.h"
+#include "ReplaceDeleteFromTextNodeCommand.h"
+
+#include "Text.h"
 
 namespace WebCore {
+    
+ReplaceDeleteFromTextNodeCommand::ReplaceDeleteFromTextNodeCommand(RefPtr<Text>&& text, unsigned offset, unsigned count)
+    : DeleteFromTextNodeCommand(WTF::move(text), offset, count, EditActionDelete)
+{
+}
 
-// This setting is used to provide ways of switching between multiple rendering modes that may have different
-// metrics.  It is used to switch between CG and GDI text on Windows.
-enum FontRenderingMode { NormalRenderingMode, AlternateRenderingMode };
+void ReplaceDeleteFromTextNodeCommand::notifyAccessibilityForTextChange(Node*, AXTextEditType, const String&, const VisiblePosition&)
+{
+}
 
 } // namespace WebCore
-
-#endif // FontRenderingMode_h

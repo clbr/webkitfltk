@@ -1420,6 +1420,17 @@ struct Node {
         ASSERT(hasObjectMaterializationData());
         return *reinterpret_cast<ObjectMaterializationData*>(m_opInfo);
     }
+
+    bool isObjectAllocation()
+    {
+        switch (op()) {
+        case NewObject:
+        case MaterializeNewObject:
+            return true;
+        default:
+            return false;
+        }
+    }
     
     bool isPhantomObjectAllocation()
     {
@@ -1554,7 +1565,6 @@ struct Node {
         case ZombieHint:
             return true;
         case Phantom:
-        case MustGenerate:
             return child1().useKindUnchecked() != UntypedUse || child2().useKindUnchecked() != UntypedUse || child3().useKindUnchecked() != UntypedUse;
         default:
             return shouldGenerate();

@@ -55,7 +55,6 @@ bool doesGC(Graph& graph, Node* node)
     case MovHint:
     case ZombieHint:
     case Phantom:
-    case MustGenerate:
     case Upsilon:
     case Phi:
     case Flush:
@@ -72,6 +71,7 @@ bool doesGC(Graph& graph, Node* node)
     case UInt32ToNumber:
     case DoubleAsInt32:
     case ArithAdd:
+    case ArithClz32:
     case ArithSub:
     case ArithNegate:
     case ArithMul:

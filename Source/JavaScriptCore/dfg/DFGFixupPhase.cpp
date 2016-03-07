@@ -119,6 +119,12 @@ private:
             node->child2().setUseKind(Int32Use);
             break;
         }
+
+        case ArithClz32: {
+            fixIntConvertingEdge(node->child1());
+            node->setArithMode(Arith::Unchecked);
+            break;
+        }
             
         case UInt32ToNumber: {
             fixIntConvertingEdge(node->child1());
@@ -1027,7 +1033,6 @@ private:
         case ConstantStoragePointer:
         case DoubleAsInt32:
         case ValueToInt32:
-        case MustGenerate: // MustGenerate would be trivial to handle but anyway we assert that we won't see it here yet.
         case DoubleRep:
         case ValueRep:
         case Int52Rep:
@@ -2012,7 +2017,6 @@ private:
         case MovHint:
         case Phantom:
         case Check:
-        case MustGenerate:
             DFG_NODE_DO_TO_CHILDREN(m_graph, m_currentNode, fixEdgeRepresentation);
             break;
             

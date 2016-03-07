@@ -464,7 +464,6 @@ private:
             compilePutStack();
             break;
         case Phantom:
-        case MustGenerate:
         case Check:
             compilePhantom();
             break;
@@ -477,6 +476,9 @@ private:
         case ArithAdd:
         case ArithSub:
             compileArithAddOrSub();
+            break;
+        case ArithClz32:
+            compileArithClz32();
             break;
         case ArithMul:
             compileArithMul();
@@ -1318,6 +1320,13 @@ private:
             DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
+    }
+
+    void compileArithClz32()
+    {
+        LValue operand = lowInt32(m_node->child1());
+        LValue isZeroUndef = m_out.booleanFalse;
+        setInt32(m_out.ctlz32(operand, isZeroUndef));
     }
     
     void compileArithMul()
@@ -3001,7 +3010,6 @@ private:
         m_out.store32(length.value, fastObject, m_heaps.DirectArguments_length);
         m_out.store32(m_out.constInt32(minCapacity), fastObject, m_heaps.DirectArguments_minCapacity);
         m_out.storePtr(m_out.intPtrZero, fastObject, m_heaps.DirectArguments_overrides);
-        m_out.storePtr(getCurrentCallee(), fastObject, m_heaps.DirectArguments_callee);
         
         ValueFromBlock fastResult = m_out.anchor(fastObject);
         m_out.jump(continuation);
@@ -3015,6 +3023,8 @@ private:
         
         m_out.appendTo(continuation, lastNext);
         LValue result = m_out.phi(m_out.intPtr, fastResult, slowResult);
+
+        m_out.storePtr(getCurrentCallee(), result, m_heaps.DirectArguments_callee);
         
         if (length.isKnown) {
             VirtualRegister start = AssemblyHelpers::argumentsStart(m_node->origin.semantic);
