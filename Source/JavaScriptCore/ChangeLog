@@ -1,3 +1,310 @@
+2014-10-07  Oliver Hunt  <oliver@apple.com>
+
+        Remove op_new_captured_func
+        https://bugs.webkit.org/show_bug.cgi?id=137491
+
+        Reviewed by Mark Lam.
+
+        Removes the op_captured_new_func opcode as part of the work
+        towards having any magical opcodes that write directly to
+        named "registers" and then have a follow on op to ensure that
+        the environment record correctly represents the stack state.
+
+        For this we add a non-captured scratch register so we don't
+        have to have any kind of magic opcode, and instead simply
+        have sensible creation and move semantics for capturing new
+        functions.
+
+        * bytecode/BytecodeList.json:
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset):
+        (JSC::computeDefsForBytecodeOffset):
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        (JSC::CodeBlock::CodeBlock):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        (JSC::BytecodeGenerator::emitNewFunction):
+        (JSC::BytecodeGenerator::emitLazyNewFunction):
+        (JSC::BytecodeGenerator::emitNewFunctionInternal):
+        * bytecompiler/BytecodeGenerator.h:
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGCapabilities.cpp:
+        (JSC::DFG::capabilityLevel):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileMainPass):
+        * jit/JIT.h:
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_new_captured_func): Deleted.
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * runtime/CommonSlowPaths.cpp:
+        (JSC::SLOW_PATH_DECL): Deleted.
+        * runtime/CommonSlowPaths.h:
+
+2014-10-06  Andy Estes  <aestes@apple.com>
+
+        Objective-C objects must be fully defined when used in a WTF::Vector
+        https://bugs.webkit.org/show_bug.cgi?id=137479
+
+        Reviewed by Mark Rowe.
+
+        When compiling an Objective-C++ file under ARC, @class types are considered non-trivially destructable, so
+        Vector needs to see their definition in order to call their destructor.
+
+        See <http://clang.llvm.org/docs/AutomaticReferenceCounting.html#ownership-qualified-fields-of-structs-and-unions> for details.
+
+        * API/ObjcRuntimeExtras.h: Imported <objc/Protocol.h>.
+
+2014-10-06  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Use of 1-bit Enum type behaves improperly
+        https://bugs.webkit.org/show_bug.cgi?id=137471
+        <rdar://problem/18559172>
+
+        Reviewed by Mark Lam.
+
+        Represent 1-bit enum element as 'unsigned', as we have done elsewhere
+        in WebKit to avoid problems when building with MSVC.
+
+        * debugger/Debugger.h:
+
+2014-10-06  Mark Lam  <mark.lam@apple.com>
+
+        Fixed compiler warnings on Windows build.
+        <https://webkit.org/b/135205>
+
+        Reviewed by Geoffrey Garen.
+
+        Benchmarking with jsc shows that perf is neutral with this change.
+
+        * assembler/MacroAssemblerX86_64.h:
+        (JSC::MacroAssemblerX86_64::call):
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        * dfg/DFGArgumentPosition.h:
+        (JSC::DFG::ArgumentPosition::mergeShouldNeverUnbox):
+        (JSC::DFG::ArgumentPosition::mergeArgumentUnboxingAwareness):
+        * dfg/DFGEdge.h:
+        (JSC::DFG::Edge::makeWord):
+        * dfg/DFGNodeFlags.h:
+        (JSC::DFG::nodeMayOverflow):
+        (JSC::DFG::nodeMayNegZero):
+        * dfg/DFGOSRExitCompilerCommon.cpp:
+        (JSC::DFG::reifyInlinedCallFrames):
+        * dfg/DFGVariableAccessData.cpp:
+        (JSC::DFG::VariableAccessData::mergeIsCaptured):
+        * dfg/DFGVariableAccessData.h:
+        (JSC::DFG::VariableAccessData::mergeIsProfitableToUnbox):
+        (JSC::DFG::VariableAccessData::mergeStructureCheckHoistingFailed):
+        (JSC::DFG::VariableAccessData::mergeCheckArrayHoistingFailed):
+        (JSC::DFG::VariableAccessData::mergeIsArgumentsAlias):
+        (JSC::DFG::VariableAccessData::mergeIsLoadedFrom):
+        * runtime/JSDataViewPrototype.cpp:
+        (JSC::getData):
+
+2014-10-06  Oliver Hunt  <oliver@apple.com>
+
+        Remove incorrect assertion.
+
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::tearOff):
+
+2014-10-06  Oliver Hunt  <oliver@apple.com>
+
+        Fix cloop build
+
+        * interpreter/Interpreter.cpp:
+        (JSC::unwindCallFrame):
+
+2014-10-06  Mark Lam  <mark.lam@apple.com>
+
+        Unreviewed build fix.
+        <https://webkit.org/b/137279>
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+
+2014-10-06  Oliver Hunt  <oliver@apple.com>
+
+        REGRESSION(r174226): [JSC] Crash when running the perf test Speedometer/Full.html
+        https://bugs.webkit.org/show_bug.cgi?id=137404
+
+        Reviewed by Michael Saboff.
+
+        Update the Arguments object to recognise that it must always have an
+        environment record if the referenced callee has one, and if such is not
+        present it should not try to extract one from the callframe, as that
+        path leads to madness.
+
+        Happily this makes some of the other code more sensible, and removes a
+        bunch of unnecessary and icky logic.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::unwindCallFrame):
+        * jit/JITOperations.cpp:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::tearOff):
+        (JSC::Arguments::didTearOffActivation): Deleted.
+        * runtime/Arguments.h:
+        (JSC::Arguments::argument):
+        (JSC::Arguments::finishCreation):
+
+2014-10-04  Brian J. Burg  <burg@cs.washington.edu>
+
+        Unreviewed, rolling out r174319.
+
+        Causes assertions in fast/profiler tests. Needs nontrivial
+        investigation, will take offline.
+
+        Reverted changeset:
+
+        "Web Inspector: timelines should not count time elapsed while
+        paused in the debugger"
+        https://bugs.webkit.org/show_bug.cgi?id=136351
+        http://trac.webkit.org/changeset/174319
+
+2014-10-04  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: timelines should not count time elapsed while paused in the debugger
+        https://bugs.webkit.org/show_bug.cgi?id=136351
+
+        Reviewed by Timothy Hatcher.
+
+        Now that we have a stopwatch to provide pause-aware timing data, we can remove the
+        profiler's handling of debugger pause/continue callbacks. The timeline agent accounts
+        for debugger pauses by pausing and resuming the stopwatch.
+
+        * API/JSProfilerPrivate.cpp:
+        (JSStartProfiling): Use a fresh stopwatch when profiling from the JSC API.
+        * inspector/ScriptDebugServer.cpp:
+        (Inspector::ScriptDebugServer::handlePause):
+        * profiler/LegacyProfiler.cpp:
+        (JSC::LegacyProfiler::profiler): Use nullptr.
+        (JSC::LegacyProfiler::startProfiling): Hand off a stopwatch to the profile generator.
+        (JSC::LegacyProfiler::stopProfiling): Use nullptr.
+        (JSC::LegacyProfiler::didPause): Deleted.
+        (JSC::LegacyProfiler::didContinue): Deleted.
+        * profiler/LegacyProfiler.h:
+        * profiler/ProfileGenerator.cpp: Remove debugger pause/continue callbacks and the
+        timestamp member that was used to track time elapsed by the debugger. Just use the
+        stopwatch's elapsed times to generate start/elapsed times for function calls.
+        (JSC::ProfileGenerator::create):
+        (JSC::ProfileGenerator::ProfileGenerator):
+        (JSC::ProfileGenerator::beginCallEntry):
+        (JSC::ProfileGenerator::endCallEntry):
+        (JSC::ProfileGenerator::didPause): Deleted.
+        (JSC::ProfileGenerator::didContinue): Deleted.
+        * profiler/ProfileGenerator.h:
+
+2014-10-04  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should sink PutLocals
+        https://bugs.webkit.org/show_bug.cgi?id=137168
+
+        Reviewed by Oliver Hunt.
+        
+        We've known for a while that our PutLocal situation was sub-optimal. We emit them anytime we
+        "pass" arguments to an inlined function call, because we need to enable the runtime to grab
+        those arguments when doing foo.arguments where foo is inlined: our engine doesn't deoptimize
+        in that case but rather just relies on the arguments being flushed (i.e. a copy of their
+        values is spilled) at a well-known place in a well-known format.
+        
+        The PutLocals incur two costs: (1) they are store instructions and stores ain't free, and (2)
+        they look like escaping sites and so they inhibit object allocation sinking.
+        
+        But in most cases, the PutLocals are unnecessary because the inlined code never performs any
+        side effect that could transitively lead to function.arguments. Even if the inlined code
+        could do such a side effect, it may be on a rare path so there is no need to penalize the
+        entire function.
+        
+        This patch implements one solution to the PutLocal problem: it aggressively sinks PutLocals
+        to the latest possible point. This is even more aggressive than the object allocation
+        sinking. That sinking algorithm avoids creating situations where an object could be
+        materialized more than one along any path. PutLocal sinking, on the other hand, doesn't avoid
+        this at all - both to make the phase cheaper and simpler and to make it more aggressive.
+        Every PutLocal is sunk no matter what.
+        
+        The upside of this patch is that it eliminates many PutLocals: many of them are sunk "past
+        their death", thus eliminating them completely. Others are sunk to rare paths. This enables a
+        lot of object allocation sinking and it removes a lot of pointless store instructions.
+        
+        It also has downsites. Sinking PutLocals increases register pressure because it increases the
+        live ranges of things like inlined arguments.
+        
+        This patch is a net performance win in its current form: 1% SunSpider regression, 2% OctaneV2
+        progression, 0.6% Kraken regression, 1% AsmBench progression, and 0.5% CompressionBench
+        regression. The biggest win is on Octane/raytrace, which improves by 27%.
+        
+        Relanding after fixing internal builds. We have to be careful about implicit casts from int64
+        to int32.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/CodeBlock.h:
+        * bytecode/Operands.h:
+        (JSC::Operands::dump): Deleted.
+        * bytecode/OperandsInlines.h:
+        (JSC::Traits>::dump):
+        * bytecode/VirtualRegister.h:
+        (JSC::VirtualRegister::isHeader):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::InlineStackEntry::InlineStackEntry):
+        * dfg/DFGClobberSet.h:
+        (JSC::DFG::ClobberSetAdd::operator()):
+        (JSC::DFG::ClobberSetOverlaps::operator()):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        (JSC::DFG::NoOpClobberize::operator()):
+        (JSC::DFG::CheckClobberize::operator()):
+        (JSC::DFG::AbstractHeapOverlaps::operator()):
+        (JSC::DFG::ReadMethodClobberize::operator()):
+        (JSC::DFG::WriteMethodClobberize::operator()):
+        (JSC::DFG::DefMethodClobberize::operator()):
+        * dfg/DFGFlushFormat.h:
+        (JSC::DFG::merge):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::Graph):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::capturedVarsFor):
+        * dfg/DFGObjectAllocationSinkingPhase.cpp:
+        (JSC::DFG::ObjectAllocationSinkingPhase::determineMaterializationPoints):
+        (JSC::DFG::ObjectAllocationSinkingPhase::placeMaterializationPoints):
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * dfg/DFGPreciseLocalClobberize.h: Added.
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::PreciseLocalClobberizeAdaptor):
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::read):
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::write):
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::def):
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::callIfAppropriate):
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::readTop):
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::writeTop):
+        (JSC::DFG::forEachLocalReadByUnwind):
+        (JSC::DFG::preciseLocalClobberize):
+        * dfg/DFGPutLocalSinkingPhase.cpp: Added.
+        (JSC::DFG::performPutLocalSinking):
+        * dfg/DFGPutLocalSinkingPhase.h: Added.
+        * dfg/DFGSSACalculator.h:
+        (JSC::DFG::SSACalculator::computePhis):
+        * dfg/DFGValidate.cpp:
+
+2014-10-03  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION(r174216): CodeBlock::dumpByteCodes crashes on op_push_name_scope
+        https://bugs.webkit.org/show_bug.cgi?id=137412
+
+        Reviewed by Mark Lam.
+
+        Added support for the JSNameScope::type opcode parameter in dumpBytecode().
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+
 2014-10-03  Saam Barati  <saambarati1@gmail.com>
 
         Implement op_profile_type in the 32-bit baseline JIT

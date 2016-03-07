@@ -3439,16 +3439,7 @@ bool ByteCodeParser::parseBlock(unsigned limit)
             }
             NEXT_OPCODE(op_new_func);
         }
-            
-        case op_new_captured_func: {
-            Node* function = addToGraph(
-                NewFunctionNoCheck, OpInfo(currentInstruction[2].u.operand));
-            if (VariableWatchpointSet* set = currentInstruction[3].u.watchpointSet)
-                addToGraph(NotifyWrite, OpInfo(set), function);
-            set(VirtualRegister(currentInstruction[1].u.operand), function);
-            NEXT_OPCODE(op_new_captured_func);
-        }
-            
+
         case op_new_func_exp: {
             set(VirtualRegister(currentInstruction[1].u.operand),
                 addToGraph(NewFunctionExpression, OpInfo(currentInstruction[2].u.operand)));
@@ -3692,12 +3683,8 @@ ByteCodeParser::InlineStackEntry::InlineStackEntry(
         
         if (m_inlineCallFrame->caller.inlineCallFrame)
             m_inlineCallFrame->capturedVars = m_inlineCallFrame->caller.inlineCallFrame->capturedVars;
-        else {
-            for (int i = byteCodeParser->m_codeBlock->m_numVars; i--;) {
-                if (byteCodeParser->m_codeBlock->isCaptured(virtualRegisterForLocal(i)))
-                    m_inlineCallFrame->capturedVars.set(i);
-            }
-        }
+        else
+            m_inlineCallFrame->capturedVars = byteCodeParser->m_graph.m_outermostCapturedVars;
 
         for (int i = argumentCountIncludingThis; i--;) {
             VirtualRegister argument = virtualRegisterForArgument(i);

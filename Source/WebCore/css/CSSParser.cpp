@@ -317,6 +317,7 @@ CSSParser::CSSParser(const CSSParserContext& context)
     , m_ignoreErrorsInDeclaration(false)
     , m_defaultNamespace(starAtom)
     , m_parsedTextPrefixLength(0)
+    , m_nestedSelectorLevel(0)
     , m_propertyRange(UINT_MAX, UINT_MAX)
     , m_ruleSourceDataResult(0)
     , m_parsingMode(NormalMode)
@@ -1345,14 +1346,14 @@ bool CSSParser::parseColor(RGBA32& color, const String& string, bool strict)
         return false;
 
     CSSValue* value = parser.m_parsedProperties.first().value();
-    if (!value->isPrimitiveValue())
+    if (!is<CSSPrimitiveValue>(*value))
         return false;
 
-    CSSPrimitiveValue* primitiveValue = toCSSPrimitiveValue(value);
-    if (!primitiveValue->isRGBColor())
+    CSSPrimitiveValue& primitiveValue = downcast<CSSPrimitiveValue>(*value);
+    if (!primitiveValue.isRGBColor())
         return false;
 
-    color = primitiveValue->getRGBA32Value();
+    color = primitiveValue.getRGBA32Value();
     return true;
 }
 
@@ -3118,7 +3119,7 @@ void CSSParser::addFillValue(RefPtr<CSSValue>& lval, PassRef<CSSValue> rval)
     }
 
     if (lval->isBaseValueList()) {
-        toCSSValueList(*lval).append(WTF::move(rval));
+        downcast<CSSValueList>(*lval).append(WTF::move(rval));
         return;
     }
 
@@ -3425,8 +3426,8 @@ void CSSParser::addAnimationValue(RefPtr<CSSValue>& lval, PassRef<CSSValue> rval
         return;
     }
 
-    if (lval->isValueList()) {
-        toCSSValueList(*lval).append(WTF::move(rval));
+    if (is<CSSValueList>(*lval)) {
+        downcast<CSSValueList>(*lval).append(WTF::move(rval));
         return;
     }
 
@@ -4170,10 +4171,10 @@ void CSSParser::parse3ValuesFillPosition(CSSParserValueList* valueList, RefPtr<C
         value1.swap(value2);
 
 #ifndef NDEBUG
-    CSSPrimitiveValue* first = toCSSPrimitiveValue(value1.get());
-    CSSPrimitiveValue* second = toCSSPrimitiveValue(value2.get());
-    ident1 = first->getPairValue()->first()->getValueID();
-    ident2 = second->getPairValue()->first()->getValueID();
+    CSSPrimitiveValue& first = downcast<CSSPrimitiveValue>(*value1);
+    CSSPrimitiveValue& second = downcast<CSSPrimitiveValue>(*value2);
+    ident1 = first.getPairValue()->first()->getValueID();
+    ident2 = second.getPairValue()->first()->getValueID();
     ASSERT(ident1 == CSSValueLeft || ident1 == CSSValueRight);
     ASSERT(ident2 == CSSValueBottom || ident2 == CSSValueTop);
 #endif
@@ -4231,8 +4232,8 @@ void CSSParser::parseFillPosition(CSSParserValueList* valueList, RefPtr<CSSValue
         return;
     }
 
-    RefPtr<CSSPrimitiveValue> parsedValue1 = toCSSPrimitiveValue(value1.get());
-    RefPtr<CSSPrimitiveValue> parsedValue2 = toCSSPrimitiveValue(value2.get());
+    RefPtr<CSSPrimitiveValue> parsedValue1 = downcast<CSSPrimitiveValue>(value1.get());
+    RefPtr<CSSPrimitiveValue> parsedValue2 = downcast<CSSPrimitiveValue>(value2.get());
 
     value1.clear();
     value2.clear();
@@ -4329,7 +4330,7 @@ void CSSParser::parseFillRepeat(RefPtr<CSSValue>& value1, RefPtr<CSSValue>& valu
 
     // If only one value was specified, value2 is the same as value1.
     m_implicitShorthand = true;
-    value2 = cssValuePool().createIdentifierValue(toCSSPrimitiveValue(value1.get())->getValueID());
+    value2 = cssValuePool().createIdentifierValue(downcast<CSSPrimitiveValue>(*value1).getValueID());
 }
 
 PassRefPtr<CSSValue> CSSParser::parseFillSize(CSSPropertyID propId, bool& allowComma)
@@ -4946,7 +4947,7 @@ PassRefPtr<CSSValue> CSSParser::parseGridPosition()
 
 static PassRefPtr<CSSValue> gridMissingGridPositionValue(CSSValue* value)
 {
-    if (value->isPrimitiveValue() && toCSSPrimitiveValue(value)->isString())
+    if (is<CSSPrimitiveValue>(*value) && downcast<CSSPrimitiveValue>(*value).isString())
         return value;
 
     return cssValuePool().createIdentifierValue(CSSValueAuto);
@@ -4998,7 +4999,7 @@ bool CSSParser::parseGridTemplateRowsAndAreas(PassRefPtr<CSSValue> templateColum
         if (m_valueList->current()->unit == CSSParserValue::ValueList) {
             if (trailingIdentWasAdded) {
                 // A row's trailing ident must be concatenated with the next row's leading one.
-                parseGridLineNames(*m_valueList, *templateRows, toCSSGridLineNamesValue(templateRows->item(templateRows->length() - 1)));
+                parseGridLineNames(*m_valueList, *templateRows, downcast<CSSGridLineNamesValue>(templateRows->item(templateRows->length() - 1)));
             } else
                 parseGridLineNames(*m_valueList, *templateRows);
         }
@@ -5900,7 +5901,7 @@ PassRefPtr<CSSBasicShape> CSSParser::parseBasicShapeCircle(CSSParserValueList* a
         // arguments except the first two. Thus, and index greater than one
         // indicates an invalid production.
         if (args->currentIndex() > 1)
-            return 0;
+            return nullptr;
 
         if (!args->currentIndex() && argument->id != CSSValueAt) {
             if (RefPtr<CSSPrimitiveValue> radius = parseShapeRadius(argument)) {
@@ -5908,7 +5909,7 @@ PassRefPtr<CSSBasicShape> CSSParser::parseBasicShapeCircle(CSSParserValueList* a
                 continue;
             }
 
-            return 0;
+            return nullptr;
         }
 
         if (argument->id == CSSValueAt && args->next()) {
@@ -5916,14 +5917,12 @@ PassRefPtr<CSSBasicShape> CSSParser::parseBasicShapeCircle(CSSParserValueList* a
             RefPtr<CSSValue> centerY;
             parseFillPosition(args, centerX, centerY);
             if (centerX && centerY && !args->current()) {
-                ASSERT(centerX->isPrimitiveValue());
-                ASSERT(centerY->isPrimitiveValue());
-                shape->setCenterX(toCSSPrimitiveValue(centerX.get()));
-                shape->setCenterY(toCSSPrimitiveValue(centerY.get()));
+                shape->setCenterX(downcast<CSSPrimitiveValue>(centerX.get()));
+                shape->setCenterY(downcast<CSSPrimitiveValue>(centerY.get()));
             } else
-                return 0;
+                return nullptr;
         } else
-            return 0;
+            return nullptr;
     }
 
     return shape;
@@ -5946,7 +5945,7 @@ PassRefPtr<CSSBasicShape> CSSParser::parseBasicShapeEllipse(CSSParserValueList* 
         // arguments except the first three. Thus, an index greater than two
         // indicates an invalid production.
         if (args->currentIndex() > 2)
-            return 0;
+            return nullptr;
 
         if (args->currentIndex() < 2 && argument->id != CSSValueAt) {
             if (RefPtr<CSSPrimitiveValue> radius = parseShapeRadius(argument)) {
@@ -5957,22 +5956,20 @@ PassRefPtr<CSSBasicShape> CSSParser::parseBasicShapeEllipse(CSSParserValueList* 
                 continue;
             }
 
-            return 0;
+            return nullptr;
         }
 
         if (argument->id != CSSValueAt || !args->next()) // expecting ellipse(.. at <position>)
-            return 0;
+            return nullptr;
 
         RefPtr<CSSValue> centerX;
         RefPtr<CSSValue> centerY;
         parseFillPosition(args, centerX, centerY);
         if (!centerX || !centerY || args->current())
-            return 0;
+            return nullptr;
 
-        ASSERT(centerX->isPrimitiveValue());
-        ASSERT(centerY->isPrimitiveValue());
-        shape->setCenterX(toCSSPrimitiveValue(centerX.get()));
-        shape->setCenterY(toCSSPrimitiveValue(centerY.get()));
+        shape->setCenterX(downcast<CSSPrimitiveValue>(centerX.get()));
+        shape->setCenterY(downcast<CSSPrimitiveValue>(centerY.get()));
     }
 
     return shape;
@@ -8115,7 +8112,7 @@ bool CSSParser::parseDeprecatedGradient(CSSParserValueList* valueList, RefPtr<CS
         a = args->next();
         if (!a || a->unit != CSSPrimitiveValue::CSS_NUMBER)
             return false;
-        toCSSRadialGradientValue(result.get())->setFirstRadius(createPrimitiveNumericValue(a));
+        downcast<CSSRadialGradientValue>(*result).setFirstRadius(createPrimitiveNumericValue(a));
 
         // Comma after the first radius.
         a = args->next();
@@ -8152,7 +8149,7 @@ bool CSSParser::parseDeprecatedGradient(CSSParserValueList* valueList, RefPtr<CS
         a = args->next();
         if (!a || a->unit != CSSPrimitiveValue::CSS_NUMBER)
             return false;
-        toCSSRadialGradientValue(result.get())->setSecondRadius(createPrimitiveNumericValue(a));
+        downcast<CSSRadialGradientValue>(*result).setSecondRadius(createPrimitiveNumericValue(a));
     }
 
     // We now will accept any number of stops (0 or more).
@@ -8312,14 +8309,11 @@ bool CSSParser::parseDeprecatedRadialGradient(CSSParserValueList* valueList, Ref
             return false;
     }
 
-    ASSERT(!centerX || centerX->isPrimitiveValue());
-    ASSERT(!centerY || centerY->isPrimitiveValue());
-
-    result->setFirstX(toCSSPrimitiveValue(centerX.get()));
-    result->setSecondX(toCSSPrimitiveValue(centerX.get()));
+    result->setFirstX(downcast<CSSPrimitiveValue>(centerX.get()));
+    result->setSecondX(downcast<CSSPrimitiveValue>(centerX.get()));
     // CSS3 radial gradients always share the same start and end point.
-    result->setFirstY(toCSSPrimitiveValue(centerY.get()));
-    result->setSecondY(toCSSPrimitiveValue(centerY.get()));
+    result->setFirstY(downcast<CSSPrimitiveValue>(centerY.get()));
+    result->setSecondY(downcast<CSSPrimitiveValue>(centerY.get()));
 
     RefPtr<CSSPrimitiveValue> shapeValue;
     RefPtr<CSSPrimitiveValue> sizeValue;
@@ -8578,13 +8572,11 @@ bool CSSParser::parseRadialGradient(CSSParserValueList* valueList, RefPtr<CSSVal
         if (!a)
             return false;
 
-        ASSERT(centerX->isPrimitiveValue());
-        ASSERT(centerY->isPrimitiveValue());
-        result->setFirstX(toCSSPrimitiveValue(centerX.get()));
-        result->setFirstY(toCSSPrimitiveValue(centerY.get()));
+        result->setFirstX(downcast<CSSPrimitiveValue>(centerX.get()));
+        result->setFirstY(downcast<CSSPrimitiveValue>(centerY.get()));
         // Right now, CSS radial gradients have the same start and end centers.
-        result->setSecondX(toCSSPrimitiveValue(centerX.get()));
-        result->setSecondY(toCSSPrimitiveValue(centerY.get()));
+        result->setSecondX(downcast<CSSPrimitiveValue>(centerX.get()));
+        result->setSecondY(downcast<CSSPrimitiveValue>(centerY.get()));
     }
 
     if (shapeValue || sizeValue || horizontalSize || centerX || centerY)
@@ -11737,7 +11729,7 @@ PassRefPtr<StyleRuleBase> CSSParser::createFontFaceRule()
         CSSProperty& property = m_parsedProperties[i];
         if (property.id() == CSSPropertyFontVariant && property.value()->isPrimitiveValue())
             property.wrapValueInCommaSeparatedList();
-        else if (property.id() == CSSPropertyFontFamily && (!property.value()->isValueList() || toCSSValueList(property.value())->length() != 1)) {
+        else if (property.id() == CSSPropertyFontFamily && (!is<CSSValueList>(*property.value()) || downcast<CSSValueList>(*property.value()).length() != 1)) {
             // Unlike font-family property, font-family descriptor in @font-face rule
             // has to be a value list with exactly one family name. It cannot have a
             // have 'initial' value and cannot 'inherit' from parent.
@@ -12061,7 +12053,7 @@ void CSSParser::markRuleHeaderEnd()
 
 void CSSParser::markSelectorStart()
 {
-    if (!isExtractingSourceData())
+    if (!isExtractingSourceData() || m_nestedSelectorLevel)
         return;
     ASSERT(!m_selectorRange.end);
 
@@ -12070,7 +12062,7 @@ void CSSParser::markSelectorStart()
 
 void CSSParser::markSelectorEnd()
 {
-    if (!isExtractingSourceData())
+    if (!isExtractingSourceData() || m_nestedSelectorLevel)
         return;
     ASSERT(!m_selectorRange.end);
     ASSERT(m_currentRuleDataStack->size());

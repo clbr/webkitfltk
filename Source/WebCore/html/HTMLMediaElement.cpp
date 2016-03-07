@@ -444,6 +444,7 @@ void HTMLMediaElement::registerWithDocument(Document& document)
         document.registerForPageScaleFactorChangedCallbacks(this);
 #endif
 
+    document.registerMediaSession(*m_mediaSession);
     addElementToDocumentMap(*this, document);
 }
 
@@ -468,6 +469,7 @@ void HTMLMediaElement::unregisterWithDocument(Document& document)
         document.unregisterForPageScaleFactorChangedCallbacks(this);
 #endif
 
+    document.unregisterMediaSession(*m_mediaSession);
     removeElementFromDocumentMap(*this, document);
 }
 
@@ -1467,9 +1469,9 @@ void HTMLMediaElement::updateActiveTextTrackCues(const MediaTime& movieTime)
 
         // ... if the text track has a corresponding track element, to then fire a
         // simple event named cuechange at the track element as well.
-        if (affectedTracks[i]->trackType() == TextTrack::TrackElement) {
+        if (is<LoadableTextTrack>(*affectedTracks[i])) {
             RefPtr<Event> event = Event::create(eventNames().cuechangeEvent, false, false);
-            HTMLTrackElement* trackElement = static_cast<LoadableTextTrack*>(affectedTracks[i])->trackElement();
+            HTMLTrackElement* trackElement = downcast<LoadableTextTrack>(*affectedTracks[i]).trackElement();
             ASSERT(trackElement);
             event->setTarget(trackElement);
             
@@ -4323,6 +4325,9 @@ void HTMLMediaElement::mediaPlayerCharacteristicChanged(MediaPlayer*)
         mediaControls()->reset();
     if (renderer())
         renderer()->updateFromElement();
+
+    document().updateIsPlayingAudio();
+
     endProcessingMediaPlayerCallback();
 }
 
@@ -4670,6 +4675,7 @@ void HTMLMediaElement::stop()
     // Stop the playback without generating events
     m_playing = false;
     setPausedInternal(true);
+    m_mediaSession->clientWillPausePlayback();
 
     userCancelledLoad();
 
@@ -5997,6 +6003,23 @@ bool HTMLMediaElement::overrideBackgroundPlaybackRestriction() const
         return true;
 #endif
     return false;
+}
+
+bool HTMLMediaElement::hasMediaCharacteristics(MediaSession::MediaCharacteristics characteristics) const
+{
+    if ((characteristics & MediaSession::MediaCharacteristicAudible) && !hasAudio())
+        return false;
+    if ((characteristics & MediaSession::MediaCharacteristicVisual) && !hasVideo())
+        return false;
+    if ((characteristics & MediaSession::MediaCharacteristicLegible) && !hasClosedCaptions())
+        return false;
+
+    return true;
+}
+
+void HTMLMediaElement::mediaStateDidChange()
+{
+    document().updateIsPlayingAudio();
 }
 
 bool HTMLMediaElement::doesHaveAttribute(const AtomicString& attribute, AtomicString* value) const

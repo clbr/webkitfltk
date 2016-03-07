@@ -2321,6 +2321,14 @@ bool Element::matches(const String& selector, ExceptionCode& ec)
     return selectorQuery && selectorQuery->matches(*this);
 }
 
+Element* Element::closest(const String& selector, ExceptionCode& ec)
+{
+    SelectorQuery* selectorQuery = document().selectorQueryForString(selector, ec);
+    if (selectorQuery)
+        return selectorQuery->closest(*this);
+    return nullptr;
+}
+
 bool Element::shouldAppearIndeterminate() const
 {
     return false;
@@ -2930,10 +2938,10 @@ void Element::cloneAttributesFromElement(const Element& other)
 
     // If 'other' has a mutable ElementData, convert it to an immutable one so we can share it between both elements.
     // We can only do this if there is no CSSOM wrapper for other's inline style, and there are no presentation attributes.
-    if (other.m_elementData->isUnique()
+    if (is<UniqueElementData>(*other.m_elementData)
         && !other.m_elementData->presentationAttributeStyle()
         && (!other.m_elementData->inlineStyle() || !other.m_elementData->inlineStyle()->hasCSSOMWrapper()))
-        const_cast<Element&>(other).m_elementData = toUniqueElementData(other.m_elementData)->makeShareableCopy();
+        const_cast<Element&>(other).m_elementData = downcast<UniqueElementData>(*other.m_elementData).makeShareableCopy();
 
     if (!other.m_elementData->isUnique())
         m_elementData = other.m_elementData;
@@ -2955,7 +2963,7 @@ void Element::createUniqueElementData()
     if (!m_elementData)
         m_elementData = UniqueElementData::create();
     else
-        m_elementData = toShareableElementData(m_elementData)->makeUniqueCopy();
+        m_elementData = downcast<ShareableElementData>(*m_elementData).makeUniqueCopy();
 }
 
 bool Element::hasPendingResources() const
