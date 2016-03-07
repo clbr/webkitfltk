@@ -382,9 +382,6 @@ public:
     void setChildrenAffectedByBackwardPositionalRules();
     void setChildIndex(unsigned);
 
-    void setIsInCanvasSubtree(bool);
-    bool isInCanvasSubtree() const;
-
     void setRegionOversetState(RegionOversetState);
     RegionOversetState regionOversetState() const;
 
@@ -549,6 +546,7 @@ public:
 
     virtual bool willRecalcStyle(Style::Change);
     virtual void didRecalcStyle(Style::Change);
+    virtual void willResetComputedStyle();
     virtual void willAttachRenderers();
     virtual void didAttachRenderers();
     virtual void willDetachRenderers();

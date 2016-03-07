@@ -1,3 +1,52 @@
+2014-08-12  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Elements whose contents start with an astral Unicode symbol disappear when CSS `::first-letter` is applied to them
+        https://bugs.webkit.org/show_bug.cgi?id=135756
+
+        Reviewed by Darin Adler.
+
+        Add a method to StringView which passes through contains() to find().
+
+        * wtf/text/StringView.h:
+        (WTF::StringView::contains):
+
+2014-08-12  Pratik Solanki  <psolanki@apple.com>
+
+        Enable didReceiveDataArray callback on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=135554
+        <rdar://problem/9170731>
+
+        Reviewed by Andreas Kling.
+
+        Enable WTF_USE_NETWORK_CFDATA_ARRAY_CALLBACK for all Cocoa platforms so that we use the same
+        code path for Mac and iOS.
+
+        * wtf/Platform.h:
+
+2014-08-12  Alex Christensen  <achristensen@webkit.org>
+
+        Generate header detection headers for CMake on Windows.
+        https://bugs.webkit.org/show_bug.cgi?id=135807
+
+        Reviewed by Brent Fulgham.
+
+        * wtf/CMakeLists.txt:
+        * wtf/PlatformWin.cmake:
+        Generate and include a stub WTFHeaderDetection.h.
+
+2014-08-11  Andy Estes  <aestes@apple.com>
+
+        [iOS] Get rid of iOS.xcconfig
+        https://bugs.webkit.org/show_bug.cgi?id=135809
+
+        Reviewed by Joseph Pecoraro.
+
+        All iOS.xcconfig did was include AspenFamily.xcconfig, so there's no need for the indirection.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/iOS.xcconfig: Removed.
+        * WTF.xcodeproj/project.pbxproj:
+
 2014-08-12  Zan Dobersek  <zdobersek@igalia.com>
 
         Clean up GMutexLocker
