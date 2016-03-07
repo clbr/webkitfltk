@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008 Nikolas Zimmermann <zimmermann@kde.org>
- * Copyright (C) 2009 Apple, Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,16 +23,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "JSSVGElementInstance.h"
+#ifndef SetupVarargsFrame_h
+#define SetupVarargsFrame_h
 
-#include "JSNodeCustom.h"
+#if ENABLE(JIT)
 
-namespace WebCore {
+#include "CCallHelpers.h"
+#include "VirtualRegister.h"
 
-void JSSVGElementInstance::visitAdditionalChildren(JSC::SlotVisitor& visitor)
-{
-    visitor.addOpaqueRoot(root(impl().correspondingElement()));
-}
+namespace JSC {
 
-} // namespace WebCore
+void emitSetVarargsFrame(CCallHelpers&, GPRReg lengthGPR, bool lengthIncludesThis, GPRReg numUsedSlotsGPR, GPRReg resultGPR);
+
+// Assumes that SP refers to the last in-use stack location, and after this returns SP will point to
+// the newly created frame plus the native header. scratchGPR2 may be the same as numUsedSlotsGPR.
+void emitSetupVarargsFrameFastCase(CCallHelpers&, GPRReg numUsedSlotsGPR, GPRReg scratchGPR1, GPRReg scratchGPR2, GPRReg scratchGPR3, int inlineStackOffset, unsigned firstVarArgOffset, CCallHelpers::JumpList& slowCase);
+
+} // namespace JSC
+
+#endif // ENABLE(JIT)
+
+#endif // SetupVarargsFrame_h
+
