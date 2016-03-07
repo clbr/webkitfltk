@@ -1,3 +1,97 @@
+2014-07-26  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: ReplayManager uses undefined events and inconsistent event data
+        https://bugs.webkit.org/show_bug.cgi?id=135222
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Controllers/ReplayManager.js:
+        (WebInspector.ReplayManager.prototype.sessionCreated.this):
+        (WebInspector.ReplayManager.prototype.sessionCreated):
+        (WebInspector.ReplayManager.prototype.segmentLoaded):
+        (WebInspector.ReplayManager.prototype.segmentUnloaded):
+        (WebInspector.ReplayManager.prototype.stopCapturing):
+        (WebInspector.ReplayManager.prototype.replayToMarkIndex):
+        (WebInspector.ReplayManager.prototype.segmentCompleted.set catch):
+        (WebInspector.ReplayManager.prototype.segmentCompleted):
+        (WebInspector.ReplayManager.prototype.startCapturing):
+        (WebInspector.ReplayManager.prototype._changeSessionState):
+
+2014-07-26  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Remove accidental debugging console.log
+        https://bugs.webkit.org/show_bug.cgi?id=135315
+
+        Reviewed by Alexey Proskuryakov.
+
+        * UserInterface/Views/ApplicationCacheFrameContentView.js:
+        (WebInspector.ApplicationCacheFrameContentView.prototype._sortDataGrid):
+
+2014-07-26  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Timelines performance is very slow, has many forced layouts
+        https://bugs.webkit.org/show_bug.cgi?id=135313
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/NavigationItem.js:
+        (WebInspector.NavigationItem):
+        (WebInspector.NavigationItem.prototype.get hidden):
+        (WebInspector.NavigationItem.prototype.set hidden):
+        Don't have the parent navigation bar update layout if the hidden state did not change.
+        This greatly reduces the number of forced layouts as timeline nodes are added.
+
+        * UserInterface/Views/NavigationSidebarPanel.js:
+        (WebInspector.NavigationSidebarPanel.prototype.showEmptyContentPlaceholder):
+        (WebInspector.NavigationSidebarPanel.prototype.hideEmptyContentPlaceholder):
+        Don't do any work if this is not changing the view.
+
+        (WebInspector.NavigationSidebarPanel.prototype._updateContentOverflowShadowVisibilitySoon):
+        (WebInspector.NavigationSidebarPanel.prototype._updateContentOverflowShadowVisibility):
+        (WebInspector.NavigationSidebarPanel.prototype._treeElementAddedOrChanged):
+        When first selecting a specific timeline (Layout / Scripts) we would have a very long hang
+        updating the content. Most of this was time spent updating the overflow shadow visibility
+        because every single tree element addition was causing a layout invalidation and forced layout.
+        Coalesce all of the tree element adds into a single update at the end.
+
+        * UserInterface/Views/TimelineOverview.js:
+        (WebInspector.TimelineOverview.prototype.updateLayout):
+        Calculating the visible duration checks offsetLeft. Calculate this once, outside
+        of a loop down below, to prevent or reduce possible forced layouts.
+
+        * UserInterface/Views/TreeOutline.js:
+        (TreeElement.prototype.revealed):
+        Prevent doing any work for timeline tree elements outside of the selected time range.
+        Previously they were considered revealed if a parent was expanded, even though that
+        parent was hidden. This greatly reduces the amount of work during a recording, since
+        previously we were potentially doing a forced layout for hidden nodes.
+
+        * UserInterface/Views/TimelineSidebarPanel.js:
+        (WebInspector.TimelineSidebarPanel.prototype.treeElementForRepresentedObject.looselyCompareRepresentedObjects):
+        Ignore ProfileNode, which may happen here in the Script timeline.
+
+2014-07-23  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: InspectorBackend's promise-based agent API does not support multiple return values
+        https://bugs.webkit.org/show_bug.cgi?id=135207
+
+        Reviewed by Joseph Pecoraro.
+
+        The promise wrapper implementation assumed that the protocol callback supplies a single 'payload'
+        return value, but InspectorBackend will actually unpack multiple return values as multiple
+        callback arguments. Set a special flag so it will not try to apply multiple return values.
+
+        It would read better if multiple return values could be spread to the resolve callback, but
+        multiple argument support are not required by the Promises specification, so we won't use them.
+
+        * UserInterface/Controllers/ReplayManager.js: Fix uses of promise return values.
+        (WebInspector.ReplayManager):
+        * UserInterface/Models/ReplaySession.js:
+        * UserInterface/Models/ReplaySessionSegment.js:
+        (WebInspector.ReplaySessionSegment):
+        * UserInterface/Protocol/InspectorBackend.js:
+        (InspectorBackend.Command.prototype.promise):
+
 2014-07-21  Saam Barati  <sbarati@apple.com>
 
         Web Inspector: Add esprima to the WebInspector.

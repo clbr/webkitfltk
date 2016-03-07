@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,33 +24,22 @@
  */
 
 #include "config.h"
-#include "DFGDesiredStructureChains.h"
+#include "ProtectionSpaceCFNet.h"
 
-#if ENABLE(DFG_JIT)
+#if USE(CFNETWORK)
 
-#include "JSCInlines.h"
+#include "AuthenticationCF.h"
+#include <CFNetwork/CFURLProtectionSpacePriv.h>
+#include <wtf/RetainPtr.h>
 
-namespace JSC { namespace DFG {
+namespace WebCore {
 
-DesiredStructureChains::DesiredStructureChains() { }
-DesiredStructureChains::~DesiredStructureChains() { }
-
-bool DesiredStructureChains::areStillValid() const
+bool ProtectionSpace::receivesCredentialSecurely() const
 {
-    for (unsigned i = 0; i < m_vector.size(); ++i) {
-        if (!m_vector[i]->isStillValid())
-            return false;
-    }
-    return true;
+    RetainPtr<CFURLProtectionSpaceRef> cfSpace = adoptCF(createCF(*this));
+    return cfSpace && CFURLProtectionSpaceReceivesCredentialSecurely(cfSpace.get());
 }
 
-void DesiredStructureChains::visitChildren(SlotVisitor& visitor)
-{
-    for (unsigned i = m_vector.size(); i--;)
-        m_vector[i]->visitChildren(visitor);
-}
+} // namespace WebCore
 
-} } // namespace JSC::DFG
-
-#endif // ENABLE(DFG_JIT)
-
+#endif // USE(CFNETWORK)
