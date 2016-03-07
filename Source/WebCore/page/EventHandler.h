@@ -120,6 +120,7 @@ enum CheckDragHysteresis { ShouldCheckDragHysteresis, DontCheckDragHysteresis };
 enum class ImmediateActionStage {
     None,
     PerformedHitTest,
+    ActionUpdated,
     ActionCancelled,
     ActionCompleted
 };
@@ -180,6 +181,7 @@ public:
     void resizeLayerDestroyed();
 
     IntPoint lastKnownMousePosition() const;
+    IntPoint lastKnownMouseGlobalPosition() const { return m_lastKnownMouseGlobalPosition; }
     Cursor currentMouseCursor() const { return m_currentMouseCursor; }
 
     static Frame* subframeForTargetNode(Node*);
@@ -313,6 +315,7 @@ public:
     bool isHandlingWheelEvent() const { return m_isHandlingWheelEvent; }
 
     WEBCORE_EXPORT void setImmediateActionStage(ImmediateActionStage stage);
+    WEBCORE_EXPORT const PlatformMouseEvent& lastMouseDownEvent() const;
 
 private:
 #if ENABLE(DRAG_SUPPORT)

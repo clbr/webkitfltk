@@ -97,6 +97,8 @@ typedef const char* optionString;
     v(bool, useDFGJIT, true) \
     v(bool, useRegExpJIT, true) \
     \
+    v(bool, reportMustSucceedExecutableAllocations, false) \
+    \
     v(unsigned, maxPerThreadStackUsage, 4 * MB) \
     v(unsigned, reservedZoneSize, 128 * KB) \
     v(unsigned, errorModeReservedZoneSize, 64 * KB) \
@@ -123,6 +125,7 @@ typedef const char* optionString;
     v(optionRange, bytecodeRangeToDFGCompile, 0) \
     v(optionString, dfgFunctionWhitelistFile, nullptr) \
     v(bool, dumpBytecodeAtDFGTime, false) \
+    v(bool, dumpGraphAfterParsing, false) \
     v(bool, dumpGraphAtEachPhase, false) \
     v(bool, verboseDFGByteCodeParsing, false) \
     v(bool, verboseCompilation, false) \
@@ -291,7 +294,12 @@ typedef const char* optionString;
     v(unsigned, numberOfGCCyclesToRecordForVerification, 3) \
     \
     v(bool, enableExceptionFuzz, false) \
-    v(unsigned, fireExceptionFuzzAt, 0)
+    v(unsigned, fireExceptionFuzzAt, 0) \
+    \
+    v(bool, enableExecutableAllocationFuzz, false) \
+    v(unsigned, fireExecutableAllocationFuzzAt, 0) \
+    v(unsigned, fireExecutableAllocationFuzzAtOrAfter, 0) \
+    v(bool, verboseExecutableAllocationFuzz, false)
 
 class Options {
 public:

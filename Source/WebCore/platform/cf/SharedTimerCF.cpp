@@ -26,9 +26,12 @@
 #import "config.h"
 #import "SharedTimer.h"
 
+#include <wtf/AutodrainedPool.h>
+
 #if PLATFORM(MAC)
 #import "PowerObserverMac.h"
 #elif PLATFORM(IOS)
+#import "WebCoreThread.h"
 #import "WebCoreThreadRun.h"
 #endif
 
@@ -61,7 +64,7 @@ static void setupPowerObserver()
     if (!registeredForApplicationNotification) {
         registeredForApplicationNotification = true;
         CFNotificationCenterRef notificationCenter = CFNotificationCenterGetLocalCenter();
-        CFNotificationCenterAddObserver(notificationCenter, 0, applicationDidBecomeActive, CFSTR("UIApplicationDidBecomeActiveNotification"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+        CFNotificationCenterAddObserver(notificationCenter, nullptr, applicationDidBecomeActive, CFSTR("UIApplicationDidBecomeActiveNotification"), nullptr, CFNotificationSuspensionBehaviorCoalesce);
     }
 #endif
 }
@@ -75,9 +78,8 @@ void setSharedTimerFiredFunction(void (*f)())
 
 static void timerFired(CFRunLoopTimerRef, void*)
 {
-    @autoreleasepool {
-        sharedTimerFiredFunction();
-    }
+    AutodrainedPool pool;
+    sharedTimerFiredFunction();
 }
 
 static void restartSharedTimer()
@@ -106,7 +108,11 @@ void setSharedTimerFireInterval(double interval)
     CFAbsoluteTime fireDate = CFAbsoluteTimeGetCurrent() + interval;
     if (!sharedTimer) {
         sharedTimer = CFRunLoopTimerCreate(nullptr, fireDate, kCFTimeIntervalDistantFuture, 0, 0, timerFired, nullptr);
+#if PLATFORM(IOS)
+        CFRunLoopAddTimer(WebThreadRunLoop(), sharedTimer, kCFRunLoopCommonModes);
+#else
         CFRunLoopAddTimer(CFRunLoopGetCurrent(), sharedTimer, kCFRunLoopCommonModes);
+#endif
 
         setupPowerObserver();
 
