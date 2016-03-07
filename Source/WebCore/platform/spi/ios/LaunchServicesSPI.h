@@ -23,22 +23,32 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-.timeline-overview-graph.runloop > .divider {
-    position: absolute;
-    z-index: 10;
+#ifndef LaunchServicesSPI_h
+#define LaunchServicesSPI_h
 
-    width: 100%;
-    height: 1px;
+#import <Foundation/Foundation.h>
 
-    background-color: rgba(0, 0, 0, 0.05);
-    text-align: right;
-}
+#if USE(APPLE_INTERNAL_SDK)
 
-.timeline-overview-graph.runloop > .divider > span {
-    padding-right: 1px;
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= 90000
+#import <MobileCoreServices/LSAppLinkPriv.h>
+#endif
 
-    font-family: Helvetica, sans-serif;
-    font-size: 8px;
+#endif
 
-    color: rgba(0, 0, 0, 0.2);
-}
+typedef void (^LSAppLinkOpenCompletionHandler)(BOOL success, NSError *error);
+
+#if !USE(APPLE_INTERNAL_SDK)
+
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= 90000
+@interface LSAppLink : NSObject <NSSecureCoding>
+@end
+
+@interface LSAppLink (Details)
++ (void)openWithURL:(NSURL *)aURL completionHandler:(LSAppLinkOpenCompletionHandler)completionHandler;
+@end
+#endif
+
+#endif
+
+#endif // LaunchServicesSPI_h

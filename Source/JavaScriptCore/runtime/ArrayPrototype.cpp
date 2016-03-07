@@ -114,6 +114,7 @@ const ClassInfo ArrayPrototype::s_info = {"Array", &JSArray::s_info, &arrayProto
   reduce         arrayProtoFuncReduce         DontEnum|Function 1
   reduceRight    arrayProtoFuncReduceRight    DontEnum|Function 1
   map            arrayProtoFuncMap            DontEnum|Function 1
+  values         arrayProtoFuncValues         DontEnum|Function 0
   entries        arrayProtoFuncEntries        DontEnum|Function 0
   keys           arrayProtoFuncKeys           DontEnum|Function 0
   find           arrayProtoFuncFind           DontEnum|Function 1
@@ -142,7 +143,7 @@ void ArrayPrototype::finishCreation(VM& vm, JSGlobalObject* globalObject)
     vm.prototypeMap.addPrototype(this);
     JSC_NATIVE_FUNCTION(vm.propertyNames->iteratorSymbol, arrayProtoFuncValues, DontEnum, 0);
 
-    if (globalObject->runtimeFlags().isSymbolEnabled()) {
+    if (!globalObject->runtimeFlags().isSymbolDisabled()) {
         JSObject* unscopables = constructEmptyObject(globalObject->globalExec(), globalObject->nullPrototypeObjectStructure());
         const char* unscopableNames[] = {
             "copyWithin",

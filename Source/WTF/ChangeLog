@@ -1,3 +1,37 @@
+2015-04-12  Michael Catanzaro  <mcatanzaro@igalia.com>
+
+        Fix -Wparentheses warning with GCC 5 in SaturatedArithmetic.h
+        https://bugs.webkit.org/show_bug.cgi?id=143457
+
+        Reviewed by Benjamin Poulain.
+
+        Tested by WTF.SaturatedArithmeticAddition and WTF.SaturatedArithmeticSubtraction.
+
+        * wtf/SaturatedArithmetic.h:
+        (signedAddOverflows): Use && instead of & to avoid triggering -Wparentheses in newer
+        versions of GCC and Clang, and to improve the clarity of the function.
+        (signedSubtractOverflows): Changed correspondingly, although there was no warning here.
+
+2015-04-08  Sam Weinig  <sam@webkit.org>
+
+        Allow LaunchServices to handle URLs on link navigations
+        <rdar://problem/19446826>
+        https://bugs.webkit.org/show_bug.cgi?id=143544
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Platform.h:
+        Add HAVE macro for this functionality.
+
+2015-04-09  Andy Estes  <aestes@apple.com>
+
+        [Cocoa] Add a HAVE(AVKIT) and use it
+        https://bugs.webkit.org/show_bug.cgi?id=143593
+
+        Reviewed by David Kilzer.
+
+        * wtf/Platform.h: Defined HAVE(AVKIT) to be true on all Cocoa platforms except Watch OS.
+
 2015-04-09  Andy Estes  <aestes@apple.com>
 
         [Content Filtering] Add a HAVE(PARENTAL_CONTROLS) and use it

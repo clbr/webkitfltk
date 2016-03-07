@@ -868,6 +868,13 @@ GPRReg SpeculativeJIT::fillSpeculateInt32Internal(Edge edge, DataFormat& returnF
         }
 
         DataFormat spillFormat = info.spillFormat();
+
+        if (spillFormat == DataFormatCell) {
+            terminateSpeculativeExecution(BadType, JSValueRegs(), edge);
+            returnFormat = DataFormatInt32;
+            return allocate();
+        }
+
         ASSERT_UNUSED(spillFormat, (spillFormat & DataFormatJS) || spillFormat == DataFormatInt32);
 
         // If we know this was spilled as an integer we can fill without checking.
@@ -3987,32 +3994,7 @@ void SpeculativeJIT::compile(Node* node)
     }
 
     case NotifyWrite: {
-        VariableWatchpointSet* set = node->variableWatchpointSet();
-    
-        JSValueOperand value(this, node->child1());
-        GPRReg valueTagGPR = value.tagGPR();
-        GPRReg valuePayloadGPR = value.payloadGPR();
-    
-        GPRTemporary temp(this);
-        GPRReg tempGPR = temp.gpr();
-    
-        m_jit.load8(set->addressOfState(), tempGPR);
-    
-        JITCompiler::Jump isDone = m_jit.branch32(JITCompiler::Equal, tempGPR, TrustedImm32(IsInvalidated));
-        JITCompiler::JumpList notifySlow;
-        notifySlow.append(m_jit.branch32(
-            JITCompiler::NotEqual,
-            JITCompiler::AbsoluteAddress(set->addressOfInferredValue()->payloadPointer()),
-            valuePayloadGPR));
-        notifySlow.append(m_jit.branch32(
-            JITCompiler::NotEqual, 
-            JITCompiler::AbsoluteAddress(set->addressOfInferredValue()->tagPointer()),
-            valueTagGPR));
-        addSlowPathGenerator(
-            slowPathCall(notifySlow, this, operationNotifyWrite, NoResult, set, valueTagGPR, valuePayloadGPR));
-        isDone.link(&m_jit);
-    
-        noResult(node);
+        compileNotifyWrite(node);
         break;
     }
 

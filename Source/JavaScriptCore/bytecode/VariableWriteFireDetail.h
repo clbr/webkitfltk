@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,10 +23,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-[
-    Conditional=MEDIA_STREAM,
-    ConstructorCallWith=ScriptExecutionContext,
-    Constructor(optional Dictionary videoConstraints),
-] interface VideoStreamTrack : MediaStreamTrack {
+#ifndef VariableWriteFireDetail_h
+#define VariableWriteFireDetail_h
+
+#include "Watchpoint.h"
+
+namespace JSC {
+
+class JSObject;
+class PropertyName;
+
+class VariableWriteFireDetail : public FireDetail {
+public:
+    VariableWriteFireDetail(JSObject* object, const PropertyName& name)
+        : m_object(object)
+        , m_name(name)
+    {
+    }
+    
+    virtual void dump(PrintStream&) const override;
+    
+    JS_EXPORT_PRIVATE static void touch(WatchpointSet*, JSObject*, const PropertyName&);
+
+private:
+    JSObject* m_object;
+    const PropertyName& m_name;
 };
 
+} // namespace JSC
+
+#endif // VariableWriteFireDetail_h

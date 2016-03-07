@@ -57,16 +57,13 @@ class JSFunction : public JSCallee {
 
 public:
     typedef JSCallee Base;
+    const static unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot | OverridesGetPropertyNames;
 
     JS_EXPORT_PRIVATE static JSFunction* create(VM&, JSGlobalObject*, int length, const String& name, NativeFunction, Intrinsic = NoIntrinsic, NativeFunction nativeConstructor = callHostFunctionAsConstructor);
+    
+    static JSFunction* createWithInvalidatedReallocationWatchpoint(VM&, FunctionExecutable*, JSScope*);
 
-    static JSFunction* create(VM& vm, FunctionExecutable* executable, JSScope* scope)
-    {
-        JSFunction* function = new (NotNull, allocateCell<JSFunction>(vm.heap)) JSFunction(vm, executable, scope);
-        ASSERT(function->structure()->globalObject());
-        function->finishCreation(vm);
-        return function;
-    }
+    static JSFunction* create(VM&, FunctionExecutable*, JSScope*);
 
     static JSFunction* createBuiltinFunction(VM&, FunctionExecutable*, JSGlobalObject*);
 
@@ -128,8 +125,6 @@ public:
     bool isClassConstructorFunction() const;
 
 protected:
-    const static unsigned StructureFlags = OverridesGetOwnPropertySlot | ImplementsHasInstance | OverridesGetPropertyNames | JSObject::StructureFlags;
-
     JS_EXPORT_PRIVATE JSFunction(VM&, JSGlobalObject*, Structure*);
     JSFunction(VM&, FunctionExecutable*, JSScope*);
 
@@ -149,6 +144,14 @@ protected:
     static void visitChildren(JSCell*, SlotVisitor&);
 
 private:
+    static JSFunction* createImpl(VM& vm, FunctionExecutable* executable, JSScope* scope)
+    {
+        JSFunction* function = new (NotNull, allocateCell<JSFunction>(vm.heap)) JSFunction(vm, executable, scope);
+        ASSERT(function->structure()->globalObject());
+        function->finishCreation(vm);
+        return function;
+    }
+    
     friend class LLIntOffsetsExtractor;
 
     static EncodedJSValue argumentsGetter(ExecState*, JSObject*, EncodedJSValue, PropertyName);

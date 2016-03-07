@@ -124,7 +124,7 @@
 #include "Symbol.h"
 #include "SymbolConstructor.h"
 #include "SymbolPrototype.h"
-#include "VariableWatchpointSetInlines.h"
+#include "VariableWriteFireDetail.h"
 #include "WeakGCMapInlines.h"
 #include "WeakMapConstructor.h"
 #include "WeakMapPrototype.h"
@@ -383,7 +383,7 @@ putDirectWithoutTransition(vm, vm.propertyNames-> jsName, lowerName ## Construct
 
     FOR_EACH_SIMPLE_BUILTIN_TYPE_WITH_CONSTRUCTOR(PUT_CONSTRUCTOR_FOR_SIMPLE_TYPE)
 
-    if (m_runtimeFlags.isSymbolEnabled())
+    if (!m_runtimeFlags.isSymbolDisabled())
         putDirectWithoutTransition(vm, vm.propertyNames->Symbol, symbolConstructor, DontEnum);
 
 #undef PUT_CONSTRUCTOR_FOR_SIMPLE_TYPE
@@ -489,7 +489,7 @@ JSGlobalObject::NewGlobalVar JSGlobalObject::addGlobalVar(const Identifier& iden
     ScopeOffset offset = symbolTable()->takeNextScopeOffset(locker);
     SymbolTableEntry newEntry(VarOffset(offset), (constantMode == IsConstant) ? ReadOnly : 0);
     if (constantMode == IsVariable)
-        newEntry.prepareToWatch(symbolTable());
+        newEntry.prepareToWatch();
     else
         newEntry.disableWatching();
     symbolTable()->add(locker, ident.impl(), newEntry);
@@ -510,7 +510,7 @@ void JSGlobalObject::addFunction(ExecState* exec, const Identifier& propertyName
     NewGlobalVar var = addGlobalVar(propertyName, IsVariable);
     variableAt(var.offset).set(exec->vm(), this, value);
     if (var.set)
-        var.set->notifyWrite(vm, value, VariableWriteFireDetail(this, propertyName));
+        var.set->touch(VariableWriteFireDetail(this, propertyName));
 }
 
 static inline JSObject* lastInPrototypeChain(JSObject* object)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,38 +23,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef VariableWatchpointSetInlines_h
-#define VariableWatchpointSetInlines_h
+#ifndef MediaPlaybackTargetMac_h
+#define MediaPlaybackTargetMac_h
 
-#include "SymbolTable.h"
-#include "VariableWatchpointSet.h"
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
 
-namespace JSC {
+#include "MediaPlaybackTarget.h"
+#include <wtf/RetainPtr.h>
 
-inline void VariableWatchpointSet::notifyWrite(VM& vm, JSValue value, const FireDetail& detail)
-{
-    ASSERT(!!value);
-    switch (state()) {
-    case ClearWatchpoint:
-        m_inferredValue.set(vm, &m_symbolTable, value);
-        startWatching();
-        return;
+namespace WebCore {
 
-    case IsWatched:
-        ASSERT(!!m_inferredValue);
-        if (value == m_inferredValue.get())
-            return;
-        invalidate(detail);
-        return;
-            
-    case IsInvalidated:
-        ASSERT(!m_inferredValue);
-        return;
-    }
-        
-    ASSERT_NOT_REACHED();
+class MediaPlaybackTargetMac : public MediaPlaybackTarget {
+public:
+    WEBCORE_EXPORT static Ref<MediaPlaybackTarget> create(AVOutputContext *);
+
+    virtual ~MediaPlaybackTargetMac();
+
+    virtual TargetType targetType() const { return AVFoundation; }
+
+    virtual const MediaPlaybackTargetContext& targetContext() const;
+    virtual bool hasActiveRoute() const;
+
+    AVOutputContext *outputContext() const { return m_outputContext.get(); }
+
+protected:
+    MediaPlaybackTargetMac(AVOutputContext *);
+
+    RetainPtr<AVOutputContext> m_outputContext;
+    mutable MediaPlaybackTargetContext m_context;
+};
+
+MediaPlaybackTargetMac* toMediaPlaybackTargetMac(MediaPlaybackTarget*);
+const MediaPlaybackTargetMac* toMediaPlaybackTargetMac(const MediaPlaybackTarget*);
+
 }
 
-} // namespace JSC
+#endif // ENABLE(WIRELESS_PLAYBACK_TARGET)
 
-#endif // VariableWatchpointSetInlines_h
+#endif

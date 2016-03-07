@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,9 +23,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-[
-    Conditional=MEDIA_STREAM,
-    Constructor(optional Dictionary audioConstraints),
-    ConstructorCallWith=ScriptExecutionContext,
-] interface AudioStreamTrack : MediaStreamTrack {
+#ifndef MediaPlaybackTargetContext_h
+#define MediaPlaybackTargetContext_h
+
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+
+OBJC_CLASS AVOutputContext;
+
+#if PLATFORM(COCOA)
+OBJC_CLASS NSKeyedArchiver;
+OBJC_CLASS NSKeyedUnarchiver;
+#endif
+
+namespace WebCore {
+
+struct MediaPlaybackTargetContext {
+
+    enum ContextType : int32_t {
+        None,
+        AVOutputContextType,
+    } type;
+
+    union {
+        AVOutputContext* avOutputContext;
+    } context;
+
+    bool encodingRequiresPlatformData() const { return type == AVOutputContextType; }
 };
+
+const MediaPlaybackTargetContext NoMediaPlaybackTargetContext = { MediaPlaybackTargetContext::None, {nullptr} };
+
+}
+
+#endif // ENABLE(WIRELESS_PLAYBACK_TARGET)
+
+#endif // MediaPlaybackTargetContext 

@@ -26,13 +26,12 @@
 .formatted-object, .formatted-node, .formatted-error, .formatted-map, .formatted-set, .formatted-weakmap {
     position: relative;
     display: inline-block;
-    vertical-align: top;
     color: black;
 }
 
 :matches(.formatted-array, .formatted-map, .formatted-set, .formatted-weakmap) > .size {
     font-style: normal;
-    color: hsl(0, 0%, 67%);
+    color: rgba(0, 0, 0, 0.33);
 }
 
 .formatted-number {
