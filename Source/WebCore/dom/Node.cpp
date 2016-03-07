@@ -1486,7 +1486,7 @@ FloatPoint Node::convertFromPage(const FloatPoint& p) const
     return p;
 }
 
-#ifndef NDEBUG
+#if ENABLE(TREE_DEBUGGING)
 
 static void appendAttributeDesc(const Node* node, StringBuilder& stringBuilder, const QualifiedName& name, const char* attrDesc)
 {
@@ -1654,7 +1654,7 @@ void Node::showTreeForThisAcrossFrame() const
     showSubTreeAcrossFrame(rootNode, this, "");
 }
 
-#endif
+#endif // ENABLE(TREE_DEBUGGING)
 
 // --------
 
@@ -1700,47 +1700,40 @@ void Node::didMoveToNewDocument(Document* oldDocument)
 {
     TreeScopeAdopter::ensureDidMoveToNewDocumentWasCalled(oldDocument);
 
-    if (const EventTargetData* eventTargetData = this->eventTargetData()) {
-        const EventListenerMap& listenerMap = eventTargetData->eventListenerMap;
-        if (!listenerMap.isEmpty()) {
-            Vector<AtomicString> types = listenerMap.eventTypes();
-            for (unsigned i = 0; i < types.size(); ++i)
-                document().addListenerTypeIfNeeded(types[i]);
+    if (auto* eventTargetData = this->eventTargetData()) {
+        if (!eventTargetData->eventListenerMap.isEmpty()) {
+            for (auto& type : eventTargetData->eventListenerMap.eventTypes())
+                document().addListenerTypeIfNeeded(type);
         }
     }
 
-    if (AXObjectCache::accessibilityEnabled() && oldDocument)
-        if (AXObjectCache* cache = oldDocument->existingAXObjectCache())
+    if (AXObjectCache::accessibilityEnabled() && oldDocument) {
+        if (auto* cache = oldDocument->existingAXObjectCache())
             cache->remove(this);
+    }
 
-    const EventListenerVector& mousewheelListeners = getEventListeners(eventNames().mousewheelEvent);
-    for (size_t i = 0; i < mousewheelListeners.size(); ++i) {
+    unsigned numWheelEventHandlers = getEventListeners(eventNames().mousewheelEvent).size()
+        + getEventListeners(eventNames().wheelEvent).size();
+    for (unsigned i = 0; i < numWheelEventHandlers; ++i) {
         oldDocument->didRemoveWheelEventHandler();
         document().didAddWheelEventHandler();
     }
 
-    const EventListenerVector& wheelListeners = getEventListeners(eventNames().wheelEvent);
-    for (size_t i = 0; i < wheelListeners.size(); ++i) {
-        oldDocument->didRemoveWheelEventHandler();
-        document().didAddWheelEventHandler();
+    unsigned numTouchEventHandlers = 0;
+    for (auto& name : eventNames().touchEventNames())
+        numTouchEventHandlers += getEventListeners(name).size();
+    for (unsigned i = 0; i < numTouchEventHandlers; ++i) {
+        oldDocument->didRemoveTouchEventHandler(this);
+        document().didAddTouchEventHandler(this);
     }
 
-    Vector<AtomicString> touchEventNames = eventNames().touchEventNames();
-    for (size_t i = 0; i < touchEventNames.size(); ++i) {
-        const EventListenerVector& listeners = getEventListeners(touchEventNames[i]);
-        for (size_t j = 0; j < listeners.size(); ++j) {
-            oldDocument->didRemoveTouchEventHandler(this);
-            document().didAddTouchEventHandler(this);
-        }
-    }
-
-    if (Vector<std::unique_ptr<MutationObserverRegistration>>* registry = mutationObserverRegistry()) {
-        for (const auto& registration : *registry)
+    if (auto* registry = mutationObserverRegistry()) {
+        for (auto& registration : *registry)
             document().addMutationObserverTypes(registration->mutationTypes());
     }
 
-    if (HashSet<MutationObserverRegistration*>* transientRegistry = transientMutationObserverRegistry()) {
-        for (const auto& registration : *transientRegistry)
+    if (auto* transientRegistry = transientMutationObserverRegistry()) {
+        for (auto& registration : *transientRegistry)
             document().addMutationObserverTypes(registration->mutationTypes());
     }
 }
@@ -2222,7 +2215,7 @@ bool Node::inRenderedDocument() const
 
 } // namespace WebCore
 
-#ifndef NDEBUG
+#if ENABLE(TREE_DEBUGGING)
 
 void showTree(const WebCore::Node* node)
 {
@@ -2236,4 +2229,4 @@ void showNodePath(const WebCore::Node* node)
         node->showNodePathForThis();
 }
 
-#endif
+#endif // ENABLE(TREE_DEBUGGING)

@@ -30,8 +30,6 @@
 #include <CrossThreadTask.h>
 #include "ResourceRequestBase.h"
 
-#include <wtf/PassOwnPtr.h>
-
 typedef const struct _CFURLRequest* CFURLRequestRef;
 
 namespace WebCore {
@@ -81,8 +79,8 @@ namespace WebCore {
         void doUpdatePlatformHTTPBody() { }
         void doUpdateResourceHTTPBody() { }
 
-        PassOwnPtr<CrossThreadResourceRequestData> doPlatformCopyData(PassOwnPtr<CrossThreadResourceRequestData> data) const { return data; }
-        void doPlatformAdopt(PassOwnPtr<CrossThreadResourceRequestData>) { }
+        std::unique_ptr<CrossThreadResourceRequestData> doPlatformCopyData(std::unique_ptr<CrossThreadResourceRequestData> data) const { return data; }
+        void doPlatformAdopt(std::unique_ptr<CrossThreadResourceRequestData>) { }
  
         static bool s_httpPipeliningEnabled;
     };
