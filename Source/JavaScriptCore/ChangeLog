@@ -1,3 +1,91 @@
+2015-01-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        String includes methods perform toString on searchString before toInt32 on a offset
+        https://bugs.webkit.org/show_bug.cgi?id=140031
+
+        Reviewed by Darin Adler.
+
+        * runtime/StringPrototype.cpp:
+        (JSC::stringProtoFuncStartsWith):
+        (JSC::stringProtoFuncEndsWith):
+        (JSC::stringProtoFuncIncludes):
+
+2015-01-01  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Change to return std::unique_ptr<> in fooCreate()
+        https://bugs.webkit.org/show_bug.cgi?id=139983
+
+        Reviewed by Darin Adler.
+
+        To avoid unnecessary std::unique_ptr<> casting, fooCreate() returns std::unique_ptr<> directly.
+
+        * create_regex_tables:
+        * yarr/YarrPattern.h:
+        (JSC::Yarr::YarrPattern::reset):
+        (JSC::Yarr::YarrPattern::newlineCharacterClass):
+        (JSC::Yarr::YarrPattern::digitsCharacterClass):
+        (JSC::Yarr::YarrPattern::spacesCharacterClass):
+        (JSC::Yarr::YarrPattern::wordcharCharacterClass):
+        (JSC::Yarr::YarrPattern::nondigitsCharacterClass):
+        (JSC::Yarr::YarrPattern::nonspacesCharacterClass):
+        (JSC::Yarr::YarrPattern::nonwordcharCharacterClass):
+
+2015-01-01  Jeff Miller  <jeffm@apple.com>
+
+        Update user-visible copyright strings to include 2015
+        https://bugs.webkit.org/show_bug.cgi?id=139880
+
+        Reviewed by Darin Adler.
+
+        * Info.plist:
+
+2015-01-01  Darin Adler  <darin@apple.com>
+
+        We often misspell identifier as "identifer"
+        https://bugs.webkit.org/show_bug.cgi?id=140025
+
+        Reviewed by Michael Saboff.
+
+        * runtime/ArrayConventions.h: Fix it.
+
+2014-12-29  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Move JavaScriptCore/yarr to std::unique_ptr
+        https://bugs.webkit.org/show_bug.cgi?id=139621
+
+        Reviewed by Anders Carlsson.
+
+        Final clean up OwnPtr|PassOwnPtr in JavaScriptCore/yarr.
+
+        * yarr/YarrInterpreter.cpp:
+        (JSC::Yarr::ByteCompiler::atomParenthesesSubpatternEnd):
+        * yarr/YarrInterpreter.h:
+        (JSC::Yarr::BytecodePattern::BytecodePattern):
+        * yarr/YarrJIT.cpp:
+        (JSC::Yarr::YarrGenerator::opCompileParenthesesSubpattern):
+        (JSC::Yarr::YarrGenerator::opCompileParentheticalAssertion):
+        (JSC::Yarr::YarrGenerator::opCompileBody):
+        * yarr/YarrPattern.cpp:
+        (JSC::Yarr::CharacterClassConstructor::charClass):
+        (JSC::Yarr::YarrPatternConstructor::YarrPatternConstructor):
+        (JSC::Yarr::YarrPatternConstructor::reset):
+        (JSC::Yarr::YarrPatternConstructor::atomPatternCharacter):
+        (JSC::Yarr::YarrPatternConstructor::atomCharacterClassEnd):
+        (JSC::Yarr::YarrPatternConstructor::atomParenthesesSubpatternBegin):
+        (JSC::Yarr::YarrPatternConstructor::atomParentheticalAssertionBegin):
+        (JSC::Yarr::YarrPatternConstructor::copyDisjunction):
+        (JSC::Yarr::YarrPatternConstructor::checkForTerminalParentheses):
+        (JSC::Yarr::YarrPatternConstructor::optimizeDotStarWrappedExpressions):
+        * yarr/YarrPattern.h:
+        (JSC::Yarr::PatternDisjunction::addNewAlternative):
+        (JSC::Yarr::YarrPattern::newlineCharacterClass):
+        (JSC::Yarr::YarrPattern::digitsCharacterClass):
+        (JSC::Yarr::YarrPattern::spacesCharacterClass):
+        (JSC::Yarr::YarrPattern::wordcharCharacterClass):
+        (JSC::Yarr::YarrPattern::nondigitsCharacterClass):
+        (JSC::Yarr::YarrPattern::nonspacesCharacterClass):
+        (JSC::Yarr::YarrPattern::nonwordcharCharacterClass):
+
 2014-12-26  Dan Bernstein  <mitz@apple.com>
 
         <rdar://problem/19348208> REGRESSION (r177027): iOS builds use the wrong toolchain

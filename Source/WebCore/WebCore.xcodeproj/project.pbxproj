@@ -489,7 +489,6 @@
 		0F15DA8A0F3AAEE70000CE47 /* AnimationControllerPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F15DA890F3AAEE70000CE47 /* AnimationControllerPrivate.h */; };
 		0F1774801378B772009DA76A /* ScrollAnimatorIOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F17747E1378B771009DA76A /* ScrollAnimatorIOS.h */; };
 		0F1774811378B772009DA76A /* ScrollAnimatorIOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0F17747F1378B772009DA76A /* ScrollAnimatorIOS.mm */; };
-		0F29C16E1300C2E2002D794E /* AccessibilityAllInOne.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F29C16D1300C2E2002D794E /* AccessibilityAllInOne.cpp */; };
 		0F3C725E1974874B00AEDD0C /* ImageSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F3C725D1974874B00AEDD0C /* ImageSource.cpp */; };
 		0F3DD44F12F5EA1B000D9190 /* ShadowBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F3DD44D12F5EA1B000D9190 /* ShadowBlur.cpp */; };
 		0F3DD45012F5EA1B000D9190 /* ShadowBlur.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F3DD44E12F5EA1B000D9190 /* ShadowBlur.h */; };
@@ -1385,12 +1384,32 @@
 		37E3524D12450C6600BAF5D9 /* InputType.h in Headers */ = {isa = PBXBuildFile; fileRef = 37E3524C12450C6600BAF5D9 /* InputType.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		37E65950163B10C200EB4574 /* SimpleFontDataIOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37E6594F163B10C200EB4574 /* SimpleFontDataIOS.mm */; };
 		37F567CE165358F400DDE92B /* PopupOpeningObserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 3772B09516535856000A49CA /* PopupOpeningObserver.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		37F57AB91A50726900876F98 /* AccessibilityARIAGrid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CA9D131822EC00D12F2A /* AccessibilityARIAGrid.cpp */; };
+		37F57ABA1A50726F00876F98 /* AccessibilityARIAGridCell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CA9E131822EC00D12F2A /* AccessibilityARIAGridCell.cpp */; };
+		37F57ABB1A50727300876F98 /* AccessibilityARIAGridRow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CA9F131822EC00D12F2A /* AccessibilityARIAGridRow.cpp */; };
+		37F57ABC1A50727700876F98 /* AccessibilityImageMapLink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA0131822EC00D12F2A /* AccessibilityImageMapLink.cpp */; };
+		37F57ABD1A50727A00876F98 /* AccessibilityList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA1131822EC00D12F2A /* AccessibilityList.cpp */; };
+		37F57ABE1A50727E00876F98 /* AccessibilityListBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA2131822EC00D12F2A /* AccessibilityListBox.cpp */; };
+		37F57ABF1A50728100876F98 /* AccessibilityListBoxOption.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA3131822EC00D12F2A /* AccessibilityListBoxOption.cpp */; };
+		37F57AC01A50728400876F98 /* AccessibilityMediaControls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA4131822EC00D12F2A /* AccessibilityMediaControls.cpp */; };
+		37F57AC11A50728700876F98 /* AccessibilityNodeObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2985709215CC532D006355CD /* AccessibilityNodeObject.cpp */; };
+		37F57AC21A50728B00876F98 /* AccessibilityObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA5131822EC00D12F2A /* AccessibilityObject.cpp */; };
+		37F57AC31A50728F00876F98 /* AccessibilityProgressIndicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A409C982116D0DDD007197BD /* AccessibilityProgressIndicator.cpp */; };
+		37F57AC41A50729300876F98 /* AccessibilityRenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA6131822EC00D12F2A /* AccessibilityRenderObject.cpp */; };
+		37F57AC51A50729700876F98 /* AccessibilityScrollbar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA7131822EC00D12F2A /* AccessibilityScrollbar.cpp */; };
+		37F57AC61A50729B00876F98 /* AccessibilityScrollView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA8131822EC00D12F2A /* AccessibilityScrollView.cpp */; };
+		37F57AC71A5072A100876F98 /* AccessibilitySearchFieldButtons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 415B3A6917CBE172000FCCE8 /* AccessibilitySearchFieldButtons.cpp */; };
+		37F57AC81A5072BC00876F98 /* AccessibilitySlider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAA9131822EC00D12F2A /* AccessibilitySlider.cpp */; };
+		37F57AC91A5072CC00876F98 /* AccessibilitySVGRoot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAC08CF015F941FC00F1E188 /* AccessibilitySVGRoot.cpp */; };
+		37F57ACA1A5072CF00876F98 /* AccessibilityTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAAA131822EC00D12F2A /* AccessibilityTable.cpp */; };
+		37F57ACB1A5072D100876F98 /* AccessibilityTableCell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAAB131822EC00D12F2A /* AccessibilityTableCell.cpp */; };
+		37F57ACC1A5072D500876F98 /* AccessibilityTableColumn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAAC131822EC00D12F2A /* AccessibilityTableColumn.cpp */; };
+		37F57ACD1A5072D700876F98 /* AccessibilityTableHeaderContainer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAAD131822EC00D12F2A /* AccessibilityTableHeaderContainer.cpp */; };
+		37F57ACE1A5072DA00876F98 /* AccessibilityTableRow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAAE131822EC00D12F2A /* AccessibilityTableRow.cpp */; };
+		37F57ACF1A5072DD00876F98 /* AXObjectCache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2981CAAF131822EC00D12F2A /* AXObjectCache.cpp */; };
 		37F818FD0D657606005E1F05 /* WebCoreURLResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 37F818FB0D657606005E1F05 /* WebCoreURLResponse.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		37F818FE0D657606005E1F05 /* WebCoreURLResponse.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37F818FC0D657606005E1F05 /* WebCoreURLResponse.mm */; };
 		37FD4298118368460093C029 /* TreeDepthLimit.h in Headers */ = {isa = PBXBuildFile; fileRef = 37FD4297118368460093C029 /* TreeDepthLimit.h */; };
-		3AB02D2A12D4F91600FBB694 /* StorageTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 3AB02D2812D4F91600FBB694 /* StorageTracker.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		3AB02D2B12D4F91600FBB694 /* StorageTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3AB02D2912D4F91600FBB694 /* StorageTracker.cpp */; };
-		3AC3680012EF7A09006A3D6F /* StorageTrackerClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 3AC367FE12EF7A09006A3D6F /* StorageTrackerClient.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		3AC648B2129E146500C3EB25 /* EditingBoundary.h in Headers */ = {isa = PBXBuildFile; fileRef = 3AC648B1129E146500C3EB25 /* EditingBoundary.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		3C244FEAA375AC633F88BE6F /* RenderLayerModelObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 3C244FE4A375AC633F88BE6F /* RenderLayerModelObject.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		3C244FEBA375AC633F88BE6F /* RenderLayerModelObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C244FE5A375AC633F88BE6F /* RenderLayerModelObject.cpp */; };
@@ -1852,8 +1871,6 @@
 		511EF2CF17F0FDF100E4FA16 /* JSIDBAnyCustom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511EF2CC17F0FDF100E4FA16 /* JSIDBAnyCustom.cpp */; };
 		511EF2D017F0FDF100E4FA16 /* JSIDBDatabaseCustom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511EF2CD17F0FDF100E4FA16 /* JSIDBDatabaseCustom.cpp */; };
 		511EF2D117F0FDF100E4FA16 /* JSIDBObjectStoreCustom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511EF2CE17F0FDF100E4FA16 /* JSIDBObjectStoreCustom.cpp */; };
-		511F23190DC160DA004F0032 /* StorageThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511F23150DC160DA004F0032 /* StorageThread.cpp */; };
-		511F231A0DC160DA004F0032 /* StorageThread.h in Headers */ = {isa = PBXBuildFile; fileRef = 511F23160DC160DA004F0032 /* StorageThread.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		5123AF181890A4CA0031CDC9 /* IDBKeyRangeData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5123AF161890A4CA0031CDC9 /* IDBKeyRangeData.cpp */; };
 		5123AF191890A4CA0031CDC9 /* IDBKeyRangeData.h in Headers */ = {isa = PBXBuildFile; fileRef = 5123AF171890A4CA0031CDC9 /* IDBKeyRangeData.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		5123AF1D18918AE40031CDC9 /* IDBGetResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 5123AF1C18918AE40031CDC9 /* IDBGetResult.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -5544,23 +5561,13 @@
 		C400D10918F1C8F60090D863 /* EventLoopInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C400D10818F1C8F60090D863 /* EventLoopInput.cpp */; };
 		C4CD629A18383766007EBAF1 /* FrameSnapshotting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4CD629818383766007EBAF1 /* FrameSnapshotting.cpp */; };
 		C4CD629B18383766007EBAF1 /* FrameSnapshotting.h in Headers */ = {isa = PBXBuildFile; fileRef = C4CD629918383766007EBAF1 /* FrameSnapshotting.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C50B561612119D23008B46E0 /* GroupSettings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C50B561412119D23008B46E0 /* GroupSettings.cpp */; };
-		C50B561712119D23008B46E0 /* GroupSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = C50B561512119D23008B46E0 /* GroupSettings.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		C50D0E830FF4272900AC2644 /* StorageNamespace.h in Headers */ = {isa = PBXBuildFile; fileRef = C50D0E810FF4272900AC2644 /* StorageNamespace.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C5102D940FD9AA2D00FAFF04 /* StorageSyncManager.h in Headers */ = {isa = PBXBuildFile; fileRef = C5102D920FD9AA2D00FAFF04 /* StorageSyncManager.h */; };
-		C5102D950FD9AA2D00FAFF04 /* StorageSyncManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5102D930FD9AA2D00FAFF04 /* StorageSyncManager.cpp */; };
-		C5102ECF0FD9EF8C00FAFF04 /* StorageAreaSync.h in Headers */ = {isa = PBXBuildFile; fileRef = C5102ECD0FD9EF8C00FAFF04 /* StorageAreaSync.h */; };
-		C5102ED00FD9EF8C00FAFF04 /* StorageAreaSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5102ECE0FD9EF8C00FAFF04 /* StorageAreaSync.cpp */; };
 		C5137CF211A58378004ADB99 /* JSDOMStringList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5137CF011A58378004ADB99 /* JSDOMStringList.cpp */; };
 		C5137CF311A58378004ADB99 /* JSDOMStringList.h in Headers */ = {isa = PBXBuildFile; fileRef = C5137CF111A58378004ADB99 /* JSDOMStringList.h */; };
-		C5160EEA1004543A00A7CEE2 /* StorageAreaImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5160EE81004543A00A7CEE2 /* StorageAreaImpl.cpp */; };
-		C5160EEB1004543A00A7CEE2 /* StorageAreaImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = C5160EE91004543A00A7CEE2 /* StorageAreaImpl.h */; };
 		C5278B0C17F212EA003A2998 /* PlatformPasteboardIOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = C5278B0B17F212EA003A2998 /* PlatformPasteboardIOS.mm */; };
 		C544274B11A57E7A0063A749 /* DOMStringList.h in Headers */ = {isa = PBXBuildFile; fileRef = C544274911A57E7A0063A749 /* DOMStringList.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		C55610F111A704EB00B82D27 /* DOMStringList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C55610F011A704EB00B82D27 /* DOMStringList.cpp */; };
 		C55C7BA11718AFBA001327E4 /* RenderThemeIOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = C55C7BA01718AFBA001327E4 /* RenderThemeIOS.mm */; };
-		C55E38BF10040D5D00A56BDB /* StorageNamespaceImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = C55E38BB10040D5D00A56BDB /* StorageNamespaceImpl.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C55E38C010040D5D00A56BDB /* StorageNamespaceImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C55E38BC10040D5D00A56BDB /* StorageNamespaceImpl.cpp */; };
 		C572EE1F1201C9BC007D8F82 /* JSIDBIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = C572EE1D1201C9BC007D8F82 /* JSIDBIndex.h */; };
 		C57FEDE11212EE9C0097BE65 /* FileSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C57FEDE01212EE9C0097BE65 /* FileSystem.cpp */; };
 		C58361A91744523F00173511 /* FontServicesIOS.h in Headers */ = {isa = PBXBuildFile; fileRef = C58361A71744523F00173511 /* FontServicesIOS.h */; };
@@ -7467,7 +7474,6 @@
 		0F15DA890F3AAEE70000CE47 /* AnimationControllerPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AnimationControllerPrivate.h; path = animation/AnimationControllerPrivate.h; sourceTree = "<group>"; };
 		0F17747E1378B771009DA76A /* ScrollAnimatorIOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ScrollAnimatorIOS.h; path = ios/ScrollAnimatorIOS.h; sourceTree = "<group>"; };
 		0F17747F1378B772009DA76A /* ScrollAnimatorIOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ScrollAnimatorIOS.mm; path = ios/ScrollAnimatorIOS.mm; sourceTree = "<group>"; };
-		0F29C16D1300C2E2002D794E /* AccessibilityAllInOne.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AccessibilityAllInOne.cpp; sourceTree = "<group>"; };
 		0F3C725D1974874B00AEDD0C /* ImageSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImageSource.cpp; sourceTree = "<group>"; };
 		0F3DD44D12F5EA1B000D9190 /* ShadowBlur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ShadowBlur.cpp; sourceTree = "<group>"; };
 		0F3DD44E12F5EA1B000D9190 /* ShadowBlur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShadowBlur.h; sourceTree = "<group>"; };
@@ -8453,9 +8459,6 @@
 		37F818FC0D657606005E1F05 /* WebCoreURLResponse.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = WebCoreURLResponse.mm; sourceTree = "<group>"; };
 		37FC96DA1104ED71003E1FAD /* TrailingFloatsRootInlineBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrailingFloatsRootInlineBox.h; sourceTree = "<group>"; };
 		37FD4297118368460093C029 /* TreeDepthLimit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TreeDepthLimit.h; sourceTree = "<group>"; };
-		3AB02D2812D4F91600FBB694 /* StorageTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageTracker.h; sourceTree = "<group>"; };
-		3AB02D2912D4F91600FBB694 /* StorageTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageTracker.cpp; sourceTree = "<group>"; };
-		3AC367FE12EF7A09006A3D6F /* StorageTrackerClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageTrackerClient.h; sourceTree = "<group>"; };
 		3AC648B1129E146500C3EB25 /* EditingBoundary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditingBoundary.h; sourceTree = "<group>"; };
 		3C244FE4A375AC633F88BE6F /* RenderLayerModelObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderLayerModelObject.h; sourceTree = "<group>"; };
 		3C244FE5A375AC633F88BE6F /* RenderLayerModelObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RenderLayerModelObject.cpp; sourceTree = "<group>"; };
@@ -8979,8 +8982,6 @@
 		511EF2CC17F0FDF100E4FA16 /* JSIDBAnyCustom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSIDBAnyCustom.cpp; sourceTree = "<group>"; };
 		511EF2CD17F0FDF100E4FA16 /* JSIDBDatabaseCustom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSIDBDatabaseCustom.cpp; sourceTree = "<group>"; };
 		511EF2CE17F0FDF100E4FA16 /* JSIDBObjectStoreCustom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSIDBObjectStoreCustom.cpp; sourceTree = "<group>"; };
-		511F23150DC160DA004F0032 /* StorageThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageThread.cpp; sourceTree = "<group>"; };
-		511F23160DC160DA004F0032 /* StorageThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageThread.h; sourceTree = "<group>"; };
 		5123AF161890A4CA0031CDC9 /* IDBKeyRangeData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IDBKeyRangeData.cpp; sourceTree = "<group>"; };
 		5123AF171890A4CA0031CDC9 /* IDBKeyRangeData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IDBKeyRangeData.h; sourceTree = "<group>"; };
 		5123AF1C18918AE40031CDC9 /* IDBGetResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IDBGetResult.h; sourceTree = "<group>"; };
@@ -13019,24 +13020,14 @@
 		C400D10818F1C8F60090D863 /* EventLoopInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventLoopInput.cpp; sourceTree = "<group>"; };
 		C4CD629818383766007EBAF1 /* FrameSnapshotting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FrameSnapshotting.cpp; sourceTree = "<group>"; };
 		C4CD629918383766007EBAF1 /* FrameSnapshotting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrameSnapshotting.h; sourceTree = "<group>"; };
-		C50B561412119D23008B46E0 /* GroupSettings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupSettings.cpp; sourceTree = "<group>"; };
-		C50B561512119D23008B46E0 /* GroupSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupSettings.h; sourceTree = "<group>"; };
 		C50D0E810FF4272900AC2644 /* StorageNamespace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageNamespace.h; sourceTree = "<group>"; };
-		C5102D920FD9AA2D00FAFF04 /* StorageSyncManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageSyncManager.h; sourceTree = "<group>"; };
-		C5102D930FD9AA2D00FAFF04 /* StorageSyncManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageSyncManager.cpp; sourceTree = "<group>"; };
-		C5102ECD0FD9EF8C00FAFF04 /* StorageAreaSync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageAreaSync.h; sourceTree = "<group>"; };
-		C5102ECE0FD9EF8C00FAFF04 /* StorageAreaSync.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageAreaSync.cpp; sourceTree = "<group>"; };
 		C5137CF011A58378004ADB99 /* JSDOMStringList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSDOMStringList.cpp; sourceTree = "<group>"; };
 		C5137CF111A58378004ADB99 /* JSDOMStringList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSDOMStringList.h; sourceTree = "<group>"; };
-		C5160EE81004543A00A7CEE2 /* StorageAreaImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageAreaImpl.cpp; sourceTree = "<group>"; };
-		C5160EE91004543A00A7CEE2 /* StorageAreaImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageAreaImpl.h; sourceTree = "<group>"; };
 		C5278B0B17F212EA003A2998 /* PlatformPasteboardIOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PlatformPasteboardIOS.mm; path = ios/PlatformPasteboardIOS.mm; sourceTree = "<group>"; };
 		C544274911A57E7A0063A749 /* DOMStringList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOMStringList.h; sourceTree = "<group>"; };
 		C544274A11A57E7A0063A749 /* DOMStringList.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DOMStringList.idl; sourceTree = "<group>"; };
 		C55610F011A704EB00B82D27 /* DOMStringList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DOMStringList.cpp; sourceTree = "<group>"; };
 		C55C7BA01718AFBA001327E4 /* RenderThemeIOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RenderThemeIOS.mm; sourceTree = "<group>"; };
-		C55E38BB10040D5D00A56BDB /* StorageNamespaceImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageNamespaceImpl.h; sourceTree = "<group>"; };
-		C55E38BC10040D5D00A56BDB /* StorageNamespaceImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageNamespaceImpl.cpp; sourceTree = "<group>"; };
 		C572EE1D1201C9BC007D8F82 /* JSIDBIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSIDBIndex.h; sourceTree = "<group>"; };
 		C57FEDE01212EE9C0097BE65 /* FileSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystem.cpp; sourceTree = "<group>"; };
 		C58361A71744523F00173511 /* FontServicesIOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FontServicesIOS.h; sourceTree = "<group>"; };
@@ -15146,10 +15137,6 @@
 				51E3F9C40DA059DC00250911 /* Storage.h */,
 				51E3F9D10DA05D7100250911 /* Storage.idl */,
 				51BE37DE0DAEE00E001085FC /* StorageArea.h */,
-				C5160EE81004543A00A7CEE2 /* StorageAreaImpl.cpp */,
-				C5160EE91004543A00A7CEE2 /* StorageAreaImpl.h */,
-				C5102ECE0FD9EF8C00FAFF04 /* StorageAreaSync.cpp */,
-				C5102ECD0FD9EF8C00FAFF04 /* StorageAreaSync.h */,
 				51E0BABA0DA5547100A9E417 /* StorageEvent.cpp */,
 				51E0BAB90DA5547100A9E417 /* StorageEvent.h */,
 				51E0BABD0DA5548400A9E417 /* StorageEvent.idl */,
@@ -15158,17 +15145,8 @@
 				51E0BB370DA5ACB600A9E417 /* StorageMap.cpp */,
 				51E0BB360DA5ACB600A9E417 /* StorageMap.h */,
 				C50D0E810FF4272900AC2644 /* StorageNamespace.h */,
-				C55E38BC10040D5D00A56BDB /* StorageNamespaceImpl.cpp */,
-				C55E38BB10040D5D00A56BDB /* StorageNamespaceImpl.h */,
 				1A3763691A2E68BB009A7EE2 /* StorageNamespaceProvider.cpp */,
 				1A37636A1A2E68BB009A7EE2 /* StorageNamespaceProvider.h */,
-				C5102D930FD9AA2D00FAFF04 /* StorageSyncManager.cpp */,
-				C5102D920FD9AA2D00FAFF04 /* StorageSyncManager.h */,
-				511F23150DC160DA004F0032 /* StorageThread.cpp */,
-				511F23160DC160DA004F0032 /* StorageThread.h */,
-				3AB02D2912D4F91600FBB694 /* StorageTracker.cpp */,
-				3AB02D2812D4F91600FBB694 /* StorageTracker.h */,
-				3AC367FE12EF7A09006A3D6F /* StorageTrackerClient.h */,
 			);
 			indentWidth = 4;
 			path = storage;
@@ -15411,7 +15389,6 @@
 			children = (
 				AAA728EF16D1D8BC00D3BBC6 /* ios */,
 				29A812050FBB9B5200510293 /* mac */,
-				0F29C16D1300C2E2002D794E /* AccessibilityAllInOne.cpp */,
 				2981CA9D131822EC00D12F2A /* AccessibilityARIAGrid.cpp */,
 				29A812160FBB9C1D00510293 /* AccessibilityARIAGrid.h */,
 				2981CA9E131822EC00D12F2A /* AccessibilityARIAGridCell.cpp */,
@@ -16684,8 +16661,6 @@
 				65A21483097A3F5300B9050A /* FrameTree.h */,
 				65CBFEF70974F607001DAC25 /* FrameView.cpp */,
 				65CBFEF80974F607001DAC25 /* FrameView.h */,
-				C50B561412119D23008B46E0 /* GroupSettings.cpp */,
-				C50B561512119D23008B46E0 /* GroupSettings.h */,
 				BC94D1500C275C8B006BC617 /* History.cpp */,
 				BC94D1510C275C8B006BC617 /* History.h */,
 				BC94D1520C275C8B006BC617 /* History.idl */,
@@ -24524,7 +24499,6 @@
 				A12705C31656BD6500C2E27C /* GridPosition.h in Headers */,
 				CDF7483F18FEBCEC0006ECC0 /* GridResolvedPosition.h in Headers */,
 				A12A1050166444FD008FA311 /* GridTrackSize.h in Headers */,
-				C50B561712119D23008B46E0 /* GroupSettings.h in Headers */,
 				8482B7461198C35400BFB005 /* HashChangeEvent.h in Headers */,
 				A8748BE012CBF2DC001FBA41 /* HashTools.h in Headers */,
 				F55B3DC01251F12D003EF269 /* HiddenInputType.h in Headers */,
@@ -26209,17 +26183,10 @@
 				A5AFB350115151A700B045CB /* StepRange.h in Headers */,
 				1AC2D845171734A100652FC0 /* Storage.h in Headers */,
 				51BE37E00DAEE00E001085FC /* StorageArea.h in Headers */,
-				C5160EEB1004543A00A7CEE2 /* StorageAreaImpl.h in Headers */,
-				C5102ECF0FD9EF8C00FAFF04 /* StorageAreaSync.h in Headers */,
 				51E0BABB0DA5547100A9E417 /* StorageEvent.h in Headers */,
 				C5EBDD84105EDDEC0056816F /* StorageEventDispatcher.h in Headers */,
 				51E0BB380DA5ACB600A9E417 /* StorageMap.h in Headers */,
 				C50D0E830FF4272900AC2644 /* StorageNamespace.h in Headers */,
-				C55E38BF10040D5D00A56BDB /* StorageNamespaceImpl.h in Headers */,
-				C5102D940FD9AA2D00FAFF04 /* StorageSyncManager.h in Headers */,
-				511F231A0DC160DA004F0032 /* StorageThread.h in Headers */,
-				3AB02D2A12D4F91600FBB694 /* StorageTracker.h in Headers */,
-				3AC3680012EF7A09006A3D6F /* StorageTrackerClient.h in Headers */,
 				81AC6C36131C57D30009A7E0 /* StringCallback.h in Headers */,
 				B23540F30D00782E002382FA /* StringTruncator.h in Headers */,
 				9B6C41531344949000085B62 /* StringWithDirection.h in Headers */,
@@ -27217,14 +27184,35 @@
 			buildActionMask = 2147483647;
 			files = (
 				41E1B1D00FF5986900576B3B /* AbstractWorker.cpp in Sources */,
-				0F29C16E1300C2E2002D794E /* AccessibilityAllInOne.cpp in Sources */,
+				37F57AB91A50726900876F98 /* AccessibilityARIAGrid.cpp in Sources */,
+				37F57ABA1A50726F00876F98 /* AccessibilityARIAGridCell.cpp in Sources */,
+				37F57ABB1A50727300876F98 /* AccessibilityARIAGridRow.cpp in Sources */,
+				37F57ABC1A50727700876F98 /* AccessibilityImageMapLink.cpp in Sources */,
+				37F57ABD1A50727A00876F98 /* AccessibilityList.cpp in Sources */,
+				37F57ABE1A50727E00876F98 /* AccessibilityListBox.cpp in Sources */,
+				37F57ABF1A50728100876F98 /* AccessibilityListBoxOption.cpp in Sources */,
+				37F57AC01A50728400876F98 /* AccessibilityMediaControls.cpp in Sources */,
 				76CDD2F21103DA6600680521 /* AccessibilityMenuList.cpp in Sources */,
 				76CDD2F61103DA6600680521 /* AccessibilityMenuListOption.cpp in Sources */,
 				76CDD2F41103DA6600680521 /* AccessibilityMenuListPopup.cpp in Sources */,
 				29ACB214143E7498006BCA5F /* AccessibilityMockObject.cpp in Sources */,
+				37F57AC11A50728700876F98 /* AccessibilityNodeObject.cpp in Sources */,
+				37F57AC21A50728B00876F98 /* AccessibilityObject.cpp in Sources */,
 				AAA728F616D1D8BC00D3BBC6 /* AccessibilityObjectIOS.mm in Sources */,
 				29A812480FBB9CA900510293 /* AccessibilityObjectMac.mm in Sources */,
+				37F57AC31A50728F00876F98 /* AccessibilityProgressIndicator.cpp in Sources */,
+				37F57AC41A50729300876F98 /* AccessibilityRenderObject.cpp in Sources */,
+				37F57AC91A5072CC00876F98 /* AccessibilitySVGRoot.cpp in Sources */,
+				37F57AC61A50729B00876F98 /* AccessibilityScrollView.cpp in Sources */,
+				37F57AC51A50729700876F98 /* AccessibilityScrollbar.cpp in Sources */,
+				37F57AC71A5072A100876F98 /* AccessibilitySearchFieldButtons.cpp in Sources */,
+				37F57AC81A5072BC00876F98 /* AccessibilitySlider.cpp in Sources */,
 				29D7BCF61444AF580070619C /* AccessibilitySpinButton.cpp in Sources */,
+				37F57ACA1A5072CF00876F98 /* AccessibilityTable.cpp in Sources */,
+				37F57ACB1A5072D100876F98 /* AccessibilityTableCell.cpp in Sources */,
+				37F57ACC1A5072D500876F98 /* AccessibilityTableColumn.cpp in Sources */,
+				37F57ACD1A5072D700876F98 /* AccessibilityTableHeaderContainer.cpp in Sources */,
+				37F57ACE1A5072DA00876F98 /* AccessibilityTableRow.cpp in Sources */,
 				B5D31DFA11CF610B009F22B4 /* ActiveDOMCallback.cpp in Sources */,
 				E1C4DE6E0EA75C650023CCD6 /* ActiveDOMObject.cpp in Sources */,
 				84D0C4041115F1D40018AA34 /* AffineTransform.cpp in Sources */,
@@ -27304,6 +27292,7 @@
 				070363E7181A1CDC00C074A5 /* AVVideoCaptureSource.mm in Sources */,
 				F478755519983AFF0024A287 /* AxisScrollSnapAnimator.mm in Sources */,
 				F45C231D1995B73B00A6E2E3 /* AxisScrollSnapOffsets.cpp in Sources */,
+				37F57ACF1A5072DD00876F98 /* AXObjectCache.cpp in Sources */,
 				AAA728F916D1D8BC00D3BBC6 /* AXObjectCacheIOS.mm in Sources */,
 				29A8124B0FBB9CA900510293 /* AXObjectCacheMac.mm in Sources */,
 				BCA8C81F11E3D36900812FB7 /* BackForwardController.cpp in Sources */,
@@ -28008,7 +27997,6 @@
 				0FA24D79162DF91900A3F4C0 /* GraphicsLayerUpdater.cpp in Sources */,
 				B2A015AA0AF6CD53006BCE0E /* GraphicsTypes.cpp in Sources */,
 				CDF7483E18FEBCEC0006ECC0 /* GridResolvedPosition.cpp in Sources */,
-				C50B561612119D23008B46E0 /* GroupSettings.cpp in Sources */,
 				F55B3DBF1251F12D003EF269 /* HiddenInputType.cpp in Sources */,
 				51A9D9F3195B9503001B2B5C /* HIDGamepad.cpp in Sources */,
 				5179CE36195CAC7E0019C198 /* HIDGamepadProvider.cpp in Sources */,
@@ -29630,15 +29618,9 @@
 				BC7FA62E0D1F0EFF00DB22A9 /* StaticNodeList.cpp in Sources */,
 				A5AFB34F115151A700B045CB /* StepRange.cpp in Sources */,
 				51E3F9C70DA059DC00250911 /* Storage.cpp in Sources */,
-				C5160EEA1004543A00A7CEE2 /* StorageAreaImpl.cpp in Sources */,
-				C5102ED00FD9EF8C00FAFF04 /* StorageAreaSync.cpp in Sources */,
 				51E0BABC0DA5547100A9E417 /* StorageEvent.cpp in Sources */,
 				C5E9B67710697E1300C7BB1A /* StorageEventDispatcher.cpp in Sources */,
 				51E0BB390DA5ACB600A9E417 /* StorageMap.cpp in Sources */,
-				C55E38C010040D5D00A56BDB /* StorageNamespaceImpl.cpp in Sources */,
-				C5102D950FD9AA2D00FAFF04 /* StorageSyncManager.cpp in Sources */,
-				511F23190DC160DA004F0032 /* StorageThread.cpp in Sources */,
-				3AB02D2B12D4F91600FBB694 /* StorageTracker.cpp in Sources */,
 				8102C5881325BB1100DDE67A /* StringCallback.cpp in Sources */,
 				B23540F20D00782E002382FA /* StringTruncator.cpp in Sources */,
 				BC5EB6A20E81DC4F00B25965 /* StyleBackgroundData.cpp in Sources */,

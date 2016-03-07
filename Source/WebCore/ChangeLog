@@ -1,3 +1,605 @@
+2015-01-01  Sam Weinig  <sam@webkit.org>
+
+        Remove GroupSettings
+        https://bugs.webkit.org/show_bug.cgi?id=140037
+
+        Reviewed by Dan Bernstein.
+
+        Nothing sets the values in GroupSettings and nothing uses them.
+        - The indexedDBDatabasePath is accessed and sent to the IndexedDB backend,
+          but the backend then proceeds to not use it.
+
+        * CMakeLists.txt:
+        * Modules/indexeddb/IDBFactory.cpp:
+        (WebCore::IDBFactory::getDatabaseNames):
+        (WebCore::IDBFactory::deleteDatabase):
+        * Modules/indexeddb/IDBFactoryBackendInterface.cpp:
+        (WebCore::IDBFactoryBackendInterface::create):
+        * Modules/indexeddb/IDBFactoryBackendInterface.h:
+        * Modules/indexeddb/PageGroupIndexedDatabase.cpp:
+        (WebCore::PageGroupIndexedDatabase::PageGroupIndexedDatabase):
+        (WebCore::PageGroupIndexedDatabase::from):
+        (WebCore::PageGroupIndexedDatabase::factoryBackend):
+        * Modules/indexeddb/PageGroupIndexedDatabase.h:
+        * Modules/indexeddb/WorkerGlobalScopeIndexedDatabase.cpp:
+        (WebCore::WorkerGlobalScopeIndexedDatabase::WorkerGlobalScopeIndexedDatabase):
+        (WebCore::WorkerGlobalScopeIndexedDatabase::from):
+        (WebCore::WorkerGlobalScopeIndexedDatabase::indexedDB):
+        * Modules/indexeddb/WorkerGlobalScopeIndexedDatabase.h:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/DocumentStyleSheetCollection.cpp:
+        * page/CaptionUserPreferences.cpp:
+        * page/Frame.cpp:
+        * page/GroupSettings.cpp: Removed.
+        * page/GroupSettings.h: Removed.
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::PageGroup):
+        * page/PageGroup.h:
+        (WebCore::PageGroup::groupSettings): Deleted.
+        * platform/DatabaseStrategy.cpp:
+        (WebCore::DatabaseStrategy::createIDBFactoryBackend):
+        * platform/DatabaseStrategy.h:
+        * workers/DedicatedWorkerGlobalScope.cpp:
+        (WebCore::DedicatedWorkerGlobalScope::create):
+        (WebCore::DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope):
+        * workers/DedicatedWorkerGlobalScope.h:
+        * workers/DedicatedWorkerThread.cpp:
+        (WebCore::DedicatedWorkerThread::create):
+        (WebCore::DedicatedWorkerThread::DedicatedWorkerThread):
+        (WebCore::DedicatedWorkerThread::createWorkerGlobalScope):
+        * workers/DedicatedWorkerThread.h:
+        * workers/DefaultSharedWorkerRepository.cpp:
+        (WebCore::DefaultSharedWorkerRepository::workerScriptLoaded):
+        (WebCore::SharedWorkerProxy::groupSettings): Deleted.
+        * workers/SharedWorkerGlobalScope.cpp:
+        (WebCore::SharedWorkerGlobalScope::create):
+        (WebCore::SharedWorkerGlobalScope::SharedWorkerGlobalScope):
+        * workers/SharedWorkerGlobalScope.h:
+        * workers/SharedWorkerThread.cpp:
+        (WebCore::SharedWorkerThread::create):
+        (WebCore::SharedWorkerThread::SharedWorkerThread):
+        (WebCore::SharedWorkerThread::createWorkerGlobalScope):
+        * workers/SharedWorkerThread.h:
+        * workers/WorkerGlobalScope.cpp:
+        (WebCore::WorkerGlobalScope::WorkerGlobalScope):
+        * workers/WorkerGlobalScope.h:
+        (WebCore::WorkerGlobalScope::groupSettings): Deleted.
+        * workers/WorkerMessagingProxy.cpp:
+        (WebCore::WorkerMessagingProxy::startWorkerGlobalScope):
+        * workers/WorkerThread.cpp:
+        (WebCore::WorkerThreadStartupData::WorkerThreadStartupData):
+        (WebCore::WorkerThread::WorkerThread):
+        (WebCore::WorkerThread::workerThread):
+        * workers/WorkerThread.h:
+
+2015-01-01  Dan Bernstein  <mitz@apple.com>
+
+        Tried to fix the iOS build.
+
+        * page/scrolling/ios/ScrollingTreeIOS.cpp:
+        (WebCore::ScrollingTreeIOS::scrollingTreeNodeDidScroll):
+
+2015-01-01  Darin Adler  <darin@apple.com>
+
+        Fix itearator typo
+        https://bugs.webkit.org/show_bug.cgi?id=140027
+
+        Reviewed by Csaba Osztrogonác.
+
+        * rendering/SimpleLineLayoutFlowContents.cpp:
+        (WebCore::SimpleLineLayout::nextBreakablePosition): Spelling mistake.
+
+2015-01-01  Alexey Proskuryakov  <ap@apple.com>
+
+        Don't dereference end() in SimpleLineLayout::RunResolver::rangeForRenderer
+        https://bugs.webkit.org/show_bug.cgi?id=139951
+        rdar://problem/19339881
+
+        Reviewed by Darin Adler.
+
+        * rendering/SimpleLineLayoutResolver.cpp:
+        (WebCore::SimpleLineLayout::RunResolver::rangeForRenderer):
+
+2015-01-01  Chris Dumez  <cdumez@apple.com>
+
+        ASSERT that a null key is never used with FeatureCounter
+        https://bugs.webkit.org/show_bug.cgi?id=140030
+
+        Reviewed by Darin Adler.
+
+        * platform/FeatureCounter.cpp:
+        (WebCore::FeatureCounter::incrementKey):
+        (WebCore::FeatureCounter::setKey):
+        * platform/ios/FeatureCounter.mm:
+        (WebCore::FeatureCounter::incrementKey):
+        (WebCore::FeatureCounter::setKey):
+
+2015-01-01  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Fix memory leak in FeatureCounter
+        https://bugs.webkit.org/show_bug.cgi?id=140029
+        <rdar://problem/19255690>
+
+        Reviewed by Darin Adler.
+
+        Fix memory leak in FeatureCounter. The NSString for the counter key
+        was allocated but never released. The patch switches to using a
+        RetainPtr instead of a raw pointer to avoid the issue.
+
+        * platform/ios/FeatureCounter.mm:
+        (WebCore::FeatureCounter::incrementKey):
+        (WebCore::FeatureCounter::setKey):
+
+2015-01-01  Jeff Miller  <jeffm@apple.com>
+
+        Update user-visible copyright strings to include 2015
+        https://bugs.webkit.org/show_bug.cgi?id=139880
+
+        Reviewed by Darin Adler.
+
+        * Info.plist:
+
+2014-12-31  Sam Weinig  <sam@webkit.org>
+
+        Move scrolling code off of WTF::bind
+        https://bugs.webkit.org/show_bug.cgi?id=140019
+
+        Reviewed by Darin Adler.
+
+        * page/scrolling/ThreadedScrollingTree.cpp:
+        (WebCore::ThreadedScrollingTree::tryToHandleWheelEvent):
+        (WebCore::ThreadedScrollingTree::invalidate):
+        (WebCore::ThreadedScrollingTree::scrollingTreeNodeDidScroll):
+        (WebCore::ThreadedScrollingTree::handleWheelEventPhase):
+        (WebCore::derefScrollingCoordinator): Deleted.
+        * page/scrolling/ios/ScrollingTreeIOS.cpp:
+        (WebCore::ScrollingTreeIOS::invalidate):
+        (WebCore::ScrollingTreeIOS::scrollingTreeNodeDidScroll):
+        (WebCore::derefScrollingCoordinator): Deleted.
+        * page/scrolling/mac/ScrollingCoordinatorMac.mm:
+        (WebCore::ScrollingCoordinatorMac::pageDestroyed):
+        (WebCore::ScrollingCoordinatorMac::handleWheelEvent):
+        * platform/MemoryPressureHandler.cpp:
+        (WebCore::MemoryPressureHandler::releaseMemory):
+        * workers/WorkerThread.cpp:
+        (WebCore::WorkerThread::releaseFastMallocFreeMemoryInAllThreads):
+
+2015-01-01  Antti Koivisto  <antti@apple.com>
+
+        Remove FontData::containsCharacters
+        https://bugs.webkit.org/show_bug.cgi?id=140026
+
+        Reviewed by Dan Bernstein.
+
+        This virtual function has no clients.
+
+        * platform/graphics/FontData.h:
+        * platform/graphics/SegmentedFontData.cpp:
+        (WebCore::SegmentedFontData::containsCharacter): Deleted.
+        (WebCore::SegmentedFontData::containsCharacters): Deleted.
+        * platform/graphics/SegmentedFontData.h:
+        * platform/graphics/SimpleFontData.h:
+        * platform/graphics/freetype/SimpleFontDataFreeType.cpp:
+        (WebCore::SimpleFontData::containsCharacters): Deleted.
+        * platform/graphics/ios/SimpleFontDataIOS.mm:
+        (WebCore::SimpleFontData::containsCharacters): Deleted.
+        * platform/graphics/mac/SimpleFontDataMac.mm:
+        (WebCore::SimpleFontData::containsCharacters): Deleted.
+        * platform/graphics/win/SimpleFontDataWin.cpp:
+        (WebCore::SimpleFontData::containsCharacters): Deleted.
+
+2015-01-01  Darin Adler  <darin@apple.com>
+
+        We often misspell identifier as "identifer"
+        https://bugs.webkit.org/show_bug.cgi?id=140025
+
+        Reviewed by Michael Saboff.
+
+        * html/MediaFragmentURIParser.cpp:
+        (WebCore::MediaFragmentURIParser::parseNPTFragment):
+        * html/parser/AtomicHTMLToken.h:
+        * html/parser/HTMLToken.h:
+        * html/shadow/SliderThumbElement.h:
+        * platform/graphics/ISOVTTCue.cpp:
+        (WebCore::ISOWebVTTCue::ISOWebVTTCue):
+        * platform/graphics/ISOVTTCue.h:
+        (WebCore::ISOWebVTTCue::id):
+        Fix mispellings.
+
+2015-01-01  Zalan Bujtas  <zalan@apple.com>
+
+        Saturated arithmetics: Incorrect float/double clamping.
+        https://bugs.webkit.org/show_bug.cgi?id=139888
+        rdar://problem/19330885
+
+        Reviewed by Simon Fraser.
+
+        Clamp float and double values correctly when applying saturated arithmetics.
+
+        Test: LayoutUnit test for float overflow.
+
+        * platform/LayoutUnit.h:
+        (WebCore::LayoutUnit::LayoutUnit):
+
+2014-12-31  Dan Bernstein  <mitz@apple.com>
+
+        Fixed the iOS build.
+
+        * page/scrolling/ios/ScrollingCoordinatorIOS.mm:
+        (WebCore::ScrollingCoordinatorIOS::commitTreeState):
+
+2014-12-31  Csaba Osztrogonác  <ossy@webkit.org>
+
+        URTBF after r177835.
+
+        * page/scrolling/coordinatedgraphics/ScrollingCoordinatorCoordinatedGraphics.cpp:
+        (WebCore::ScrollingCoordinatorCoordinatedGraphics::ScrollingCoordinatorCoordinatedGraphics):
+        * page/scrolling/coordinatedgraphics/ScrollingCoordinatorCoordinatedGraphics.h:
+
+2014-12-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r176476.
+        https://bugs.webkit.org/show_bug.cgi?id=140021
+
+        Sadly, this didn't reduce media test crashiness (Requested by
+        ap on #webkit).
+
+        Reverted changeset:
+
+        "[Mac] Random crashes inside media libraries when creating
+        then destroying media quickly."
+        https://bugs.webkit.org/show_bug.cgi?id=138980
+        http://trac.webkit.org/changeset/176476
+
+2014-12-31  Sam Weinig  <sam@webkit.org>
+
+        Remove the remaining uses of OwnPtr from WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=140017
+
+        Reviewed by Dan Bernstein.
+
+        * WebCore.exp.in:
+        * page/scrolling/AsyncScrollingCoordinator.cpp:
+        (WebCore::AsyncScrollingCoordinator::AsyncScrollingCoordinator):
+        * page/scrolling/AsyncScrollingCoordinator.h:
+        * page/scrolling/ScrollingStateTree.cpp:
+        (WebCore::ScrollingStateTree::commit):
+        (WebCore::ScrollingStateTree::create): Deleted.
+        * page/scrolling/ScrollingStateTree.h:
+        * page/scrolling/ScrollingTree.cpp:
+        (WebCore::ScrollingTree::commitNewTreeState):
+        * page/scrolling/ScrollingTree.h:
+        * page/scrolling/ThreadedScrollingTree.cpp:
+        (WebCore::ThreadedScrollingTree::commitNewTreeState):
+        * page/scrolling/ThreadedScrollingTree.h:
+        * page/scrolling/ios/ScrollingTreeIOS.cpp:
+        (WebCore::ScrollingTreeIOS::commitNewTreeState):
+        * page/scrolling/ios/ScrollingTreeIOS.h:
+        * page/scrolling/mac/ScrollingCoordinatorMac.mm:
+        (WebCore::ScrollingCoordinatorMac::commitTreeState):
+
+2014-12-31  Dan Bernstein  <mitz@apple.com>
+
+        Don’t use AccessibilityAllInOne when building with Xcode
+        https://bugs.webkit.org/show_bug.cgi?id=139974
+
+        Reviewed by Darin Adler.
+
+        * WebCore.xcodeproj/project.pbxproj: Added all files included by AccessibilityAllInOne.cpp
+        to the WebCore target, and removed AccessibilityAllInOne.cpp from the project.
+
+2014-12-30  Chris Dumez  <cdumez@apple.com>
+
+        Move font-related CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140008
+
+        Reviewed by Darin Adler.
+
+        Move font-related CSS properties to the new StyleBuilder
+        by teaching makeprop.pl how to generate them.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyFont::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyFont::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyFont::applyValue): Deleted.
+        (WebCore::ApplyPropertyFont::createHandler): Deleted.
+        * css/makeprop.pl:
+        (generateInitialValueSetter):
+        (generateInheritValueSetter):
+        (generateValueSetter):
+        * platform/graphics/FontDescription.h:
+        (WebCore::FontDescription::initialItalic):
+        (WebCore::FontDescription::initialSmallCaps):
+        (WebCore::FontDescription::initialKerning):
+        (WebCore::FontDescription::initialFontSmoothing):
+        (WebCore::FontDescription::initialTextRenderingMode):
+
+2014-12-30  Chris Dumez  <cdumez@apple.com>
+
+        Move '-webkit-font-variant-ligature' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140007
+
+        Reviewed by Darin Adler.
+
+        Move '-webkit-font-variant-ligature' CSS property to the new StyleBuilder
+        by using custom code.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyFontVariantLigatures::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyFontVariantLigatures::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyFontVariantLigatures::applyValue): Deleted.
+        (WebCore::ApplyPropertyFontVariantLigatures::createHandler): Deleted.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyInitialWebkitFontVariantLigatures):
+        (WebCore::StyleBuilderCustom::applyInheritWebkitFontVariantLigatures):
+        (WebCore::StyleBuilderCustom::applyValueWebkitFontVariantLigatures):
+
+2014-12-29  Chris Dumez  <cdumez@apple.com>
+
+        Move animation / transition CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139999
+
+        Reviewed by Darin Adler.
+
+        Move animation / transition CSS properties to the new StyleBuilder by
+        teaching makeprop.pl how to generate them.
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Remove more dead code
+        https://bugs.webkit.org/show_bug.cgi?id=139998
+
+        Reviewed by Oliver Hunt.
+
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::localStorage): Deleted.
+        (WebCore::PageGroup::transientLocalStorage): Deleted.
+        * page/PageGroup.h:
+        (WebCore::PageGroup::hasLocalStorage): Deleted.
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Remove unneeded StorageNamespace functions
+        https://bugs.webkit.org/show_bug.cgi?id=139997
+
+        Reviewed by Sam Weinig.
+
+        * loader/EmptyClients.cpp:
+        * storage/StorageNamespace.h:
+        (WebCore::StorageNamespace::closeIdleLocalStorageDatabases): Deleted.
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of some PageGroup storage functions
+        https://bugs.webkit.org/show_bug.cgi?id=139996
+
+        Reviewed by Sam Weinig.
+
+        * WebCore.exp.in:
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::closeLocalStorage): Deleted.
+        (WebCore::PageGroup::clearLocalStorageForAllOrigins): Deleted.
+        (WebCore::PageGroup::clearLocalStorageForOrigin): Deleted.
+        (WebCore::PageGroup::closeIdleLocalStorageDatabases): Deleted.
+        (WebCore::PageGroup::syncLocalStorage): Deleted.
+        * page/PageGroup.h:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Move storage code from WebCore to WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=139558
+
+        Reviewed by Darin Adler.
+
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/MemoryPressureHandler.cpp:
+
+2014-12-29  Sebastian Dröge  <sebastian@centricular.com>
+
+        [GStreamer] Rewrite MediaSource implementation
+        https://bugs.webkit.org/show_bug.cgi?id=139441
+
+        Reviewed by Philippe Normand.
+
+        This now is a clean reimplementation around appsrc that works good
+        enough for YouTube (except for seeking), but it still does not
+        implement the complete API correctly. Further work is required on
+        top of this and the Bugzilla ticket linked above contains some
+        further work in the right direction.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.cpp:
+        (WebCore::MediaPlayerPrivateGStreamer::doSeek):
+        (WebCore::MediaPlayerPrivateGStreamer::didLoadingProgress):
+        (WebCore::MediaPlayerPrivateGStreamer::sourceChanged):
+        (WebCore::MediaPlayerPrivateGStreamer::canSaveMediaData):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.h:
+        (WebCore::MediaPlayerPrivateGStreamer::totalVideoFrames):
+        (WebCore::MediaPlayerPrivateGStreamer::droppedVideoFrames):
+        (WebCore::MediaPlayerPrivateGStreamer::corruptedVideoFrames):
+        (WebCore::MediaPlayerPrivateGStreamer::totalFrameDelay):
+        (WebCore::MediaPlayerPrivateGStreamer::isMediaSource):
+        * platform/graphics/gstreamer/MediaSourceGStreamer.cpp:
+        (WebCore::MediaSourceGStreamer::MediaSourceGStreamer):
+        (WebCore::MediaSourceGStreamer::addSourceBuffer):
+        (WebCore::MediaSourceGStreamer::durationChanged):
+        (WebCore::MediaSourceGStreamer::markEndOfStream):
+        (WebCore::MediaSourceGStreamer::unmarkEndOfStream):
+        (WebCore::MediaSourceGStreamer::readyState):
+        (WebCore::MediaSourceGStreamer::setReadyState):
+        (WebCore::MediaSourceGStreamer::waitForSeekCompleted):
+        (WebCore::MediaSourceGStreamer::seekCompleted):
+        * platform/graphics/gstreamer/MediaSourceGStreamer.h:
+        * platform/graphics/gstreamer/SourceBufferPrivateGStreamer.cpp:
+        (WebCore::SourceBufferPrivateGStreamer::SourceBufferPrivateGStreamer):
+        (WebCore::SourceBufferPrivateGStreamer::~SourceBufferPrivateGStreamer):
+        (WebCore::SourceBufferPrivateGStreamer::setClient):
+        (WebCore::SourceBufferPrivateGStreamer::append):
+        (WebCore::SourceBufferPrivateGStreamer::removedFromMediaSource):
+        (WebCore::SourceBufferPrivateGStreamer::readyState):
+        (WebCore::SourceBufferPrivateGStreamer::setReadyState):
+        (WebCore::SourceBufferPrivateGStreamer::flushAndEnqueueNonDisplayingSamples):
+        (WebCore::SourceBufferPrivateGStreamer::enqueueSample):
+        (WebCore::SourceBufferPrivateGStreamer::isReadyForMoreSamples):
+        (WebCore::SourceBufferPrivateGStreamer::setActive):
+        (WebCore::SourceBufferPrivateGStreamer::stopAskingForMoreSamples):
+        (WebCore::SourceBufferPrivateGStreamer::notifyClientWhenReadyForMoreSamples):
+        * platform/graphics/gstreamer/SourceBufferPrivateGStreamer.h:
+        * platform/graphics/gstreamer/WebKitMediaSourceGStreamer.cpp:
+        (webkit_media_src_class_init):
+        (webkit_media_src_init):
+        (webKitMediaSrcFinalize):
+        (webKitMediaSrcSetProperty):
+        (webKitMediaSrcGetProperty):
+        (webKitMediaSrcDoAsyncStart):
+        (webKitMediaSrcDoAsyncDone):
+        (webKitMediaSrcChangeState):
+        (webKitMediaSrcQueryWithParent):
+        (webKitMediaSrcGetUri):
+        (webKitMediaSrcSetUri):
+        (WebCore::MediaSourceClientGStreamer::MediaSourceClientGStreamer):
+        (WebCore::MediaSourceClientGStreamer::~MediaSourceClientGStreamer):
+        (WebCore::MediaSourceClientGStreamer::addSourceBuffer):
+        (WebCore::MediaSourceClientGStreamer::durationChanged):
+        (WebCore::MediaSourceClientGStreamer::append):
+        (WebCore::MediaSourceClientGStreamer::markEndOfStream):
+        (WebCore::MediaSourceClientGStreamer::removedFromMediaSource):
+        (WTF::adoptGRef):
+        (WTF::refGPtr<WebKitMediaSrc>):
+        (WTF::derefGPtr<WebKitMediaSrc>):
+        (webKitMediaSrcAddSrc): Deleted.
+        (webKitMediaVideoSrcStop): Deleted.
+        (webKitMediaAudioSrcStop): Deleted.
+        (webKitMediaVideoSrcStart): Deleted.
+        (webKitMediaAudioSrcStart): Deleted.
+        (webKitMediaVideoSrcNeedDataMainCb): Deleted.
+        (webKitMediaAudioSrcNeedDataMainCb): Deleted.
+        (webKitMediaVideoSrcNeedDataCb): Deleted.
+        (webKitMediaAudioSrcNeedDataCb): Deleted.
+        (webKitMediaVideoSrcEnoughDataMainCb): Deleted.
+        (webKitMediaAudioSrcEnoughDataMainCb): Deleted.
+        (webKitMediaVideoSrcEnoughDataCb): Deleted.
+        (webKitMediaAudioSrcEnoughDataCb): Deleted.
+        (webKitMediaVideoSrcSeekMainCb): Deleted.
+        (webKitMediaAudioSrcSeekMainCb): Deleted.
+        (webKitMediaVideoSrcSeekDataCb): Deleted.
+        (webKitMediaAudioSrcSeekDataCb): Deleted.
+        (webKitMediaSrcSetMediaPlayer): Deleted.
+        (webKitMediaSrcSetPlayBin): Deleted.
+        (MediaSourceClientGstreamer::MediaSourceClientGstreamer): Deleted.
+        (MediaSourceClientGstreamer::~MediaSourceClientGstreamer): Deleted.
+        (MediaSourceClientGstreamer::didReceiveDuration): Deleted.
+        (MediaSourceClientGstreamer::didReceiveData): Deleted.
+        (MediaSourceClientGstreamer::didFinishLoading): Deleted.
+        (MediaSourceClientGstreamer::didFail): Deleted.
+        * platform/graphics/gstreamer/WebKitMediaSourceGStreamer.h:
+        Rewrite MediaSource implementation for GStreamer. The old code was
+        overly complicated and did not work at all for anything I've tested
+        it with.
+
+2014-12-28  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, additional build fix on win port since r177786.
+
+        * platform/graphics/opengl/Extensions3DOpenGLES.h: Change a constructor from *protected* to *public*.
+
+2014-12-28  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, speculative build fix on win port since r177786.
+
+        Apply std::unique_ptr<> and std::make_unique<> to win files as well.
+
+        * platform/graphics/opengl/GraphicsContext3DOpenGLES.cpp:
+        (WebCore::GraphicsContext3D::getExtensions):
+        * platform/graphics/win/GraphicsContextWin.cpp:
+        (WebCore::GraphicsContext::createWindowsBitmap):
+
+2014-12-28  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Convert OwnPtr to std::unique_ptr in WebCore/graphics/
+        https://bugs.webkit.org/show_bug.cgi?id=139971
+
+        Reviewed by Darin Adler.
+
+        Use std::unique_ptr<> and std::make_unique<> instead of OwnPtr.
+
+        * platform/graphics/GlyphMetricsMap.h:
+        (WebCore::GlyphMetricsMap<T>::locatePageSlowCase):
+        * platform/graphics/GlyphPageTreeNode.cpp:
+        (WebCore::GlyphPageTreeNode::getChild):
+        (WebCore::GlyphPageTreeNode::pruneCustomFontData):
+        (WebCore::GlyphPageTreeNode::pruneFontData):
+        * platform/graphics/GlyphPageTreeNode.h:
+        * platform/graphics/GraphicsContext.h:
+        * platform/graphics/GraphicsContext3D.h:
+        * platform/graphics/GraphicsContext3DPrivate.h:
+        * platform/graphics/GraphicsLayer.h:
+        * platform/graphics/MaskImageOperation.h:
+        * platform/graphics/ca/LayerPool.h:
+        * platform/graphics/ca/TileController.h:
+        * platform/graphics/ca/TileCoverageMap.h:
+        * platform/graphics/ca/mac/WebTiledBackingLayer.h:
+        * platform/graphics/gpu/DrawingBuffer.h:
+        * platform/graphics/gpu/Texture.cpp:
+        (WebCore::Texture::Texture):
+        (WebCore::Texture::create):
+        * platform/graphics/gpu/Texture.h:
+        * platform/graphics/opengl/Extensions3DOpenGL.h:
+        * platform/graphics/opengl/GraphicsContext3DOpenGL.cpp:
+        (WebCore::GraphicsContext3D::getExtensions):
+        * platform/graphics/opengl/GraphicsContext3DOpenGLCommon.cpp:
+        (WebCore::GraphicsContext3D::compileShader):
+        (WebCore::GraphicsContext3D::mappedSymbolName):
+        * platform/graphics/wayland/WaylandDisplay.cpp:
+        (WebCore::WaylandDisplay::createSharingGLContext):
+        * platform/graphics/wayland/WaylandDisplay.h:
+        * platform/graphics/wayland/WaylandSurface.cpp:
+        (WebCore::WaylandSurface::createGLContext):
+        * platform/graphics/wayland/WaylandSurface.h:
+
+2014-12-28  Dan Bernstein  <mitz@apple.com>
+
+        iOS build fix.
+
+        Reverted r177781, because it appears to trigger <http://webkit.org/b/139609> on iOS.
+
+        * WebCore.xcodeproj/project.pbxproj:
+
+2014-12-28  Roland Takacs  <rtakacs.u-szeged@partner.samsung.com>
+
+        Set relayoutChildren to 'true' only if size change happens in Table
+        https://bugs.webkit.org/show_bug.cgi?id=139676
+
+        Reviewed by Darin Adler.
+
+        Pass 'true' value for layoutPositionedObjects() in case of size change.
+        It helps to avoid unneccessary setChildNeedsLayout() and
+        setPreferredLogicalWidthsDirty() calls.
+
+        This is a backport of my fix in Blink: https://codereview.chromium.org/714933002/
+
+        * rendering/RenderTable.cpp:
+        (WebCore::RenderTable::layout):
+
+2014-12-28  Dan Bernstein  <mitz@apple.com>
+
+        Don’t use AccessibilityAllInOne when building with Xcode
+        https://bugs.webkit.org/show_bug.cgi?id=139974
+
+        Reviewed by Darin Adler.
+
+        * WebCore.xcodeproj/project.pbxproj: Added all files included by AccessibilityAllInOne.cpp
+        to the WebCore target, and removed AccessibilityAllInOne.cpp from the project.
+
 2014-12-26  Andreas Kling  <akling@apple.com>
 
         Purge PassRefPtr from Element and ElementRareData.

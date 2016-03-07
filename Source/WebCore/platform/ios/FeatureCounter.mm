@@ -28,25 +28,28 @@
 
 #if PLATFORM(IOS) && USE(APPLE_INTERNAL_SDK)
 #import <AppSupport/CPAggregateDictionary.h>
+#include <wtf/RetainPtr.h>
 
 namespace WebCore {
 
 void FeatureCounter::incrementKey(Page* page, const char* const key)
 {
+    ASSERT(key);
     if (!shouldUseForPage(page))
         return;
 
-    NSString *nsKey = [[NSString alloc] initWithCharactersNoCopy:reinterpret_cast<unichar*>(const_cast<char*>(key)) length:strlen(key) freeWhenDone:NO];
-    [[CPAggregateDictionary sharedAggregateDictionary] incrementKey:nsKey];
+    RetainPtr<NSString> nsKey = adoptNS([[NSString alloc] initWithCharactersNoCopy:reinterpret_cast<unichar*>(const_cast<char*>(key)) length:strlen(key) freeWhenDone:NO]);
+    [[CPAggregateDictionary sharedAggregateDictionary] incrementKey:nsKey.get()];
 }
 
 void FeatureCounter::setKey(Page* page, const char* const key, int64_t value)
 {
+    ASSERT(key);
     if (!shouldUseForPage(page))
         return;
 
-    NSString *nsKey = [[NSString alloc] initWithCharactersNoCopy:reinterpret_cast<unichar*>(const_cast<char*>(key)) length:strlen(key) freeWhenDone:NO];
-    [[CPAggregateDictionary sharedAggregateDictionary] setValue:value forScalarKey:nsKey];
+    RetainPtr<NSString> nsKey = adoptNS([[NSString alloc] initWithCharactersNoCopy:reinterpret_cast<unichar*>(const_cast<char*>(key)) length:strlen(key) freeWhenDone:NO]);
+    [[CPAggregateDictionary sharedAggregateDictionary] setValue:value forScalarKey:nsKey.get()];
 }
 
 } // namespace WebCore

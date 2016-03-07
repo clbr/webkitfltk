@@ -23,17 +23,17 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
 #include "StorageTracker.h"
 
-#include "FileSystem.h"
-#include "PageGroup.h"
-#include "SQLiteDatabaseTracker.h"
-#include "SQLiteStatement.h"
-#include "SecurityOrigin.h"
 #include "StorageThread.h"
 #include "StorageTrackerClient.h"
-#include "TextEncoding.h"
+#include "WebStorageNamespaceProvider.h"
+#include <WebCore/FileSystem.h>
+#include <WebCore/PageGroup.h>
+#include <WebCore/SQLiteDatabaseTracker.h>
+#include <WebCore/SQLiteStatement.h>
+#include <WebCore/SecurityOrigin.h>
+#include <WebCore/TextEncoding.h>
 #include <wtf/MainThread.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
@@ -397,7 +397,7 @@ void StorageTracker::deleteAllOrigins()
         m_originSet.clear();
     }
 
-    PageGroup::clearLocalStorageForAllOrigins();
+    WebStorageNamespaceProvider::clearLocalStorageForAllOrigins();
 
     m_thread->dispatch([this] {
         syncDeleteAllOrigins();
@@ -494,7 +494,7 @@ void StorageTracker::deleteOrigin(SecurityOrigin* origin)
     // to reopen the db before the db is deleted by a StorageTracker thread.
     // In this case, reopening the db in StorageAreaSync will cancel a pending
     // StorageTracker db deletion.
-    PageGroup::clearLocalStorageForOrigin(origin);
+    WebStorageNamespaceProvider::clearLocalStorageForOrigin(origin);
 
     String originId = origin->databaseIdentifier();
     

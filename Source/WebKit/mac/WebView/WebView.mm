@@ -36,6 +36,7 @@
 #import "DOMNodeInternal.h"
 #import "DOMRangeInternal.h"
 #import "DictionaryPopupInfo.h"
+#import "StorageThread.h"
 #import "WebAlternativeTextClient.h"
 #import "WebApplicationCache.h"
 #import "WebBackForwardListInternal.h"
@@ -175,12 +176,13 @@
 #import <WebCore/SecurityOrigin.h>
 #import <WebCore/SecurityPolicy.h>
 #import <WebCore/Settings.h>
-#import <WebCore/StorageThread.h>
 #import <WebCore/StyleProperties.h>
 #import <WebCore/TextResourceDecoder.h>
 #import <WebCore/ThreadCheck.h>
 #import <WebCore/UserAgent.h>
 #import <WebCore/UserContentController.h>
+#import <WebCore/UserScript.h>
+#import <WebCore/UserStyleSheet.h>
 #import <WebCore/WebCoreObjCExtras.h>
 #import <WebCore/WebCoreView.h>
 #import <WebCore/Widget.h>
@@ -4803,7 +4805,6 @@ static Vector<String> toStringVector(NSArray* patterns)
         [WebPluginDatabase closeSharedDatabase];
 
     WebStorageNamespaceProvider::closeLocalStorage();
-    PageGroup::closeLocalStorage();
 }
 #endif // !PLATFORM(IOS)
 

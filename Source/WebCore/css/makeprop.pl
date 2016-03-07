@@ -43,9 +43,11 @@ my @names = ();
 my %nameIsInherited;
 my %propertiesWithStyleBuilderOptions;
 my %styleBuilderOptions = (
-  AutoFunctions => 1, # Defined in Source/WebCore/css/StyleBuilderConverter.h
+  AnimationProperty => 1, # Defined in Source/WebCore/css/StyleBuilderConverter.h
+  AutoFunctions => 1,
   Converter => 1,
   Custom => 1,
+  FontProperty => 1,
   Getter => 1,
   Initial => 1,
   NameForMethods => 1,
@@ -372,6 +374,40 @@ sub getVisitedLinkSetter {
   return $renderStyle . "->setVisitedLink" . getNameForMethods($name);
 }
 
+sub getAnimationClearMethod {
+  my $name = shift;
+
+  return "clear" . getNameForMethods($name);
+}
+
+sub getEnsureAnimationsOrTransitionsMethod {
+  my $name = shift;
+
+  return "ensureAnimations" if $name =~ /animation-/;
+  return "ensureTransitions" if $name =~ /transition-/;
+  die "Unrecognized animation property name.";
+}
+
+sub getAnimationsOrTransitionsMethod {
+  my $name = shift;
+
+  return "animations" if $name =~ /animation-/;
+  return "transitions" if $name =~ /transition-/;
+  die "Unrecognized animation property name.";
+}
+
+sub getAnimationTestMethod {
+  my $name = shift;
+
+  return "is" . getNameForMethods($name) . "Set";
+}
+
+sub getAnimationMapfunction {
+  my $name = shift;
+
+  return "mapAnimation" . getNameForMethods($name);
+}
+
 foreach my $name (@names) {
   # Skip properties still using the legacy style builder.
   next unless exists($propertiesWithStyleBuilderOptions{$name});
@@ -450,10 +486,85 @@ sub handleCurrentColorValue {
   return $code;
 }
 
+sub generateAnimationPropertyInitialValueSetter {
+  my $name = shift;
+  my $indent = shift;
+
+  my $setterContent = "";
+  $setterContent .= $indent . "AnimationList& list = styleResolver.style()->" . getEnsureAnimationsOrTransitionsMethod($name) . "();\n";
+  $setterContent .= $indent . "if (list.isEmpty())\n";
+  $setterContent .= $indent . "    list.append(Animation::create());\n";
+  my $setter = $propertiesWithStyleBuilderOptions{$name}{"Setter"};
+  my $initial = $propertiesWithStyleBuilderOptions{$name}{"Initial"};
+  $setterContent .= $indent . "list.animation(0)." . $setter . "(Animation::" . $initial . "());\n";
+  if ($name eq "-webkit-transition-property") {
+    $setterContent .= $indent . "list.animation(0).setAnimationMode(Animation::AnimateAll);\n";
+  }
+  $setterContent .= $indent . "for (size_t i = 1; i < list.size(); ++i)\n";
+  $setterContent .= $indent . "    list.animation(i)." . getAnimationClearMethod($name) . "();\n";
+
+  return $setterContent;
+}
+
+sub generateAnimationPropertyInheritValueSetter {
+  my $name = shift;
+  my $indent = shift;
+
+  my $setterContent = "";
+  $setterContent .= $indent . "AnimationList& list = styleResolver.style()->" . getEnsureAnimationsOrTransitionsMethod($name) . "();\n";
+  $setterContent .= $indent . "const AnimationList* parentList = styleResolver.parentStyle()->" . getAnimationsOrTransitionsMethod($name) . "();\n";
+  $setterContent .= $indent . "size_t i = 0, parentSize = parentList ? parentList->size() : 0;\n";
+  $setterContent .= $indent . "for ( ; i < parentSize && parentList->animation(i)." . getAnimationTestMethod($name) . "(); ++i) {\n";
+  $setterContent .= $indent . "    if (list.size() <= i)\n";
+  $setterContent .= $indent . "        list.append(Animation::create());\n";
+  my $getter = $propertiesWithStyleBuilderOptions{$name}{"Getter"};
+  my $setter = $propertiesWithStyleBuilderOptions{$name}{"Setter"};
+  $setterContent .= $indent . "    list.animation(i)." . $setter . "(parentList->animation(i)." . $getter . "());\n";
+  $setterContent .= $indent . "    list.animation(i).setAnimationMode(parentList->animation(i).animationMode());\n";
+  $setterContent .= $indent . "}\n";
+  $setterContent .= "\n";
+  $setterContent .= $indent . "/* Reset any remaining animations to not have the property set. */\n";
+  $setterContent .= $indent . "for ( ; i < list.size(); ++i)\n";
+  $setterContent .= $indent . "    list.animation(i)." . getAnimationClearMethod($name) . "();\n";
+
+  return $setterContent;
+}
+
+sub generateAnimationPropertyValueSetter {
+  my $name = shift;
+  my $indent = shift;
+
+  my $setterContent = "";
+  $setterContent .= $indent . "AnimationList& list = styleResolver.style()->" . getEnsureAnimationsOrTransitionsMethod($name) . "();\n";
+  $setterContent .= $indent . "size_t childIndex = 0;\n";
+  $setterContent .= $indent . "if (is<CSSValueList>(value)) {\n";
+  $setterContent .= $indent . "    /* Walk each value and put it into an animation, creating new animations as needed. */\n";
+  $setterContent .= $indent . "    for (auto& currentValue : downcast<CSSValueList>(value)) {\n";
+  $setterContent .= $indent . "        if (childIndex <= list.size())\n";
+  $setterContent .= $indent . "            list.append(Animation::create());\n";
+  $setterContent .= $indent . "        styleResolver.styleMap()->" . getAnimationMapfunction($name) . "(list.animation(childIndex), currentValue);\n";
+  $setterContent .= $indent . "        ++childIndex;\n";
+  $setterContent .= $indent . "    }\n";
+  $setterContent .= $indent . "} else {\n";
+  $setterContent .= $indent . "    if (list.isEmpty())\n";
+  $setterContent .= $indent . "        list.append(Animation::create());\n";
+  $setterContent .= $indent . "    styleResolver.styleMap()->" . getAnimationMapfunction($name) . "(list.animation(childIndex), value);\n";
+  $setterContent .= $indent . "    childIndex = 1;\n";
+  $setterContent .= $indent . "}\n";
+  $setterContent .= $indent . "for ( ; childIndex < list.size(); ++childIndex) {\n";
+  $setterContent .= $indent . "    /* Reset all remaining animations to not have the property set. */\n";
+  $setterContent .= $indent . "    list.animation(childIndex)." . getAnimationClearMethod($name) . "();\n";
+  $setterContent .= $indent . "}\n";
+
+  return $setterContent;
+}
+
 sub generateInitialValueSetter {
   my $name = shift;
   my $indent = shift;
 
+  my $setter = $propertiesWithStyleBuilderOptions{$name}{"Setter"};
+  my $initial = $propertiesWithStyleBuilderOptions{$name}{"Initial"};
   my $setterContent = "";
   $setterContent .= $indent . "static void applyInitial" . $nameToId{$name} . "(StyleResolver& styleResolver)\n";
   $setterContent .= $indent . "{\n";
@@ -461,11 +572,17 @@ sub generateInitialValueSetter {
   if (exists $propertiesWithStyleBuilderOptions{$name}{"AutoFunctions"}) {
     $setterContent .= $indent . "    " . getAutoSetter($name, $style) . ";\n";
   } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"VisitedLinkColorSupport"}) {
-      my $initialColor = "RenderStyle::" . $propertiesWithStyleBuilderOptions{$name}{"Initial"} . "()";
+      my $initialColor = "RenderStyle::" . $initial . "()";
       $setterContent .= generateColorValueSetter($name, $initialColor, $indent . "    ");
+  } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"AnimationProperty"}) {
+    $setterContent .= generateAnimationPropertyInitialValueSetter($name, $indent . "    ");
+  } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"FontProperty"}) {
+    $setterContent .= $indent . "    FontDescription fontDescription = styleResolver.fontDescription();\n";
+    $setterContent .= $indent . "    fontDescription." . $setter . "(FontDescription::" . $initial . "());\n";
+    $setterContent .= $indent . "    styleResolver.setFontDescription(fontDescription);\n";
   } else {
-    my $setValue = $style . "->" . $propertiesWithStyleBuilderOptions{$name}{"Setter"};
-    $setterContent .= $indent . "    " . $setValue . "(RenderStyle::" . $propertiesWithStyleBuilderOptions{$name}{"Initial"} . "());\n";
+    my $setValue = $style . "->" . $setter;
+    $setterContent .= $indent . "    " . $setValue . "(RenderStyle::" . $initial . "());\n";
   }
   $setterContent .= $indent . "}\n";
 
@@ -481,7 +598,8 @@ sub generateInheritValueSetter {
   $setterContent .= $indent . "{\n";
   my $parentStyle = "styleResolver.parentStyle()";
   my $style = "styleResolver.style()";
-  my $setValue = $style . "->" . $propertiesWithStyleBuilderOptions{$name}{"Setter"};
+  my $getter = $propertiesWithStyleBuilderOptions{$name}{"Getter"};
+  my $setter = $propertiesWithStyleBuilderOptions{$name}{"Setter"};
   my $didCallSetValue = 0;
   if (exists $propertiesWithStyleBuilderOptions{$name}{"AutoFunctions"}) {
     $setterContent .= $indent . "    if (" . getAutoGetter($name, $parentStyle) . ") {\n";
@@ -489,16 +607,25 @@ sub generateInheritValueSetter {
     $setterContent .= $indent . "        return;\n";
     $setterContent .= $indent . "    }\n";
   } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"VisitedLinkColorSupport"}) {
-    $setterContent .= $indent . "    Color color = " . $parentStyle . "->" . $propertiesWithStyleBuilderOptions{$name}{"Getter"} . "();\n";
+    $setterContent .= $indent . "    Color color = " . $parentStyle . "->" . $getter . "();\n";
     if (!exists($propertiesWithStyleBuilderOptions{$name}{"NoDefaultColor"})) {
       $setterContent .= $indent . "    if (!color.isValid())\n";
       $setterContent .= $indent . "        color = " . $parentStyle . "->color();\n";
     }
     $setterContent .= generateColorValueSetter($name, "color", $indent . "    ");
     $didCallSetValue = 1;
+  } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"AnimationProperty"}) {
+    $setterContent .= generateAnimationPropertyInheritValueSetter($name, $indent . "    ");
+    $didCallSetValue = 1;
+  } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"FontProperty"}) {
+    $setterContent .= $indent . "    FontDescription fontDescription = styleResolver.fontDescription();\n";
+    $setterContent .= $indent . "    fontDescription." . $setter . "(styleResolver.parentFontDescription()." . $getter . "());\n";
+    $setterContent .= $indent . "    styleResolver.setFontDescription(fontDescription);\n";
+    $didCallSetValue = 1;
   }
   if (!$didCallSetValue) {
-    my $inheritedValue = $parentStyle . "->" .  $propertiesWithStyleBuilderOptions{$name}{"Getter"} . "()";
+    my $inheritedValue = $parentStyle . "->" .  $getter . "()";
+    my $setValue = $style . "->" . $setter;
     $setterContent .= $indent . "    " . $setValue . "(" . $inheritedValue . ");\n";
   }
   $setterContent .= $indent . "}\n";
@@ -520,6 +647,7 @@ sub generateValueSetter {
     $convertedValue = "static_cast<" . $propertiesWithStyleBuilderOptions{$name}{"TypeName"} . ">(downcast<CSSPrimitiveValue>(value))";
   }
 
+  my $setter = $propertiesWithStyleBuilderOptions{$name}{"Setter"};
   my $style = "styleResolver.style()";
   my $didCallSetValue = 0;
   if (exists $propertiesWithStyleBuilderOptions{$name}{"AutoFunctions"}) {
@@ -528,16 +656,24 @@ sub generateValueSetter {
     $setterContent .= $indent . "        return;\n";
     $setterContent .= $indent . "    }\n";
   } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"VisitedLinkColorSupport"}) {
-      $setterContent .= $indent . "    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);\n";
-      if ($name eq "color") {
-        # The "color" property supports "currentColor" value. We should add a parameter.
-        $setterContent .= handleCurrentColorValue($name, "primitiveValue", $indent . "    ");
-      }
-      $setterContent .= generateColorValueSetter($name, "primitiveValue", $indent . "    ", VALUE_IS_PRIMITIVE);
-      $didCallSetValue = 1;
+    $setterContent .= $indent . "    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);\n";
+    if ($name eq "color") {
+      # The "color" property supports "currentColor" value. We should add a parameter.
+      $setterContent .= handleCurrentColorValue($name, "primitiveValue", $indent . "    ");
+    }
+    $setterContent .= generateColorValueSetter($name, "primitiveValue", $indent . "    ", VALUE_IS_PRIMITIVE);
+    $didCallSetValue = 1;
+  } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"AnimationProperty"}) {
+    $setterContent .= generateAnimationPropertyValueSetter($name, $indent . "    ");
+    $didCallSetValue = 1;
+  } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"FontProperty"}) {
+    $setterContent .= $indent . "    FontDescription fontDescription = styleResolver.fontDescription();\n";
+    $setterContent .= $indent . "    fontDescription." . $setter . "(" . $convertedValue . ");\n";
+    $setterContent .= $indent . "    styleResolver.setFontDescription(fontDescription);\n";
+    $didCallSetValue = 1;
   }
   if (!$didCallSetValue) {
-    my $setValue = $style . "->" . $propertiesWithStyleBuilderOptions{$name}{"Setter"};
+    my $setValue = $style . "->" . $setter;
     $setterContent .= $indent . "    " . $setValue . "(" . $convertedValue . ");\n";
   }
   $setterContent .= $indent . "}\n";
