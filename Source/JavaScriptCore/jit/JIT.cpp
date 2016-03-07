@@ -38,7 +38,6 @@ JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse
 #include "ArityCheckFailReturnThunks.h"
 #include "CodeBlock.h"
 #include "DFGCapabilities.h"
-#include "HighFidelityLog.h"
 #include "Interpreter.h"
 #include "JITInlines.h"
 #include "JITOperations.h"
@@ -53,6 +52,7 @@ JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse
 #include "SamplingTool.h"
 #include "SlowPathCall.h"
 #include "StackAlignment.h"
+#include "TypeProfilerLog.h"
 #include <wtf/CryptographicallyRandomNumber.h>
 
 using namespace std;
@@ -268,7 +268,7 @@ void JIT::privateCompileMainPass()
         DEFINE_OP(op_inc)
         DEFINE_OP(op_profile_did_call)
         DEFINE_OP(op_profile_will_call)
-        DEFINE_OP(op_profile_types_with_high_fidelity)
+        DEFINE_OP(op_profile_type)
         DEFINE_OP(op_push_name_scope)
         DEFINE_OP(op_push_with_scope)
         case op_put_by_id_out_of_line:
@@ -501,9 +501,9 @@ CompilationResult JIT::privateCompile(JITCompilationEffort effort)
         break;
     }
 
-    // This ensures that we have the most up to date type information when performing typecheck optimizations for op_profile_types_with_high_fidelity.
-    if (m_vm->isProfilingTypesWithHighFidelity())
-        m_vm->highFidelityLog()->processHighFidelityLog(ASCIILiteral("Preparing for JIT compilation."));
+    // This ensures that we have the most up to date type information when performing typecheck optimizations for op_profile_type.
+    if (m_vm->typeProfiler())
+        m_vm->typeProfilerLog()->processLogEntries(ASCIILiteral("Preparing for JIT compilation."));
     
     if (Options::showDisassembly() || m_vm->m_perBytecodeProfiler)
         m_disassembler = adoptPtr(new JITDisassembler(m_codeBlock));
@@ -722,35 +722,38 @@ CompilationResult JIT::privateCompile(JITCompilationEffort effort)
 
 void JIT::privateCompileExceptionHandlers()
 {
-    if (m_exceptionChecks.empty() && m_exceptionChecksWithCallFrameRollback.empty())
-        return;
-
-    Jump doLookup;
-
     if (!m_exceptionChecksWithCallFrameRollback.empty()) {
         m_exceptionChecksWithCallFrameRollback.link(this);
-        emitGetCallerFrameFromCallFrameHeaderPtr(GPRInfo::argumentGPR1);
-        doLookup = jump();
-    }
 
-    if (!m_exceptionChecks.empty())
-        m_exceptionChecks.link(this);
-    
-    // lookupExceptionHandler is passed two arguments, the VM and the exec (the CallFrame*).
-    move(GPRInfo::callFrameRegister, GPRInfo::argumentGPR1);
+        // lookupExceptionHandlerFromCallerFrame is passed two arguments, the VM and the exec (the CallFrame*).
 
-    if (doLookup.isSet())
-        doLookup.link(this);
-
-    move(TrustedImmPtr(vm()), GPRInfo::argumentGPR0);
+        move(TrustedImmPtr(vm()), GPRInfo::argumentGPR0);
+        move(GPRInfo::callFrameRegister, GPRInfo::argumentGPR1);
 
 #if CPU(X86)
-    // FIXME: should use the call abstraction, but this is currently in the SpeculativeJIT layer!
-    poke(GPRInfo::argumentGPR0);
-    poke(GPRInfo::argumentGPR1, 1);
+        // FIXME: should use the call abstraction, but this is currently in the SpeculativeJIT layer!
+        poke(GPRInfo::argumentGPR0);
+        poke(GPRInfo::argumentGPR1, 1);
 #endif
-    m_calls.append(CallRecord(call(), (unsigned)-1, FunctionPtr(lookupExceptionHandler).value()));
-    jumpToExceptionHandler();
+        m_calls.append(CallRecord(call(), (unsigned)-1, FunctionPtr(lookupExceptionHandlerFromCallerFrame).value()));
+        jumpToExceptionHandler();
+    }
+
+    if (!m_exceptionChecks.empty()) {
+        m_exceptionChecks.link(this);
+
+        // lookupExceptionHandler is passed two arguments, the VM and the exec (the CallFrame*).
+        move(TrustedImmPtr(vm()), GPRInfo::argumentGPR0);
+        move(GPRInfo::callFrameRegister, GPRInfo::argumentGPR1);
+
+#if CPU(X86)
+        // FIXME: should use the call abstraction, but this is currently in the SpeculativeJIT layer!
+        poke(GPRInfo::argumentGPR0);
+        poke(GPRInfo::argumentGPR1, 1);
+#endif
+        m_calls.append(CallRecord(call(), (unsigned)-1, FunctionPtr(lookupExceptionHandler).value()));
+        jumpToExceptionHandler();
+    }
 }
 
 unsigned JIT::frameRegisterCountFor(CodeBlock* codeBlock)

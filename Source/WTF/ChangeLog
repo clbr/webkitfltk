@@ -1,3 +1,132 @@
+2014-08-22  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Disable ENABLE_IOS_{GESTURE, TOUCH}_EVENTS, and temporarily disable ENABLE_TOUCH_EVENTS
+        and ENABLE_XSLT when building with the iOS public SDK
+        https://bugs.webkit.org/show_bug.cgi?id=135945
+
+        Reviewed by Andy Estes.
+
+        * wtf/FeatureDefines.h:
+
+2014-08-22  Akos Kiss  <akiss@inf.u-szeged.hu>
+
+        Enable fixed executable allocator for any ARM64 target.
+        https://bugs.webkit.org/show_bug.cgi?id=136162
+
+        Reviewed by Michael Saboff.
+
+        The ARM64 macro assembler relies on near calls being implemented by BL
+        instructions, which have only 128MB offset range from PC. The
+        on-demand executable allocator cannot ensure that any two locations in
+        memory allocated for the JIT-compiled code are within this range. 
+        However, the fixed executable allocator has a fixed 16MB memory pool for
+        ARM64.
+
+        * wtf/Platform.h:
+        Define ENABLE_EXECUTABLE_ALLOCATOR_FIXED if CPU(ARM64), and update
+        attached comment.
+
+2014-08-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r172844.
+        https://bugs.webkit.org/show_bug.cgi?id=136164
+
+        re-applying WEBCORE_EXPORTS patch (Requested by
+        alexchristensen on #webkit).
+
+        Reverted changeset:
+
+        "Revert r172831, it broke the Windows build."
+        http://trac.webkit.org/changeset/172844
+
+2014-08-22  Jon Lee  <jonlee@apple.com>
+
+        Fix iOS build due to r172832 and move RUBBER_BANDING out of FeatureDefines.h
+        https://bugs.webkit.org/show_bug.cgi?id=136157
+
+        Reviewed by Simon Fraser.
+
+        * wtf/FeatureDefines.h: Remove ENABLE(RUBBER_BANDING) logic for Mac platform.
+
+2014-08-21  Tim Horton  <timothy_horton@apple.com>
+
+        Revert r172831, it broke the Windows build.
+
+        * wtf/ExportMacros.h:
+
+2014-08-21  Zalan Bujtas  <zalan@apple.com>
+
+        Enable SATURATED_LAYOUT_ARITHMETIC.
+        https://bugs.webkit.org/show_bug.cgi?id=136106
+
+        Reviewed by Simon Fraser.
+
+        SATURATED_LAYOUT_ARITHMETIC protects LayoutUnit against arithmetic overflow.
+        (No measurable performance regression on Mac.)
+
+        * wtf/FeatureDefines.h:
+
+2014-08-21  Alex Christensen  <achristensen@webkit.org>
+
+        More WEBCORE_EXPORT macros.
+        https://bugs.webkit.org/show_bug.cgi?id=136129
+
+        Reviewed by Tim Horton.
+
+        * wtf/ExportMacros.h:
+        Removed WTF_TESTING which isn't used.
+
+2014-08-20  Akos Kiss  <akiss@inf.u-szeged.hu>
+
+        Enable ARM64 disassembler on EFL
+        https://bugs.webkit.org/show_bug.cgi?id=136089
+
+        Reviewed by Filip Pizlo.
+
+        * wtf/Platform.h:
+        Enable WTF_USE_ARM64_DISASSEMBLER for EFL as well.
+
+2014-08-19  Pratik Solanki  <psolanki@apple.com>
+
+        Remove PurgeableBuffer since it is not very useful any more
+        https://bugs.webkit.org/show_bug.cgi?id=135939
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Platform.h: Remove ENABLE_PURGEABLE_MEMORY define.
+        * wtf/VMTags.h: Remove VM tags used by WebCore for cached resource purgeable memory.
+
+2014-08-19  Magnus Granberg  <zorry@gentoo.org>
+
+        TEXTREL in libjavascriptcoregtk-1.0.so.0.11.0 on x86 (or i586)
+        https://bugs.webkit.org/show_bug.cgi?id=70610
+
+        Reviewed by Darin Adler.
+
+        Add PLT if we're building with PIC.
+
+        * wtf/InlineASM.h:
+
+2014-08-19  Zalan Bujtas  <zalan@apple.com>
+
+        Remove ENABLE(SUBPIXEL_LAYOUT).
+        https://bugs.webkit.org/show_bug.cgi?id=136077
+
+        Reviewed by Simon Fraser.
+
+        Remove compile time flag SUBPIXEL_LAYOUT. All ports have it enabled for a while now.
+
+        * wtf/FeatureDefines.h:
+
+2014-08-18  Maciej Stachowiak  <mjs@apple.com>
+
+        Use NSURLFileTypeMappings directly instead of depending on WebKitSystemInterface wrappers for it
+        https://bugs.webkit.org/show_bug.cgi?id=136035
+
+        Reviewed by Dan Bernstein.
+
+        * wtf/Platform.h: Define USE(APPLE_INTERNAL_SDK) by default on platforms that have it.
+
 2014-08-18  Commit Queue  <commit-queue@webkit.org>
 
         Unreviewed, rolling out r172736.

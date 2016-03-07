@@ -499,10 +499,6 @@
 
 #endif /* PLATFORM(MAC) */
 
-#if OS(DARWIN) && !PLATFORM(GTK)
-#define ENABLE_PURGEABLE_MEMORY 1
-#endif
-
 #if PLATFORM(IOS)
 
 #define DONT_FINALIZE_ON_MAIN_THREAD 1
@@ -689,7 +685,7 @@
 #define ENABLE_DISASSEMBLER 1
 #endif
 
-#if !defined(WTF_USE_ARM64_DISASSEMBLER) && ENABLE(JIT) && PLATFORM(IOS) && CPU(ARM64) && !USE(LLVM_DISASSEMBLER)
+#if !defined(WTF_USE_ARM64_DISASSEMBLER) && ENABLE(JIT) && (PLATFORM(IOS) || PLATFORM(EFL)) && CPU(ARM64) && !USE(LLVM_DISASSEMBLER)
 #define WTF_USE_ARM64_DISASSEMBLER 1
 #endif
 
@@ -843,9 +839,9 @@
 #endif
 
 /* Pick which allocator to use; we only need an executable allocator if the assembler is compiled in.
-   On x86-64 we use a single fixed mmap, on other platforms we mmap on demand. */
+   On non-Windows x86-64, iOS, and ARM64 we use a single fixed mmap, on other platforms we mmap on demand. */
 #if ENABLE(ASSEMBLER)
-#if CPU(X86_64) && !OS(WINDOWS) || PLATFORM(IOS)
+#if CPU(X86_64) && !OS(WINDOWS) || PLATFORM(IOS) || CPU(ARM64)
 #define ENABLE_EXECUTABLE_ALLOCATOR_FIXED 1
 #else
 #define ENABLE_EXECUTABLE_ALLOCATOR_DEMAND 1
@@ -1061,6 +1057,12 @@
 
 #if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 #define WTF_USE_ASYNC_NSTEXTINPUTCLIENT 1
+#endif
+
+#if PLATFORM(COCOA)
+#if defined __has_include && __has_include(<CoreFoundation/CFPriv.h>)
+#define WTF_USE_APPLE_INTERNAL_SDK 1
+#endif
 #endif
 
 #if (OS(DARWIN) && USE(CG)) || USE(FREETYPE) || (PLATFORM(WIN) && (USE(CG) || USE(CAIRO)))

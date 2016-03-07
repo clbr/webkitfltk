@@ -39,9 +39,9 @@ typedef CAPropertyAnimation* PlatformAnimationRef;
 
 namespace WebCore {
 
-NSString* toCAFillModeType(PlatformCAAnimation::FillModeType);
-NSString* toCAValueFunctionType(PlatformCAAnimation::ValueFunctionType);
-CAMediaTimingFunction* toCAMediaTimingFunction(const TimingFunction*, bool reverse);
+WEBCORE_EXPORT NSString* toCAFillModeType(PlatformCAAnimation::FillModeType);
+WEBCORE_EXPORT NSString* toCAValueFunctionType(PlatformCAAnimation::ValueFunctionType);
+WEBCORE_EXPORT CAMediaTimingFunction* toCAMediaTimingFunction(const TimingFunction*, bool reverse);
 
 bool hasExplicitBeginTime(CAAnimation *);
 void setHasExplicitBeginTime(CAAnimation *, bool);
@@ -49,7 +49,7 @@ void setHasExplicitBeginTime(CAAnimation *, bool);
 class PlatformCAAnimationMac final : public PlatformCAAnimation {
 public:
     static PassRefPtr<PlatformCAAnimation> create(AnimationType, const String& keyPath);
-    static PassRefPtr<PlatformCAAnimation> create(PlatformAnimationRef);
+    WEBCORE_EXPORT static PassRefPtr<PlatformCAAnimation> create(PlatformAnimationRef);
 
     virtual ~PlatformCAAnimationMac();
 

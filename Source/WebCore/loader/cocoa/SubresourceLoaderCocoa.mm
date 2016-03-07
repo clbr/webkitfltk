@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,49 +23,37 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IDBBackingStoreTransactionLevelDB_h
-#define IDBBackingStoreTransactionLevelDB_h
+#include "config.h"
+#include "SubresourceLoader.h"
 
-#include "LevelDBTransaction.h"
+#include "CachedResource.h"
+#include "DiskCacheMonitorCocoa.h"
+#include "ResourceHandle.h"
+#include "ResourceLoader.h"
+#include "SharedBuffer.h"
 
-#if ENABLE(INDEXED_DATABASE)
-#if USE(LEVELDB)
+@interface NSCachedURLResponse (Details)
+-(CFCachedURLResponseRef)_CFCachedURLResponse;
+@end
 
 namespace WebCore {
 
-class IDBBackingStoreLevelDB;
+#if USE(CFNETWORK)
 
-class IDBBackingStoreTransactionLevelDB : public RefCounted<IDBBackingStoreTransactionLevelDB> {
-public:
-    static PassRefPtr<IDBBackingStoreTransactionLevelDB> create(int64_t transactionID, IDBBackingStoreLevelDB* backingStore)
-    {
-        return adoptRef(new IDBBackingStoreTransactionLevelDB(transactionID, backingStore));
-    }
+CFCachedURLResponseRef SubresourceLoader::willCacheResponse(ResourceHandle* handle, CFCachedURLResponseRef cachedResponse)
+{
+    DiskCacheMonitor::monitorFileBackingStoreCreation(request(), m_resource->sessionID(), cachedResponse);
+    return ResourceLoader::willCacheResponse(handle, cachedResponse);
+}
 
-    ~IDBBackingStoreTransactionLevelDB();
+#else
 
-    void begin();
-    bool commit();
-    void rollback();
-    void resetTransaction();
+NSCachedURLResponse* SubresourceLoader::willCacheResponse(ResourceHandle* handle, NSCachedURLResponse* response)
+{
+    DiskCacheMonitor::monitorFileBackingStoreCreation(request(), m_resource->sessionID(), [response _CFCachedURLResponse]);
+    return ResourceLoader::willCacheResponse(handle, response);
+}
 
-    static LevelDBTransaction* levelDBTransactionFrom(IDBBackingStoreTransactionLevelDB& transaction)
-    {
-        return static_cast<IDBBackingStoreTransactionLevelDB&>(transaction).m_transaction.get();
-    }
+#endif
 
-    int64_t transactionID() { return m_transactionID; }
-
-private:
-    IDBBackingStoreTransactionLevelDB(int64_t transactionID, IDBBackingStoreLevelDB*);
-
-    int64_t m_transactionID;
-    IDBBackingStoreLevelDB* m_backingStore;
-    RefPtr<LevelDBTransaction> m_transaction;
-};
-
-} // namespace WebCore
-
-#endif // USE(LEVELDB)
-#endif // ENABLE(INDEXED_DATABASE)
-#endif // IDBBackingStoreTransactionLevelDB_h
+}

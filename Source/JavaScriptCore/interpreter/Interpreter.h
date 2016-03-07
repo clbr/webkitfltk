@@ -179,6 +179,31 @@ namespace JSC {
         }
     };
 
+    class NativeCallFrameTracerWithRestore {
+    public:
+        ALWAYS_INLINE NativeCallFrameTracerWithRestore(VM* vm, VMEntryFrame* vmEntryFrame, CallFrame* callFrame)
+            : m_vm(vm)
+        {
+            ASSERT(vm);
+            ASSERT(callFrame);
+            m_savedTopVMEntryFrame = vm->topVMEntryFrame;
+            m_savedTopCallFrame = vm->topCallFrame;
+            vm->topVMEntryFrame = vmEntryFrame;
+            vm->topCallFrame = callFrame;
+        }
+
+        ALWAYS_INLINE ~NativeCallFrameTracerWithRestore()
+        {
+            m_vm->topVMEntryFrame = m_savedTopVMEntryFrame;
+            m_vm->topCallFrame = m_savedTopCallFrame;
+        }
+
+    private:
+        VM* m_vm;
+        VMEntryFrame* m_savedTopVMEntryFrame;
+        CallFrame* m_savedTopCallFrame;
+    };
+
     class Interpreter {
         WTF_MAKE_FAST_ALLOCATED;
         friend class CachedCall;
@@ -226,7 +251,7 @@ namespace JSC {
         
         SamplingTool* sampler() { return m_sampler.get(); }
 
-        NEVER_INLINE HandlerInfo* unwind(CallFrame*&, JSValue&);
+        NEVER_INLINE HandlerInfo* unwind(VMEntryFrame*&, CallFrame*&, JSValue&);
         NEVER_INLINE void debug(CallFrame*, DebugHookID);
         JSString* stackTraceAsString(ExecState*, Vector<StackFrame>);
 

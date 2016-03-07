@@ -1,3 +1,150 @@
+2014-08-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r172866.
+        https://bugs.webkit.org/show_bug.cgi?id=136177
+
+        Broke iOS build (Requested by othermaciej on #webkit).
+
+        Reverted changeset:
+
+        "Replace use of WKCopyCFLocalizationPreferredName with
+        NSLocale public API"
+        https://bugs.webkit.org/show_bug.cgi?id=136082
+        http://trac.webkit.org/changeset/172866
+
+2014-08-22  Simon Fraser  <simon.fraser@apple.com>
+
+        Implement paint flashing in the WK1 InspectorOverlay page
+        https://bugs.webkit.org/show_bug.cgi?id=136138
+
+        Reviewed by Sam Weinig, Joseph Pecoraro.
+
+        Implement paint flashing for the WebKit1 InspectorOverlay via a second canvas in the overlay page.
+        We avoid allocating backing store for this canvas until we have paint rects.
+        
+        Because this overlay page is weird and doesn't know how to paint itself, InspectorOverlay manages
+        an array of rects, and pushes them to the page when they change, before forcing a paint.
+        
+        Because iOS doesn't use the InspectorOverlay page, stub out setShowPaintRects on its
+        WebKit WebInspectorClient, but don't yet implement paint flashing there.
+
+        * WebCoreSupport/WebInspectorClient.h:
+        * WebCoreSupport/WebInspectorClient.mm:
+        (WebInspectorClient::WebInspectorClient):
+
+2014-08-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Replace use of WKCopyCFLocalizationPreferredName with NSLocale public API
+        https://bugs.webkit.org/show_bug.cgi?id=136082
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Plugins/Hosted/NetscapePluginHostManager.mm:
+        (WebKit::NetscapePluginHostManager::spawnPluginHost): Get current
+        localization name using WebCore helper instead of SPI.
+        * Plugins/WebBasePluginPackage.mm: Fixed the include style for this 
+        file.
+        (-[WebBasePluginPackage getPluginInfoFromPLists]): Get current
+        localization name using WebCore helper instead of SPI.
+        (+[WebBasePluginPackage preferredLocalizationName]): Deleted. This
+        helper no longer pulls its weight.
+        * WebCoreSupport/WebSystemInterface.mm: 
+        (InitWebCoreSystemInterface): Remove mention of
+        WKCopyCFLocalizationPreferredName.
+        * WebKit.order: ditto
+
+2014-08-22  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Disable ENABLE_IOS_{GESTURE, TOUCH}_EVENTS, and temporarily disable ENABLE_TOUCH_EVENTS
+        and ENABLE_XSLT when building with the iOS public SDK
+        https://bugs.webkit.org/show_bug.cgi?id=135945
+
+        Reviewed by Andy Estes.
+
+        * Configurations/FeatureDefines.xcconfig: Disable ENABLE_IOS_{GESTURE, TOUCH}_EVENTS, ENABLE_TOUCH_EVENTS
+        and ENABLE_XSLT when building with the public SDK.
+        * MigrateHeaders.make: Conditionally migrate headers for touch and gesture events.
+
+2014-08-22  Jon Lee  <jonlee@apple.com>
+
+        Fix iOS build due to r172832 and move RUBBER_BANDING out of FeatureDefines.h
+        https://bugs.webkit.org/show_bug.cgi?id=136157
+
+        Reviewed by Simon Fraser.
+
+        * Configurations/FeatureDefines.xcconfig: Add ENABLE(RUBBER_BANDING).
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]): Wrap in ENABLE(RUBBER_BANDING).
+
+2014-08-21  Zalan Bujtas  <zalan@apple.com>
+
+        Enable SATURATED_LAYOUT_ARITHMETIC.
+        https://bugs.webkit.org/show_bug.cgi?id=136106
+
+        Reviewed by Simon Fraser.
+
+        SATURATED_LAYOUT_ARITHMETIC protects LayoutUnit against arithmetic overflow.
+        (No measurable performance regression on Mac.)
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-08-21  Beth Dakin  <bdakin@apple.com>
+
+        overflow:scroll elements should support rubber-banding
+        https://bugs.webkit.org/show_bug.cgi?id=91655
+
+        Reviewed by Sam Weinig and Darin Adler.
+
+        Disable rubber-banding in overflow areas for now.
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]):
+
+2014-08-19  Pratik Solanki  <psolanki@apple.com>
+
+        Remove PurgeableBuffer since it is not very useful any more
+        https://bugs.webkit.org/show_bug.cgi?id=135939
+
+        Reviewed by Andreas Kling.
+
+        * Misc/WebCache.mm:
+        (+[WebCache statistics]):
+
+2014-08-19  Zalan Bujtas  <zalan@apple.com>
+
+        Remove ENABLE(SUBPIXEL_LAYOUT).
+        https://bugs.webkit.org/show_bug.cgi?id=136077
+
+        Reviewed by Simon Fraser.
+
+        Remove compile time flag SUBPIXEL_LAYOUT. All ports have it enabled for a while now.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-08-18  Maciej Stachowiak  <mjs@apple.com>
+
+        Use NSURLFileTypeMappings directly instead of depending on WebKitSystemInterface wrappers for it
+        https://bugs.webkit.org/show_bug.cgi?id=136035
+
+        Reviewed by Dan Bernstein.
+
+        * Misc/WebNSViewExtras.m:
+        (-[NSView _web_DragImageForElement:rect:event:pasteboard:source:offset:]): Remove comment
+        reference to obsolete WKSI function.
+        * WebCoreSupport/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface): Don't initialize the no-longer-used WKGetExtensionsForMIMEType,
+        WKGetPreferredExtensionForMIMEType, or WKGetMIMETypeForExtension
+        * Plugins/WebPluginDatabase.mm:
+        (-[WebPluginDatabase pluginForExtension:]): Include SPI header from WebCore; use
+        NSURLFileTypeMappings directly instead of via WKSI wrapper.
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::objectContentType): ditto
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _imageExistsAtPaths:]): ditto
+        * WebView/WebView.mm:
+        (+[WebView _supportedFileExtensions]): ditto
+        (+[WebView suggestedFileExtensionForMIMEType:]): ditto
+        (+[WebView _MIMETypeForFile:]): ditto
+
 2014-08-18  Commit Queue  <commit-queue@webkit.org>
 
         Unreviewed, rolling out r172736.

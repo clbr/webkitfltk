@@ -813,6 +813,8 @@ void JIT::emit_op_catch(Instruction* currentInstruction)
     move(TrustedImmPtr(m_vm), regT3);
     // operationThrow returns the callFrame for the handler.
     load32(Address(regT3, VM::callFrameForThrowOffset()), callFrameRegister);
+    load32(Address(regT3, VM::vmEntryFrameForThrowOffset()), regT0);
+    store32(regT0, Address(regT3, VM::topVMEntryFrameOffset()));
 
     addPtr(TrustedImm32(stackPointerOffsetFor(codeBlock()) * sizeof(Register)), callFrameRegister, stackPointerRegister);
 
@@ -1306,9 +1308,9 @@ void JIT::emit_op_to_index_string(Instruction* currentInstruction)
     slowPathCall.call();
 }
 
-void JIT::emit_op_profile_types_with_high_fidelity(Instruction* currentInstruction)
+void JIT::emit_op_profile_type(Instruction* currentInstruction)
 {
-    JITSlowPathCall slowPathCall(this, currentInstruction, slow_path_profile_types_with_high_fidelity);
+    JITSlowPathCall slowPathCall(this, currentInstruction, slow_path_profile_type);
     slowPathCall.call();
 }
 
