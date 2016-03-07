@@ -1,3 +1,614 @@
+2015-01-21  Michael Saboff  <msaboff@apple.com>
+
+        Eliminate Scope slot from JavaScript CallFrame
+        https://bugs.webkit.org/show_bug.cgi?id=136724
+
+        Reviewed by Geoffrey Garen.
+
+        This finishes the removal of the scope chain slot from the call frame header.
+
+        * dfg/DFGOSRExitCompilerCommon.cpp:
+        (JSC::DFG::reifyInlinedCallFrames):
+        * dfg/DFGPreciseLocalClobberize.h:
+        (JSC::DFG::PreciseLocalClobberizeAdaptor::readTop):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * ftl/FTLJSCall.cpp:
+        (JSC::FTL::JSCall::emit):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNativeCallOrConstruct):
+        (JSC::FTL::LowerDFGToLLVM::compileCallOrConstruct):
+        * interpreter/JSStack.h:
+        * interpreter/VMInspector.cpp:
+        (JSC::VMInspector::dumpFrame):
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileOpCall):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileOpCall):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::privateCompileCTINativeCall):
+        * jit/Repatch.cpp:
+        (JSC::generateByIdStub):
+        (JSC::linkClosureCall):
+        * jit/ThunkGenerators.cpp:
+        (JSC::virtualForThunkGenerator):
+        (JSC::nativeForGenerator):
+        Deleted ScopeChain slot from JSStack.  Removed all code where ScopeChain was being
+        read or set.  In most cases this was where we make JS calls.
+
+        * interpreter/CallFrameClosure.h:
+        (JSC::CallFrameClosure::setArgument):
+        (JSC::CallFrameClosure::resetCallFrame): Deleted.
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::execute):
+        (JSC::Interpreter::executeCall):
+        (JSC::Interpreter::executeConstruct):
+        (JSC::Interpreter::prepareForRepeatCall):
+        * interpreter/ProtoCallFrame.cpp:
+        (JSC::ProtoCallFrame::init):
+        * interpreter/ProtoCallFrame.h:
+        (JSC::ProtoCallFrame::scope): Deleted.
+        (JSC::ProtoCallFrame::setScope): Deleted.
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions):
+        * llint/LowLevelInterpreter.asm:
+        * llint/LowLevelInterpreter64.asm:
+        Removed the related scopeChainValue member from ProtoCallFrame.  Reduced the number of
+        registers that needed to be copied from the ProtoCallFrame to a callee's frame
+        from 5 to 4.
+
+        * llint/LowLevelInterpreter32_64.asm:
+        In addition to the prior changes, also deleted the unused macro getDeBruijnScope.
+
+2015-01-21  Michael Saboff  <msaboff@apple.com>
+
+        Eliminate construct methods from NullGetterFunction and NullSetterFunction classes
+        https://bugs.webkit.org/show_bug.cgi?id=140708
+
+        Reviewed by Mark Lam.
+
+        Eliminated construct methods and change getConstructData() for both classes to return
+        ConstructTypeNone as they can never be called.
+
+        * runtime/NullGetterFunction.cpp:
+        (JSC::NullGetterFunction::getConstructData):
+        (JSC::constructReturnUndefined): Deleted.
+        * runtime/NullSetterFunction.cpp:
+        (JSC::NullSetterFunction::getConstructData):
+        (JSC::constructReturnUndefined): Deleted.
+
+2015-01-21  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(INSPECTOR) ifdef guards
+        https://bugs.webkit.org/show_bug.cgi?id=140668
+
+        Reviewed by Darin Adler.
+
+        * Configurations/FeatureDefines.xcconfig:
+        * bindings/ScriptValue.cpp:
+        (Deprecated::ScriptValue::toInspectorValue):
+        * bindings/ScriptValue.h:
+        * inspector/ConsoleMessage.cpp:
+        * inspector/ConsoleMessage.h:
+        * inspector/ContentSearchUtilities.cpp:
+        * inspector/ContentSearchUtilities.h:
+        * inspector/IdentifiersFactory.cpp:
+        * inspector/IdentifiersFactory.h:
+        * inspector/InjectedScript.cpp:
+        * inspector/InjectedScript.h:
+        * inspector/InjectedScriptBase.cpp:
+        * inspector/InjectedScriptBase.h:
+        * inspector/InjectedScriptHost.cpp:
+        * inspector/InjectedScriptHost.h:
+        * inspector/InjectedScriptManager.cpp:
+        * inspector/InjectedScriptManager.h:
+        * inspector/InjectedScriptModule.cpp:
+        * inspector/InjectedScriptModule.h:
+        * inspector/InspectorAgentRegistry.cpp:
+        * inspector/InspectorBackendDispatcher.cpp:
+        * inspector/InspectorBackendDispatcher.h:
+        * inspector/InspectorProtocolTypes.h:
+        * inspector/JSGlobalObjectConsoleClient.cpp:
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        * inspector/JSGlobalObjectInspectorController.h:
+        * inspector/JSGlobalObjectScriptDebugServer.cpp:
+        * inspector/JSGlobalObjectScriptDebugServer.h:
+        * inspector/JSInjectedScriptHost.cpp:
+        * inspector/JSInjectedScriptHost.h:
+        * inspector/JSInjectedScriptHostPrototype.cpp:
+        * inspector/JSInjectedScriptHostPrototype.h:
+        * inspector/JSJavaScriptCallFrame.cpp:
+        * inspector/JSJavaScriptCallFrame.h:
+        * inspector/JSJavaScriptCallFramePrototype.cpp:
+        * inspector/JSJavaScriptCallFramePrototype.h:
+        * inspector/JavaScriptCallFrame.cpp:
+        * inspector/JavaScriptCallFrame.h:
+        * inspector/ScriptCallFrame.cpp:
+        (Inspector::ScriptCallFrame::buildInspectorObject):
+        * inspector/ScriptCallFrame.h:
+        * inspector/ScriptCallStack.cpp:
+        (Inspector::ScriptCallStack::buildInspectorArray):
+        * inspector/ScriptCallStack.h:
+        * inspector/ScriptDebugServer.cpp:
+        * inspector/agents/InspectorAgent.cpp:
+        * inspector/agents/InspectorAgent.h:
+        * inspector/agents/InspectorConsoleAgent.cpp:
+        * inspector/agents/InspectorConsoleAgent.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        * inspector/agents/InspectorDebuggerAgent.h:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        * inspector/agents/InspectorRuntimeAgent.h:
+        * inspector/agents/JSGlobalObjectConsoleAgent.cpp:
+        * inspector/agents/JSGlobalObjectConsoleAgent.h:
+        * inspector/agents/JSGlobalObjectDebuggerAgent.cpp:
+        * inspector/agents/JSGlobalObjectDebuggerAgent.h:
+        * inspector/agents/JSGlobalObjectRuntimeAgent.cpp:
+        * inspector/agents/JSGlobalObjectRuntimeAgent.h:
+        * inspector/scripts/codegen/cpp_generator_templates.py:
+        (CppGeneratorTemplates):
+        * inspector/scripts/tests/expected/commands-with-async-attribute.json-result:
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+        * inspector/scripts/tests/expected/domains-with-varying-command-sizes.json-result:
+        * inspector/scripts/tests/expected/enum-values.json-result:
+        * inspector/scripts/tests/expected/events-with-optional-parameters.json-result:
+        * inspector/scripts/tests/expected/generate-domains-with-feature-guards.json-result:
+        * inspector/scripts/tests/expected/same-type-id-different-domain.json-result:
+        * inspector/scripts/tests/expected/shadowed-optional-type-setters.json-result:
+        * inspector/scripts/tests/expected/type-declaration-aliased-primitive-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-array-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-enum-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-object-type.json-result:
+        * inspector/scripts/tests/expected/type-requiring-runtime-casts.json-result:
+        * runtime/TypeSet.cpp:
+        (JSC::TypeSet::inspectorTypeSet):
+        (JSC::StructureShape::inspectorRepresentation):
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Clean up InjectedScriptSource.js
+        https://bugs.webkit.org/show_bug.cgi?id=140709
+
+        Reviewed by Timothy Hatcher.
+
+        This patch includes some relevant Blink patches and small changes.
+        
+        Patch by <aandrey@chromium.org>
+        DevTools: Remove console last result $_ on console clear.
+        https://src.chromium.org/viewvc/blink?revision=179179&view=revision
+
+        Patch by <eustas@chromium.org>
+        [Inspect DOM properties] incorrect CSS Selector Syntax
+        https://src.chromium.org/viewvc/blink?revision=156903&view=revision
+
+        * inspector/InjectedScriptSource.js:
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Cleanup RuntimeAgent a bit
+        https://bugs.webkit.org/show_bug.cgi?id=140706
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InjectedScript.h:
+        * inspector/InspectorBackendDispatcher.h:
+        * inspector/ScriptCallFrame.cpp:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::evaluate):
+        (Inspector::InspectorRuntimeAgent::getProperties):
+        (Inspector::InspectorRuntimeAgent::run):
+        (Inspector::InspectorRuntimeAgent::getRuntimeTypesForVariablesAtOffsets):
+        (Inspector::recompileAllJSFunctionsForTypeProfiling):
+        (Inspector::InspectorRuntimeAgent::setTypeProfilerEnabledState):
+
+2015-01-20  Matthew Mirman  <mmirman@apple.com>
+
+        Made Identity in the DFG allocate a new temp register and move 
+        the old data to it.
+        https://bugs.webkit.org/show_bug.cgi?id=140700
+        <rdar://problem/19339106>
+
+        Reviewed by Filip Pizlo.
+
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile): 
+        Added scratch registers for Identity. 
+        * tests/mozilla/mozilla-tests.yaml: enabled previously failing test
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Expanding event objects in console shows undefined for most values, it should have real values
+        https://bugs.webkit.org/show_bug.cgi?id=137306
+
+        Reviewed by Timothy Hatcher.
+
+        Provide another optional parameter to getProperties, to gather a list
+        of all own and getter properties.
+
+        * inspector/InjectedScript.cpp:
+        (Inspector::InjectedScript::getProperties):
+        * inspector/InjectedScript.h:
+        * inspector/InjectedScriptSource.js:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::getProperties):
+        * inspector/agents/InspectorRuntimeAgent.h:
+        * inspector/protocol/Runtime.json:
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Should show dynamic specificity values
+        https://bugs.webkit.org/show_bug.cgi?id=140647
+
+        Reviewed by Benjamin Poulain.
+
+        * inspector/protocol/CSS.json:
+        Clarify CSSSelector optional values and add "dynamic" property indicating
+        if the selector can be dynamic based on the element it is matched against.
+
+2015-01-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178751.
+        https://bugs.webkit.org/show_bug.cgi?id=140694
+
+        Caused 32-bit JSC test failures (Requested by JoePeck on
+        #webkit).
+
+        Reverted changeset:
+
+        "put_by_val_direct need to check the property is index or not
+        for using putDirect / putDirectIndex"
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+        http://trac.webkit.org/changeset/178751
+
+2015-01-20  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        put_by_val_direct need to check the property is index or not for using putDirect / putDirectIndex
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+
+        Reviewed by Geoffrey Garen.
+
+        In the put_by_val_direct operation, we use JSObject::putDirect.
+        However, it only accepts non-index property. For index property, we need to use JSObject::putDirectIndex.
+        This patch changes Identifier::asIndex() to return Optional<uint32_t>.
+        It forces callers to check the value is index or not explicitly.
+        Additionally, it checks toString-ed Identifier is index or not to choose putDirect / putDirectIndex.
+
+        * bytecode/GetByIdStatus.cpp:
+        (JSC::GetByIdStatus::computeFor):
+        * bytecode/PutByIdStatus.cpp:
+        (JSC::PutByIdStatus::computeFor):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitDirectPutById):
+        * dfg/DFGOperations.cpp:
+        (JSC::DFG::operationPutByValInternal):
+        * jit/JITOperations.cpp:
+        * jit/Repatch.cpp:
+        (JSC::emitPutTransitionStubAndGetOldStructure):
+        * jsc.cpp:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::getOwnPropertySlot):
+        (JSC::Arguments::put):
+        (JSC::Arguments::deleteProperty):
+        (JSC::Arguments::defineOwnProperty):
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncSort):
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::defineOwnProperty):
+        * runtime/JSCJSValue.cpp:
+        (JSC::JSValue::putToPrimitive):
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::JSGenericTypedArrayView<Adaptor>::getOwnPropertySlot):
+        (JSC::JSGenericTypedArrayView<Adaptor>::put):
+        (JSC::JSGenericTypedArrayView<Adaptor>::defineOwnProperty):
+        (JSC::JSGenericTypedArrayView<Adaptor>::deleteProperty):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::put):
+        (JSC::JSObject::putDirectAccessor):
+        (JSC::JSObject::putDirectCustomAccessor):
+        (JSC::JSObject::deleteProperty):
+        (JSC::JSObject::putDirectMayBeIndex):
+        (JSC::JSObject::defineOwnProperty):
+        * runtime/JSObject.h:
+        (JSC::JSObject::getOwnPropertySlot):
+        (JSC::JSObject::getPropertySlot):
+        (JSC::JSObject::putDirectInternal):
+        * runtime/JSString.cpp:
+        (JSC::JSString::getStringPropertyDescriptor):
+        * runtime/JSString.h:
+        (JSC::JSString::getStringPropertySlot):
+        * runtime/LiteralParser.cpp:
+        (JSC::LiteralParser<CharType>::parse):
+        * runtime/PropertyName.h:
+        (JSC::toUInt32FromCharacters):
+        (JSC::toUInt32FromStringImpl):
+        (JSC::PropertyName::asIndex):
+        * runtime/PropertyNameArray.cpp:
+        (JSC::PropertyNameArray::add):
+        * runtime/StringObject.cpp:
+        (JSC::StringObject::deleteProperty):
+        * runtime/Structure.cpp:
+        (JSC::Structure::prototypeChainMayInterceptStoreTo):
+
+2015-01-20  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION(178696): Sporadic crashes while garbage collecting
+        https://bugs.webkit.org/show_bug.cgi?id=140688
+
+        Reviewed by Geoffrey Garen.
+
+        Added missing visitor.append(&thisObject->m_nullSetterFunction).
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::visitChildren):
+
+2015-01-19  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Replay: code generator should take supplemental specifications and allow cross-framework references
+        https://bugs.webkit.org/show_bug.cgi?id=136312
+
+        Reviewed by Joseph Pecoraro.
+
+        Some types are shared between replay inputs from different frameworks.
+        Previously, these type declarations were duplicated in every input
+        specification file in which they were used. This caused some type encoding
+        traits to be emitted twice if used from WebCore inputs and WebKit2 inputs.
+
+        This patch teaches the replay inputs code generator to accept multiple
+        input specification files. Inputs can freely reference types from other
+        frameworks without duplicating declarations.
+
+        On the code generation side, the model could contain types and inputs from
+        frameworks that are not the target framework. Only generate code for the
+        target framework.
+
+        To properly generate cross-framework type encoding traits, use
+        Type.encoding_type_argument in more places, and add the export macro for WebCore
+        and the Test framework.
+
+        Adjust some tests so that enum coverage is preserved by moving the enum types
+        into "Test" (the target framework for tests).
+
+        * JavaScriptCore.vcxproj/copy-files.cmd:
+        For Windows, copy over JSInputs.json as if it were a private header.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Make JSInputs.json a private header.
+        * replay/JSInputs.json:
+        Put all primitive types and WTF types in this specification file.
+
+        * replay/scripts/CodeGeneratorReplayInputs.py:
+        (Input.__init__):
+        (InputsModel.__init__): Keep track of the input's framework.
+        (InputsModel.parse_specification): Parse the framework here. Adjust to new format,
+        and allow either types or inputs to be missing from a single file.
+
+        (InputsModel.parse_type_with_framework):
+        (InputsModel.parse_input_with_framework):
+        (Generator.should_generate_item): Added helper method.
+        (Generator.generate_header): Filter inputs to generate.
+        (Generator.generate_implementation): Filter inputs to generate.
+        (Generator.generate_enum_trait_declaration): Filter enums to generate.
+        Add WEBCORE_EXPORT macro to enum encoding traits.
+
+        (Generator.generate_for_each_macro): Filter inputs to generate.
+        (Generator.generate_enum_trait_implementation): Filter enums to generate.
+        (generate_from_specifications): Added.
+        (generate_from_specifications.parse_json_from_file):
+        (InputsModel.parse_toplevel): Deleted.
+        (InputsModel.parse_type_with_framework_name): Deleted.
+        (InputsModel.parse_input): Deleted.
+        (generate_from_specification): Deleted.
+        * replay/scripts/CodeGeneratorReplayInputsTemplates.py:
+        * replay/scripts/tests/expected/fail-on-no-inputs.json-error: Removed.
+        * replay/scripts/tests/expected/fail-on-no-types.json-error: Removed.
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers-with-guarded-values.json-TestReplayInputs.cpp:
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers-with-guarded-values.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers.json-TestReplayInputs.cpp:
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enum-with-guard.json-TestReplayInputs.cpp:
+        * replay/scripts/tests/expected/generate-enum-with-guard.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enums-with-same-base-name.json-TestReplayInputs.cpp:
+        * replay/scripts/tests/expected/generate-enums-with-same-base-name.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-input-with-guard.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-input-with-vector-members.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-inputs-with-flags.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-memoized-type-modes.json-TestReplayInputs.h:
+        * replay/scripts/tests/fail-on-c-style-enum-no-storage.json:
+        * replay/scripts/tests/fail-on-duplicate-enum-type.json:
+        * replay/scripts/tests/fail-on-duplicate-input-names.json:
+        * replay/scripts/tests/fail-on-duplicate-type-names.json:
+        * replay/scripts/tests/fail-on-enum-type-missing-values.json:
+        * replay/scripts/tests/fail-on-missing-input-member-name.json:
+        * replay/scripts/tests/fail-on-missing-input-name.json:
+        * replay/scripts/tests/fail-on-missing-input-queue.json:
+        * replay/scripts/tests/fail-on-missing-type-mode.json:
+        * replay/scripts/tests/fail-on-missing-type-name.json:
+        * replay/scripts/tests/fail-on-no-inputs.json:
+        Removed, no longer required to be in a single file.
+
+        * replay/scripts/tests/fail-on-no-types.json:
+        Removed, no longer required to be in a single file.
+
+        * replay/scripts/tests/fail-on-unknown-input-queue.json:
+        * replay/scripts/tests/fail-on-unknown-member-type.json:
+        * replay/scripts/tests/fail-on-unknown-type-mode.json:
+        * replay/scripts/tests/generate-enum-encoding-helpers-with-guarded-values.json:
+        * replay/scripts/tests/generate-enum-encoding-helpers.json:
+        * replay/scripts/tests/generate-enum-with-guard.json:
+        Include enums that are and are not generated.
+
+        * replay/scripts/tests/generate-enums-with-same-base-name.json:
+        * replay/scripts/tests/generate-event-loop-shape-types.json:
+        * replay/scripts/tests/generate-input-with-guard.json:
+        * replay/scripts/tests/generate-input-with-vector-members.json:
+        * replay/scripts/tests/generate-inputs-with-flags.json:
+        * replay/scripts/tests/generate-memoized-type-modes.json:
+
+2015-01-20  Tomas Popela  <tpopela@redhat.com>
+
+        [GTK] Cannot compile 2.7.3 on PowerPC machines
+        https://bugs.webkit.org/show_bug.cgi?id=140616
+
+        Include climits for INT_MAX and wtf/DataLog.h for dataLogF
+
+        Reviewed by Csaba Osztrogonác.
+
+        * runtime/BasicBlockLocation.cpp:
+
+2015-01-19  Michael Saboff  <msaboff@apple.com>
+
+        A "cached" null setter should throw a TypeException when called in strict mode and doesn't
+        https://bugs.webkit.org/show_bug.cgi?id=139418
+
+        Reviewed by Filip Pizlo.
+
+        Made a new NullSetterFunction class similar to NullGetterFunction.  The difference is that 
+        NullSetterFunction will throw a TypeError per the ECMA262 spec for a strict mode caller.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        Added new files NullSetterFunction.cpp and NullSetterFunction.h.
+
+        * runtime/GetterSetter.h:
+        (JSC::GetterSetter::GetterSetter):
+        (JSC::GetterSetter::isSetterNull):
+        (JSC::GetterSetter::setSetter):
+        Change setter instances from using NullGetterFunction to using NullSetterFunction.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::nullSetterFunction):
+        Added m_nullSetterFunction and accessor.
+
+        * runtime/NullSetterFunction.cpp: Added.
+        (JSC::GetCallerStrictnessFunctor::GetCallerStrictnessFunctor):
+        (JSC::GetCallerStrictnessFunctor::operator()):
+        (JSC::GetCallerStrictnessFunctor::callerIsStrict):
+        (JSC::callerIsStrict):
+        Method to determine if the caller is in strict mode.
+
+        (JSC::callReturnUndefined):
+        (JSC::constructReturnUndefined):
+        (JSC::NullSetterFunction::getCallData):
+        (JSC::NullSetterFunction::getConstructData):
+        * runtime/NullSetterFunction.h: Added.
+        (JSC::NullSetterFunction::create):
+        (JSC::NullSetterFunction::createStructure):
+        (JSC::NullSetterFunction::NullSetterFunction):
+        Class with handlers for a null setter.
+
+2015-01-19  Saam Barati  <saambarati1@gmail.com>
+
+        Web Inspector: Provide a front end for JSC's Control Flow Profiler
+        https://bugs.webkit.org/show_bug.cgi?id=138454
+
+        Reviewed by Timothy Hatcher.
+
+        This patch puts the final touches on what JSC needs to provide
+        for the Web Inspector to show a UI for the control flow profiler.
+
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::recompileAllJSFunctionsForTypeProfiling):
+        * runtime/ControlFlowProfiler.cpp:
+        (JSC::ControlFlowProfiler::getBasicBlocksForSourceID):
+        * runtime/FunctionHasExecutedCache.cpp:
+        (JSC::FunctionHasExecutedCache::getFunctionRanges):
+        (JSC::FunctionHasExecutedCache::getUnexecutedFunctionRanges): Deleted.
+        * runtime/FunctionHasExecutedCache.h:
+
+2015-01-19  David Kilzer  <ddkilzer@apple.com>
+
+        [iOS] Only use LLVM static library arguments on 64-bit builds of libllvmForJSC.dylib
+        <http://webkit.org/b/140658>
+
+        Reviewed by Filip Pizlo.
+
+        * Configurations/LLVMForJSC.xcconfig: Set OTHER_LDFLAGS_LLVM
+        only when building for 64-bit architectures.
+
+2015-01-19  Filip Pizlo  <fpizlo@apple.com>
+
+        ClosureCallStubRoutine no longer needs codeOrigin
+        https://bugs.webkit.org/show_bug.cgi?id=140659
+
+        Reviewed by Michael Saboff.
+        
+        Once upon a time, we would look for the CodeOrigin associated with a return PC. This search
+        would start with the CodeBlock according to the caller frame's call frame header. But if the
+        call was a closure call, the return PC would be inside some closure call stub. So if the
+        CodeBlock search failed, we would search *all* closure call stub routines to see which one
+        encompasses the return PC. Then, we would use the CodeOrigin stored in the stub routine
+        object. This was all a bunch of madness, and we actually got rid of it - we now determine
+        the CodeOrigin for a call frame using the encoded code origin bits inside the tag of the
+        argument count.
+        
+        This patch removes the final vestiges of the madness:
+        
+        - Remove the totally unused method declaration for the thing that did the closure call stub
+          search.
+        
+        - Remove the CodeOrigin field from the ClosureCallStubRoutine. Except for that crazy search
+          that we no longer do, everyone else who finds a ClosureCallStubRoutine will find it via
+          the CallLinkInfo. The CallLinkInfo also has the CodeOrigin, so we don't need this field
+          anymore.
+
+        * bytecode/CodeBlock.h:
+        * jit/ClosureCallStubRoutine.cpp:
+        (JSC::ClosureCallStubRoutine::ClosureCallStubRoutine):
+        * jit/ClosureCallStubRoutine.h:
+        (JSC::ClosureCallStubRoutine::executable):
+        (JSC::ClosureCallStubRoutine::codeOrigin): Deleted.
+        * jit/Repatch.cpp:
+        (JSC::linkClosureCall):
+
+2015-01-19  Saam Barati  <saambarati1@gmail.com>
+
+        Basic block start offsets should never be larger than end offsets in the control flow profiler
+        https://bugs.webkit.org/show_bug.cgi?id=140377
+
+        Reviewed by Filip Pizlo.
+
+        The bytecode generator will emit code more than once for some AST nodes. For instance, 
+        the finally block of TryNode will emit two code paths for its finally block: one for 
+        the normal path, and another for the path where an exception is thrown in the catch block. 
+        
+        This repeated code emission of the same AST node previously broke how the control 
+        flow profiler computed text ranges of basic blocks because when the same AST node 
+        is emitted multiple times, there is a good chance that there are ranges that span 
+        from the end offset of one of these duplicated nodes back to the start offset of 
+        the same duplicated node. This caused a basic block range to report a larger start 
+        offset than end offset. This was incorrect. Now, when this situation is encountered 
+        while linking a CodeBlock, the faulty range in question is ignored.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        (JSC::CodeBlock::insertBasicBlockBoundariesForControlFlowProfiler):
+        * bytecode/CodeBlock.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForInNode::emitMultiLoopBytecode):
+        (JSC::ForOfNode::emitBytecode):
+        (JSC::TryNode::emitBytecode):
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseConditionalExpression):
+        * runtime/ControlFlowProfiler.cpp:
+        (JSC::ControlFlowProfiler::ControlFlowProfiler):
+        * runtime/ControlFlowProfiler.h:
+        (JSC::ControlFlowProfiler::dummyBasicBlock):
+
+2015-01-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Flip the switch on
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+
+        Reviewed by Antti Koivisto.
+
+        * Configurations/FeatureDefines.xcconfig:
+
 2015-01-19  Brian J. Burg  <burg@cs.washington.edu>
 
         Web Replay: convert to is<T> and downcast<T> for decoding replay inputs

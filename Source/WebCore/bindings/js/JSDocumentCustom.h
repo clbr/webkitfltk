@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Nikolas Zimmermann <zimmermann@kde.org>
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,11 +20,24 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-interface SVGElementInstanceList {
-    readonly attribute unsigned long length;
+#ifndef JSDocumentCustom_h
+#define JSDocumentCustom_h
 
-    SVGElementInstance item([Default=Undefined] optional unsigned long index);
-};
+#include "JSDOMBinding.h"
+#include "JSDocument.h"
+
+namespace WebCore {
+
+ALWAYS_INLINE JSDocument* jsDocumentCast(JSC::JSValue value)
+{
+    if (UNLIKELY(!value.isCell()))
+        return nullptr;
+    return value.asCell()->type() == JSDocumentWrapperType ? JSC::jsCast<JSDocument*>(value) : nullptr;
+}
+
+} // namespace WebCore
+
+#endif // JSDocumentCustom_h

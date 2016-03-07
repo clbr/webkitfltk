@@ -126,6 +126,8 @@ public:
         if (hasError())
             return;
 
+        sinkPendingAtomIfNecessary();
+
         if (builtInCharacterClassID == JSC::Yarr::NewlineClassID && inverted) {
             m_hasValidAtom = true;
             ASSERT(m_lastPrefixTreeEntry);
@@ -243,8 +245,7 @@ private:
     {
         if (trivialAtom & hasNonCharacterMask) {
             ASSERT(trivialAtom & newlineClassIDBuiltinMask);
-            for (unsigned i = 1; i < 128; ++i)
-                m_nfa.addTransition(source, target, i);
+            m_nfa.addTransitionsOnAnyCharacter(source, target);
         } else {
             if (trivialAtom & caseInsensitiveMask) {
                 char character = static_cast<char>(trivialAtom & characterMask);

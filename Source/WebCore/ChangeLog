@@ -1,3 +1,981 @@
+2015-01-21  Benjamin Poulain  <benjamin@webkit.org>
+
+        Handle the transition on any character as a separate type of transition
+        https://bugs.webkit.org/show_bug.cgi?id=140711
+
+        Reviewed by Andreas Kling.
+
+        Instead of considering the universal transition as 127 transitions, it is now
+        handled as a separate type of transition.
+
+        The goal is to reduce the number of exit edge to consider for each node. Instead
+        of having 127 for any partition containing one universal transition, we have
+        as few exit edges as necessary + one universal transition.
+
+        In the NFA, the universal transition is stored directly on NFANode in a new
+        HashSet (transitionsOnAnyCharacter).
+        The target nodes are made exclusive between "transitionsOnAnyCharacter" and "transitions"
+        by construction. That is not strictly needed but it simplify debugging at the moment.
+
+        When converting a NFA to a DFA, we first find all the node that transition on any character.
+        Then, when we iterate over "real" transition, we also augment that set with the set on
+        any character.
+
+        When creating the DFA node, we first consider each "real" transition, then we have a single
+        "fallback" transition for any character that has not been handled yet.
+
+        When matching, we first search for any real transition. If there is none but a fallback exists,
+        we take the fallback.
+
+        * contentextensions/DFA.cpp:
+        (WebCore::ContentExtensions::DFA::nextState):
+        (WebCore::ContentExtensions::printTransitions):
+        (WebCore::ContentExtensions::DFA::debugPrintDot):
+        (WebCore::ContentExtensions::printTransition): Deleted.
+        * contentextensions/DFANode.h:
+        * contentextensions/NFA.cpp:
+        (WebCore::ContentExtensions::NFA::addTransition):
+        (WebCore::ContentExtensions::NFA::addTransitionsOnAnyCharacter):
+        (WebCore::ContentExtensions::printTransitions):
+        (WebCore::ContentExtensions::NFA::debugPrintDot):
+        (WebCore::ContentExtensions::printTransition): Deleted.
+        * contentextensions/NFA.h:
+        * contentextensions/NFANode.h:
+        * contentextensions/NFAToDFA.cpp:
+        (WebCore::ContentExtensions::populateTransitions):
+        (WebCore::ContentExtensions::getOrCreateDFANode):
+        (WebCore::ContentExtensions::NFAToDFA::convert):
+        * contentextensions/URLFilterParser.cpp:
+        (WebCore::ContentExtensions::GraphBuilder::generateTransition):
+
+2015-01-20  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION(r178180): Membuster regressed ~4%
+        https://bugs.webkit.org/show_bug.cgi?id=140495
+
+        Reviewed by Andreas Kling.
+
+        After r178180 we keep system fallback fonts that are used on glyph pages alive.
+        Previously we would traverse the glyph pages and remove entries referencing system fallbacks.
+
+        * platform/graphics/FontCache.cpp:
+        (WebCore::FontCache::purgeInactiveFontData):
+        * platform/graphics/FontCascade.cpp:
+        (WebCore::pruneUnreferencedEntriesFromFontGlyphsCache):
+        (WebCore::pruneSystemFallbackFonts):
+        * platform/graphics/FontCascade.h:
+        * platform/graphics/FontGlyphs.cpp:
+        (WebCore::FontGlyphs::pruneSystemFallbacks):
+
+            When clearing the font cache also remove the cached glyph pages that may contain system fallback fonts
+            and release the fallbacks.
+
+        * platform/graphics/FontGlyphs.h:
+
+2015-01-21  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        first-letter pseudo-element from ancestors is not being ignored in grids and flexboxes
+        https://bugs.webkit.org/show_bug.cgi?id=138424
+
+        Reviewed by Benjamin Poulain.
+
+        Source/WebCore:
+
+        According to the grid and flexbox specs:
+        "::first-letter pseudo-element do not apply to grid/flex containers".
+        http://dev.w3.org/csswg/css-grid/#grid-containers
+        http://dev.w3.org/csswg/css-flexbox/#flex-containers
+
+        Check also the CSS WG mailing list discussion:
+        http://lists.w3.org/Archives/Public/www-style/2014Dec/0305.html
+
+        This was almost working right, except in the case that an ancestor was
+        setting the ::first-letter pseudo-element.
+
+        Added a few more cases to the current tests in order to check this
+        behavior.
+        Also created some new tests to increase coverage
+
+        Tests: fast/css/first-letter-from-ancestors-not-apply-inline-elements.html
+               fast/css/first-letter-ignores-display-property.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::getFirstLetter): Go to the next sibling when
+        looking for the first text child if you reach a grid or flexbox.
+
+2015-01-21  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix cast-align warning in Source/WebCore/platform/efl/EflScreenUtilities.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=140670
+
+        Reviewed by Darin Adler.
+
+        * platform/efl/EflScreenUtilities.cpp:
+        (WebCore::createCustomCursor):
+
+2015-01-21  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(INSPECTOR) ifdef guards
+        https://bugs.webkit.org/show_bug.cgi?id=140668
+
+        Reviewed by Darin Adler.
+
+        * Configurations/FeatureDefines.xcconfig:
+        * WebCore.exp.in:
+        * bindings/js/JSCommandLineAPIHostCustom.cpp:
+        * bindings/js/JSDOMWindowBase.cpp:
+        (WebCore::JSDOMWindowBase::supportsProfiling):
+        (WebCore::JSDOMWindowBase::supportsRichSourceInfo):
+        * bindings/js/JSInspectorFrontendHostCustom.cpp:
+        * bindings/js/ScriptController.cpp:
+        (WebCore::ScriptController::collectIsolatedContexts):
+        * bindings/js/ScriptController.h:
+        * bindings/js/ScriptGlobalObject.cpp:
+        (WebCore::ScriptGlobalObject::set):
+        * bindings/js/ScriptGlobalObject.h:
+        * bindings/js/WorkerScriptDebugServer.cpp:
+        * bindings/js/WorkerScriptDebugServer.h:
+        * dom/Node.cpp:
+        (WebCore::Node::inspect):
+        * inspector/CommandLineAPIHost.cpp:
+        * inspector/CommandLineAPIHost.idl:
+        * inspector/CommandLineAPIModule.cpp:
+        * inspector/CommandLineAPIModule.h:
+        * inspector/DOMEditor.cpp:
+        * inspector/DOMEditor.h:
+        * inspector/DOMPatchSupport.cpp:
+        * inspector/DOMPatchSupport.h:
+        * inspector/InspectorApplicationCacheAgent.cpp:
+        * inspector/InspectorApplicationCacheAgent.h:
+        * inspector/InspectorCSSAgent.cpp:
+        * inspector/InspectorCSSAgent.h:
+        * inspector/InspectorClient.cpp:
+        * inspector/InspectorConsoleInstrumentation.h:
+        (WebCore::InspectorInstrumentation::addMessageToConsole):
+        (WebCore::InspectorInstrumentation::consoleCount):
+        (WebCore::InspectorInstrumentation::startConsoleTiming):
+        (WebCore::InspectorInstrumentation::stopConsoleTiming):
+        (WebCore::InspectorInstrumentation::consoleTimeStamp):
+        (WebCore::InspectorInstrumentation::startProfiling):
+        (WebCore::InspectorInstrumentation::stopProfiling):
+        * inspector/InspectorController.cpp:
+        * inspector/InspectorController.h:
+        * inspector/InspectorDOMAgent.cpp:
+        * inspector/InspectorDOMAgent.h:
+        * inspector/InspectorDOMDebuggerAgent.cpp:
+        * inspector/InspectorDOMDebuggerAgent.h:
+        * inspector/InspectorDOMStorageAgent.cpp:
+        * inspector/InspectorDatabaseAgent.cpp:
+        * inspector/InspectorDatabaseAgent.h:
+        * inspector/InspectorDatabaseInstrumentation.h:
+        (WebCore::InspectorInstrumentation::didOpenDatabase):
+        * inspector/InspectorDatabaseResource.cpp:
+        * inspector/InspectorDatabaseResource.h:
+        * inspector/InspectorFrontendClientLocal.cpp:
+        * inspector/InspectorFrontendHost.cpp:
+        * inspector/InspectorFrontendHost.idl:
+        * inspector/InspectorHistory.cpp:
+        * inspector/InspectorHistory.h:
+        * inspector/InspectorIndexedDBAgent.cpp:
+        * inspector/InspectorIndexedDBAgent.h:
+        * inspector/InspectorInstrumentation.cpp:
+        * inspector/InspectorInstrumentation.h:
+        (WebCore::InspectorInstrumentation::didClearWindowObjectInWorld):
+        (WebCore::InspectorInstrumentation::isDebuggerPaused):
+        (WebCore::InspectorInstrumentation::willInsertDOMNode):
+        (WebCore::InspectorInstrumentation::didInsertDOMNode):
+        (WebCore::InspectorInstrumentation::willRemoveDOMNode):
+        (WebCore::InspectorInstrumentation::didRemoveDOMNode):
+        (WebCore::InspectorInstrumentation::willModifyDOMAttr):
+        (WebCore::InspectorInstrumentation::didModifyDOMAttr):
+        (WebCore::InspectorInstrumentation::didRemoveDOMAttr):
+        (WebCore::InspectorInstrumentation::didInvalidateStyleAttr):
+        (WebCore::InspectorInstrumentation::frameWindowDiscarded):
+        (WebCore::InspectorInstrumentation::mediaQueryResultChanged):
+        (WebCore::InspectorInstrumentation::didPushShadowRoot):
+        (WebCore::InspectorInstrumentation::willPopShadowRoot):
+        (WebCore::InspectorInstrumentation::didCreateNamedFlow):
+        (WebCore::InspectorInstrumentation::willRemoveNamedFlow):
+        (WebCore::InspectorInstrumentation::didChangeRegionOverset):
+        (WebCore::InspectorInstrumentation::didRegisterNamedFlowContentElement):
+        (WebCore::InspectorInstrumentation::didUnregisterNamedFlowContentElement):
+        (WebCore::InspectorInstrumentation::mouseDidMoveOverElement):
+        (WebCore::InspectorInstrumentation::handleTouchEvent):
+        (WebCore::InspectorInstrumentation::handleMousePress):
+        (WebCore::InspectorInstrumentation::forcePseudoState):
+        (WebCore::InspectorInstrumentation::characterDataModified):
+        (WebCore::InspectorInstrumentation::willSendXMLHttpRequest):
+        (WebCore::InspectorInstrumentation::didInstallTimer):
+        (WebCore::InspectorInstrumentation::didRemoveTimer):
+        (WebCore::InspectorInstrumentation::willCallFunction):
+        (WebCore::InspectorInstrumentation::didCallFunction):
+        (WebCore::InspectorInstrumentation::willDispatchXHRReadyStateChangeEvent):
+        (WebCore::InspectorInstrumentation::didDispatchXHRReadyStateChangeEvent):
+        (WebCore::InspectorInstrumentation::willDispatchEvent):
+        (WebCore::InspectorInstrumentation::didDispatchEvent):
+        (WebCore::InspectorInstrumentation::willHandleEvent):
+        (WebCore::InspectorInstrumentation::didHandleEvent):
+        (WebCore::InspectorInstrumentation::willDispatchEventOnWindow):
+        (WebCore::InspectorInstrumentation::didDispatchEventOnWindow):
+        (WebCore::InspectorInstrumentation::willEvaluateScript):
+        (WebCore::InspectorInstrumentation::didEvaluateScript):
+        (WebCore::InspectorInstrumentation::scriptsEnabled):
+        (WebCore::InspectorInstrumentation::willFireTimer):
+        (WebCore::InspectorInstrumentation::didFireTimer):
+        (WebCore::InspectorInstrumentation::didInvalidateLayout):
+        (WebCore::InspectorInstrumentation::willLayout):
+        (WebCore::InspectorInstrumentation::didLayout):
+        (WebCore::InspectorInstrumentation::didScroll):
+        (WebCore::InspectorInstrumentation::willDispatchXHRLoadEvent):
+        (WebCore::InspectorInstrumentation::didDispatchXHRLoadEvent):
+        (WebCore::InspectorInstrumentation::willPaint):
+        (WebCore::InspectorInstrumentation::didPaint):
+        (WebCore::InspectorInstrumentation::willScrollLayer):
+        (WebCore::InspectorInstrumentation::didScrollLayer):
+        (WebCore::InspectorInstrumentation::willRecalculateStyle):
+        (WebCore::InspectorInstrumentation::didRecalculateStyle):
+        (WebCore::InspectorInstrumentation::didScheduleStyleRecalculation):
+        (WebCore::InspectorInstrumentation::applyEmulatedMedia):
+        (WebCore::InspectorInstrumentation::willSendRequest):
+        (WebCore::InspectorInstrumentation::continueAfterPingLoader):
+        (WebCore::InspectorInstrumentation::markResourceAsCached):
+        (WebCore::InspectorInstrumentation::didLoadResourceFromMemoryCache):
+        (WebCore::InspectorInstrumentation::willReceiveResourceResponse):
+        (WebCore::InspectorInstrumentation::didReceiveResourceResponse):
+        (WebCore::InspectorInstrumentation::continueAfterXFrameOptionsDenied):
+        (WebCore::InspectorInstrumentation::continueWithPolicyDownload):
+        (WebCore::InspectorInstrumentation::continueWithPolicyIgnore):
+        (WebCore::InspectorInstrumentation::didReceiveData):
+        (WebCore::InspectorInstrumentation::didFinishLoading):
+        (WebCore::InspectorInstrumentation::didFailLoading):
+        (WebCore::InspectorInstrumentation::documentThreadableLoaderStartedLoadingForClient):
+        (WebCore::InspectorInstrumentation::willLoadXHR):
+        (WebCore::InspectorInstrumentation::didFailXHRLoading):
+        (WebCore::InspectorInstrumentation::didFinishXHRLoading):
+        (WebCore::InspectorInstrumentation::didReceiveXHRResponse):
+        (WebCore::InspectorInstrumentation::willLoadXHRSynchronously):
+        (WebCore::InspectorInstrumentation::didLoadXHRSynchronously):
+        (WebCore::InspectorInstrumentation::scriptImported):
+        (WebCore::InspectorInstrumentation::scriptExecutionBlockedByCSP):
+        (WebCore::InspectorInstrumentation::didReceiveScriptResponse):
+        (WebCore::InspectorInstrumentation::domContentLoadedEventFired):
+        (WebCore::InspectorInstrumentation::loadEventFired):
+        (WebCore::InspectorInstrumentation::frameDetachedFromParent):
+        (WebCore::InspectorInstrumentation::didCommitLoad):
+        (WebCore::InspectorInstrumentation::frameDocumentUpdated):
+        (WebCore::InspectorInstrumentation::loaderDetachedFromFrame):
+        (WebCore::InspectorInstrumentation::frameStartedLoading):
+        (WebCore::InspectorInstrumentation::frameStoppedLoading):
+        (WebCore::InspectorInstrumentation::frameScheduledNavigation):
+        (WebCore::InspectorInstrumentation::frameClearedScheduledNavigation):
+        (WebCore::InspectorInstrumentation::willRunJavaScriptDialog):
+        (WebCore::InspectorInstrumentation::didRunJavaScriptDialog):
+        (WebCore::InspectorInstrumentation::willDestroyCachedResource):
+        (WebCore::InspectorInstrumentation::willWriteHTML):
+        (WebCore::InspectorInstrumentation::didWriteHTML):
+        (WebCore::InspectorInstrumentation::didDispatchDOMStorageEvent):
+        (WebCore::InspectorInstrumentation::shouldPauseDedicatedWorkerOnStart):
+        (WebCore::InspectorInstrumentation::didStartWorkerGlobalScope):
+        (WebCore::InspectorInstrumentation::workerGlobalScopeTerminated):
+        (WebCore::InspectorInstrumentation::didCreateWebSocket):
+        (WebCore::InspectorInstrumentation::willSendWebSocketHandshakeRequest):
+        (WebCore::InspectorInstrumentation::didReceiveWebSocketHandshakeResponse):
+        (WebCore::InspectorInstrumentation::didCloseWebSocket):
+        (WebCore::InspectorInstrumentation::didReceiveWebSocketFrame):
+        (WebCore::InspectorInstrumentation::didReceiveWebSocketFrameError):
+        (WebCore::InspectorInstrumentation::didSendWebSocketFrame):
+        (WebCore::InspectorInstrumentation::sessionCreated):
+        (WebCore::InspectorInstrumentation::sessionLoaded):
+        (WebCore::InspectorInstrumentation::sessionModified):
+        (WebCore::InspectorInstrumentation::segmentCreated):
+        (WebCore::InspectorInstrumentation::segmentCompleted):
+        (WebCore::InspectorInstrumentation::segmentLoaded):
+        (WebCore::InspectorInstrumentation::segmentUnloaded):
+        (WebCore::InspectorInstrumentation::captureStarted):
+        (WebCore::InspectorInstrumentation::captureStopped):
+        (WebCore::InspectorInstrumentation::playbackStarted):
+        (WebCore::InspectorInstrumentation::playbackPaused):
+        (WebCore::InspectorInstrumentation::playbackFinished):
+        (WebCore::InspectorInstrumentation::playbackHitPosition):
+        (WebCore::InspectorInstrumentation::networkStateChanged):
+        (WebCore::InspectorInstrumentation::updateApplicationCacheStatus):
+        (WebCore::InspectorInstrumentation::didRequestAnimationFrame):
+        (WebCore::InspectorInstrumentation::didCancelAnimationFrame):
+        (WebCore::InspectorInstrumentation::willFireAnimationFrame):
+        (WebCore::InspectorInstrumentation::didFireAnimationFrame):
+        (WebCore::InspectorInstrumentation::layerTreeDidChange):
+        (WebCore::InspectorInstrumentation::renderLayerDestroyed):
+        (WebCore::InspectorInstrumentation::pseudoElementDestroyed):
+        (WebCore::InspectorInstrumentation::instrumentingAgentsForDocument):
+        (WebCore::InspectorInstrumentation::hasFrontends): Deleted.
+        (WebCore::InspectorInstrumentation::consoleAgentEnabled): Deleted.
+        (WebCore::InspectorInstrumentation::runtimeAgentEnabled): Deleted.
+        (WebCore::InspectorInstrumentation::timelineAgentEnabled): Deleted.
+        (WebCore::InspectorInstrumentation::replayAgentEnabled): Deleted.
+        * inspector/InspectorLayerTreeAgent.cpp:
+        * inspector/InspectorLayerTreeAgent.h:
+        * inspector/InspectorOverlay.cpp:
+        * inspector/InspectorPageAgent.cpp:
+        * inspector/InspectorPageAgent.h:
+        * inspector/InspectorReplayAgent.cpp:
+        * inspector/InspectorReplayAgent.h:
+        * inspector/InspectorResourceAgent.cpp:
+        * inspector/InspectorResourceAgent.h:
+        * inspector/InspectorStyleSheet.cpp:
+        * inspector/InspectorStyleSheet.h:
+        * inspector/InspectorStyleTextEditor.cpp:
+        * inspector/InspectorStyleTextEditor.h:
+        * inspector/InspectorTimelineAgent.cpp:
+        * inspector/InspectorTimelineAgent.h:
+        * inspector/InspectorWorkerAgent.cpp:
+        * inspector/InspectorWorkerResource.h:
+        * inspector/InstrumentingAgents.cpp:
+        * inspector/NetworkResourcesData.cpp:
+        * inspector/NetworkResourcesData.h:
+        * inspector/PageConsoleAgent.cpp:
+        * inspector/PageConsoleAgent.h:
+        * inspector/PageDebuggerAgent.cpp:
+        * inspector/PageDebuggerAgent.h:
+        * inspector/PageRuntimeAgent.cpp:
+        * inspector/PageRuntimeAgent.h:
+        * inspector/PageScriptDebugServer.cpp:
+        * inspector/PageScriptDebugServer.h:
+        * inspector/TimelineRecordFactory.cpp:
+        * inspector/WebConsoleAgent.cpp:
+        * inspector/WebConsoleAgent.h:
+        * inspector/WebDebuggerAgent.cpp:
+        * inspector/WebDebuggerAgent.h:
+        * inspector/WebInjectedScriptHost.cpp:
+        * inspector/WebInjectedScriptHost.h:
+        * inspector/WebInjectedScriptManager.cpp:
+        * inspector/WebInjectedScriptManager.h:
+        * inspector/WorkerConsoleAgent.cpp:
+        * inspector/WorkerConsoleAgent.h:
+        * inspector/WorkerDebuggerAgent.cpp:
+        * inspector/WorkerDebuggerAgent.h:
+        * inspector/WorkerInspectorController.cpp:
+        * inspector/WorkerInspectorController.h:
+        * inspector/WorkerRuntimeAgent.cpp:
+        * inspector/WorkerRuntimeAgent.h:
+        * loader/DocumentThreadableLoader.cpp:
+        (WebCore::DocumentThreadableLoader::didReceiveResponse):
+        (WebCore::DocumentThreadableLoader::loadRequest):
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::continueLoadAfterNavigationPolicy):
+        (WebCore::FrameLoader::dispatchDidClearWindowObjectInWorld):
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::createResourceHandle):
+        (WebCore::ApplicationCacheGroup::didReceiveResponse):
+        * loader/appcache/ApplicationCacheHost.cpp:
+        (WebCore::ApplicationCacheHost::applicationCacheInfo):
+        * loader/appcache/ApplicationCacheHost.h:
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::shouldContinueAfterNotifyingLoadedFromMemoryCache):
+        * page/ContextMenuController.cpp:
+        (WebCore::ContextMenuController::showContextMenu):
+        (WebCore::ContextMenuController::contextMenuItemSelected):
+        (WebCore::ContextMenuController::populate):
+        (WebCore::ContextMenuController::addInspectElementItem):
+        (WebCore::ContextMenuController::checkOrEnableIfNeeded):
+        * page/FrameView.cpp:
+        (WebCore::FrameView::sendResizeEventIfNeeded):
+        * page/Page.cpp:
+        (WebCore::Page::Page):
+        (WebCore::Page::~Page):
+        * page/Page.h:
+        * platform/ContextMenuItem.h:
+        * platform/efl/EflInspectorUtilities.cpp:
+        * platform/efl/EflInspectorUtilities.h:
+        * platform/network/ResourceRequestBase.h:
+        (WebCore::ResourceRequestBase::ResourceRequestBase):
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        (WebCore::ResourceRequest::updateFromDelegatePreservingOldProperties):
+        * platform/network/cocoa/ResourceRequestCocoa.mm:
+        (WebCore::ResourceRequest::updateFromDelegatePreservingOldProperties):
+        * testing/Internals.cpp:
+        (WebCore::InspectorFrontendChannelDummy::sendMessageToFrontend):
+        (WebCore::Internals::resetToConsistentState):
+        (WebCore::Internals::inspectorHighlightRects):
+        (WebCore::Internals::inspectorHighlightObject):
+        (WebCore::Internals::setInspectorIsUnderTest):
+        * testing/Internals.h:
+        * testing/Internals.idl:
+        * workers/WorkerGlobalScope.cpp:
+        (WebCore::WorkerGlobalScope::WorkerGlobalScope):
+        * workers/WorkerGlobalScope.h:
+        * workers/WorkerGlobalScopeProxy.h:
+        * workers/WorkerMessagingProxy.cpp:
+        (WebCore::WorkerMessagingProxy::WorkerMessagingProxy):
+        (WebCore::WorkerMessagingProxy::sendMessageToInspector):
+        (WebCore::WorkerMessagingProxy::postMessageToPageInspector):
+        * workers/WorkerMessagingProxy.h:
+        * workers/WorkerReportingProxy.h:
+        * workers/WorkerThread.cpp:
+        (WebCore::WorkerThread::workerThread):
+
+2015-01-20  Chris Dumez  <cdumez@apple.com>
+
+        Simplify DiagnosticLoggingClient call sites
+        https://bugs.webkit.org/show_bug.cgi?id=140701
+
+        Reviewed by Andreas Kling.
+
+        Simplify DiagnosticLoggingClient call sites by:
+        - Moving the Settings::diagnosticLoggingEnabled() check inside the
+          MainFrame::diagnosticLoggingClient() getter.
+        - Having MainFrame::diagnosticLoggingClient() return a reference
+          instead of a pointer (returning a dummy client if necessary).
+
+        Otherwise, each call site needs to both check the setting and do a
+        null-check on the client which is a bit annoying.
+
+        * history/PageCache.cpp:
+        (WebCore::logPageCacheFailureDiagnosticMessage):
+        (WebCore::logCanCacheFrameDecision):
+        (WebCore::logCanCachePageDecision):
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::parseAttribute):
+        * loader/EmptyClients.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::logNavigation):
+        (WebCore::FrameLoader::checkLoadCompleteForThisFrame):
+        * loader/SubframeLoader.cpp:
+        (WebCore::logPluginRequest):
+        * loader/SubresourceLoader.cpp:
+        (WebCore::logResourceLoaded):
+        * page/DiagnosticLoggingClient.h:
+        (WebCore::DiagnosticLoggingClient::logDiagnosticMessage): Deleted.
+        (WebCore::DiagnosticLoggingClient::logDiagnosticMessageWithResult): Deleted.
+        (WebCore::DiagnosticLoggingClient::logDiagnosticMessageWithValue): Deleted.
+        * page/MainFrame.cpp:
+        (WebCore::MainFrame::diagnosticLoggingClient):
+        * page/MainFrame.h:
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Should show dynamic specificity values
+        https://bugs.webkit.org/show_bug.cgi?id=140647
+
+        Reviewed by Benjamin Poulain.
+
+        Test: inspector/css/selector-dynamic-specificity.html
+
+        * inspector/InspectorCSSAgent.h:
+        * inspector/InspectorCSSAgent.cpp:
+        (WebCore::InspectorCSSAgent::setRuleSelector):
+        (WebCore::InspectorCSSAgent::addRule):
+        (WebCore::InspectorCSSAgent::buildObjectForRule):
+        (WebCore::InspectorCSSAgent::buildArrayForMatchedRuleList):
+        When building a response for a particular element, pass the element along.
+
+        * inspector/InspectorStyleSheet.h:
+        * inspector/InspectorStyleSheet.cpp:
+        (WebCore::hasDynamicSpecificity):
+        (WebCore::buildObjectForSelectorHelper):
+        (WebCore::selectorsFromSource):
+        (WebCore::InspectorStyleSheet::buildObjectForSelector):
+        (WebCore::InspectorStyleSheet::buildObjectForSelectorList):
+        (WebCore::InspectorStyleSheet::buildObjectForRule):
+        (WebCore::InspectorStyleSheet::buildArrayForRuleList):
+        (WebCore::InspectorStyleSheetForInlineStyle::InspectorStyleSheetForInlineStyle):
+        When building a response for a Selector, include the specificity if we know
+        the element in context.
+
+2015-01-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Build fix after r178760.
+
+        Windows will not accept a variable as the size declaration for an array.
+
+        * svg/SVGToOTFFontConversion.cpp:
+        (WebCore::SVGToOTFFontConverter::appendGSUBTable): Make size argument a const.
+
+2015-01-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed Windows project file gardening.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Add missing SVG files and put things in their proper
+        folders.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+
+2015-01-20  Benjamin Poulain  <benjamin@webkit.org>
+
+        URLFilterParser dismisses the last atom when parsing a builtin character class
+        https://bugs.webkit.org/show_bug.cgi?id=140695
+
+        Reviewed by Andreas Kling.
+
+        The pending atom was not sunk before creating the new atom.
+
+        * contentextensions/URLFilterParser.cpp:
+        (WebCore::ContentExtensions::GraphBuilder::atomBuiltInCharacterClass):
+
+2015-01-20  Andreas Kling  <akling@apple.com>
+
+        Fast path for casting JSValue to JSDocument*.
+        <https://webkit.org/b/134655>
+
+        Add a custom JSType bit for JSDocument so we can quickly cast to it
+        from JSValue in the DocumentPrototype functions. This removes a bunch
+        of grunt work and branches from common functions like getElementById.
+
+        Also removed GetCastingHelperForBaseObject and replace it with
+        simple jsCasts since we don't need dynamic type checks for the base.
+
+        Reviewed by Darin Adler.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSDOMWrapper.h:
+        * bindings/js/JSDocumentCustom.h:
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateHeader):
+        (GetCastingHelperForThisObject):
+        (GenerateImplementation):
+        (GetCastingHelperForBaseObject): Deleted.
+        * dom/Document.idl:
+
+2015-01-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178751.
+        https://bugs.webkit.org/show_bug.cgi?id=140694
+
+        Caused 32-bit JSC test failures (Requested by JoePeck on
+        #webkit).
+
+        Reverted changeset:
+
+        "put_by_val_direct need to check the property is index or not
+        for using putDirect / putDirectIndex"
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+        http://trac.webkit.org/changeset/178751
+
+2015-01-20  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Use FlowContents::Segment::text instead of renderer when possible.
+        https://bugs.webkit.org/show_bug.cgi?id=140692
+
+        Reviewed by Myles C. Maxfield.
+
+        No change in functionality.
+
+        * rendering/SimpleLineLayoutResolver.cpp:
+        (WebCore::SimpleLineLayout::RunResolver::Run::text):
+
+2015-01-20  David Kilzer  <ddkilzer@apple.com>
+
+        Switch to comparing PLATFORM_NAME in terms of macosx
+        <http://webkit.org/b/139516>
+
+        Reviewed by Timothy Hatcher.
+
+        * bindings/scripts/preprocessor.pm:
+        (applyPreprocessor):
+        * generate-export-file:
+        (preprocessorMacros):
+
+2015-01-20  Benjamin Poulain  <benjamin@webkit.org>
+
+        Attempt to fix 32bits builds after r178743
+
+        * contentextensions/ContentExtensionsBackend.cpp:
+        (WebCore::ContentExtensions::ContentExtensionsBackend::shouldBlockURL):
+
+2015-01-20  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        put_by_val_direct need to check the property is index or not for using putDirect / putDirectIndex
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+
+        Reviewed by Geoffrey Garen.
+
+        Test: js/dfg-put-by-val-direct-with-edge-numbers.html
+
+        * bindings/js/JSDOMWindowCustom.cpp:
+        (WebCore::JSDOMWindow::getOwnPropertySlot):
+        * bindings/js/JSHTMLAllCollectionCustom.cpp:
+        (WebCore::callHTMLAllCollection):
+        (WebCore::JSHTMLAllCollection::item):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateGetOwnPropertySlotBody):
+        (GenerateImplementation):
+        * bindings/scripts/test/JS/JSFloat64Array.cpp:
+        (WebCore::JSFloat64Array::getOwnPropertySlot):
+        (WebCore::JSFloat64Array::getOwnPropertyDescriptor):
+        (WebCore::JSFloat64Array::put):
+        * bindings/scripts/test/JS/JSTestEventTarget.cpp:
+        (WebCore::JSTestEventTarget::getOwnPropertySlot):
+        * bridge/runtime_array.cpp:
+        (JSC::RuntimeArray::getOwnPropertySlot):
+        (JSC::RuntimeArray::put):
+
+2015-01-20  Chris Dumez  <cdumez@apple.com>
+
+        Drop width / height shorthands code from StylePropertyShorthand.*
+        https://bugs.webkit.org/show_bug.cgi?id=140686
+
+        Reviewed by Andreas Kling.
+
+        Drop width / height shorthands code from StylePropertyShorthand.*.
+        width / height are not shorthands for min-width/max-width and
+        min-height/max-height. Also, only matchingCustomShorthandsForLonghand()
+        treats these as shorthands. For e.g, the reverse method
+        (indexOfShorthandForLonghand()) does not.
+
+        * css/StylePropertyShorthand.cpp:
+        (WebCore::widthShorthand): Deleted.
+        (WebCore::heightShorthand): Deleted.
+        * css/StylePropertyShorthand.h:
+        (WebCore::matchingCustomShorthandsForLonghand):
+
+2015-01-20  Benjamin Poulain  <benjamin@webkit.org>
+
+        Add a mechanism to ignore previous content extension rules
+        https://bugs.webkit.org/show_bug.cgi?id=140663
+
+        Reviewed by Andreas Kling.
+
+        * contentextensions/ContentExtensionRule.h:
+        * contentextensions/ContentExtensionsBackend.cpp:
+        (WebCore::ContentExtensions::ContentExtensionsBackend::shouldBlockURL):
+        * contentextensions/ContentExtensionsManager.cpp:
+        (WebCore::ContentExtensions::ExtensionsManager::loadAction):
+
+2015-01-20  Benjamin Poulain  <benjamin@webkit.org>
+
+        Resolve the epsilon transitions for each state upfront instead of dynamically
+        https://bugs.webkit.org/show_bug.cgi?id=140654
+
+        Reviewed by Andreas Kling.
+
+        Instead of recomputing the epsilon-closure for each set, we compute the closure
+        of every element at the beginning of the transformation.
+
+        We then remove the epsilon transitions from the NFA to simplify populateTransitions().
+        The epsilon transitions are still there, but they are now in a separate graph we use
+        in parallel.
+
+        * contentextensions/NFAToDFA.cpp:
+        (WebCore::ContentExtensions::epsilonClosureExcludingSelf):
+        (WebCore::ContentExtensions::resolveEpsilonClosures):
+        (WebCore::ContentExtensions::extendSetWithClosure):
+        (WebCore::ContentExtensions::populateTransitions):
+        (WebCore::ContentExtensions::NFAToDFA::convert):
+        (WebCore::ContentExtensions::epsilonClosure): Deleted.
+        (WebCore::ContentExtensions::populateTransitionsExcludingEpsilon): Deleted.
+        * contentextensions/NFAToDFA.h:
+
+2015-01-20  Chris Dumez  <cdumez@apple.com>
+
+        Log types of resources being loaded using DiagnosticLoggingClient
+        https://bugs.webkit.org/show_bug.cgi?id=140682
+
+        Reviewed by Andreas Kling.
+
+        Log types of resources being loaded using DiagnosticLoggingClient
+        instead of the legacy FeatureCounter.
+
+        * loader/SubresourceLoader.cpp:
+        (WebCore::logResourceLoaded):
+        (WebCore::SubresourceLoader::didFinishLoading):
+        (WebCore::logResourceLoadedUsingFeatureCounter): Deleted.
+        * page/DiagnosticLoggingKeys.cpp:
+        (WebCore::DiagnosticLoggingKeys::otherKey):
+        (WebCore::DiagnosticLoggingKeys::mainResourceKey):
+        (WebCore::DiagnosticLoggingKeys::loadedKey):
+        (WebCore::DiagnosticLoggingKeys::imageKey):
+        (WebCore::DiagnosticLoggingKeys::rawKey):
+        (WebCore::DiagnosticLoggingKeys::resourceKey):
+        (WebCore::DiagnosticLoggingKeys::scriptKey):
+        (WebCore::DiagnosticLoggingKeys::styleSheetKey):
+        (WebCore::DiagnosticLoggingKeys::svgDocumentKey):
+        (WebCore::DiagnosticLoggingKeys::fontKey):
+        * page/DiagnosticLoggingKeys.h:
+        * platform/FeatureCounterKeys.h:
+
+2015-01-20  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Remove redundant style.preserveNewline check when collapsing trailing whitespace.
+        https://bugs.webkit.org/show_bug.cgi?id=140684
+
+        Reviewed by Antti Koivisto.
+
+        FlowContents::isLineBreak() checks whether we are at a hard newline.
+
+        No change in functionality.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::removeTrailingWhitespace):
+
+2015-01-19  Simon Fraser  <simon.fraser@apple.com>
+
+        Add a way to collect scrolling performance data (viewport tile coverage) with UI-side compositing
+        https://bugs.webkit.org/show_bug.cgi?id=140474
+
+        Reviewed by Tim Horton.
+
+        Add accessors for standard names for container CALayer for each of the tile grids,
+        and when tile grids are swapped, update those names as appropriate.
+        
+        * WebCore.exp.in:
+        * platform/graphics/ca/TileController.cpp:
+        (WebCore::TileController::tileGridContainerLayerName):
+        (WebCore::TileController::zoomedOutTileGridContainerLayerName):
+        (WebCore::TileController::setContentsScale):
+        * platform/graphics/ca/TileController.h:
+        * platform/graphics/ca/TileGrid.cpp:
+        (WebCore::TileGrid::TileGrid):
+        (WebCore::TileGrid::setIsZoomedOutTileGrid):
+        * platform/graphics/ca/TileGrid.h:
+
+2015-01-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix unused-private-field warning in IconEfl.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=140676
+
+        Reviewed by Darin Adler.
+
+        * platform/graphics/Icon.h:
+        * platform/graphics/efl/IconEfl.cpp:
+        (WebCore::Icon::Icon): Deleted.
+
+2015-01-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix unused-private-field warning in FontCustomPlatformDataFreeType.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=140677
+
+        Reviewed by Martin Robinson.
+
+        * platform/graphics/cairo/FontCustomPlatformData.h:
+        * platform/graphics/freetype/FontCustomPlatformDataFreeType.cpp:
+        (WebCore::FontCustomPlatformData::FontCustomPlatformData):
+        (WebCore::FontCustomPlatformData::~FontCustomPlatformData):
+
+2015-01-20  peavo@outlook.com  <peavo@outlook.com>
+
+        Plugin content not loaded.
+        https://bugs.webkit.org/show_bug.cgi?id=140672
+
+        Reviewed by Brent Fulgham.
+
+        It seems this is caused by a std::unique_ptr in CClass::methodNamed being moved,
+        resetting its raw pointer. The raw pointer, which now is null, is then returned
+        from the method.
+
+        * bridge/c/c_class.cpp:
+        (JSC::Bindings::CClass::methodNamed):
+        (JSC::Bindings::CClass::fieldNamed):
+
+2015-01-20  Darin Adler  <darin@apple.com>
+
+        Remove SVGElementInstanceList, m_instanceUnderMouse, DUMP_INSTANCE_TREE, DUMP_SHADOW_TREE
+        https://bugs.webkit.org/show_bug.cgi?id=140679
+
+        Reviewed by Anders Carlsson.
+
+        First step in removing the SVG instance tree.
+        All based on redoing the same excellent work Rob Buis did to remove this in Blink in crbug.com/313438.
+
+        * CMakeLists.txt: Removed the source files.
+        * DerivedSources.cpp: Ditto.
+        * DerivedSources.make: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::clear): Removed code to set unused m_instanceUnderMouse.
+        (WebCore::EventHandler::updateMouseEventTargetNode): Ditto.
+        * page/EventHandler.h: Removed m_instanceUnderMouse.
+
+        * svg/SVGAllInOne.cpp: Removed the source files.
+        * svg/SVGElementInstance.cpp:
+        (WebCore::SVGElementInstance::childNodes): Deleted.
+        * svg/SVGElementInstance.h: Removed childNodes.
+        * svg/SVGElementInstance.idl: Ditto.
+        * svg/SVGElementInstanceList.cpp: Removed.
+        * svg/SVGElementInstanceList.h: Removed.
+        * svg/SVGElementInstanceList.idl: Removed.
+        * svg/SVGUseElement.cpp:
+        (WebCore::dumpInstanceTree): Deleted.
+        (WebCore::SVGUseElement::buildShadowAndInstanceTree): Removed DUMP_INSTANCE_TREE and
+        DUMP_SHADOW_TREE code.
+
+2015-01-19  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Replay: code generator should take supplemental specifications and allow cross-framework references
+        https://bugs.webkit.org/show_bug.cgi?id=136312
+
+        Reviewed by Joseph Pecoraro.
+
+        Changes covered by existing input generator tests.
+
+        * DerivedSources.make: Add JSInputs.json as supplemental specification.
+        * replay/WebInputs.json: Moved common types to JSInputs.json.
+
+2015-01-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix unused-const-variable warning in RenderLayerCompositor.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=140678
+
+        Reviewed by Simon Fraser.
+
+        * rendering/RenderLayerCompositor.cpp:
+
+2015-01-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [gstreamer] Fix expression result unused warning in GRefPtrGStreamer.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=140671
+
+        Reviewed by Philippe Normand.
+
+        * platform/graphics/gstreamer/GRefPtrGStreamer.cpp:
+        (WTF::refGPtr<GstToc>):
+
+2015-01-19  Dean Jackson  <dino@apple.com>
+
+        Support "plus-darker" in mix-blend mode
+        https://bugs.webkit.org/show_bug.cgi?id=140646
+        <rdar://problem/19523370>
+
+        Reviewed by Simon Fraser.
+
+        Support the "plus-darker" blending mode to CSS.
+        See: https://lists.w3.org/Archives/Public/public-fx/2015JanMar/0021.html
+
+        Test: css3/blending/svg-blend-plus-darker.html
+
+        * css/CSSParser.cpp:
+        (WebCore::isValidKeywordPropertyAndValue): mix-blend-mode can now accept
+        the new keyword.
+        * css/CSSPrimitiveValueMappings.h: Add the mappings.
+        (WebCore::CSSPrimitiveValue::CSSPrimitiveValue):
+        (WebCore::CSSPrimitiveValue::operator BlendMode):
+        * platform/graphics/GraphicsTypes.cpp: Add the new GraphicsType.
+        * platform/graphics/GraphicsTypes.h:
+        * platform/graphics/ca/mac/PlatformCAFiltersMac.mm: Map to the CA compositing filter.
+        (PlatformCAFilters::setBlendingFiltersOnLayer):
+        * platform/graphics/cg/GraphicsContextCG.cpp:
+        (WebCore::GraphicsContext::setPlatformCompositeOperation): Map to the CG blending flag.
+
+2015-01-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix 'register' storage class specifier is deprecated warning
+        https://bugs.webkit.org/show_bug.cgi?id=140669
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.cpp:
+        (webKitWebAudioSrcLoop):
+
+2015-01-20  Chris Dumez  <cdumez@apple.com>
+
+        Use DiagnosticLoggingClient to log page cache failures
+        https://bugs.webkit.org/show_bug.cgi?id=140650
+
+        Reviewed by Andreas Kling.
+
+        Use DiagnosticLoggingClient to log page cache failures instead of the
+        legacy FeatureCounter.
+
+        * history/PageCache.cpp:
+        (WebCore::logPageCacheFailureDiagnosticMessage):
+        (WebCore::logCanCacheFrameDecision):
+        (WebCore::logCanCachePageDecision):
+        (WebCore::PageCache::canCache):
+        (WebCore::pruningReasonToDiagnosticLoggingKey):
+        (WebCore::PageCache::take):
+        (WebCore::PageCache::get):
+        (WebCore::pruningReasonToFeatureCounterKey): Deleted.
+        * page/DiagnosticLoggingKeys.cpp:
+        (WebCore::DiagnosticLoggingKeys::successKey):
+        (WebCore::DiagnosticLoggingKeys::failureKey):
+        (WebCore::DiagnosticLoggingKeys::pageLoadedKey):
+        (WebCore::DiagnosticLoggingKeys::engineFailedToLoadKey):
+        (WebCore::DiagnosticLoggingKeys::navigationKey):
+        (WebCore::DiagnosticLoggingKeys::pageCacheKey):
+        (WebCore::DiagnosticLoggingKeys::noDocumentLoaderKey):
+        (WebCore::DiagnosticLoggingKeys::mainDocumentErrorKey):
+        (WebCore::DiagnosticLoggingKeys::isErrorPageKey):
+        (WebCore::DiagnosticLoggingKeys::hasPluginsKey):
+        (WebCore::DiagnosticLoggingKeys::httpsNoStoreKey):
+        (WebCore::DiagnosticLoggingKeys::hasOpenDatabasesKey):
+        (WebCore::DiagnosticLoggingKeys::noCurrentHistoryItemKey):
+        (WebCore::DiagnosticLoggingKeys::quirkRedirectComingKey):
+        (WebCore::DiagnosticLoggingKeys::loadingAPISenseKey):
+        (WebCore::DiagnosticLoggingKeys::documentLoaderStoppingKey):
+        (WebCore::DiagnosticLoggingKeys::cannotSuspendActiveDOMObjectsKey):
+        (WebCore::DiagnosticLoggingKeys::applicationCacheKey):
+        (WebCore::DiagnosticLoggingKeys::deniedByClientKey):
+        (WebCore::DiagnosticLoggingKeys::deviceMotionKey):
+        (WebCore::DiagnosticLoggingKeys::deviceOrientationKey):
+        (WebCore::DiagnosticLoggingKeys::deviceProximityKey):
+        (WebCore::DiagnosticLoggingKeys::reloadKey):
+        (WebCore::DiagnosticLoggingKeys::reloadFromOriginKey):
+        (WebCore::DiagnosticLoggingKeys::sameLoadKey):
+        (WebCore::DiagnosticLoggingKeys::expiredKey):
+        (WebCore::DiagnosticLoggingKeys::prunedDueToMemoryPressureKey):
+        (WebCore::DiagnosticLoggingKeys::prunedDueToCapacityReached):
+        (WebCore::DiagnosticLoggingKeys::prunedDueToProcessSuspended):
+        (WebCore::DiagnosticLoggingKeys::passKey): Deleted.
+        (WebCore::DiagnosticLoggingKeys::failKey): Deleted.
+        (WebCore::DiagnosticLoggingKeys::noopKey): Deleted.
+        * page/DiagnosticLoggingKeys.h:
+        * platform/FeatureCounterKeys.h:
+
+2015-01-19  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Wrong arguments passed to computeNormalizedFractionBreadth
+        https://bugs.webkit.org/show_bug.cgi?id=139058
+
+        Reviewed by Andreas Kling.
+
+        The method RenderGrid::computeNormalizedFractionBreadth() is
+        supposed to get as fourth argument either the grid element's
+        content box size or the max-size of a particular grid item. For
+        the former we were incorrectly passing the free space after
+        distributing the available space to tracks.
+
+        Apart from that, that method has a bug in its implementation. As
+        we were using the free space instead of the grid element's content
+        box size, we didn't have to subtract the usedBreadth of grid
+        tracks from the passed in value. That did not work for the case of
+        the caller passing the max-size of a particular item.
+
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::computeUsedBreadthOfGridTracks):
+        (WebCore::RenderGrid::computeNormalizedFractionBreadth):
+
+2015-01-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Flip the switch on
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+
+        Reviewed by Antti Koivisto.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-01-19  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178683.
+        https://bugs.webkit.org/show_bug.cgi?id=140657
+
+        Lots of asserts in tests. (Requested by JoePeck on #webkit).
+
+        Reverted changeset:
+
+        "LayoutState and subtree layout code should use
+        RenderElement."
+        https://bugs.webkit.org/show_bug.cgi?id=126878
+        http://trac.webkit.org/changeset/178683
+
+2015-01-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        Avoid compiling files twice when they are included in an 'AllInOne.cpp' file.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Mark several files as 'not to be built', since
+        they are also build as part of an 'AllInOne.cpp' file.
+
 2015-01-19  Chris Dumez  <cdumez@apple.com>
 
         Stop using FeatureCounter to log navigation types

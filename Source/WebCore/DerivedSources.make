@@ -555,7 +555,6 @@ SVG_BINDING_IDLS = \
     $(WebCore)/svg/SVGDocument.idl \
     $(WebCore)/svg/SVGElement.idl \
     $(WebCore)/svg/SVGElementInstance.idl \
-    $(WebCore)/svg/SVGElementInstanceList.idl \
     $(WebCore)/svg/SVGEllipseElement.idl \
     $(WebCore)/svg/SVGException.idl \
     $(WebCore)/svg/SVGExternalResourcesRequired.idl \
@@ -1162,6 +1161,7 @@ INPUT_GENERATOR_SCRIPTS = \
 
 INPUT_GENERATOR_SPECIFICATIONS = \
 	$(WebCore)/replay/WebInputs.json \
+	$(WebReplayScripts)/JSInputs.json \
 #
 
 all : WebReplayInputs.h

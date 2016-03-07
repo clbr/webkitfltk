@@ -1,3 +1,49 @@
+2015-01-21  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(INSPECTOR) ifdef guards
+        https://bugs.webkit.org/show_bug.cgi?id=140668
+
+        Reviewed by Darin Adler.
+
+        * Configurations/FeatureDefines.xcconfig:
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::dispatchWillSendRequest):
+
+2015-01-20  Anders Carlsson  <andersca@apple.com>
+
+        Remove USE(GLIB) code from WebKit1
+        https://bugs.webkit.org/show_bug.cgi?id=140714
+
+        Reviewed by Andreas Kling.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        (-[WebView _close]):
+        (-[WebView _clearGlibLoopObserver]): Deleted.
+        (glibContextIterationCallback): Deleted.
+        (-[WebView _scheduleGlibContextIterations]): Deleted.
+        * WebView/WebViewData.h:
+        * WebView/WebViewInternal.h:
+
+2015-01-20  David Kilzer  <ddkilzer@apple.com>
+
+        Switch to comparing PLATFORM_NAME in terms of macosx
+        <http://webkit.org/b/139516>
+
+        Reviewed by Timothy Hatcher.
+
+        * MigrateHeaders.make:
+        * postprocess-headers.sh:
+
+2015-01-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Flip the switch on
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+
+        Reviewed by Antti Koivisto.
+
+        * Configurations/FeatureDefines.xcconfig:
+
 2015-01-19  Beth Dakin  <bdakin@apple.com>
 
         Speculative build fix.

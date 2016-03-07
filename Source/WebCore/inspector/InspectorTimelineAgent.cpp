@@ -30,9 +30,6 @@
 */
 
 #include "config.h"
-
-#if ENABLE(INSPECTOR)
-
 #include "InspectorTimelineAgent.h"
 
 #include "Event.h"
@@ -282,7 +279,7 @@ void InspectorTimelineAgent::didInvalidateLayout(Frame& frame)
 
 void InspectorTimelineAgent::willLayout(Frame& frame)
 {
-    RenderElement* root = frame.view()->layoutRoot();
+    RenderObject* root = frame.view()->layoutRoot();
     bool partialLayout = !!root;
 
     if (!partialLayout)
@@ -706,5 +703,3 @@ Page* InspectorTimelineAgent::page()
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(INSPECTOR)

@@ -182,9 +182,7 @@ public:
 #if ENABLE(WEB_REPLAY)
     ReplayController& replayController() const { return *m_replayController; }
 #endif
-#if ENABLE(INSPECTOR)
     InspectorController& inspectorController() const { return *m_inspectorController; }
-#endif
 #if ENABLE(POINTER_LOCK)
     PointerLockController& pointerLockController() const { return *m_pointerLockController; }
 #endif
@@ -469,9 +467,7 @@ private:
 #if ENABLE(WEB_REPLAY)
     const std::unique_ptr<ReplayController> m_replayController;
 #endif
-#if ENABLE(INSPECTOR)
     const std::unique_ptr<InspectorController> m_inspectorController;
-#endif
 #if ENABLE(POINTER_LOCK)
     const std::unique_ptr<PointerLockController> m_pointerLockController;
 #endif
