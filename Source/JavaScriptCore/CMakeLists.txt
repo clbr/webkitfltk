@@ -65,6 +65,7 @@ set(JavaScriptCore_SOURCES
     bytecode/ArrayAllocationProfile.cpp
     bytecode/ArrayProfile.cpp
     bytecode/BytecodeBasicBlock.cpp
+    bytecode/BytecodeIntrinsicRegistry.cpp
     bytecode/BytecodeLivenessAnalysis.cpp
     bytecode/CallEdge.cpp
     bytecode/CallLinkInfo.cpp
@@ -155,6 +156,7 @@ set(JavaScriptCore_SOURCES
     dfg/DFGDominators.cpp
     dfg/DFGDriver.cpp
     dfg/DFGEdge.cpp
+    dfg/DFGEpoch.cpp
     dfg/DFGFailedFinalizer.cpp
     dfg/DFGFinalizer.cpp
     dfg/DFGFixupPhase.cpp
@@ -180,6 +182,7 @@ set(JavaScriptCore_SOURCES
     dfg/DFGLoopPreHeaderCreationPhase.cpp
     dfg/DFGMayExit.cpp
     dfg/DFGMinifiedNode.cpp
+    dfg/DFGMovHintRemovalPhase.cpp
     dfg/DFGNaiveDominators.cpp
     dfg/DFGNaturalLoops.cpp
     dfg/DFGNode.cpp
@@ -508,6 +511,7 @@ set(JavaScriptCore_RUNTIME_SOURCES
     runtime/JSTypedArrayPrototypes.cpp
     runtime/JSTypedArrays.cpp
     runtime/JSWeakMap.cpp
+    runtime/JSWeakSet.cpp
     runtime/JSWithScope.cpp
     runtime/JSWrapperObject.cpp
     runtime/LiteralParser.cpp
@@ -585,6 +589,8 @@ set(JavaScriptCore_RUNTIME_SOURCES
     runtime/WeakMapConstructor.cpp
     runtime/WeakMapData.cpp
     runtime/WeakMapPrototype.cpp
+    runtime/WeakSetConstructor.cpp
+    runtime/WeakSetPrototype.cpp
 )
 
 list(APPEND JavaScriptCore_SOURCES

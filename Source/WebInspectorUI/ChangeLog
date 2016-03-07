@@ -1,3 +1,154 @@
+2015-04-21  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Use String.prototype.startsWith in more places
+        https://bugs.webkit.org/show_bug.cgi?id=144025
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Models/Gradient.js:
+        * UserInterface/Views/DebuggerSidebarPanel.js:
+        (WebInspector.DebuggerSidebarPanel.prototype._scriptAdded):
+        * UserInterface/Views/ResourceSidebarPanel.js:
+        (WebInspector.ResourceSidebarPanel.prototype._scriptWasAdded):
+
+2015-04-21  Nikita Vasilyev  <nvasilyev@apple.com>
+
+        Web Inspector: Make formatted nodes more consistent with formatted objects
+        https://bugs.webkit.org/show_bug.cgi?id=142159
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/DOMTreeOutline.css:
+        (.dom-tree-outline ol):
+        Keep indentation exactly two spaces of Menlo.
+
+        (.dom-tree-outline li):
+        (.dom-tree-outline li.parent):
+        (.dom-tree-outline li .html-tag.close):
+        (.dom-tree-outline li.parent::before):
+        (.dom-tree-outline:focus li.parent.selected::before):
+        (.dom-tree-outline li.parent.expanded::before):
+        (.dom-tree-outline:focus li.parent.expanded.selected::before):
+        * UserInterface/Views/FormattedValue.css:
+        (.formatted-node > .dom-tree-outline ol):
+        Keep indentation exactly two spaces of Menlo.
+
+        * UserInterface/Views/ObjectTreePropertyTreeElement.css:
+        (.object-tree-property > .disclosure-button):
+        Disclosure triangle is 13 by 13 pixels. Having it in the middle of 16 by 16
+        pixels block makes it look bloory on non-retina screen, because:
+        (16 - 13) / 2 = 1.5px. Replacing 16 with 15 fixes the problem.
+
+        * UserInterface/Views/ObjectTreeView.css:
+        (.object-tree:not(.lossless-preview) > :matches(.title, .object-preview)):
+
+2015-04-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Unify PrettyPrinting Tool and UserInterface resources
+        https://bugs.webkit.org/show_bug.cgi?id=143969
+
+        Reviewed by Timothy Hatcher.
+
+        Have the PrettyPrinting tool just use the CodeMirror and WebInspector
+        resources from the relative UserInterface directory. This avoids
+        having duplicate resources in the tree which offered few advantages.
+
+        * Scripts/update-pretty-printer.rb: Removed.
+        * Tools/PrettyPrinting/CodeMirrorFormatters.js: Removed.
+        * Tools/PrettyPrinting/Formatter.js: Removed.
+        * Tools/PrettyPrinting/FormatterContentBuilder.js: Removed.
+        * Tools/PrettyPrinting/codemirror.css: Removed.
+        * Tools/PrettyPrinting/codemirror.js: Removed.
+        * Tools/PrettyPrinting/css.js: Removed.
+        * Tools/PrettyPrinting/index.html:
+        * Tools/PrettyPrinting/javascript.js: Removed.
+
+        * UserInterface/Views/CodeMirrorFormatters.js:
+        Fix style issues.
+
+2015-04-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Improve Support for WeakSet in Console
+        https://bugs.webkit.org/show_bug.cgi?id=143951
+
+        Reviewed by Darin Adler.
+
+        * UserInterface/Models/NativeFunctionParameters.js:
+        WeakSet has the same APIs and parameters as Set for the functions it implements.
+
+        * UserInterface/Protocol/RemoteObject.js:
+        (WebInspector.RemoteObject.prototype.isCollectionType):
+        (WebInspector.RemoteObject.prototype.isWeakCollection):
+        (WebInspector.RemoteObject.prototype.getCollectionEntries):
+        (WebInspector.RemoteObject.prototype._weakCollectionObjectGroup):
+        WeakSet is a weak collection.
+
+        * UserInterface/Models/ObjectPreview.js:
+        (WebInspector.ObjectPreview.prototype.hasSize):
+        * UserInterface/Views/ConsoleMessageView.js:
+        (WebInspector.ConsoleMessageView.prototype._formatParameter):
+        * UserInterface/Views/FormattedValue.css:
+        (.formatted-object, .formatted-node, .formatted-error, .formatted-map, .formatted-set, .formatted-weakmap, .formatted-weakset):
+        (:matches(.formatted-array, .formatted-map, .formatted-set, .formatted-weakmap, .formatted-weakset) > .size):
+        (.formatted-object, .formatted-node, .formatted-error, .formatted-map, .formatted-set, .formatted-weakmap): Deleted.
+        (:matches(.formatted-array, .formatted-map, .formatted-set, .formatted-weakmap) > .size): Deleted.
+        * UserInterface/Views/FormattedValue.js:
+        (WebInspector.FormattedValue.createElementForTypesAndValue):
+        Treat a WeakSet like a set in more places.
+
+2015-04-18  Nikita Vasilyev  <nvasilyev@apple.com>
+
+        Web Inspector: Pass multiple arguments to classList.add and classList.remove
+        https://bugs.webkit.org/show_bug.cgi?id=143914
+
+        classList.add and classList.remove can accept multiple arguments, use that.
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Base/Main.js:
+        (WebInspector.updateDockedState):
+        * UserInterface/Views/DOMTreeDataGrid.js:
+        (WebInspector.DOMTreeDataGrid):
+        * UserInterface/Views/DOMTreeOutline.js:
+        (WebInspector.DOMTreeOutline):
+        * UserInterface/Views/DataGrid.js:
+        (WebInspector.DataGridNode.prototype.set hasChildren):
+        * UserInterface/Views/DatabaseContentView.js:
+        (WebInspector.DatabaseContentView):
+        * UserInterface/Views/DetailsSection.js:
+        (WebInspector.DetailsSection):
+        * UserInterface/Views/DetailsSectionPropertiesRow.js:
+        (WebInspector.DetailsSectionPropertiesRow):
+        * UserInterface/Views/GeneralTreeElement.js:
+        (WebInspector.GeneralTreeElement.prototype.set classNames):
+        * UserInterface/Views/NavigationItem.js:
+        (WebInspector.NavigationItem):
+        * UserInterface/Views/ResourceContentView.js:
+        (WebInspector.ResourceContentView):
+        * UserInterface/Views/ResourceTimelineDataGridNode.js:
+        (WebInspector.ResourceTimelineDataGridNode.prototype.createCellContent):
+        * UserInterface/Views/Sidebar.js:
+        (WebInspector.Sidebar):
+        * UserInterface/Views/SidebarPanel.js:
+        (WebInspector.SidebarPanel):
+        * UserInterface/Views/SourceCodeTextEditor.js:
+        * UserInterface/Views/TextEditor.js:
+        (WebInspector.TextEditor):
+        * UserInterface/Views/TimelineRuler.js:
+
+2015-04-18  Nikita Vasilyev  <nvasilyev@apple.com>
+
+        Web Inspector: Make prototype pill’s background semi-transparent
+        https://bugs.webkit.org/show_bug.cgi?id=143928
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/ObjectTreePropertyTreeElement.css:
+        (.object-tree-property.prototype-property):
+
+        (.object-tree-property.prototype-property:hover, .object-tree-property.prototype-property:focus):
+        Slightly highlight the prototype pill when hovering over.
+
 2015-04-17  Jono Wells  <jonowells@apple.com>
 
         Web Inspector: All sans-serif font family rules should be set the same way.

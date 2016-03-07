@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,23 +20,33 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef AudioProducer_h
-#define AudioProducer_h
+#include "config.h"
+#include "JSWeakSet.h"
 
-namespace WebCore {
+#include "JSCJSValueInlines.h"
+#include "SlotVisitorInlines.h"
+#include "StructureInlines.h"
+#include "WeakMapData.h"
+#include "WriteBarrierInlines.h"
 
-class AudioProducer {
-public:
-    virtual bool isPlayingAudio() = 0;
-    virtual void pageMutedStateDidChange() = 0;
+namespace JSC {
 
-protected:
-    virtual ~AudioProducer() { }
-};
+const ClassInfo JSWeakSet::s_info = { "WeakSet", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWeakSet) };
 
+void JSWeakSet::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    m_weakMapData.set(vm, this, WeakMapData::create(vm));
 }
 
-#endif
+void JSWeakSet::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    Base::visitChildren(cell, visitor);
+    JSWeakSet* thisObj = jsCast<JSWeakSet*>(cell);
+    visitor.append(&thisObj->m_weakMapData);
+}
+
+}

@@ -575,6 +575,7 @@ struct Node {
         ASSERT(m_op == NewObject || m_op == MaterializeNewObject);
         m_op = PhantomNewObject;
         m_flags &= ~NodeHasVarArgs;
+        m_flags |= NodeMustGenerate;
         m_opInfo = 0;
         m_opInfo2 = 0;
         children = AdjacencyList();
@@ -1141,6 +1142,76 @@ struct Node {
         }
     }
     
+    class SuccessorsIterable {
+    public:
+        SuccessorsIterable()
+            : m_terminal(nullptr)
+        {
+        }
+        
+        SuccessorsIterable(Node* terminal)
+            : m_terminal(terminal)
+        {
+        }
+        
+        class iterator {
+        public:
+            iterator()
+                : m_terminal(nullptr)
+                , m_index(UINT_MAX)
+            {
+            }
+            
+            iterator(Node* terminal, unsigned index)
+                : m_terminal(terminal)
+                , m_index(index)
+            {
+            }
+            
+            BasicBlock* operator*()
+            {
+                return m_terminal->successor(m_index);
+            }
+            
+            iterator& operator++()
+            {
+                m_index++;
+                return *this;
+            }
+            
+            bool operator==(const iterator& other) const
+            {
+                return m_index == other.m_index;
+            }
+            
+            bool operator!=(const iterator& other) const
+            {
+                return !(*this == other);
+            }
+        private:
+            Node* m_terminal;
+            unsigned m_index;
+        };
+        
+        iterator begin()
+        {
+            return iterator(m_terminal, 0);
+        }
+        
+        iterator end()
+        {
+            return iterator(m_terminal, m_terminal->numSuccessors());
+        }
+        
+    private:
+        Node* m_terminal;
+    };
+    
+    SuccessorsIterable successors()
+    {
+        return SuccessorsIterable(this);
+    }
+    
     BasicBlock*& successorForCondition(bool condition)
     {
         return branchData()->forCondition(condition);
@@ -1190,7 +1261,6 @@ struct Node {
     bool hasCellOperand()
     {
         switch (op()) {
-        case AllocationProfileWatchpoint:
         case CheckCell:
         case NativeConstruct:
         case NativeCall:
