@@ -1,3 +1,66 @@
+2015-02-27  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Use Maps in ResourceCollection instead of objects
+        https://bugs.webkit.org/show_bug.cgi?id=142101
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Models/ResourceCollection.js:
+        (WebInspector.ResourceCollection):
+        (WebInspector.ResourceCollection.prototype.resourcesWithType):
+        (WebInspector.ResourceCollection.prototype.removeAllResources):
+        (WebInspector.ResourceCollection.prototype.resourceForURL):
+        (WebInspector.ResourceCollection.prototype._associateWithResource):
+        (WebInspector.ResourceCollection.prototype._disassociateWithResource):
+        (WebInspector.ResourceCollection.prototype._resourceURLDidChange):
+        (WebInspector.ResourceCollection.prototype._resourceTypeDidChange):
+        Use Maps instead of objects.
+
+2015-02-26  Nikita Vasilyev  <nvasilyev@apple.com>
+
+        Web Inspector: Add a subtle blue background for selected console messages
+        https://bugs.webkit.org/show_bug.cgi?id=142073
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/LogContentView.css:
+        (.console-item.selected::after):
+        (.console-messages:focus .console-item.selected):
+        (.console-messages:focus .console-item.selected + .console-item):
+        (.console-error-level + .console-item):
+        (.console-error-level .section .header .title):
+        (.console-warning-level):
+        (.console-warning-level + .console-item):
+
+2015-02-26  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Colored console messages apply text color to object tree properties
+        https://bugs.webkit.org/show_bug.cgi?id=142051
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/ObjectPreviewView.css:
+        (.object-preview):
+        * UserInterface/Views/ObjectTreeView.css:
+        (.object-tree):
+        Default the color to black within Object Tree and Object Preview views.
+
+2015-02-26  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Clear Log on Reload clears some logs that were after reload
+        https://bugs.webkit.org/show_bug.cgi?id=142070
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/LogContentView.js:
+        (WebInspector.LogContentView.prototype._sessionStarted):
+        We can bail after calling clearLog, since that will already start
+        a new session for us.
+
+        (WebInspector.LogContentView.prototype._clearLog):
+        Don't trigger a backend clear messages, since that will cause us to
+        clear messages received between the request and response.
+
 2015-02-26  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Save Console Evaluations into Command Line variables $1-$99 ($n)

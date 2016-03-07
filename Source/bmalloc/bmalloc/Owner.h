@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,40 +20,19 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef PossiblyNull_h
-#define PossiblyNull_h
+#ifndef Owner_h
+#define Owner_h
 
-#include <wtf/Assertions.h>
+namespace bmalloc {
 
-namespace WTF {
-
-template <typename T> struct PossiblyNull {
-    PossiblyNull(T data)
-        : m_data(data)
-    {
-    }
-    PossiblyNull(const PossiblyNull<T>& source)
-        : m_data(source.m_data)
-    {
-        source.m_data = 0;
-    }
-    ~PossiblyNull() { ASSERT(!m_data); }
-    bool getValue(T& out) WARN_UNUSED_RETURN;
-private:
-    mutable T m_data;
+enum class Owner : unsigned {
+    VMHeap,
+    Heap
 };
 
-template <typename T> bool PossiblyNull<T>::getValue(T& out)
-{
-    out = m_data;
-    bool result = !!m_data;
-    m_data = 0;
-    return result;
-}
+} // namespace bmalloc
 
-}
-
-#endif
+#endif // Owner_h
