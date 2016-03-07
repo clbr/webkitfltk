@@ -400,6 +400,7 @@ std::unique_ptr<WebGLRenderingContextBase> WebGLRenderingContextBase::create(HTM
             renderingContext = std::unique_ptr<WebGL2RenderingContext>(new WebGL2RenderingContext(canvas, attributes));
         else
             renderingContext = std::unique_ptr<WebGLRenderingContext>(new WebGLRenderingContext(canvas, attributes));
+        return renderingContext;
     }
 
     HostWindow* hostWindow = document.view()->root()->hostWindow();
@@ -463,6 +464,8 @@ WebGLRenderingContextBase::WebGLRenderingContextBase(HTMLCanvasElement* passedCa
     ASSERT(m_context);
     m_contextGroup = WebGLContextGroup::create();
     m_contextGroup->addContext(this);
+    
+    m_context->setWebGLContext(this);
 
     m_maxViewportDims[0] = m_maxViewportDims[1] = 0;
     m_context->getIntegerv(GraphicsContext3D::MAX_VIEWPORT_DIMS, m_maxViewportDims);

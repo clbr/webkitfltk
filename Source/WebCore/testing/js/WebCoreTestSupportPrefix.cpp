@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,44 +23,4 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef BoundaryTagInlines_h
-#define BoundaryTagInlines_h
-
-#include "Range.h"
-#include "BeginTag.h"
-#include "EndTag.h"
-#include "Inline.h"
-#include "LargeChunk.h"
-
-namespace bmalloc {
-
-inline Range BoundaryTag::init(LargeChunk* chunk)
-{
-    Range range(chunk->begin(), chunk->end() - chunk->begin());
-
-    BeginTag* beginTag = LargeChunk::beginTag(range.begin());
-    beginTag->setRange(range);
-    beginTag->setFree(true);
-    beginTag->setHasPhysicalPages(false);
-
-    EndTag* endTag = LargeChunk::endTag(range.begin(), range.size());
-    endTag->init(beginTag);
-
-    // Mark the left and right edges of our chunk as allocated. This naturally
-    // prevents merging logic from overflowing beyond our chunk, without requiring
-    // special-case checks.
-    
-    EndTag* leftSentinel = beginTag->prev();
-    BASSERT(leftSentinel >= static_cast<void*>(chunk));
-    leftSentinel->initSentinel();
-
-    BeginTag* rightSentinel = endTag->next();
-    BASSERT(rightSentinel < static_cast<void*>(range.begin()));
-    rightSentinel->initSentinel();
-    
-    return range;
-}
-
-} // namespace bmalloc
-
-#endif // BoundaryTagInlines_h
+#include "WebCoreTestSupportPrefix.h"

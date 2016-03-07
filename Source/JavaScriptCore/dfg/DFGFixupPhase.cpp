@@ -919,18 +919,25 @@ private:
         case GetByIdFlush: {
             if (!node->child1()->shouldSpeculateCell())
                 break;
-            StringImpl* impl = m_graph.identifiers()[node->identifierNumber()];
-            if (impl == vm().propertyNames->length.impl()) {
-                attemptToMakeGetArrayLength(node);
-                break;
-            }
-            if (impl == vm().propertyNames->byteLength.impl()) {
-                attemptToMakeGetTypedArrayByteLength(node);
-                break;
-            }
-            if (impl == vm().propertyNames->byteOffset.impl()) {
-                attemptToMakeGetTypedArrayByteOffset(node);
-                break;
+
+            // If we hadn't exited because of BadCache, BadIndexingType, or ExoticObjectMode, then
+            // leave this as a GetById.
+            if (!m_graph.hasExitSite(node->origin.semantic, BadCache)
+                && !m_graph.hasExitSite(node->origin.semantic, BadIndexingType)
+                && !m_graph.hasExitSite(node->origin.semantic, ExoticObjectMode)) {
+                StringImpl* impl = m_graph.identifiers()[node->identifierNumber()];
+                if (impl == vm().propertyNames->length.impl()) {
+                    attemptToMakeGetArrayLength(node);
+                    break;
+                }
+                if (impl == vm().propertyNames->byteLength.impl()) {
+                    attemptToMakeGetTypedArrayByteLength(node);
+                    break;
+                }
+                if (impl == vm().propertyNames->byteOffset.impl()) {
+                    attemptToMakeGetTypedArrayByteOffset(node);
+                    break;
+                }
             }
             fixEdge<CellUse>(node->child1());
             break;
@@ -1058,8 +1065,9 @@ private:
         case CheckStructureImmediate:
         case PutStructureHint:
         case MaterializeNewObject:
-        case PutLocal:
-        case KillLocal:
+        case PutStack:
+        case KillStack:
+        case GetStack:
             // These are just nodes that we don't currently expect to see during fixup.
             // If we ever wanted to insert them prior to fixup, then we just have to create
             // fixup rules for them.

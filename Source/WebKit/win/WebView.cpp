@@ -75,6 +75,7 @@
 #include <JavaScriptCore/InitializeThreading.h>
 #include <JavaScriptCore/JSCJSValue.h>
 #include <JavaScriptCore/JSLock.h>
+#include <JavaScriptCore/Profile.h>
 #include <WebCore/AXObjectCache.h>
 #include <WebCore/ApplicationCacheStorage.h>
 #include <WebCore/BString.h>
@@ -4995,7 +4996,7 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
     hr = prefsPrivate->databasesEnabled(&enabled);
     if (FAILED(hr))
         return hr;
-    DatabaseManager::manager().setIsAvailable(enabled);
+    DatabaseManager::singleton().setIsAvailable(enabled);
 
     hr = prefsPrivate->localStorageEnabled(&enabled);
     if (FAILED(hr))

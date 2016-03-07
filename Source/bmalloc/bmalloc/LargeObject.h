@@ -29,11 +29,14 @@
 #include "BeginTag.h"
 #include "EndTag.h"
 #include "LargeChunk.h"
+#include "Range.h"
 
 namespace bmalloc {
 
 class LargeObject {
 public:
+    static Range init(LargeChunk*);
+
     LargeObject();
     LargeObject(void*);
 
@@ -51,6 +54,9 @@ public:
     
     bool hasPhysicalPages() const;
     void setHasPhysicalPages(bool) const;
+    
+    bool isMarked() const;
+    void setMarked(bool) const;
     
     bool isValidAndFree(size_t) const;
 
@@ -121,6 +127,19 @@ inline void LargeObject::setHasPhysicalPages(bool hasPhysicalPages) const
     validate();
     m_beginTag->setHasPhysicalPages(hasPhysicalPages);
     m_endTag->setHasPhysicalPages(hasPhysicalPages);
+}
+
+inline bool LargeObject::isMarked() const
+{
+    validate();
+    return m_beginTag->isMarked();
+}
+
+inline void LargeObject::setMarked(bool isMarked) const
+{
+    validate();
+    m_beginTag->setMarked(isMarked);
+    m_endTag->setMarked(isMarked);
 }
 
 inline bool LargeObject::isValidAndFree(size_t expectedSize) const
@@ -220,6 +239,7 @@ inline void LargeObject::validateSelf() const
     BASSERT(m_beginTag->size() == m_endTag->size());
     BASSERT(m_beginTag->isFree() == m_endTag->isFree());
     BASSERT(m_beginTag->hasPhysicalPages() == m_endTag->hasPhysicalPages());
+    BASSERT(m_beginTag->isMarked() == m_endTag->isMarked());
 }
 
 inline void LargeObject::validate() const
@@ -235,6 +255,33 @@ inline void LargeObject::validate() const
         LargeObject next(DoNotValidate, begin() + size());
         next.validateSelf();
     }
+}
+
+inline Range LargeObject::init(LargeChunk* chunk)
+{
+    Range range(chunk->begin(), chunk->end() - chunk->begin());
+
+    BeginTag* beginTag = LargeChunk::beginTag(range.begin());
+    beginTag->setRange(range);
+    beginTag->setFree(true);
+    beginTag->setHasPhysicalPages(false);
+
+    EndTag* endTag = LargeChunk::endTag(range.begin(), range.size());
+    endTag->init(beginTag);
+
+    // Mark the left and right edges of our chunk as allocated. This naturally
+    // prevents merging logic from overflowing beyond our chunk, without requiring
+    // special-case checks.
+    
+    EndTag* leftSentinel = beginTag->prev();
+    BASSERT(leftSentinel >= static_cast<void*>(chunk));
+    leftSentinel->initSentinel();
+
+    BeginTag* rightSentinel = endTag->next();
+    BASSERT(rightSentinel < static_cast<void*>(range.begin()));
+    rightSentinel->initSentinel();
+    
+    return range;
 }
 
 } // namespace bmalloc

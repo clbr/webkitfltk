@@ -1,3 +1,146 @@
+2015-02-26  Geoffrey Garen  <ggaren@apple.com>
+
+        bmalloc: Large object free list can grow infinitely
+        https://bugs.webkit.org/show_bug.cgi?id=142055
+
+        Reviewed by Andreas Kling.
+
+        By design, we don't eagerly remove large objects from the free list.
+        This creates two simple pathologies:
+
+            (1) If you free and then allocate the same object repeatedly, it will
+            duplicate itself in the free list repeatedly. Since it is never
+            invalid at the time of allocation, it will never be removed.
+
+            (2) If you split and then merge the same object repeatedly, it will
+            duplicate its split sibling in the free list repeatedly. If its
+            sibling is in a separate free list size class, it will never be
+            consulted at the time of allocation, so it will never be removed.
+
+        So, a simple "while (1) { free(malloc(x)); }" causes infinite memory
+        use in the free list.
+
+        The solution in this patch is a simple helper to remove garbage from the
+        free list if it grows too large. This pathology is not common, so the
+        cost is OK.
+
+        Long-term, perhaps we should rethink the laziness of these free lists.
+
+        * bmalloc/BoundaryTag.h:
+        (bmalloc::BoundaryTag::isMarked):
+        (bmalloc::BoundaryTag::setMarked): New bit, used by free list GC.
+
+        * bmalloc/FreeList.cpp:
+        (bmalloc::FreeList::removeInvalidAndDuplicateEntries): The GC algorithm.
+
+        * bmalloc/FreeList.h:
+        (bmalloc::FreeList::FreeList):
+        (bmalloc::FreeList::push): Invoke the GC if we're getting huge.
+
+        * bmalloc/LargeObject.h:
+        (bmalloc::LargeObject::isMarked):
+        (bmalloc::LargeObject::setMarked):
+        (bmalloc::LargeObject::validateSelf): Expose the new bit.
+
+        * bmalloc/Sizes.h: New constant to control GC frequency.
+
+2015-02-26  Csaba Osztrogonác  <ossy@webkit.org>
+
+        URTBF after r180693.
+
+        * CMakeLists.txt:
+
+2015-02-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Try to fix the Mac build.
+
+        Unreviewed.
+
+        * bmalloc.xcodeproj/project.pbxproj: Make FreeList.h available.
+
+2015-02-26  Geoffrey Garen  <ggaren@apple.com>
+
+        bmalloc: Refactored SegregatedFreeList and BoundaryTag::init
+        https://bugs.webkit.org/show_bug.cgi?id=142049
+
+        Reviewed by Anders Carlsson.
+
+        Split out a FreeList class from SegregatedFreeList. This will make it
+        easier to add behaviors on free list insertion and removal -- and it's
+        probably how I should have designed things at the start.
+
+        Moved BoundaryTag::init into LargeObject, since all the related logic
+        lives in LargeObject now too, and this allows us to remove BoundaryTagInlines.h.
+
+        * bmalloc.xcodeproj/project.pbxproj:
+        * bmalloc/BoundaryTagInlines.h: Removed.
+        * bmalloc/FreeList.cpp: Copied from Source/bmalloc/bmalloc/SegregatedFreeList.cpp.
+        (bmalloc::FreeList::takeGreedy):
+        (bmalloc::FreeList::take):
+        (bmalloc::SegregatedFreeList::SegregatedFreeList): Deleted.
+        (bmalloc::SegregatedFreeList::insert): Deleted.
+        (bmalloc::SegregatedFreeList::takeGreedy): Deleted.
+        (bmalloc::SegregatedFreeList::take): Deleted.
+        * bmalloc/FreeList.h: Copied from Source/bmalloc/bmalloc/SegregatedFreeList.h.
+        (bmalloc::FreeList::push):
+        * bmalloc/LargeObject.h:
+        (bmalloc::LargeObject::init):
+        * bmalloc/SegregatedFreeList.cpp:
+        (bmalloc::SegregatedFreeList::SegregatedFreeList):
+        (bmalloc::SegregatedFreeList::insert):
+        (bmalloc::SegregatedFreeList::takeGreedy):
+        (bmalloc::SegregatedFreeList::take):
+        * bmalloc/SegregatedFreeList.h:
+        * bmalloc/Sizes.h:
+        * bmalloc/VMHeap.cpp:
+        (bmalloc::VMHeap::grow):
+
+2015-02-26  Geoffrey Garen  <ggaren@apple.com>
+
+        bmalloc: free up a bit in BoundaryTag
+        https://bugs.webkit.org/show_bug.cgi?id=142048
+
+        Reviewed by Brady Eidson.
+
+        We were wasting a bit by accident, and I need one now.
+
+        * bmalloc/Algorithm.h:
+        (bmalloc::rightShift): Deleted. Not needed, now that I've simplified
+        the math.
+
+        * bmalloc/BoundaryTag.h: Since each boundary tag bucket is 1024 bytes
+        long, the maximum offset into a bucket is 1023.
+
+        You need 5 bits to count up to 1024, but only 4 to count up to 1023.
+        
+        Math is hard.
+
+        (bmalloc::BoundaryTag::compactBegin): Switched to division because it
+        is simpler, and easier to match up with our ASSERT. The compiler will
+        turn division by constant power of two into a shift for us.
+
+        (bmalloc::BoundaryTag::setRange): Added an ASSERT for compactBegin
+        because we do encode it, so we should ASSERT that encoding did not
+        lose information.
+
+        * bmalloc/Sizes.h: Shifting is no longer used since we use division
+        instead.
+
+2015-02-24  Stephanie Lewis  <slewis@apple.com>
+
+        Rolling out http://trac.webkit.org/changeset/180430 as it causes the PLT to crash.
+        <rdar://problem/19948015>
+
+        Unreviewed.
+
+        * bmalloc/VMHeap.cpp:
+        (bmalloc::VMHeap::grow):
+        * bmalloc/VMHeap.h:
+        * bmalloc/Zone.cpp:
+        (bmalloc::Zone::Zone):
+        (bmalloc::Zone::size): Deleted.
+        * bmalloc/Zone.h:
+
 2015-02-24  Geoffrey Garen  <ggaren@apple.com>
 
         bmalloc: Added a little more abstraction for large objects

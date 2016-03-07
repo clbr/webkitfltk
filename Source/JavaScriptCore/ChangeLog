@@ -1,3 +1,584 @@
+2015-02-26  Mark Lam  <mark.lam@apple.com>
+
+        MachineThreads::Thread clean up has a use after free race condition.
+        <https://webkit.org/b/141990>
+
+        Reviewed by Filip Pizlo.
+
+        MachineThreads::Thread clean up relies on the clean up mechanism
+        implemented in _pthread_tsd_cleanup_key(), which looks like this:
+
+        void _pthread_tsd_cleanup_key(pthread_t self, pthread_key_t key)
+        {
+            void (*destructor)(void *);
+            if (_pthread_key_get_destructor(key, &destructor)) {
+                void **ptr = &self->tsd[key];
+                void *value = *ptr;
+
+            // === Start of window for the bug to manifest =================
+
+                // At this point, this thread has cached "destructor" and "value"
+                // (which is a MachineThreads*).  If the VM gets destructed (along
+                // with its MachineThreads registry) by another thread, then this
+                // thread will have no way of knowing that the MachineThreads* is
+                // now pointing to freed memory.  Calling the destructor below will
+                // therefore result in a use after free scenario when it tries to
+                // access the MachineThreads' data members.
+
+                if (value) {
+                    *ptr = NULL;
+                    if (destructor) {
+
+            // === End of window for the bug to manifest ==================
+
+                        destructor(value);
+                    }
+                }
+            }
+        }
+
+        The fix is to add each active MachineThreads to an ActiveMachineThreadsManager,
+        and always check if the manager still contains that MachineThreads object
+        before we call removeCurrentThread() on it.  When MachineThreads is destructed,
+        it will remove itself from the manager.  The add, remove, and checking
+        operations are all synchronized on the manager's lock, thereby ensuring that
+        the MachineThreads object, if found in the manager, will remain alive for the
+        duration of time we call removeCurrentThread() on it.
+
+        There's also possible for the MachineThreads object to already be destructed
+        and another one happened to have been instantiated at the same address.
+        Hence, we should only remove the exiting thread if it is found in the
+        MachineThreads object.
+
+        There is no test for this issue because this bug requires a race condition
+        between 2 threads where:
+        1. Thread B, which had previously used the VM, exiting and
+           getting to the bug window shown in _pthread_tsd_cleanup_key() above.
+        2. Thread A destructing the VM (and its MachineThreads object)
+           within that window of time before Thread B calls the destructor.
+
+        It is not possible to get a reliable test case without invasively
+        instrumenting _pthread_tsd_cleanup_key() or MachineThreads::removeCurrentThread()
+        to significantly increase that window of opportunity.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::ActiveMachineThreadsManager::Locker::Locker):
+        (JSC::ActiveMachineThreadsManager::add):
+        (JSC::ActiveMachineThreadsManager::remove):
+        (JSC::ActiveMachineThreadsManager::contains):
+        (JSC::ActiveMachineThreadsManager::ActiveMachineThreadsManager):
+        (JSC::activeMachineThreadsManager):
+        (JSC::MachineThreads::MachineThreads):
+        (JSC::MachineThreads::~MachineThreads):
+        (JSC::MachineThreads::removeThread):
+        (JSC::MachineThreads::removeThreadIfFound):
+        (JSC::MachineThreads::removeCurrentThread): Deleted.
+        * heap/MachineStackMarker.h:
+
+2015-02-26  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Save Console Evaluations into Command Line variables $1-$99 ($n)
+        https://bugs.webkit.org/show_bug.cgi?id=142061
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/protocol/Debugger.json:
+        * inspector/protocol/Runtime.json:
+        Input flag "saveResult" on whether we should try to save a result.
+        Output int "savedResultIndex" to tell the frontend the saved state.
+
+        * inspector/InjectedScriptSource.js:
+        Handle saving and clearing $1-$99 values.
+        Include in BasicCommandLineAPI for JSContext inspection.
+
+        * inspector/InjectedScriptBase.cpp:
+        (Inspector::InjectedScriptBase::makeEvalCall):
+        * inspector/InjectedScriptBase.h:
+        Allow an optional "savedResultIndex" out value on evals.
+
+        * inspector/InjectedScript.cpp:
+        (Inspector::InjectedScript::evaluate):
+        (Inspector::InjectedScript::evaluateOnCallFrame):
+        * inspector/InjectedScript.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::evaluateOnCallFrame):
+        * inspector/agents/InspectorDebuggerAgent.h:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::evaluate):
+        * inspector/agents/InspectorRuntimeAgent.h:
+        Plumbing for new in and out parameters.
+
+2015-02-26  Filip Pizlo  <fpizlo@apple.com>
+
+        The bool returning form of BytecodeGenerator::addVar() can be removed
+        https://bugs.webkit.org/show_bug.cgi?id=142064
+
+        Reviewed by Mark Lam.
+        
+        It's easier to implement addVar() when you don't have to return whether it's a new
+        variable or not.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::addVar):
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::addVar): Deleted.
+
+2015-02-26  Filip Pizlo  <fpizlo@apple.com>
+
+        Various array access corner cases should take OSR exit feedback
+        https://bugs.webkit.org/show_bug.cgi?id=142056
+
+        Reviewed by Geoffrey Garen.
+        
+        Two major changes here:
+        
+        - Don't keep converting GetById into GetArrayLength if we exited due to any kind of array
+          type check.
+        
+        - Use a generic form of GetByVal/PutByVal if we exited due to any kind of exotic checks,
+          like the Arguments safety checks. We use the "ExoticObjectMode" for out-of-bounds on
+          arguments for now, since it's a convenient way of forcing out-of-bounds to be handled by
+          the Generic array mode.
+
+        * bytecode/ExitKind.cpp:
+        (JSC::exitKindToString):
+        * bytecode/ExitKind.h:
+        * dfg/DFGArrayMode.cpp:
+        (JSC::DFG::ArrayMode::refine):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnArguments):
+        (JSC::DFG::SpeculativeJIT::compileGetArgumentsLength):
+        * tests/stress/array-length-array-storage-plain-object.js: Added.
+        (foo):
+        * tests/stress/array-length-plain-object.js: Added.
+        (foo):
+
+2015-02-25  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG SSA stack accesses shouldn't speak of VariableAccessDatas
+        https://bugs.webkit.org/show_bug.cgi?id=142036
+
+        Reviewed by Michael Saboff.
+        
+        VariableAccessData is a useful thing in LoadStore and ThreadedCPS, but it's purely harmful in
+        SSA because you can't cook up new VariableAccessDatas. So, if you know that you want to load
+        or store to the stack, and you know what format to use as well as the location, then prior to
+        this patch you couldn't do it unless you found some existing VariableAccessData that matched
+        your requirements. That can be a hard task.
+        
+        It's better if SSA doesn't speak of VariableAccessDatas but instead just has stack accesses
+        that speak of the things that a stack access needs: local, machineLocal, and format. This
+        patch changes the SSA way of accessing the stack to do just that.
+        
+        Also add more IR validation.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGConstantFoldingPhase.cpp:
+        (JSC::DFG::ConstantFoldingPhase::foldConstants):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGFlushFormat.h:
+        (JSC::DFG::isConcrete):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dump):
+        * dfg/DFGGraph.h:
+        * dfg/DFGMayExit.cpp:
+        (JSC::DFG::mayExit):
+        * dfg/DFGNode.cpp:
+        (JSC::DFG::Node::hasVariableAccessData):
+        * dfg/DFGNode.h:
+        (JSC::DFG::StackAccessData::StackAccessData):
+        (JSC::DFG::StackAccessData::flushedAt):
+        (JSC::DFG::Node::convertToPutStack):
+        (JSC::DFG::Node::convertToGetStack):
+        (JSC::DFG::Node::hasUnlinkedLocal):
+        (JSC::DFG::Node::hasStackAccessData):
+        (JSC::DFG::Node::stackAccessData):
+        (JSC::DFG::Node::willHaveCodeGenOrOSR):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOSRAvailabilityAnalysisPhase.cpp:
+        (JSC::DFG::LocalOSRAvailabilityCalculator::executeNode):
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGPutLocalSinkingPhase.cpp: Removed.
+        * dfg/DFGPutLocalSinkingPhase.h: Removed.
+        * dfg/DFGPutStackSinkingPhase.cpp: Copied from Source/JavaScriptCore/dfg/DFGPutLocalSinkingPhase.cpp.
+        (JSC::DFG::performPutStackSinking):
+        (JSC::DFG::performPutLocalSinking): Deleted.
+        * dfg/DFGPutStackSinkingPhase.h: Copied from Source/JavaScriptCore/dfg/DFGPutLocalSinkingPhase.h.
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGStackLayoutPhase.cpp:
+        (JSC::DFG::StackLayoutPhase::run):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::validate):
+        (JSC::DFG::Validate::validateCPS):
+        (JSC::DFG::Validate::validateSSA):
+        * dfg/DFGVirtualRegisterAllocationPhase.cpp:
+        (JSC::DFG::VirtualRegisterAllocationPhase::run):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::lower):
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileGetStack):
+        (JSC::FTL::LowerDFGToLLVM::compilePutStack):
+        (JSC::FTL::LowerDFGToLLVM::compileGetLocal): Deleted.
+        (JSC::FTL::LowerDFGToLLVM::compilePutLocal): Deleted.
+        * ftl/FTLOSRExit.h:
+        * tests/stress/many-sunken-locals.js: Added. This failure mode was caught by some miscellaneous test, so I figured I should write an explicit test for it.
+        (foo):
+        (bar):
+        (baz):
+        (fuzz):
+        (buzz):
+
+2015-02-26  Mark Lam  <mark.lam@apple.com>
+
+        Rolling out r180602, r180608, r180613, r180617, r180671.
+        <https://webkit.org/b/141990>
+
+        Not reviewed.
+
+        The r180602 solution does result in more work for GC when worker
+        threads are in use.  Filip is uncomfortable with that.
+        The EFL and GTK ports also seem to be unhappy with this change.
+        Rolling out while we investigate.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::gatherStackRoots):
+        (JSC::Heap::machineThreads): Deleted.
+        * heap/Heap.h:
+        (JSC::Heap::machineThreads):
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::MachineThreads):
+        (JSC::MachineThreads::~MachineThreads):
+        (JSC::MachineThreads::addCurrentThread):
+        * heap/MachineStackMarker.h:
+        * runtime/JSLock.cpp:
+        (JSC::JSLock::didAcquireLock):
+
+2015-02-26  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [Mac] [iOS] Parsing support for -apple-trailing-word
+        https://bugs.webkit.org/show_bug.cgi?id=141939
+
+        Reviewed by Andreas Kling.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-02-26  Michael Saboff  <msaboff@apple.com>
+
+        [Win] Debug-only JavaScriptCore failures
+        https://bugs.webkit.org/show_bug.cgi?id=142045
+
+        Rubber stamped by Filip Pizlo.
+
+        Reduced loop count to a more reasonable value of 10,000.  This still gets us to tier up
+        to the FTL, but doesn't take too long to run.
+
+        * tests/stress/repeated-arity-check-fail.js:
+
+2015-02-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Make build logs more legible by reducing noise
+        https://bugs.webkit.org/show_bug.cgi?id=142034
+
+        Reviewed by Alexey Proskuryakov.
+
+        Modify batch files, makefiles, and DOS commands to remove
+        uninteresting/unhelpful output.
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/JavaScriptCorePreBuild.cmd:
+        * JavaScriptCore.vcxproj/copy-files.cmd:
+        * JavaScriptCore.vcxproj/jsc/jscLauncherPreBuild.cmd:
+        * JavaScriptCore.vcxproj/jsc/jscPreBuild.cmd:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpLauncherPreBuild.cmd:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpPreBuild.cmd:
+        * JavaScriptCore.vcxproj/testapi/testapiLauncherPostBuild.cmd:
+        * JavaScriptCore.vcxproj/testapi/testapiLauncherPreBuild.cmd:
+        * JavaScriptCore.vcxproj/testapi/testapiPostBuild.cmd:
+        * JavaScriptCore.vcxproj/testapi/testapiPreBuild.cmd:
+
+2015-02-26  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Add calleeSaveRegisters() implementation for ARM Traditional
+        https://bugs.webkit.org/show_bug.cgi?id=141903
+
+        Reviewed by Darin Adler.
+
+        * jit/RegisterSet.cpp:
+        (JSC::RegisterSet::calleeSaveRegisters):
+
+2015-02-25  Michael Saboff  <msaboff@apple.com>
+
+        Web Inspector: CRASH when debugger pauses inside a Promise handler
+        https://bugs.webkit.org/show_bug.cgi?id=141396
+
+        Reviewed by Mark Lam.
+
+        For frames that don't have a scope, typically native frames, use the lexicalGlobalObject to
+        create the DebuggerScope for that frame.
+
+        * debugger/DebuggerCallFrame.cpp:
+        (JSC::DebuggerCallFrame::scope):
+
+2015-02-25  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG abstract heaps should respect the difference between heap and stack
+        https://bugs.webkit.org/show_bug.cgi?id=142022
+
+        Reviewed by Geoffrey Garen.
+        
+        We will soon (https://bugs.webkit.org/show_bug.cgi?id=141174) be in a world where a "world
+        clobbering" operation cannot write to our stack, but may be able to read from it. This
+        means that we need to change the DFG abstract heap hierarchy to have a notion of Heap that
+        subsumes all that World previously subsumed, and a new notion of Stack that is a subtype
+        of World and a sibling of Heap.
+
+        So, henceforth "clobbering the world" means reading World and writing Heap.
+        
+        This makes a bunch of changes to make this work, including changing the implementation of
+        disjointness in AbstractHeap to make it support a more general hierarchy. I was expecting
+        a slow-down, but I measured the heck out of this and found no perf difference.
+
+        * dfg/DFGAbstractHeap.cpp:
+        (JSC::DFG::AbstractHeap::dump):
+        * dfg/DFGAbstractHeap.h:
+        (JSC::DFG::AbstractHeap::supertype):
+        (JSC::DFG::AbstractHeap::isStrictSubtypeOf):
+        (JSC::DFG::AbstractHeap::isSubtypeOf):
+        (JSC::DFG::AbstractHeap::overlaps):
+        (JSC::DFG::AbstractHeap::isDisjoint):
+        * dfg/DFGClobberize.cpp:
+        (JSC::DFG::clobbersHeap):
+        (JSC::DFG::clobbersWorld): Deleted.
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+
+2015-02-25  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r180595): construct varargs fails in FTL
+        https://bugs.webkit.org/show_bug.cgi?id=142030
+
+        Reviewed by Geoffrey Garen.
+
+        The bug was caused by IC size being too small for construct_varargs even though we've added a new argument.
+        Fixed the bug by increasing the IC size to match call_varargs.
+
+        * ftl/FTLInlineCacheSize.cpp:
+        (JSC::FTL::sizeOfConstructVarargs):
+
+2015-02-25  Mark Lam  <mark.lam@apple.com>
+
+        ASan does not like JSC::MachineThreads::tryCopyOtherThreadStack.
+        <https://webkit.org/b/141672>
+
+        Reviewed by Alexey Proskuryakov.
+
+        ASan does not like the fact that we memcpy the stack for GC scans.  So,
+        we're working around this by using our own memcpy (asanUnsafeMemcpy)
+        implementation that we can tell ASan to ignore.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::asanUnsafeMemcpy):
+
+2015-02-25  Benjamin Poulain  <bpoulain@apple.com>
+
+        CodeBlock crashes when dumping op_push_name_scope
+        https://bugs.webkit.org/show_bug.cgi?id=141953
+
+        Reviewed by Filip Pizlo and Csaba Osztrogonác.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        * tests/stress/op-push-name-scope-crashes-profiler.js: Added.
+
+2015-02-25  Benjamin Poulain  <benjamin@webkit.org>
+
+        Make ParserError immutable by design
+        https://bugs.webkit.org/show_bug.cgi?id=141955
+
+        Reviewed by Geoffrey Garen.
+
+        This patch enforce that no field of ParserError can
+        be modified after the constructor.
+
+        * parser/ParserError.h:
+        Move the attributes to pack the integer + 2 bytes together.
+        This is irrelevant for memory impact, it is to remve a load-store
+        when copying by value.
+
+        Also move the attributes to be private.
+
+        (JSC::ParserError::isValid):
+        To client of the interface cared about the type of the error,
+        the only information needed was: is there an error.
+
+        (JSC::ParserError::ParserError):
+        (JSC::ParserError::syntaxErrorType):
+        (JSC::ParserError::token):
+        (JSC::ParserError::message):
+        (JSC::ParserError::line):
+        (JSC::ParserError::toErrorObject):
+        * API/JSScriptRef.cpp:
+        * builtins/BuiltinExecutables.cpp:
+        (JSC::BuiltinExecutables::createBuiltinExecutable):
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::generateFunctionCodeBlock):
+        (JSC::UnlinkedFunctionExecutable::fromGlobalCode):
+        (JSC::UnlinkedFunctionExecutable::codeBlockFor):
+        * bytecode/UnlinkedCodeBlock.h:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::parse):
+        * jsc.cpp:
+        (runInteractive):
+        * parser/Parser.h:
+        (JSC::parse):
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getGlobalCodeBlock):
+        (JSC::CodeCache::getFunctionExecutableFromGlobalCode):
+        * runtime/CodeCache.h:
+        * runtime/Completion.h:
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::checkSyntax):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::createProgramCodeBlock):
+        (JSC::JSGlobalObject::createEvalCodeBlock):
+
+2015-02-25  Filip Pizlo  <fpizlo@apple.com>
+
+        Need to pass RTLD_DEEPBIND to dlopen() to ensure that our LLVMOverrides take effect on Linux
+        https://bugs.webkit.org/show_bug.cgi?id=142006
+
+        Reviewed by Csaba Osztrogonác.
+
+        This fixes hard-to-reproduce concurrency-related crashes when running stress tests with FTL and
+        concurrent JIT enabled.
+
+        * llvm/InitializeLLVMPOSIX.cpp:
+        (JSC::initializeLLVMPOSIX):
+
+2015-02-24  Filip Pizlo  <fpizlo@apple.com>
+
+        CMake build of libllvmForJSC.so should limit its export list like the Xcode build does
+        https://bugs.webkit.org/show_bug.cgi?id=141989
+
+        Reviewed by Gyuyoung Kim.
+
+        * CMakeLists.txt:
+        * llvm/library/libllvmForJSC.version: Added.
+
+2015-02-24  Alexey Proskuryakov  <ap@apple.com>
+
+        More iOS build fix after r180602.
+
+        * heap/Heap.h: Export Heap::machineThreads().
+
+2015-02-24  Brent Fulgham  <bfulgham@apple.com>
+
+        Unreviewed build fix after r180602.
+
+        * heap/MachineStackMarker.h: Add missing 'no return'
+        declaration for Windows.
+
+2015-02-24  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r180599.
+        https://bugs.webkit.org/show_bug.cgi?id=141998
+
+        Lots of new test failures (Requested by smfr on #webkit).
+
+        Reverted changeset:
+
+        "Parsing support for -webkit-trailing-word"
+        https://bugs.webkit.org/show_bug.cgi?id=141939
+        http://trac.webkit.org/changeset/180599
+
+2015-02-24  Mark Lam  <mark.lam@apple.com>
+
+        MachineThreads::Thread clean up has a use after free race condition.
+        <https://webkit.org/b/141990>
+
+        Reviewed by Michael Saboff.
+
+        MachineThreads::Thread clean up relies on the clean up mechanism
+        implemented in _pthread_tsd_cleanup_key(), which looks like this:
+
+        void _pthread_tsd_cleanup_key(pthread_t self, pthread_key_t key)
+        {
+            void (*destructor)(void *);
+            if (_pthread_key_get_destructor(key, &destructor)) {
+                void **ptr = &self->tsd[key];
+                void *value = *ptr;
+
+                // At this point, this thread has cached "destructor" and "value"
+                // (which is a MachineThreads*).  If the VM gets destructed (along
+                // with its MachineThreads registry) by another thread, then this
+                // thread will have no way of knowing that the MachineThreads* is
+                // now pointing to freed memory.  Calling the destructor below will
+                // therefore result in a use after free scenario when it tries to
+                // access the MachineThreads' data members.
+
+                if (value) {
+                    *ptr = NULL;
+                    if (destructor) {
+                        destructor(value);
+                    }
+                }
+            }
+        }
+
+        The solution is simply to change MachineThreads from a per VM thread
+        registry to a process global singleton thread registry i.e. the
+        MachineThreads registry is now immortal and we cannot have a use after
+        free scenario since we never free it.
+
+        The cost of this change is that all VM instances will have to scan
+        stacks of all threads ever touched by a VM, and not just those that
+        touched a specific VM.  However, stacks tend to be shallow.  Hence,
+        those additional scans will tend to be cheap.
+
+        Secondly, it is not common for there to be multiple JSC VMs in use
+        concurrently on multiple threads.  Hence, this cost should rarely
+        manifest in real world applications.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::machineThreads):
+        (JSC::Heap::gatherStackRoots):
+        * heap/Heap.h:
+        (JSC::Heap::machineThreads): Deleted.
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::MachineThreads):
+        (JSC::MachineThreads::~MachineThreads):
+        (JSC::MachineThreads::addCurrentThread):
+        * heap/MachineStackMarker.h:
+        * runtime/JSLock.cpp:
+        (JSC::JSLock::didAcquireLock):
+
 2015-02-24  Myles C. Maxfield  <mmaxfield@apple.com>
 
         [Mac] [iOS] Parsing support for -apple-trailing-word

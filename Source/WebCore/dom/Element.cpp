@@ -280,7 +280,7 @@ bool Element::dispatchMouseEvent(const PlatformMouseEvent& platformEvent, const 
 bool Element::dispatchWheelEvent(const PlatformWheelEvent& event)
 {
     if (!event.deltaX() && !event.deltaY())
-        return false;
+        return true;
 
     RefPtr<WheelEvent> wheelEvent = WheelEvent::create(event, document().defaultView());
     return EventDispatcher::dispatchEvent(this, wheelEvent) && !wheelEvent->defaultHandled();
@@ -381,7 +381,7 @@ NamedNodeMap& Element::attributes() const
     if (NamedNodeMap* attributeMap = rareData.attributeMap())
         return *attributeMap;
 
-    rareData.setAttributeMap(NamedNodeMap::create(const_cast<Element&>(*this)));
+    rareData.setAttributeMap(std::make_unique<NamedNodeMap>(const_cast<Element&>(*this)));
     return *rareData.attributeMap();
 }
 

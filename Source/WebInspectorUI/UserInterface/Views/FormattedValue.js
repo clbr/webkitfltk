@@ -82,7 +82,7 @@ WebInspector.FormattedValue.createElementForTypesAndValue = function(type, subty
 
     // String: quoted and replace newlines as nice unicode symbols.
     if (type === "string") {
-        span.textContent = "\"" + displayString.replace(/\n/g, "\u21B5").replace(/"/g, "\\\"") + "\"";
+        span.textContent = doubleQuotedString(displayString.replace(/\n/g, "\u21B5"));
         return span;
     }
 
@@ -110,4 +110,17 @@ WebInspector.FormattedValue.createElementForObjectPreview = function(objectPrevi
 WebInspector.FormattedValue.createElementForPropertyPreview = function(propertyPreview)
 {
     return WebInspector.FormattedValue.createElementForTypesAndValue(propertyPreview.type, propertyPreview.subtype, propertyPreview.value, true, false);
+};
+
+WebInspector.FormattedValue.createObjectTreeOrFormattedValueForRemoteObject = function(object, propertyPath)
+{
+    if (object.subtype === "node")
+        return WebInspector.FormattedValue.createElementForNode(object);
+
+    if (object.type === "object") {
+        var objectTree = new WebInspector.ObjectTreeView(object, WebInspector.ObjectTreeView.Mode.Properties, propertyPath);
+        return objectTree.element;
+    }
+
+    return WebInspector.FormattedValue.createElementForRemoteObject(object);
 };
