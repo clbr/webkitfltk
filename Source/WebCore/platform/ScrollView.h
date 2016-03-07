@@ -156,7 +156,13 @@ public:
     void setCanBlitOnScroll(bool);
     bool canBlitOnScroll() const;
 
-    virtual float topContentInset() const { return 0; }
+    // There are at least three types of contentInset. Usually we just care about WebCoreContentInset, which is the inset
+    // that is set on a Page that requires WebCore to move its layers to accomodate the inset. However, there are platform
+    // concepts that are similar on both iOS and Mac when there is a platformWidget(). Sometimes we need the Mac platform value
+    // for topContentInset, so when the TopContentInsetType is WebCoreOrPlatformContentInset, platformTopContentInset()
+    // will be returned instead of the value set on Page.
+    enum class TopContentInsetType { WebCoreContentInset, WebCoreOrPlatformContentInset };
+    virtual float topContentInset(TopContentInsetType = TopContentInsetType::WebCoreContentInset) const { return 0; }
 
     // The visible content rect has a location that is the scrolled offset of the document. The width and height are the unobscured viewport
     // width and height. By default the scrollbars themselves are excluded from this rectangle, but an optional boolean argument allows them
@@ -200,9 +206,9 @@ public:
     // visibleContentScaleFactor is usually 1, except when the setting delegatesPageScaling is true and the
     // ScrollView is the main frame; in that case, visibleContentScaleFactor is equal to the page's pageScaleFactor.
     // Ports that don't use pageScaleFactor can treat unscaledUnobscuredVisibleContentSize and visibleContentRect().size() as equivalent.
-    // unscaledTotalVisibleContentSize() includes areas in the content that might be obscured by UI elements.
+    // unscaledVisibleContentSizeIncludingObscuredArea() includes areas in the content that might be obscured by UI elements.
     IntSize unscaledUnobscuredVisibleContentSize(VisibleContentRectIncludesScrollbars = ExcludeScrollbars) const;
-    IntSize unscaledTotalVisibleContentSize(VisibleContentRectIncludesScrollbars = ExcludeScrollbars) const;
+    IntSize unscaledVisibleContentSizeIncludingObscuredArea(VisibleContentRectIncludesScrollbars = ExcludeScrollbars) const;
     virtual float visibleContentScaleFactor() const { return 1; }
 
     // Functions for getting/setting the size webkit should use to layout the contents. By default this is the same as the visible
@@ -408,6 +414,9 @@ protected:
     // Called to update the scrollbars to accurately reflect the state of the view.
     void updateScrollbars(const IntSize& desiredOffset);
 
+    float platformTopContentInset() const;
+    void platformSetTopContentInset(float);
+
 private:
     virtual IntRect visibleContentRectInternal(VisibleContentRectIncludesScrollbars, VisibleContentRectBehavior) const override;
     IntRect unobscuredContentRectInternal(VisibleContentRectIncludesScrollbars = ExcludeScrollbars) const;
@@ -472,6 +481,8 @@ private:
     bool platformCanBlitOnScroll() const;
     IntRect platformVisibleContentRect(bool includeScrollbars) const;
     IntSize platformVisibleContentSize(bool includeScrollbars) const;
+    IntRect platformVisibleContentRectIncludingObscuredArea(bool includeScrollbars) const;
+    IntSize platformVisibleContentSizeIncludingObscuredArea(bool includeScrollbars) const;
     void platformSetContentsSize();
     IntRect platformContentsToScreen(const IntRect&) const;
     IntPoint platformScreenToContents(const IntPoint&) const;

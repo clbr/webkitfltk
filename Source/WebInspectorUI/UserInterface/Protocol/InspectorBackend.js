@@ -40,6 +40,8 @@ function InspectorBackendClass()
 
     this.dumpInspectorTimeStats = false;
     this.dumpInspectorProtocolMessages = false;
+    this.warnForLongMessageHandling = false;
+    this.longMessageHandlingThreshold = 10; // milliseconds.
 }
 
 InspectorBackendClass.prototype = {
@@ -171,8 +173,12 @@ InspectorBackendClass.prototype = {
                 console.error("Uncaught exception in inspector page while dispatching callback for command " + command.qualifiedName + ": ", e);
             }
 
+            var processingDuration = Date.now() - processingStartTime;
+            if (this.warnForLongMessageHandling && processingDuration > this.longMessageHandlingThreshold)
+                console.warn("InspectorBackend: took " + processingDuration + "ms to handle response for command: " + command.qualifiedName);
+
             if (this.dumpInspectorTimeStats)
-                console.log("time-stats: " + command.qualifiedName + " = " + (processingStartTime - callbackData.sendRequestTime) + " + " + (Date.now() - processingStartTime));
+                console.log("time-stats: Handling: " + processingDuration + "ms; RTT: " + (processingStartTime - callbackData.sendRequestTime) + "ms; (command " + command.qualifiedName + ")");
 
             this._callbackData.delete(messageObject["id"]);
         }
@@ -214,8 +220,12 @@ InspectorBackendClass.prototype = {
             console.error("Uncaught exception in inspector page while handling event " + qualifiedName + ": ", e);
         }
 
+        var processingDuration = Date.now() - processingStartTime;
+        if (this.warnForLongMessageHandling && processingDuration > this.longMessageHandlingThreshold)
+            console.warn("InspectorBackend: took " + processingDuration + "ms to handle event: " + messageObject["method"]);
+
         if (this.dumpInspectorTimeStats)
-            console.log("time-stats: " + messageObject["method"] + " = " + (Date.now() - processingStartTime));
+            console.log("time-stats: Handling: " + processingDuration + "ms (event " + messageObject["method"] + ")");
     },
 
     _invokeCommand: function(command, parameters, callback)
@@ -294,6 +304,11 @@ InspectorBackend.Agent.prototype = {
     getEvent: function(eventName)
     {
         return this._events[eventName];
+    },
+
+    hasEvent: function(eventName)
+    {
+        return eventName in this._events;
     },
 
     dispatchEvent: function(eventName, eventArguments)

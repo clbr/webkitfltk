@@ -266,10 +266,10 @@ IntRect ScrollView::unobscuredContentRectInternal(VisibleContentRectIncludesScro
     return IntRect(IntPoint(m_scrollOffset), expandedIntSize(visibleContentSize));
 }
 
-IntSize ScrollView::unscaledTotalVisibleContentSize(VisibleContentRectIncludesScrollbars scrollbarInclusion) const
+IntSize ScrollView::unscaledVisibleContentSizeIncludingObscuredArea(VisibleContentRectIncludesScrollbars scrollbarInclusion) const
 {
     if (platformWidget())
-        return platformVisibleContentSize(scrollbarInclusion == IncludeScrollbars);
+        return platformVisibleContentSizeIncludingObscuredArea(scrollbarInclusion == IncludeScrollbars);
 
 #if USE(TILED_BACKING_STORE)
     if (!m_fixedVisibleContentRect.isEmpty())
@@ -291,10 +291,10 @@ IntSize ScrollView::unscaledTotalVisibleContentSize(VisibleContentRectIncludesSc
     
 IntSize ScrollView::unscaledUnobscuredVisibleContentSize(VisibleContentRectIncludesScrollbars scrollbarInclusion) const
 {
-    IntSize visibleContentSize = unscaledTotalVisibleContentSize(scrollbarInclusion);
-    
+    IntSize visibleContentSize = unscaledVisibleContentSizeIncludingObscuredArea(scrollbarInclusion);
+
     if (platformWidget())
-        return visibleContentSize;
+        return platformVisibleContentSize(scrollbarInclusion == IncludeScrollbars);
 
 #if USE(TILED_BACKING_STORE)
     if (!m_fixedVisibleContentRect.isEmpty())
@@ -410,13 +410,13 @@ IntPoint ScrollView::adjustScrollPositionWithinRange(const IntPoint& scrollPoint
 
 IntSize ScrollView::documentScrollOffsetRelativeToViewOrigin() const
 {
-    return scrollOffset() - IntSize(0, headerHeight() + topContentInset());
+    return scrollOffset() - IntSize(0, headerHeight() + topContentInset(TopContentInsetType::WebCoreOrPlatformContentInset));
 }
 
 IntPoint ScrollView::documentScrollPositionRelativeToViewOrigin() const
 {
     IntPoint scrollPosition = this->scrollPosition();
-    return IntPoint(scrollPosition.x(), scrollPosition.y() - headerHeight() - topContentInset());
+    return IntPoint(scrollPosition.x(), scrollPosition.y() - headerHeight() - topContentInset(TopContentInsetType::WebCoreOrPlatformContentInset));
 }
 
 IntSize ScrollView::documentScrollOffsetRelativeToScrollableAreaOrigin() const
@@ -830,7 +830,7 @@ IntPoint ScrollView::contentsToRootView(const IntPoint& contentsPoint) const
     if (delegatesScrolling())
         return convertToRootView(contentsPoint);
 
-    IntPoint viewPoint = contentsPoint + IntSize(0, headerHeight() + topContentInset()) - scrollOffset();
+    IntPoint viewPoint = contentsPoint + IntSize(0, headerHeight() + topContentInset(TopContentInsetType::WebCoreOrPlatformContentInset)) - scrollOffset();
     return convertToRootView(viewPoint);  
 }
 
@@ -850,7 +850,7 @@ IntRect ScrollView::contentsToRootView(const IntRect& contentsRect) const
         return convertToRootView(contentsRect);
 
     IntRect viewRect = contentsRect;
-    viewRect.move(-scrollOffset() + IntSize(0, headerHeight() + topContentInset()));
+    viewRect.move(-scrollOffset() + IntSize(0, headerHeight() + topContentInset(TopContentInsetType::WebCoreOrPlatformContentInset)));
     return convertToRootView(viewRect);
 }
 
@@ -860,7 +860,7 @@ IntPoint ScrollView::rootViewToTotalContents(const IntPoint& rootViewPoint) cons
         return convertFromRootView(rootViewPoint);
 
     IntPoint viewPoint = convertFromRootView(rootViewPoint);
-    return viewPoint + scrollOffset() - IntSize(0, topContentInset());
+    return viewPoint + scrollOffset() - IntSize(0, topContentInset(TopContentInsetType::WebCoreOrPlatformContentInset));
 }
 
 IntPoint ScrollView::windowToContents(const IntPoint& windowPoint) const
@@ -877,7 +877,7 @@ IntPoint ScrollView::contentsToWindow(const IntPoint& contentsPoint) const
     if (delegatesScrolling())
         return convertToContainingWindow(contentsPoint);
 
-    IntPoint viewPoint = contentsPoint + IntSize(0, headerHeight() + topContentInset()) - scrollOffset();
+    IntPoint viewPoint = contentsPoint + IntSize(0, headerHeight() + topContentInset(TopContentInsetType::WebCoreOrPlatformContentInset)) - scrollOffset();
     return convertToContainingWindow(viewPoint);  
 }
 
@@ -897,7 +897,7 @@ IntRect ScrollView::contentsToWindow(const IntRect& contentsRect) const
         return convertToContainingWindow(contentsRect);
 
     IntRect viewRect = contentsRect;
-    viewRect.move(-scrollOffset() + IntSize(0, headerHeight() + topContentInset()));
+    viewRect.move(-scrollOffset() + IntSize(0, headerHeight() + topContentInset(TopContentInsetType::WebCoreOrPlatformContentInset)));
     return convertToContainingWindow(viewRect);
 }
 
@@ -1515,7 +1515,26 @@ IntRect ScrollView::platformVisibleContentRect(bool) const
     return IntRect();
 }
 
+float ScrollView::platformTopContentInset() const
+{
+    return 0;
+}
+
+void ScrollView::platformSetTopContentInset(float)
+{
+}
+
 IntSize ScrollView::platformVisibleContentSize(bool) const
+{
+    return IntSize();
+}
+
+IntRect ScrollView::platformVisibleContentRectIncludingObscuredArea(bool) const
+{
+    return IntRect();
+}
+
+IntSize ScrollView::platformVisibleContentSizeIncludingObscuredArea(bool) const
 {
     return IntSize();
 }

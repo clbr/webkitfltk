@@ -46,6 +46,7 @@
 #import "Image.h"
 #import "JSNode.h"
 #import "NodeFilter.h"
+#import "Page.h"
 #import "Range.h"
 #import "RenderImage.h"
 #import "ScriptController.h"
@@ -609,7 +610,18 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
     if (!frame)
         return nil;
 
+    // iOS uses CGImageRef for drag images, which doesn't support separate logical/physical sizes.
+#if PLATFORM(MAC)
+    RetainPtr<NSImage> renderedImage = createDragImageForRange(*frame, *range, forceBlackText);
+
+    IntSize size([renderedImage size]);
+    size.scale(1 / frame->page()->deviceScaleFactor());
+    [renderedImage setSize:size];
+
+    return renderedImage.autorelease();
+#else
     return createDragImageForRange(*frame, *range, forceBlackText).autorelease();
+#endif
 }
 
 - (NSArray *)textRects

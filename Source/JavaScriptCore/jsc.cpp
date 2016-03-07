@@ -95,7 +95,7 @@ using namespace JSC;
 using namespace WTF;
 
 namespace JSC {
-extern const struct HashTable globalObjectTable;
+WTF_IMPORT extern const struct HashTable globalObjectTable;
 }
 
 namespace {
@@ -272,7 +272,7 @@ public:
             m_delegate.set(vm, this, delegate);
     }
 
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::OverridesGetOwnPropertySlot | JSC::OverridesVisitChildren | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 
     static bool getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName name, PropertySlot& slot)
     {

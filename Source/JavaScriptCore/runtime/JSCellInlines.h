@@ -30,6 +30,7 @@
 #include "DeferGC.h"
 #include "Handle.h"
 #include "JSCell.h"
+#include "JSDestructibleObject.h"
 #include "JSObject.h"
 #include "JSString.h"
 #include "Structure.h"
@@ -173,7 +174,6 @@ inline bool JSCell::isAPIValueWrapper() const
 
 inline void JSCell::setStructure(VM& vm, Structure* structure)
 {
-    ASSERT(structure->typeInfo().overridesVisitChildren() == this->structure()->typeInfo().overridesVisitChildren());
     ASSERT(structure->classInfo() == this->structure()->classInfo());
     ASSERT(!this->structure()
         || this->structure()->transitionWatchpointSetHasBeenInvalidated()
@@ -229,6 +229,14 @@ inline bool JSCell::canUseFastGetOwnProperty(const Structure& structure)
     return !structure.hasGetterSetterProperties() 
         && !structure.hasCustomGetterSetterProperties()
         && !structure.typeInfo().overridesGetOwnPropertySlot();
+}
+
+inline const ClassInfo* JSCell::classInfo() const
+{
+    MarkedBlock* block = MarkedBlock::blockFor(this);
+    if (block->destructorType() == MarkedBlock::Normal)
+        return static_cast<const JSDestructibleObject*>(this)->classInfo();
+    return structure(*block->vm())->classInfo();
 }
 
 inline bool JSCell::toBoolean(ExecState* exec) const

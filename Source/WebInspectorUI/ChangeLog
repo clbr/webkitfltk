@@ -1,3 +1,210 @@
+2014-08-01  Jonathan Wells  <jonowells@apple.com>
+
+        Web Inspector: Timeline header height doesn't match style updates.
+        https://bugs.webkit.org/show_bug.cgi?id=135516
+
+        Reviewed by Timothy Hatcher.
+
+        Update the timeline header height to match the updates
+        to the navigation bars in other panels made in
+        https://bugs.webkit.org/show_bug.cgi?id=135445. Also
+        update the shadows on some of the search bars.
+
+        * UserInterface/Views/FilterBar.css:
+        (.filter-bar > input[type="search"]):
+        (body.mac-platform.legacy .filter-bar > input[type="search"]):
+        * UserInterface/Views/FindBanner.css:
+        (.find-banner > input[type="search"]):
+        (body.mac-platform.legacy .find-banner > input[type="search"]):
+        * UserInterface/Views/LogContentView.css:
+        (.search-bar.log-search-bar > input[type="search"]):
+        (body.mac-platform.legacy .search-bar.log-search-bar > input[type="search"]):
+        Remove inset shadows on search bars.
+
+        * UserInterface/Views/TimelineSidebarPanel.css:
+        (.sidebar > .panel.navigation.timeline > .status-bar):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar):
+        (.sidebar > .panel.navigation.timeline > .status-bar > .record-glyph):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-glyph):
+        (.sidebar > .panel.navigation.timeline > .status-bar > .record-status):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-status):
+        (.sidebar > .panel.navigation.timeline > .title-bar.timelines):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .title-bar.timelines):
+        (.sidebar > .panel.navigation.timeline > .title-bar.timeline-events):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .title-bar.timeline-events):
+        (.sidebar > .panel.navigation.timeline > .timelines-content):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .timelines-content):
+        (.sidebar > .panel.navigation.timeline > .empty-content-placeholder):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .empty-content-placeholder):
+        Update the height of the timeline status bar.
+
+2014-07-31  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: "Stop Recording" button feels unresponsive, recording takes a long time to stop
+        https://bugs.webkit.org/show_bug.cgi?id=135490
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Controllers/TimelineManager.js:
+        (WebInspector.TimelineManager.prototype.stopCapturing):
+        Immediately stop the recording without waiting for an event from the backend.
+        This makes the Web Inspector UI feel responsive to the user stopping the recording.
+        This also matches behavior before r171195.
+
+2014-07-31  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Timeline recording is not working inspecting iOS 7 and earlier
+        https://bugs.webkit.org/show_bug.cgi?id=135466
+
+        Reviewed by Timothy Hatcher.
+
+        Start / stop capturing for older backends that won't emit start / stop events.
+
+        * UserInterface/Protocol/InspectorBackend.js:
+        (InspectorBackend.Agent.prototype.hasEvent):
+        Provide a way to check if an event is supported.
+
+        * UserInterface/Controllers/TimelineManager.js:
+        (WebInspector.TimelineManager.prototype.startCapturing):
+        (WebInspector.TimelineManager.prototype.stopCapturing):
+        Fallback to starting and stopping capturing manually if the backend
+        does not provide the events.
+
+2014-07-31  Jonathan Wells  <jonowells@apple.com>
+
+        Web Inspector: Sync button look and feel with Xcode updates.
+        https://bugs.webkit.org/show_bug.cgi?id=135445
+
+        Reviewed by Timothy Hatcher.
+
+        Update styles to match recent changes to Xcode text-only
+        buttons, the navigation bar, and search fields. Include
+        older style rules for older Mac platforms.
+
+        * UserInterface/Views/ButtonNavigationItem.css:
+        (.navigation-bar .item.button.text-only):
+        (body.mac-platform.legacy .navigation-bar .item.button.text-only):
+        * UserInterface/Views/CSSStyleDetailsSidebarPanel.css:
+        (.sidebar > .panel.details.css-style > .navigation-bar):
+        (.sidebar > .panel.details.css-style > .content):
+        (body.mac-platform.legacy .sidebar > .panel.details.css-style > .content):
+        * UserInterface/Views/DebuggerSidebarPanel.css:
+        (.sidebar > .panel.navigation.debugger > .content):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.debugger > .content):
+        * UserInterface/Views/DividerNavigationItem.css:
+        (.navigation-bar .item.divider):
+        (body.mac-platform.legacy .navigation-bar .item.divider):
+        * UserInterface/Views/FilterBar.css:
+        (.filter-bar):
+        (body.mac-platform.legacy .filter-bar):
+        (.filter-bar > input[type="search"]):
+        (body.mac-platform.legacy .filter-bar > input[type="search"]):
+        * UserInterface/Views/LogContentView.css:
+        (.search-bar.log-search-bar > input[type="search"]):
+        (@media reader):
+        (.log-search-bar > input): Deleted.
+        * UserInterface/Views/Main.css:
+        (#split-content-browser > .navigation-bar):
+        (body.mac-platform.legacy #split-content-browser > .navigation-bar):
+        * UserInterface/Views/NavigationBar.css:
+        (.navigation-bar):
+        (body.mac-platform.legacy .navigation-bar):
+        (.navigation-bar .item):
+        (body.mac-platform.legacy .navigation-bar .item):
+        * UserInterface/Views/NavigationSidebarPanel.css:
+        (.sidebar > .panel.navigation > .content):
+        (body.mac-platform.legacy .sidebar > .panel.navigation > .content):
+        * UserInterface/Views/QuickConsole.css:
+        (.quick-console):
+        (body.mac-platform.legacy .quick-console):
+        * UserInterface/Views/RadioButtonNavigationItem.css:
+        (.navigation-bar .item.radio.button.text-only:hover):
+        (body.mac-platform.legacy .navigation-bar .item.radio.button.text-only:hover):
+        (.navigation-bar .item.radio.button.text-only.selected):
+        (body.mac-platform.legacy .navigation-bar .item.radio.button.text-only.selected):
+        (.navigation-bar .item.radio.button.text-only:active):
+        (.navigation-bar .item.radio.button.text-only.selected:active):
+        (body.mac-platform.legacy .navigation-bar .item.radio.button.text-only.selected:active):
+        * UserInterface/Views/ResourceSidebarPanel.css:
+        (.sidebar > .panel.navigation.resource > .empty-content-placeholder):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.resource > .empty-content-placeholder):
+        (.sidebar > .panel.navigation.resource > .search-bar):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.resource > .search-bar):
+        (.sidebar > .panel.navigation.resource > .search-bar > input[type="search"]):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.resource > .search-bar > input[type="search"]):
+        * UserInterface/Views/ScopeBar.css:
+        (.scope-bar > li):
+        (body.mac-platform.legacy .scope-bar > li):
+        (.scope-bar > li:hover):
+        (body.mac-platform.legacy .scope-bar > li:hover):
+        (.scope-bar > li.selected):
+        (.scope-bar > li:active):
+        (body.mac-platform.legacy .scope-bar > li:active):
+        (.scope-bar > li.selected:active):
+        (body.mac-platform.legacy .scope-bar > li.selected:active):
+        * UserInterface/Views/SearchBar.css:
+        (.search-bar > input[type="search"]):
+        (body.mac-platform.legacy .search-bar > input[type="search"]):
+        Update styles and apply older styles to legacy Mac platforms.
+
+2014-07-31  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: MessageDispatcher should not synchronously dispatch all backend messages
+        https://bugs.webkit.org/show_bug.cgi?id=135427
+
+        Reviewed by Timothy Hatcher.
+
+        The frontend dispatches all queued messages from the backend synchronously, even if there are
+        hundreds of messages, or even if some of the messages take a long time (>10ms) to process.
+
+        This patch adds a time limit to the frontend's message dispatcher. If the time limit is exceeded
+        when processing the message queue, unhandled messages remain in the queue and the dispatcher goes
+        to sleep until the next run loop (obtained by a new setTimeout).
+
+        This has the effect of removing stutters when the message queue has hundreds of small messages.
+        The outliers are still the same since some single messages can take over 200ms to be handled.
+
+        This patch also improves performance logging in InspectorBackend so that it is easier to see
+        message handling times and their distribution among run loop turns.
+
+        * UserInterface/Protocol/InspectorBackend.js:
+        (InspectorBackendClass): Add a new diagnostic flag that warns about slow message handling.
+        (InspectorBackendClass.prototype._dispatchCallback.get if): Improve logging.
+        (InspectorBackendClass.prototype._dispatchCallback): Improve logging.
+        (InspectorBackendClass.prototype._dispatchEvent): Improve logging.
+        * UserInterface/Protocol/MessageDispatcher.js:
+        (WebInspector.dispatchNextQueuedMessageFromBackend): Keep track of a time limit for message
+        dispatching, and set a new timeout if we exceed the time limit.
+
+2014-07-31  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Right edge of Timeline Record button does not work
+        https://bugs.webkit.org/show_bug.cgi?id=135444
+
+        Reviewed by Timothy Hatcher.
+
+        When hovering the record button we would show the status text, however
+        because the left edge of the status text box would overlap the right
+        edge of the record button causing completely unexpected behavior.
+
+        Position the status text correctly so that it never overlaps the record
+        button. 5px to match the left margin of the record button, and another
+        2px for some padding between the button and text.
+
+        * UserInterface/Views/TimelineSidebarPanel.css:
+        (.sidebar > .panel.navigation.timeline > .status-bar > .record-status):
+
+2014-07-31  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: console.profile missing profile information
+        https://bugs.webkit.org/show_bug.cgi?id=135432
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Models/ScriptTimelineRecord.js:
+        Delete the payload information as soon as it has been processed.
+        It is no longer needed anymore and can be garbage collected.
+
 2014-07-30  Brian J. Burg  <burg@cs.washington.edu>
 
         Web Inspector: ProbeSetDetailsSection should not create live location links for unresolved breakpoints
