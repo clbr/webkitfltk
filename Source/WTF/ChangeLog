@@ -1,3 +1,183 @@
+2015-01-30  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Implement ES6 Symbol
+        https://bugs.webkit.org/show_bug.cgi?id=140435
+
+        Reviewed by Geoffrey Garen.
+
+        Introduce new unique string mechanizm into StringImpl.
+        It is used for implementing Symbol which holds a [[Description]] value.
+
+        * wtf/text/AtomicString.h:
+        (WTF::AtomicString::add):
+        (WTF::AtomicString::addWithStringTableProvider):
+
+        Previously, we checked `isAtomic()` or `!length()`. This guard can filter out EmptyUnique.
+        But now, we introduced new unique StringImpl. Since it has an actual string value, we need to check `isUnique()`.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::~StringImpl):
+        (WTF::StringImpl::createUnique):
+
+        In createUnique, we leverage Substring mechanizm to produce a new unique
+        string from an existing string.
+
+        * wtf/text/StringImpl.h:
+        (WTF::StringImpl::StringImpl):
+        (WTF::StringImpl::createUniqueEmpty):
+        (WTF::StringImpl::flagIsUnique):
+        (WTF::StringImpl::isUnique):
+        (WTF::StringImpl::setIsAtomic):
+        (WTF::StringImpl::createEmptyUnique): Deleted.
+        (WTF::StringImpl::isEmptyUnique): Deleted.
+
+        Instead of EmptyUnique, we introduced new flag to StringImpl, `isUnique`.
+        While EmptyUnique cannot hold any string values except for empty string,
+        the unique StringImpl can hold any String values.
+        We fold the Symbol's descriptiveString value here.
+
+        * wtf/text/StringStatics.cpp:
+        (WTF::StringImpl::hashAndFlagsForUnique):
+        (WTF::StringImpl::hashAndFlagsForEmptyUnique): Deleted.
+
+2015-01-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        Re-landing just the HandleBlock piece of this patch.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::fastAlignedMalloc):
+        (WTF::fastAlignedFree):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        * wtf/FastMalloc.h:
+
+2015-01-30  Namhoon Kim  <yanhkim@gmail.com>
+
+        Call vsnprintf instead of _vsnprintf in vprintf_stderr_common
+        https://bugs.webkit.org/show_bug.cgi?id=141078
+
+        In windows _vsnprintf api does not place null character
+        automatically. Simply replace it with vsnprintf. Which is
+        polyfill to call wtf_vsnprintf in windows.
+
+        Reviewed by Brent Fulgham.
+
+        * wtf/Assertions.cpp:
+
+2015-01-30  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: ASSERT in InspectorTimelineAgent::internalStop
+        https://bugs.webkit.org/show_bug.cgi?id=141039
+
+        Reviewed by Timothy Hatcher.
+
+        Add messages to Stopwatch assertions, and clean up constructor.
+
+        * wtf/Stopwatch.h:
+        (WTF::Stopwatch::Stopwatch):
+        (WTF::Stopwatch::start):
+        (WTF::Stopwatch::stop):
+
+2015-01-30  Chris Dumez  <cdumez@apple.com>
+
+        Add match_constness<Reference, T> helper struct
+        https://bugs.webkit.org/show_bug.cgi?id=140905
+
+        Reviewed by Benjamin Poulain.
+
+        Add match_constness<Reference, T> helper struct to simplify downcast<>()
+        a bit. The purpose of this helper is to update T's constness to match
+        Reference's.
+
+        * wtf/TypeCasts.h:
+        (WTF::downcast):
+
+2015-01-30  Chris Dumez  <cdumez@apple.com>
+
+        Add assertion in RefPtr's operator*() to make sure we don't dereference nullptr
+        https://bugs.webkit.org/show_bug.cgi?id=141092
+
+        Reviewed by Anders Carlsson.
+
+        Add assertion in RefPtr's operator*() to make sure we don't dereference
+        nullptr.
+
+        * wtf/RefPtr.h:
+        (WTF::RefPtr::operator*):
+
+2015-01-30  Geoffrey Garen  <ggaren@apple.com>
+
+        GC marking threads should clear malloc caches
+        https://bugs.webkit.org/show_bug.cgi?id=141097
+
+        Reviewed by Andreas Kling.
+
+        Split the scavenging API into per-thread vs global, so that you can
+        request to scavenge your own thread without scavenging the whole heap.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::releaseFastMallocFreeMemoryForThisThread):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        * wtf/FastMalloc.h:
+
+2015-01-30  Antti Koivisto  <antti@apple.com>
+
+        OSObjectPtr does not work with dispatch_data_t on Maverics
+        https://bugs.webkit.org/show_bug.cgi?id=141081
+
+        Reviewed by Pratik Solanki.
+        
+        Trying to use OSObjectPtr<dispatch_data_t> throws 
+        
+        -[OS_dispatch_data _xref_dispose]: unrecognized selector sent to instance 0
+
+        * wtf/OSObjectPtr.h:
+        (WTF::retainOSObject<dispatch_data_t>):
+        (WTF::releaseOSObject<dispatch_data_t>):
+        
+            Add specialization for dispatch_data_t on Maverics.
+
+2015-01-29  Santosh Mahto  <santoshbit2007@gmail.com>
+
+        Refactor String::format to handle unreached va_end.
+        https://bugs.webkit.org/show_bug.cgi?id=140938
+
+        Reviewed by Alexey Proskuryakov.
+
+        Now va_end is called for all platform after getting length
+        of formatted string and again va_start/va_end is called to write
+        formatted string in buffer. This way it ensure va_end is always
+        reached for each va_start.
+
+        * wtf/text/WTFString.cpp:
+
+2015-01-29  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Move HAVE_DTRACE definition back to Platform.h
+        https://bugs.webkit.org/show_bug.cgi?id=141033
+
+        Reviewed by Dan Bernstein.
+
+        * wtf/Platform.h:
+
+2015-01-28  Namhoon Kim  <namkim@ea.com>
+
+        Windows return -1 when calling vsnprintf with arguments that exceed target buffer size
+        https://bugs.webkit.org/show_bug.cgi?id=140917
+
+        Reviewed by Brent Fulgham.
+
+        Fix return value of vsnprintf when windows API return -1 to denote
+        requested buffer exceeded. Replace return value by calling vscprintf.
+
+        * wtf/StringExtras.h:
+        (snprintf): Fix return value by calling vscprintf when buffer exceeded.
+        (wtf_vsnprintf): Ditto.
+
 2015-01-28  Geoffrey Garen  <ggaren@apple.com>
 
         Removed fastMallocForbid / fastMallocAllow
