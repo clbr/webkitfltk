@@ -1,3 +1,564 @@
+2015-02-03  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: ASSERT mainThreadPthread launching remote debuggable JSContext app with Debug JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=141189
+
+        Reviewed by Michael Saboff.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::singleton):
+        Ensure we call WTF::initializeMainThread() on the main thread so that
+        we can perform automatic String <-> NSString conversions.
+
+2015-02-03  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Project file cleanups after r179429.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        arguments[-1] should have well-defined behavior
+        https://bugs.webkit.org/show_bug.cgi?id=141183
+
+        Reviewed by Mark Lam.
+        
+        According to JSC's internal argument numbering, 0 is "this" and 1 is the first argument.
+        In the "arguments[i]" expression, "this" is not accessible and i = 0 refers to the first
+        argument. Previously we handled the bounds check in "arguments[i]" - where "arguments" is
+        statically known to be the current function's arguments object - as follows:
+        
+            add 1, i
+            branchAboveOrEqual i, callFrame.ArgumentCount, slowPath
+        
+        The problem with this is that if i = -1, this passes the test, and we end up accessing
+        what would be the "this" argument slot. That's wrong, since we should really be bottoming
+        out in arguments["-1"], which is usually undefined but could be anything. It's even worse
+        if the function is inlined or if we're in a constructor - in that case the "this" slot
+        could be garbage.
+        
+        It turns out that we had this bug in all of our engines.
+        
+        This fixes the issue by changing the algorithm to:
+        
+            load32 callFrame.ArgumentCount, tmp
+            sub 1, tmp
+            branchAboveOrEqual i, tmp, slowPath
+        
+        In some engines, we would have used the modified "i" (the one that had 1 added to it) for
+        the subsequent argument load; since we don't do this anymore I also had to change some of
+        the offsets on the BaseIndex arguments load.
+        
+        This also includes tests that are written in such a way as to get coverage on LLInt and
+        Baseline JIT (get-my-argument-by-val-wrap-around-no-warm-up), DFG and FTL
+        (get-my-argument-by-val-wrap-around), and DFG when we're being paranoid about the user
+        overwriting the "arguments" variable (get-my-argument-by-val-safe-wrap-around). This also
+        includes off-by-1 out-of-bounds tests for each of these cases, since in the process of
+        writing the patch I broke the arguments[arguments.length] case in the DFG and didn't see
+        any test failures.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileGetMyArgumentByVal):
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::offsetOfArguments):
+        (JSC::AssemblyHelpers::offsetOfArgumentsIncludingThis): Deleted.
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_get_argument_by_val):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_get_argument_by_val):
+        * llint/LowLevelInterpreter.asm:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * tests/stress/get-my-argument-by-val-out-of-bounds-no-warm-up.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-out-of-bounds.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-safe-out-of-bounds.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-safe-wrap-around.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-wrap-around-no-warm-up.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-wrap-around.js: Added.
+        (foo):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        MultiGetByOffset should be marked NodeMustGenerate
+        https://bugs.webkit.org/show_bug.cgi?id=140137
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertToGetByOffset): We were sloppy - we should also clear NodeMustGenerate once it's a GetByOffset.
+        (JSC::DFG::Node::convertToMultiGetByOffset): Assert that we converted from something that already had NodeMustGenerate.
+        * dfg/DFGNodeType.h: We shouldn't DCE a node that does checks and could be effectful in baseline. Making MultiGetByOffset as NodeMustGenerate prevents DCE. FTL could still DCE the actual loads, but the checks will stay.
+        * tests/stress/multi-get-by-offset-dce.js: Added. This previously failed because the getter wasn't called.
+        (foo):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        [FTL] inlined GetMyArgumentByVal with no arguments passed causes instant crash
+        https://bugs.webkit.org/show_bug.cgi?id=141180
+        rdar://problem/19677552
+
+        Reviewed by Benjamin Poulain.
+        
+        If we do a GetMyArgumentByVal on an inlined call frame that has no arguments, then the
+        bounds check already terminates execution. This means we can skip the part where we
+        previously did an out-of-bound array access on the inlined call frame arguments vector.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::safelyInvalidateAfterTermination):
+        (JSC::FTL::LowerDFGToLLVM::compileGetMyArgumentByVal):
+        (JSC::FTL::LowerDFGToLLVM::terminate):
+        (JSC::FTL::LowerDFGToLLVM::didAlreadyTerminate):
+        (JSC::FTL::LowerDFGToLLVM::crash):
+        * tests/stress/get-my-argument-by-val-inlined-no-formal-parameters.js: Added.
+        (foo):
+        (bar):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION(r179477): arguments simplification no longer works
+        https://bugs.webkit.org/show_bug.cgi?id=141169
+
+        Reviewed by Mark Lam.
+        
+        The operations involved in callee/scope access don't exit and shouldn't get in the way
+        of strength-reducing a Flush to a PhantomLocal. Then the PhantomLocal shouldn't get in
+        the way of further such strength-reduction. We also need to canonicalize PhantomLocal
+        before running arguments simplification.
+
+        * dfg/DFGMayExit.cpp:
+        (JSC::DFG::mayExit):
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * dfg/DFGStrengthReductionPhase.cpp:
+        (JSC::DFG::StrengthReductionPhase::handleNode):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        VirtualRegister should really know how to dump itself
+        https://bugs.webkit.org/show_bug.cgi?id=141171
+
+        Reviewed by Geoffrey Garen.
+        
+        Gives VirtualRegister a dump() method that pretty-prints the virtual register. The rest of
+        the patch is all about using this new power.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/CodeBlock.cpp:
+        (JSC::constantName):
+        (JSC::CodeBlock::registerName):
+        * bytecode/CodeBlock.h:
+        (JSC::missingThisObjectMarker): Deleted.
+        * bytecode/VirtualRegister.cpp: Added.
+        (JSC::VirtualRegister::dump):
+        * bytecode/VirtualRegister.h:
+        (WTF::printInternal): Deleted.
+        * dfg/DFGArgumentPosition.h:
+        (JSC::DFG::ArgumentPosition::dump):
+        * dfg/DFGFlushedAt.cpp:
+        (JSC::DFG::FlushedAt::dump):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dump):
+        * dfg/DFGPutLocalSinkingPhase.cpp:
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::reportValidationContext):
+        * dfg/DFGValueSource.cpp:
+        (JSC::DFG::ValueSource::dump):
+        * dfg/DFGVariableEvent.cpp:
+        (JSC::DFG::VariableEvent::dump):
+        (JSC::DFG::VariableEvent::dumpSpillInfo):
+        * ftl/FTLExitArgumentForOperand.cpp:
+        (JSC::FTL::ExitArgumentForOperand::dump):
+        * ftl/FTLExitValue.cpp:
+        (JSC::FTL::ExitValue::dumpInContext):
+        * profiler/ProfilerBytecodeSequence.cpp:
+        (JSC::Profiler::BytecodeSequence::BytecodeSequence):
+
+2015-02-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        Re-landing just the HandleBlock piece of this patch.
+
+        * heap/HandleBlock.h:
+        * heap/HandleBlockInlines.h:
+        (JSC::HandleBlock::create):
+        (JSC::HandleBlock::destroy):
+        (JSC::HandleBlock::HandleBlock):
+        (JSC::HandleBlock::payloadEnd):
+        * heap/HandleSet.cpp:
+        (JSC::HandleSet::~HandleSet):
+        (JSC::HandleSet::grow):
+
+2015-02-02  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Support console.table
+        https://bugs.webkit.org/show_bug.cgi?id=141058
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InjectedScriptSource.js:
+        Include the firstLevelKeys filter when generating previews.
+
+        * runtime/ConsoleClient.cpp:
+        (JSC::appendMessagePrefix):
+        Differentiate console.table logs to system log.
+
+2015-01-31  Filip Pizlo  <fpizlo@apple.com>
+
+        BinarySwitch should be faster on average
+        https://bugs.webkit.org/show_bug.cgi?id=141046
+
+        Reviewed by Anders Carlsson.
+        
+        This optimizes our binary switch using math. It's strictly better than what we had before
+        assuming we bottom out in some case (rather than fall through), assuming all cases get
+        hit with equal probability. The difference is particularly large for large switch
+        statements. For example, a switch statement with 1000 cases would previously require on
+        average 13.207 branches to get to some case, while now it just requires 10.464.
+        
+        This is also a progression for the fall-through case, though we could shave off another
+        1/6 branch on average if we wanted to - though it would regress taking a case (not falling
+        through) by 1/6 branch. I believe it's better to bias the BinarySwitch for not falling
+        through.
+        
+        This also adds some randomness to the algorithm to minimize the likelihood of us
+        generating a switch statement that is always particularly bad for some input. Note that
+        the randomness has no effect on average-case performance assuming all cases are equally
+        likely.
+        
+        This ought to have no actual performance change because we don't rely on binary switches
+        that much. The main reason why this change is interesting is that I'm finding myself
+        increasingly relying on BinarySwitch, and I'd like to know that it's optimal.
+
+        * jit/BinarySwitch.cpp:
+        (JSC::BinarySwitch::BinarySwitch):
+        (JSC::BinarySwitch::~BinarySwitch):
+        (JSC::BinarySwitch::build):
+        * jit/BinarySwitch.h:
+
+2015-02-02  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Extend CSS.getSupportedCSSProperties to provide values for properties for CSS Augmented JSContext
+        https://bugs.webkit.org/show_bug.cgi?id=141064
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/protocol/CSS.json:
+
+2015-02-02  Daniel Bates  <dabates@apple.com>
+
+        [iOS] ASSERTION FAILED: m_scriptExecutionContext->isContextThread() in ContextDestructionObserver::observeContext
+        https://bugs.webkit.org/show_bug.cgi?id=141057
+        <rdar://problem/19068790>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::receivedIndicateMessage): Modified to call WTF::callOnWebThreadOrDispatchAsyncOnMainThread().
+        (Inspector::dispatchAsyncOnQueueSafeForAnyDebuggable): Deleted; moved logic to common helper function,
+        WTF::callOnWebThreadOrDispatchAsyncOnMainThread() so that it can be called from both RemoteInspector::receivedIndicateMessage()
+        and CryptoKeyRSA::generatePair().
+
+2015-02-02  Saam Barati  <saambarati1@gmail.com>
+
+        Create tests for JSC's Control Flow Profiler
+        https://bugs.webkit.org/show_bug.cgi?id=141123
+
+        Reviewed by Filip Pizlo.
+
+        This patch creates a control flow profiler testing API in jsc.cpp 
+        that accepts a function and a string as arguments. The string must 
+        be a substring of the text of the function argument. The API returns 
+        a boolean indicating whether or not the basic block that encloses the 
+        substring has executed.
+
+        This patch uses this API to test that the control flow profiler
+        behaves as expected on basic block boundaries. These tests do not
+        provide full coverage for all JavaScript statements that can create
+        basic blocks boundaries. Full coverage will come in a later patch.
+
+        * jsc.cpp:
+        (GlobalObject::finishCreation):
+        (functionHasBasicBlockExecuted):
+        * runtime/ControlFlowProfiler.cpp:
+        (JSC::ControlFlowProfiler::hasBasicBlockAtTextOffsetBeenExecuted):
+        * runtime/ControlFlowProfiler.h:
+        * tests/controlFlowProfiler: Added.
+        * tests/controlFlowProfiler.yaml: Added.
+        * tests/controlFlowProfiler/driver: Added.
+        * tests/controlFlowProfiler/driver/driver.js: Added.
+        (assert):
+        * tests/controlFlowProfiler/if-statement.js: Added.
+        (testIf):
+        (noMatches):
+        * tests/controlFlowProfiler/loop-statements.js: Added.
+        (forRegular):
+        (forIn):
+        (forOf):
+        (whileLoop):
+        * tests/controlFlowProfiler/switch-statements.js: Added.
+        (testSwitch):
+        * tests/controlFlowProfiler/test-jit.js: Added.
+        (tierUpToBaseline):
+        (tierUpToDFG):
+        (baselineTest):
+        (dfgTest):
+
+2015-01-28  Filip Pizlo  <fpizlo@apple.com>
+
+        Polymorphic call inlining should be based on polymorphic call inline caching rather than logging
+        https://bugs.webkit.org/show_bug.cgi?id=140660
+
+        Reviewed by Geoffrey Garen.
+        
+        When we first implemented polymorphic call inlining, we did the profiling based on a call
+        edge log. The idea was to store each call edge (a tuple of call site and callee) into a
+        global log that was processed lazily. Processing the log would give precise counts of call
+        edges, and could be used to drive well-informed inlining decisions - polymorphic or not.
+        This was a speed-up on throughput tests but a slow-down for latency tests. It was a net win
+        nonetheless.
+        
+        Experience with this code shows three things. First, the call edge profiler is buggy and
+        complex. It would take work to fix the bugs. Second, the call edge profiler incurs lots of
+        overhead for latency code that we care deeply about. Third, it's not at all clear that
+        having call edge counts for every possible callee is any better than just having call edge
+        counts for the limited number of callees that an inline cache would catch.
+        
+        So, this patch removes the call edge profiler and replaces it with a polymorphic call inline
+        cache. If we miss the basic call inline cache, we inflate the cache to be a jump to an
+        out-of-line stub that cases on the previously known callees. If that misses again, then we
+        rewrite that stub to include the new callee. We do this up to some number of callees. If we
+        hit the limit then we switch to using a plain virtual call.
+        
+        Substantial speed-up on V8Spider; undoes the slow-down that the original call edge profiler
+        caused. Might be a SunSpider speed-up (below 1%), depending on hardware.
+        
+        Rolling this back in after fixing https://bugs.webkit.org/show_bug.cgi?id=141107.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/CallEdge.h:
+        (JSC::CallEdge::count):
+        (JSC::CallEdge::CallEdge):
+        * bytecode/CallEdgeProfile.cpp: Removed.
+        * bytecode/CallEdgeProfile.h: Removed.
+        * bytecode/CallEdgeProfileInlines.h: Removed.
+        * bytecode/CallLinkInfo.cpp:
+        (JSC::CallLinkInfo::unlink):
+        (JSC::CallLinkInfo::visitWeak):
+        * bytecode/CallLinkInfo.h:
+        * bytecode/CallLinkStatus.cpp:
+        (JSC::CallLinkStatus::CallLinkStatus):
+        (JSC::CallLinkStatus::computeFor):
+        (JSC::CallLinkStatus::computeFromCallLinkInfo):
+        (JSC::CallLinkStatus::isClosureCall):
+        (JSC::CallLinkStatus::makeClosureCall):
+        (JSC::CallLinkStatus::dump):
+        (JSC::CallLinkStatus::computeFromCallEdgeProfile): Deleted.
+        * bytecode/CallLinkStatus.h:
+        (JSC::CallLinkStatus::CallLinkStatus):
+        (JSC::CallLinkStatus::isSet):
+        (JSC::CallLinkStatus::variants):
+        (JSC::CallLinkStatus::size):
+        (JSC::CallLinkStatus::at):
+        (JSC::CallLinkStatus::operator[]):
+        (JSC::CallLinkStatus::canOptimize):
+        (JSC::CallLinkStatus::edges): Deleted.
+        (JSC::CallLinkStatus::canTrustCounts): Deleted.
+        * bytecode/CallVariant.cpp:
+        (JSC::variantListWithVariant):
+        (JSC::despecifiedVariantList):
+        * bytecode/CallVariant.h:
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::~CodeBlock):
+        (JSC::CodeBlock::linkIncomingPolymorphicCall):
+        (JSC::CodeBlock::unlinkIncomingCalls):
+        (JSC::CodeBlock::noticeIncomingCall):
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::isIncomingCallAlreadyLinked): Deleted.
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::addCallWithoutSettingResult):
+        (JSC::DFG::ByteCodeParser::handleCall):
+        (JSC::DFG::ByteCodeParser::handleInlining):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGConstantFoldingPhase.cpp:
+        (JSC::DFG::ConstantFoldingPhase::foldConstants):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGDriver.cpp:
+        (JSC::DFG::compileImpl):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::hasHeapPrediction):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGTierUpCheckInjectionPhase.cpp:
+        (JSC::DFG::TierUpCheckInjectionPhase::run):
+        (JSC::DFG::TierUpCheckInjectionPhase::removeFTLProfiling): Deleted.
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * heap/Heap.cpp:
+        (JSC::Heap::collect):
+        * jit/BinarySwitch.h:
+        * jit/ClosureCallStubRoutine.cpp: Removed.
+        * jit/ClosureCallStubRoutine.h: Removed.
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileOpCall):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileOpCall):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        (JSC::operationLinkPolymorphicCallFor):
+        (JSC::operationLinkClosureCallFor): Deleted.
+        * jit/JITStubRoutine.h:
+        * jit/JITWriteBarrier.h:
+        * jit/PolymorphicCallStubRoutine.cpp: Added.
+        (JSC::PolymorphicCallNode::~PolymorphicCallNode):
+        (JSC::PolymorphicCallNode::unlink):
+        (JSC::PolymorphicCallCase::dump):
+        (JSC::PolymorphicCallStubRoutine::PolymorphicCallStubRoutine):
+        (JSC::PolymorphicCallStubRoutine::~PolymorphicCallStubRoutine):
+        (JSC::PolymorphicCallStubRoutine::variants):
+        (JSC::PolymorphicCallStubRoutine::edges):
+        (JSC::PolymorphicCallStubRoutine::visitWeak):
+        (JSC::PolymorphicCallStubRoutine::markRequiredObjectsInternal):
+        * jit/PolymorphicCallStubRoutine.h: Added.
+        (JSC::PolymorphicCallNode::PolymorphicCallNode):
+        (JSC::PolymorphicCallCase::PolymorphicCallCase):
+        (JSC::PolymorphicCallCase::variant):
+        (JSC::PolymorphicCallCase::codeBlock):
+        * jit/Repatch.cpp:
+        (JSC::linkSlowFor):
+        (JSC::linkFor):
+        (JSC::revertCall):
+        (JSC::unlinkFor):
+        (JSC::linkVirtualFor):
+        (JSC::linkPolymorphicCall):
+        (JSC::linkClosureCall): Deleted.
+        * jit/Repatch.h:
+        * jit/ThunkGenerators.cpp:
+        (JSC::linkPolymorphicCallForThunkGenerator):
+        (JSC::linkPolymorphicCallThunkGenerator):
+        (JSC::linkPolymorphicCallThatPreservesRegsThunkGenerator):
+        (JSC::linkClosureCallForThunkGenerator): Deleted.
+        (JSC::linkClosureCallThunkGenerator): Deleted.
+        (JSC::linkClosureCallThatPreservesRegsThunkGenerator): Deleted.
+        * jit/ThunkGenerators.h:
+        (JSC::linkPolymorphicCallThunkGeneratorFor):
+        (JSC::linkClosureCallThunkGeneratorFor): Deleted.
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::jitCompileAndSetHeuristics):
+        * runtime/Options.h:
+        * runtime/VM.cpp:
+        (JSC::VM::prepareToDiscardCode):
+        (JSC::VM::ensureCallEdgeLog): Deleted.
+        * runtime/VM.h:
+
+2015-01-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Converting Flushes and PhantomLocals to Phantoms requires an OSR availability analysis rather than just using the SetLocal's child
+        https://bugs.webkit.org/show_bug.cgi?id=141107
+
+        Reviewed by Michael Saboff.
+        
+        See the bugzilla for a discussion of the problem. This addresses the problem by ensuring
+        that Flushes are always strength-reduced to PhantomLocals, and CPS rethreading does a mini
+        OSR availability analysis to determine the right MovHint value to use for the Phantom.
+
+        * dfg/DFGCPSRethreadingPhase.cpp:
+        (JSC::DFG::CPSRethreadingPhase::CPSRethreadingPhase):
+        (JSC::DFG::CPSRethreadingPhase::freeUnnecessaryNodes):
+        (JSC::DFG::CPSRethreadingPhase::clearVariables):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeFlushOrPhantomLocalFor):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeLocalsInBlock):
+        (JSC::DFG::CPSRethreadingPhase::clearVariablesAtHeadAndTail): Deleted.
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertPhantomToPhantomLocal):
+        (JSC::DFG::Node::convertFlushToPhantomLocal):
+        (JSC::DFG::Node::convertToPhantomLocal): Deleted.
+        * dfg/DFGStrengthReductionPhase.cpp:
+        (JSC::DFG::StrengthReductionPhase::handleNode):
+        * tests/stress/inline-call-that-doesnt-use-all-args.js: Added.
+        (foo):
+        (bar):
+        (baz):
+
+2015-01-31  Michael Saboff  <msaboff@apple.com>
+
+        Crash (DFG assertion) beneath AbstractInterpreter::verifyEdge() @ http://experilous.com/1/planet-generator/2014-09-28/version-1
+        https://bugs.webkit.org/show_bug.cgi?id=141111
+
+        Reviewed by Filip Pizlo.
+
+        In LowerDFGToLLVM::compileNode(), if we determine while compiling a node that we would have
+        exited, we don't need to process the OSR availability or abstract interpreter.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::safelyInvalidateAfterTermination): Broke this out a a separate
+        method since we need to call it at the top and near the bottom of compileNode().
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+
+2015-01-31  Sam Weinig  <sam@webkit.org>
+
+        Remove even more Mountain Lion support
+        https://bugs.webkit.org/show_bug.cgi?id=141124
+
+        Reviewed by Alexey Proskuryakov.
+
+        * API/tests/DateTests.mm:
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+        * jit/ExecutableAllocatorFixedVMPool.cpp:
+
+2015-01-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179426.
+        https://bugs.webkit.org/show_bug.cgi?id=141119
+
+        "caused a memory use regression" (Requested by Guest45 on
+        #webkit).
+
+        Reverted changeset:
+
+        "Use FastMalloc (bmalloc) instead of BlockAllocator for GC
+        pages"
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+        http://trac.webkit.org/changeset/179426
+
 2015-01-30  Daniel Bates  <dabates@apple.com>
 
         Clean up: Remove unnecessary <dispatch/dispatch.h> header from RemoteInspectorDebuggableConnection.h

@@ -61,9 +61,9 @@ class SecurityOrigin;
 
 class MemoryCache {
     WTF_MAKE_NONCOPYABLE(MemoryCache); WTF_MAKE_FAST_ALLOCATED;
-public:
     friend NeverDestroyed<MemoryCache>;
 
+public:
     struct TypeStatistic {
         int count;
         int size;
@@ -88,6 +88,8 @@ public:
         TypeStatistic xslStyleSheets;
         TypeStatistic fonts;
     };
+
+    WEBCORE_EXPORT static MemoryCache& singleton();
 
     WEBCORE_EXPORT CachedResource* resourceForURL(const URL&, SessionID = SessionID::defaultSessionID());
     WEBCORE_EXPORT CachedResource* resourceForRequest(const ResourceRequest&, SessionID);
@@ -159,10 +161,9 @@ public:
 
 private:
 #if ENABLE(CACHE_PARTITIONING)
-    typedef HashMap<String, CachedResource*> CachedResourceItem;
-    typedef HashMap<String, OwnPtr<CachedResourceItem>> CachedResourceMap;
+    typedef HashMap<std::pair<URL, String /* partitionName */>, CachedResource*> CachedResourceMap;
 #else
-    typedef HashMap<String, CachedResource*> CachedResourceMap;
+    typedef HashMap<URL, CachedResource*> CachedResourceMap;
 #endif
 
     struct LRUList {
@@ -214,9 +215,6 @@ private:
     typedef HashMap<SessionID, std::unique_ptr<CachedResourceMap>> SessionCachedResourceMap;
     SessionCachedResourceMap m_sessionResources;
 };
-
-// Function to obtain the global cache.
-WEBCORE_EXPORT MemoryCache& memoryCache();
 
 }
 

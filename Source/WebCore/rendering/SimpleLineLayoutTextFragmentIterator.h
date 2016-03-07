@@ -23,8 +23,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SimpleLineLayoutFlowContentsIterator_h
-#define SimpleLineLayoutFlowContentsIterator_h
+#ifndef SimpleLineLayoutTextFragmentIterator_h
+#define SimpleLineLayoutTextFragmentIterator_h
 
 #include "RenderStyle.h"
 #include "SimpleLineLayoutFlowContents.h"
@@ -36,9 +36,9 @@ class RenderBlockFlow;
 
 namespace SimpleLineLayout {
 
-class FlowContentsIterator  {
+class TextFragmentIterator  {
 public:
-    FlowContentsIterator(const RenderBlockFlow&);
+    TextFragmentIterator(const RenderBlockFlow&);
     class TextFragment {
     public:
         enum Type { ContentEnd, LineBreak, Whitespace, NonWhitespace };
@@ -59,7 +59,9 @@ public:
         Type type() const { return m_type; }
         bool isCollapsed() const { return m_isCollapsed; }
         bool isBreakable() const { return m_isBreakable; }
+
         bool isEmpty() const { return start() == end(); }
+        TextFragment split(unsigned splitPosition, const TextFragmentIterator&);
 
     private:
         unsigned m_start { 0 };
@@ -103,20 +105,42 @@ private:
     unsigned m_position { 0 };
 };
 
-inline UChar FlowContentsIterator::characterAt(unsigned position) const
+inline TextFragmentIterator::TextFragment TextFragmentIterator::TextFragment::split(unsigned splitPosition, const TextFragmentIterator& textFragmentIterator)
+{
+    auto updateFragmentProperties = [&textFragmentIterator] (TextFragment& fragment)
+    {
+        fragment.m_width = 0;
+        if (fragment.start() != fragment.end())
+            fragment.m_width = textFragmentIterator.textWidth(fragment.start(), fragment.end(), 0);
+        if (fragment.start() + 1 > fragment.end())
+            return;
+        fragment.m_isCollapsed = false;
+        fragment.m_isBreakable = false;
+    };
+
+    TextFragment newFragment(*this);
+    m_end = splitPosition;
+    updateFragmentProperties(*this);
+
+    newFragment.m_start = splitPosition;
+    updateFragmentProperties(newFragment);
+    return newFragment;
+}
+
+inline UChar TextFragmentIterator::characterAt(unsigned position) const
 {
     auto& segment = m_flowContents.segmentForPosition(position);
     return segment.text[position - segment.start];
 }
 
-inline bool FlowContentsIterator::isLineBreak(unsigned position) const
+inline bool TextFragmentIterator::isLineBreak(unsigned position) const
 {
     if (isEnd(position))
         return false;
     return m_style.preserveNewline && characterAt(position) == '\n';
 }
 
-inline bool FlowContentsIterator::isEnd(unsigned position) const
+inline bool TextFragmentIterator::isEnd(unsigned position) const
 {
     return position >= m_flowContents.length();
 }

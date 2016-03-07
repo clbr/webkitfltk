@@ -2002,10 +2002,10 @@ static bool fastDocumentTeardownEnabled()
             // until we leave that page.
             otherView->_private->page->mainFrame().loader().history().saveDocumentAndScrollState();
         }
-        RefPtr<HistoryItem> newItem = otherBackForwardClient->itemAtIndex(i)->copy();
+        Ref<HistoryItem> newItem = otherBackForwardClient->itemAtIndex(i)->copy();
         if (i == 0) 
-            newItemToGoTo = newItem.get();
-        backForwardClient->addItem(newItem.release());
+            newItemToGoTo = newItem.ptr();
+        backForwardClient->addItem(WTF::move(newItem));
     }
     
     ASSERT(newItemToGoTo);
@@ -7913,8 +7913,9 @@ static inline uint64_t roundUpToPowerOf2(uint64_t num)
     // Don't shrink a big disk cache, since that would cause churn.
     nsurlCacheDiskCapacity = std::max(nsurlCacheDiskCapacity, [nsurlCache diskCapacity]);
 
-    memoryCache().setCapacities(cacheMinDeadCapacity, cacheMaxDeadCapacity, cacheTotalCapacity);
-    memoryCache().setDeadDecodedDataDeletionInterval(deadDecodedDataDeletionInterval);
+    auto& memoryCache = MemoryCache::singleton();
+    memoryCache.setCapacities(cacheMinDeadCapacity, cacheMaxDeadCapacity, cacheTotalCapacity);
+    memoryCache.setDeadDecodedDataDeletionInterval(deadDecodedDataDeletionInterval);
 
     auto& pageCache = PageCache::singleton();
     pageCache.setMaxSize(pageCacheSize);

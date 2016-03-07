@@ -1,3 +1,87 @@
+2015-02-02  Dhi Aurrahman  <diorahman@rockybars.com>
+
+        Optimize matchesLangPseudoClass() of :lang()
+        https://bugs.webkit.org/show_bug.cgi?id=140873
+
+        Reviewed by Darin Adler.
+
+        Add some basic equality comparison operators.
+
+        * wtf/text/StringView.h:
+        (WTF::operator==):
+        (WTF::operator!=):
+        (WTF::equal):
+        (WTF::equalIgnoringASCIICase):
+
+2015-02-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        Re-landing just the HandleBlock piece of this patch.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::fastAlignedMalloc):
+        (WTF::fastAlignedFree):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        * wtf/FastMalloc.h:
+
+2015-02-02  Daniel Bates  <dabates@apple.com>
+
+        [iOS] ASSERTION FAILED: m_scriptExecutionContext->isContextThread() in ContextDestructionObserver::observeContext
+        https://bugs.webkit.org/show_bug.cgi?id=141057
+        <rdar://problem/19068790>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * wtf/MainThread.h:
+        * wtf/mac/MainThreadMac.mm:
+        (WTF::callOnWebThreadOrDispatchAsyncOnMainThread): Added.
+
+2015-01-31  Sam Weinig  <sam@webkit.org>
+
+        Remove even more Mountain Lion support
+        https://bugs.webkit.org/show_bug.cgi?id=141124
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * wtf/Assertions.cpp:
+        * wtf/FeatureDefines.h:
+        * wtf/Platform.h:
+
+2015-01-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179426.
+        https://bugs.webkit.org/show_bug.cgi?id=141119
+
+        "caused a memory use regression" (Requested by Guest45 on
+        #webkit).
+
+        Reverted changeset:
+
+        "Use FastMalloc (bmalloc) instead of BlockAllocator for GC
+        pages"
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+        http://trac.webkit.org/changeset/179426
+
+2015-01-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179408.
+        https://bugs.webkit.org/show_bug.cgi?id=141117
+
+        This didn't fully fix the issue (Requested by anttik on
+        #webkit).
+
+        Reverted changeset:
+
+        "OSObjectPtr does not work with dispatch_data_t on Maverics"
+        https://bugs.webkit.org/show_bug.cgi?id=141081
+        http://trac.webkit.org/changeset/179408
+
 2015-01-30  Yusuke Suzuki  <utatane.tea@gmail.com>
 
         Implement ES6 Symbol

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, 2014, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,36 +23,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ClosureCallStubRoutine_h
-#define ClosureCallStubRoutine_h
-
-#if ENABLE(JIT)
-
-#include "CodeOrigin.h"
-#include "GCAwareJITStubRoutine.h"
+#include "config.h"
+#include "VirtualRegister.h"
 
 namespace JSC {
 
-class ClosureCallStubRoutine : public GCAwareJITStubRoutine {
-public:
-    ClosureCallStubRoutine(
-        const MacroAssemblerCodeRef&, VM&, const JSCell* owner,
-        ExecutableBase*);
+void VirtualRegister::dump(PrintStream& out) const
+{
+    if (!isValid()) {
+        out.print("<invalid>");
+        return;
+    }
     
-    virtual ~ClosureCallStubRoutine();
+    if (isHeader()) {
+        out.print("head", m_virtualRegister);
+        return;
+    }
     
-    ExecutableBase* executable() const { return m_executable.get(); }
-
-protected:
-    virtual void markRequiredObjectsInternal(SlotVisitor&) override;
-
-private:
-    WriteBarrier<ExecutableBase> m_executable;
-};
+    if (isConstant()) {
+        out.print("const", toConstantIndex());
+        return;
+    }
+    
+    if (isArgument()) {
+        if (!toArgument())
+            out.print("this");
+        else
+            out.print("arg", toArgument());
+        return;
+    }
+    
+    if (isLocal()) {
+        out.print("loc", toLocal());
+        return;
+    }
+    
+    RELEASE_ASSERT_NOT_REACHED();
+}
 
 } // namespace JSC
-
-#endif // ENABLE(JIT)
-
-#endif // ClosureCallStubRoutine_h
 
