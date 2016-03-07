@@ -1,3 +1,996 @@
+2014-08-06  Zalan Bujtas  <zalan@apple.com>
+
+        Cleanup InlineTextBox::paintSelection and ::localSelectionRect.
+        https://bugs.webkit.org/show_bug.cgi?id=135631
+
+        Reviewed by Darin Adler.
+
+        Covered by existing tests.
+
+        * rendering/InlineTextBox.cpp: Ideally these 2 functions should share some more code.
+        (WebCore::InlineTextBox::localSelectionRect): Local coordinates should not be snapped/enclosed.
+        This change could potentially break some selections. Should that be the case, they need to be addressed
+        separately.
+        (WebCore::InlineTextBox::paint):
+        (WebCore::InlineTextBox::paintSelection): Minor cleanup.
+        * rendering/InlineTextBox.h:
+
+2014-08-06  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Be able to disable gtk2 dependency
+        https://bugs.webkit.org/show_bug.cgi?id=135505
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Do not build WebCorePlatformGTK2 when ENABLE_PLUGIN_PROCESS_GTK2
+        is OFF.
+
+        * PlatformGTK.cmake:
+
+2014-08-06  Mark Lam  <mark.lam@apple.com>
+
+        Gardening: fix bindings test breakage for for r170564 merged in r172129.
+        <https://webkit.org/b/134333>
+
+        Not reviewed.
+
+        No new tests.
+
+        * bindings/scripts/test/JS/JSTestEventTarget.h:
+        (WebCore::JSTestEventTarget::create):
+
+2014-08-06  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed typo correction.
+
+        * bindings/scripts/CodeGeneratorJS.pm: removed unnecessary space.
+        (GenerateImplementation):
+
+2014-08-05  James Craig  <jcraig@apple.com>
+
+        Web Inspector: AXI: Add label string once AccessibilityObject::computedLabel() is available
+        https://bugs.webkit.org/show_bug.cgi?id=129940
+
+        Reviewed by Chris Fleizach.
+
+        Test: inspector-protocol/dom/getAccessibilityPropertiesForNode-expected.txt
+
+        * accessibility/AccessibilityObject.cpp: Fixed crash.
+        (WebCore::AccessibilityObject::accessibilityComputedLabel): 
+        * accessibility/AccessibilityObject.h: Method name update.
+        * inspector/InspectorDOMAgent.cpp: New support for getting Node label from AccessibilityObject.
+        (WebCore::InspectorDOMAgent::buildObjectForAccessibilityProperties):
+
+2014-07-29  Filip Pizlo  <fpizlo@apple.com>
+
+        Merge r170564, r170571, r170604, r170628, r170672, r170680, r170724, r170728, r170729, r170819, r170821, r170836, r170855, r170860, r170890, r170907, r170929, r171052, r171106, r171152, r171153, r171214 from ftlopt.
+
+    2014-07-01  Mark Lam  <mark.lam@apple.com>
+    
+            [ftlopt] DebuggerCallFrame::scope() should return a DebuggerScope.
+            <https://webkit.org/b/134420>
+    
+            Reviewed by Geoffrey Garen.
+    
+            No new tests.
+    
+            * ForwardingHeaders/debugger/DebuggerCallFrame.h: Removed.
+            - This is not in use.  Hence, we can remove it.
+            * bindings/js/ScriptController.cpp:
+            (WebCore::ScriptController::attachDebugger):
+            - We should acquire the JSLock before modifying a JS global object.
+    
+    2014-06-25  Filip Pizlo  <fpizlo@apple.com>
+    
+            [ftlopt] If a CodeBlock is jettisoned due to a watchpoint then it should be possible to figure out something about that watchpoint
+            https://bugs.webkit.org/show_bug.cgi?id=134333
+    
+            Reviewed by Geoffrey Garen.
+    
+            No new tests because no change in behavior.
+    
+            * bindings/scripts/CodeGeneratorJS.pm:
+            (GenerateHeader):
+    
+2014-08-05  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Build break since r172093
+        https://bugs.webkit.org/show_bug.cgi?id=135636
+
+        Reviewed by Gyuyoung Kim.
+
+        Since r172093, AbstractView.idl is added in CMake Build but CodeGeneratorJS.pm does not take care of it.
+
+        No new tests required, no new functionality.
+
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (ShouldGenerateToJSDeclaration):
+        (ShouldGenerateToJSImplementation):
+        (GetImplClassName): Added to rename implClassName to DOMWindow if interface name is AbstractView.
+        (GenerateHeader):
+        (GenerateImplementation):
+
+2014-08-05  Nikos Andronikos  <nikos.andronikos-webkit@cisra.canon.com.au>
+
+        [CG] strokeRect does not honor lineJoin
+        https://bugs.webkit.org/show_bug.cgi?id=132948
+
+        Reviewed by Darin Adler.
+
+        Replaced use of CGContextStrokeRectWithWidth convenience function with explicit 
+        call to CGContextAddRect and CGContextStrokePath.  The convenience functions
+        CGContextStrokeRect and CGContextStrokeRectWithWidth fail to apply some attributes
+        (e.g. stroke join) of the graphics state in certain cases.
+
+        Test: fast/canvas/canvas-strokeRect-lineJoin.html
+
+        * platform/graphics/cg/GraphicsContextCG.cpp:
+        (WebCore::GraphicsContext::strokeRect):
+
+2014-08-05  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Build attempts to use ANGLE when not building WebGL.
+        https://bugs.webkit.org/show_bug.cgi?id=135630
+        <rdar://problem/135630>
+
+        Unreviewed build fix.
+
+        * platform/graphics/win/GraphicsContext3DWin.cpp: Move #include of GraphicsContext3D.h
+        inside USE(3D_GRAPHICS) guard.
+
+2014-08-05  Simon Fraser  <simon.fraser@apple.com>
+
+        [iOS WK2] Crash going back on a specific tumblr blog (under ScrollingStateTree::removeNodeAndAllDescendants)
+        https://bugs.webkit.org/show_bug.cgi?id=135629
+        <rdar://problem/17802174>
+
+        Reviewed by Tim Horton.
+        
+        In r170198 I added an "orphan scrolling nodes" code path that sets aside subtrees
+        of scrolling nodes into an m_orphanedSubframeNodes map, which keeps them alive until
+        they get reparented or destroyed. The nodes in that subtree remain in m_stateNodeMap,
+        which holds raw pointers to them.
+        
+        However, ScrollingStateTree::commit() can clear m_orphanedSubframeNodes, which is
+        sometimes non-empty at this point. When that happened, we would destroy nodes which
+        were still referenced by m_stateNodeMap, with the result that a later query for the
+        same nodeID would hand back a pointer to a deleted object.
+        
+        Fix by calling recursiveNodeWillBeRemoved() on nodes in the m_orphanedSubframeNodes
+        before clearing it, which removes them and all their descendants from the state node map.
+
+        Test: platform/mac-wk2/tiled-drawing/scrolling/frames/orphaned-subtree.html
+
+        * page/scrolling/ScrollingStateTree.cpp:
+        (WebCore::ScrollingStateTree::clear):
+        (WebCore::ScrollingStateTree::commit):
+
+2014-08-05  Peyton Randolph  <prandolph@apple.com>
+
+        Add the ability to force text to render in white, not just black
+        https://bugs.webkit.org/show_bug.cgi?id=135625
+
+        Reviewed by Beth Dakin.
+
+        This patch introduces PaintBehaviorForceWhiteText, a complement to PaintBehaviorForceBlackText. If
+        a client specifies both PaintBehaviorForceWhiteText and PaintBehaviorForceBlackText, the text will be
+        painted black.
+
+        No new tests.
+
+        * rendering/EllipsisBox.cpp:
+        (WebCore::EllipsisBox::paint): Use the forced text color to paint the text if requested.
+        * rendering/InlineTextBox.cpp:
+        (WebCore::InlineTextBox::paint): Disable the text shadow if a text color has been forced.
+        * rendering/PaintInfo.h:
+        (WebCore::PaintInfo::forceTextColor): 
+        Return true iff the client has requested to force a black or white text color.
+        (WebCore::PaintInfo::forceWhiteText):
+        Return true iff forcing white text has been requested.
+        (WebCore::PaintInfo::forcedTextColor): 
+        Return the forced text color. Currently only white and black are supported.
+        * rendering/PaintPhase.h:
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::paintLayerContents): Remove the forceBlackText-related code as it is redundant.
+        (WebCore::RenderLayer::paintForegroundForFragments): 
+        Remove forceBlackText parameter and infer the correct behavior from the given paint behavior.
+        * rendering/RenderLayer.h:
+        * rendering/TextPaintStyle.cpp:
+        (WebCore::computeTextPaintStyle): Use the forced text color if available.
+        (WebCore::computeTextSelectionPaintStyle): Use the forced text color if available.
+
+2014-08-05  Alex Christensen  <achristensen@webkit.org>
+
+        More work on CMake.
+        https://bugs.webkit.org/show_bug.cgi?id=135620
+
+        Reviewed by Reviewed by Laszlo Gombos.
+
+        * CMakeLists.txt:
+        Added missing idls.
+        * PlatformMac.cmake:
+        Added additional include directories and source files.
+        * css/makeSelectorPseudoClassAndCompatibilityElementMap.py:
+        * css/makeSelectorPseudoElementsMap.py:
+        The Windows distribution of gperf doesn't like single quotes for its key-positions parameters.
+        * page/Chrome.h:
+        Compile fix.
+
+2014-08-05  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: ReplayManager shouldn't assume replay status when the inspector is opened
+        https://bugs.webkit.org/show_bug.cgi?id=135212
+
+        Reviewed by Timothy Hatcher.
+
+        The frontend should be able to introspect the session and segment state machines,
+        currently loaded segment and session identifiers, and replay position.
+
+        * inspector/InspectorReplayAgent.cpp:
+        (WebCore::buildInspectorObjectForSessionState): Added.
+        (WebCore::buildInspectorObjectForSegmentState): Added.
+        (WebCore::InspectorReplayAgent::currentReplayState): Added.
+        * inspector/InspectorReplayAgent.h:
+        * inspector/protocol/Replay.json: Add currentReplayState query command.
+        * replay/ReplayController.h: Add some accessors.
+
+2014-08-05  Dean Jackson  <dino@apple.com>
+
+        [iOS] Media controls layout incorrectly in RTL content
+        https://bugs.webkit.org/show_bug.cgi?id=135621
+        <rdar://problem/17849206>
+
+        Reviewed by Eric Carlson.
+
+        Media controls should always layout in LTR mode, even when the
+        page content is RTL. There already was a rule to do this on
+        non-iOS systems, but it wasn't getting included for iOS.
+        In this case I put the rule on the composited parent of the
+        controls in order to maintain the padding of the control panel.
+        This should still leave the captions unaffected.
+
+        * Modules/mediacontrols/mediaControlsiOS.css:
+        (video::-webkit-media-controls-panel-composited-parent): Add direction: ltr.
+
+2014-08-05  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Replay: rename protocol methods for getting replay session/segment data
+        https://bugs.webkit.org/show_bug.cgi?id=135618
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InspectorReplayAgent.cpp:
+        (WebCore::InspectorReplayAgent::getSessionData):
+        (WebCore::InspectorReplayAgent::getSegmentData):
+        (WebCore::InspectorReplayAgent::getSerializedSession): Deleted.
+        (WebCore::InspectorReplayAgent::getSerializedSegment): Deleted.
+        * inspector/InspectorReplayAgent.h:
+        * inspector/protocol/Replay.json:
+
+2014-08-05  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION: Extremely flashy scrolling while a page is still loading (because of flush throttling)
+        https://bugs.webkit.org/show_bug.cgi?id=135603
+        <rdar://problem/17876385>
+        
+        This hit ASSERT(frame().isMainFrame()) in FrameView::updateLayerFlushThrottling
+        running scrollbars/scrollbar-iframe-click-does-not-blur-content.html and a few other tests.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setWasScrolledByUser): Only invoke updateLayerFlushThrottling for the main frame.
+
+2014-08-05  Peyton Randolph  <prandolph@apple.com>
+
+        Rename MAC_LONG_PRESS feature flag to LONG_MOUSE_PRESS.
+        https://bugs.webkit.org/show_bug.cgi?id=135276
+
+        Reviewed by Beth Dakin.
+
+        No new tests. Just a compiler flag.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-08-05  Dean Jackson  <dino@apple.com>
+
+        [Media iOS] Ensure there is a nice default fallback for missing wireless target names
+        https://bugs.webkit.org/show_bug.cgi?id=135488
+        <rdar://problem/17879156>
+
+        Reviewed by Antoine Quint.
+
+        Antoine found me on iMessage to tell me I'm an idiot and that I've
+        forgotten how to write JavaScript. Embarrassingly, this code is what
+        I originally had, but then second-guessed myself.
+
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.updateWirelessPlaybackStatus): No need for the local
+        variable or conditional statement, since null and "" both evaluate as false.
+
+2014-08-05  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION: Extremely flashy scrolling while a page is still loading (because of flush throttling)
+        https://bugs.webkit.org/show_bug.cgi?id=135603
+        <rdar://problem/17876385>
+
+        Reviewed by Andreas Kling.
+
+        * page/FrameView.cpp:
+        (WebCore::determineLayerFlushThrottleState):
+        
+            Disable throttling after user has scrolled the page.
+            This is consistent with the speculative tiling. It also gets enabled on first scroll.
+
+        (WebCore::FrameView::setWasScrolledByUser):
+
+2014-08-05  Martin Hodovan  <mhodovan.u-szeged@partner.samsung.com>
+
+        ASSERTION FAILED: name[0] == '@' && length >= 2 in WebCore::CSSParser::detectAtToken
+        https://bugs.webkit.org/show_bug.cgi?id=134632
+
+        At-rules must consist of at least two characters: the '@' symbol followed by
+        an identifier name. The failure of this condition makes the assertion fail.
+
+        The length of an at-rule is currently calculated by pointer arithmetic on
+        the 'result' pointer, which is expected to be set to the end of the at-rule
+        identifier by the WebCore::*CSSTokenizer::parseIdentifier method.
+        If the at-rule token is a sequence of 8-bit-only characters then
+        'result' will point correctly at the end of the identifier. However, if
+        the at-rule contains a 16-bit Unicode escape then 'result' will not be
+        updated correctly anymore, hence it cannot be used for length calculation.
+        The patch makes the parseIdentifier bump the result pointer even in the 16-bit slow case.
+
+        Patch by Renata Hodovan, backported from Chromium: https://codereview.chromium.org/241053002
+
+        Reviewed by Darin Adler.
+
+        Test: fast/css/atrule-with-escape-character-crash.html
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::realLex):
+
+2014-08-04  Andy Estes  <aestes@apple.com>
+
+        [iOS] The raw bytes of an iWork document's PDF preview are displayed rather than the PDF itself
+        https://bugs.webkit.org/show_bug.cgi?id=135596
+
+        Reviewed by David Kilzer.
+
+        Some iWork documents contain pre-rendered PDF previews. When WebKit asks QuickLook to convert such a document,
+        QuickLook will return this PDF as the converted response. However, until WebKit has sent the document's data to
+        QuickLook, -[QLPreviewConverter previewResponse] will misleadingly tell WebKit that the converted resource will
+        be of type 'text/html'. This leads WebKit to render the PDF preview as HTML.
+
+        Instead of querying QLPreviewConverter for the previewResponse before we've sent it any data, postpone calling
+        ResourceLoader::didReceiveResponse until we've begun to receive data via the QLPreviewConverter delegate. At
+        that point -[QLPreviewConverter previewResponse] will have the correct MIME type and we can call didReceiveResponse.
+
+        No new tests. QuickLook is not testable from WebKit.
+
+        * platform/network/ios/QuickLook.mm:
+        (-[WebResourceLoaderQuickLookDelegate connection:didReceiveDataArray:]): If didReceiveResponse has yet to be
+        called, call it now with QuickLookHandle::nsResponse().
+        (-[WebResourceLoaderQuickLookDelegate connection:didReceiveData:lengthReceived:]): Ditto.
+        (-[WebResourceLoaderQuickLookDelegate connection:didFailWithError:]): Ditto.
+        (-[WebResourceLoaderQuickLookDelegate connectionDidFinishLoading:]): Assert that didReceiveResponse has been called.
+        (-[WebResourceLoaderQuickLookDelegate clearHandle]): Cleared the raw pointer to QuickLookHandle.
+        (WebCore::QuickLookHandle::create): Pointed WebResourceLoaderQuickLookDelegate's quickLookHandle property to
+        the newly created QuickLookHandle.
+
+2014-08-05  Renata Hodovan  <rhodovan.u-szeged@partner.samsung.com>
+
+        Fixing calc() parameter parsing in cubic-bezier functions
+        https://bugs.webkit.org/show_bug.cgi?id=135605
+
+        Reviewed by Andreas Kling.
+
+        Before this patch, calc values in cubic-bezier functions weren't being read correctly
+        since they were handled as simple floats.
+
+        This is a backport of my fix in Blink: https://codereview.chromium.org/369313002/
+
+        Test: css3/calc/cubic-bezier-with-multiple-calcs-crash.html.html
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseCubicBezierTimingFunctionValue):
+
+2014-08-05  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Seeking occasionally causes many frames to be displayed in "fast forward" mode
+        https://bugs.webkit.org/show_bug.cgi?id=135422
+
+        Reviewed by Eric Carlson.
+
+        Three related fixes:
+
+        In reenqueueMediaForTime(), update TrackBuffer.lastEnqueuedPresentationTime when we flush
+        samples, so that the next time samples are re-enqueued, the starting point for re-enqueueing
+        is correct.
+
+        In sourceBufferPrivateDidReceiveSample(), do not add samples to the decode queue
+        if they are before the current media time.
+
+        When a seek is pending, but samples for the new time is not yet present in the SourceBuffer,
+        the SourceBufferPrivate may signal that it's ready for new samples through the
+        sourceBufferPrivateDidBecomeReadyForMoreSamples() method. In this situation, we should not
+        continue to provideMediaData(), as that will append samples from the prior-to-seeking media
+        timeline. Since the timeline may have moved forward due to the seek, a decoder may decide to
+        display those frames as quickly as possible (the "fast forward" behavior) in order to catch
+        up to the new current time.
+
+        If a re-enqueue is pending, don't provide media data in response to being notified that the
+        SourceBufferPrivate is ready for more samples. Wait until samples for the new current time
+        are appended.
+
+        Also, don't provide media data if we are waiting for a seek to complete.
+
+        * Modules/mediasource/MediaSource.h:
+        (WebCore::MediaSource::isSeeking): Convenience method.
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::sourceBufferPrivateDidReceiveSample):
+        (WebCore::SourceBuffer::sourceBufferPrivateDidBecomeReadyForMoreSamples):
+        (WebCore::SourceBuffer::reenqueueMediaForTime):
+
+2014-08-05  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Select text activity should return replaced text instead of previously selected text
+        https://bugs.webkit.org/show_bug.cgi?id=135595
+
+        Reviewed by Mario Sanchez Prada.
+
+        When the select activity API is used to replace text, the replacement string should be returned instead of the old selected text.
+
+        Updated existing test: platform/mac/accessibility/select-text.html
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::selectText):
+
+2014-08-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Select activity behavior does not work when an existing range is already selected
+        https://bugs.webkit.org/show_bug.cgi?id=135579
+
+        Reviewed by Mario Sanchez Prada.
+
+        If you have an existing range selected, and try to apply a select and replace operation, like capitalize,
+        searching for that range will fail because it skips the currently selected range.
+
+        For these cases, it seems the best way is to start the search from the start position, rather than relying on the
+        entire range.
+
+        Updated existing test: platform/mac/accessibility/select-text.html
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::selectText):
+
+2014-08-04  Jer Noble  <jer.noble@apple.com>
+
+        [MSE][Mac] Seeking past buffered range will not resume playback when seek completes.
+        https://bugs.webkit.org/show_bug.cgi?id=135591
+
+        Reviewed by Eric Carlson.
+
+        If a seek is delayed due to seeking into an unbuffered area, playback will not be restarted
+        at that point. Instead, playback must resume when enough media data has been added, and
+        the MediaSource indicates the seek should complete.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateMediaSourceAVFObjC.mm:
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::seekCompleted):
+
+2014-08-04  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Videos will report a stall when within 1 frame-duration before the end of a movie.
+        https://bugs.webkit.org/show_bug.cgi?id=135586
+
+        Reviewed by Eric Carlson.
+
+        Under certain circumstances, videos which are within 1/24 seconds before the end of a media stream when
+        monitorSourceBuffers() is called will fail the hasFutureTime() check. This is because hasFutureTime()
+        checks whether enough media is buffered to play back at least some time in the future, but when the
+        current time is close to the duration, not enough data is buffered to satisfy that check.
+
+        Add some logic which will break out early when the SourceBuffer has buffered up to and including the
+        media's duration, and return that the buffer indeed hasFutureTime() available.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::hasFutureTime):
+
+2014-08-04  Benjamin Poulain  <benjamin@webkit.org>
+
+        Simplify the StyleInvalidation mode of rule collection
+        https://bugs.webkit.org/show_bug.cgi?id=135521
+
+        Reviewed by Antti Koivisto.
+
+        There are two branches where StyleInvalidation code is removed:
+        -Pseudo elements for shadow dom elements.
+        -Pseudo elements without dom tree counterpart.
+
+        The first can never be hit because StyleInvalidationAnalysis does a complete invalidation
+        when there is any shadow dom styling involved in the stylesheets.
+
+        Even if that branch was hit, not failing on custom pseudo elements would be equivalent
+        to ignoring those pseudo elements from the Selector. By doing so, we would match elements
+        that do not have shadow dom and invalidate pretty much everything.
+
+        Unlike pseudo elements without real elements, shadow dom elements are not matched separately with a different
+        context, thus we could generalize StyleInvalidationAnalysis to handle this case.
+
+
+        The second case handle pseudo elements that do not have a real element. That case no longer need to be handled
+        separately at the filter time, it has become a special case of SelectorChecker::match() after everything else
+        has matched.
+
+        The only condition for this to work is that the Context's pseudoId must be NOPSEUDO. This is the case
+        in practice since matching specific pseudo types would be a waste of time. ElementRuleCollector::collectMatchingRules()
+        has a new assertion to enforce that.
+
+        Test: fast/css/stylesheet-change-updates-pseudo-elements.html
+
+        * css/ElementRuleCollector.cpp:
+        (WebCore::ElementRuleCollector::collectMatchingRules):
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::matchRecursively):
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateRequestedPseudoElementEqualsToSelectorPseudoElement):
+
+2014-08-04  Benjamin Poulain  <benjamin@webkit.org>
+
+        Add a flag for the CSS Selectors level 4 implementation
+        https://bugs.webkit.org/show_bug.cgi?id=135535
+
+        Reviewed by Andreas Kling.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-08-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: add AccessibilityObject::computedLabelString() for WebAXI
+        https://bugs.webkit.org/show_bug.cgi?id=129939
+
+        Reviewed by Mario Sanchez Prada.
+
+        Provide a method that the WebKit Inspector can call in order to 
+        display an accessible name for an AX node.
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::accessibilityComputedLabel):
+        * accessibility/AccessibilityObject.h:
+
+2014-08-04  Tim Horton  <timothy_horton@apple.com>
+
+        Lots of crashes in WebKit1 after r172013.
+        https://bugs.webkit.org/show_bug.cgi?id=135582
+        <rdar://problem/17837636>
+
+        Reviewed by Enrica Casucci.
+
+        * editing/SelectionRectGatherer.cpp:
+        (WebCore::SelectionRectGatherer::addRect):
+        (WebCore::SelectionRectGatherer::addGapRects):
+        Don't try to do local-to-absolute coordinate conversion if we don't have
+        a repaint container, which happens a lot in WebKit1.
+
+2014-08-04  Alex Christensen  <achristensen@webkit.org>
+
+        Progress towards CMake on Mac.
+        https://bugs.webkit.org/show_bug.cgi?id=135528
+
+        Reviewed by Gyuyoung Kim.
+
+        * PlatformMac.cmake: Added.
+
+2014-08-04  Tim Horton  <timothy_horton@apple.com>
+
+        Selection services menu dropdown is in the wrong place when selecting some text on Yelp
+        https://bugs.webkit.org/show_bug.cgi?id=135582
+        <rdar://problem/17837636>
+
+        Reviewed by Simon Fraser.
+
+        * editing/SelectionRectGatherer.cpp:
+        (WebCore::SelectionRectGatherer::addRect):
+        (WebCore::SelectionRectGatherer::addGapRects):
+        (WebCore::SelectionRectGatherer::addRects): Deleted.
+        Rename addRects to addGapRects for clarity.
+        Map rects and gapRects to absolute RenderView coordinates so that
+        they are in a form WebKit2 can use. Previously they were sometimes
+        relative to a different repaint container, but that information was
+        lost when moving through SelectionRectGatherer.
+
+        Ideally we would keep selection rects as full quads instead of rects
+        for more of their life, but that problem is much deeper than just SelectionRectGatherer.
+
+        * editing/SelectionRectGatherer.h:
+        Add a comment clarifying the coordinate space of the stored selection rects.
+
+        * rendering/RenderView.cpp:
+        (WebCore::RenderView::applySubtreeSelection):
+        Rename addRects to addGapRects for clarity.
+
+2014-08-04  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] shape-margin not respected when it extends beyond an explicitly set margin
+        https://bugs.webkit.org/show_bug.cgi?id=135308
+
+        Reviewed by Dean Jackson.
+
+        When a zero height line is supplied and the image shape extends into
+        the margin box (only possible when a shape-margin is supplied), then
+        only an empty interval was being returned. This patch makes it
+        properly return the interval for the line in question.
+
+        Test: fast/shapes/shape-outside-floats/shape-outside-image-shape-margin.html
+
+        * rendering/shapes/RasterShape.cpp:
+        (WebCore::RasterShape::getExcludedIntervals): Handle the zero height
+        line case.
+
+2014-08-04  Zalan Bujtas  <zalan@apple.com>
+
+        Subpixel rendering: InlineTextBox mistakenly rounds offset value before painting.
+        https://bugs.webkit.org/show_bug.cgi?id=135470
+
+        Reviewed by Simon Fraser.
+
+        This patch removes the premature paint offset adjustment for inlines. Premature snapping
+        could alter the final painting coordinates and push content to wrong positions.
+
+        This patch also enforces WebCore's pixel snapping strategy (round) on text painting.
+        It ensures that text positioning is in sync with other painting related operations including
+        clipping, box decorations etc. Underlying graphics libraries can take different directions on
+        text snapping, for example CG ceils text coordinates vertically (in horizontal context,
+        with the current settings). It can lead to undesired side effects.
+
+        Test: fast/inline/hidpi-inline-selection-leaves-gap.html
+
+        * rendering/InlineTextBox.cpp:
+        (WebCore::InlineTextBox::paint):
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::calculateClipRects): wrong direction used at r171896.
+        * rendering/SimpleLineLayoutFunctions.cpp: we don't paint vertical content here.
+        (WebCore::SimpleLineLayout::paintFlow):
+
+2014-08-04  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed, rolling out r171992, r171995, & r172000.
+
+        The cumulative effect of those revisions was to cause decoding errors when switching resolutions on YouTube.
+
+        Reverted changesets:
+
+        https://bugs.webkit.org/show_bug.cgi?id=135422 / http://trac.webkit.org/changeset/171992
+        https://bugs.webkit.org/show_bug.cgi?id=135424 / http://trac.webkit.org/changeset/171995
+        https://bugs.webkit.org/show_bug.cgi?id=135572 / http://trac.webkit.org/changeset/172000
+
+2014-08-04  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Always clear ConsoleClient when Page/WindowShell is destroyed
+        https://bugs.webkit.org/show_bug.cgi?id=135569
+
+        Reviewed by Mark Lam.
+
+        * bindings/js/ScriptController.cpp:
+        (WebCore::ScriptController::~ScriptController):
+        Whenever a window shell goes away, clear the console client.
+        We did this in clearWindowShell but not before destroying.
+
+2014-08-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: isWordEndMatch should allow for multiple word selections
+        https://bugs.webkit.org/show_bug.cgi?id=135573
+
+        Reviewed by Mario Sanchez Prada.
+
+        isWordEndMatch was searching from the beginning of the selected range, which meant
+        that if the result was multiple words, we'd reject the result. 
+        Instead, we should search from the end of the range, so that we encompass all words.
+
+        Modified existing test: platform/mac/accessibility/select-text-should-match-whole-words.html
+
+        * editing/TextIterator.cpp:
+        (WebCore::SearchBuffer::isWordEndMatch):
+
+2014-08-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Secure text fields need to support Search parameterized attributes
+        https://bugs.webkit.org/show_bug.cgi?id=135568
+
+        Reviewed by Mario Sanchez Prada.
+ 
+        Secure text fields still need to support the fast searching that WebKit exposes, even though they don't support
+        other parameterized attributes.
+  
+        Test: platform/mac/accessibility/secure-text-field-supports-fast-search.html
+
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (-[WebAccessibilityObjectWrapper accessibilityParameterizedAttributeNames]):
+
+2014-08-04  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Further fixes for "fast forward" playback after seeking in YouTube behavior.
+        https://bugs.webkit.org/show_bug.cgi?id=135572
+
+        Reviewed by Eric Carlson.
+
+        Two related fixes:
+
+        In reenqueueMediaForTime(), update TrackBuffer.lastEnqueuedPresentationTime when we flush samples, so that
+        the next time samples are re-enqueued, the starting point for re-enqueueing is correct.
+
+        In sourceBufferPrivateDidReceiveSample(), do not add samples to the decode queue if they are before the
+        current media time.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::sourceBufferPrivateDidReceiveSample):
+        (WebCore::SourceBuffer::reenqueueMediaForTime):
+
+2014-08-04  Matt Baker  <mattbaker@apple.com>
+
+        Web Inspector: All-caps CSS properties are not shown in Computed pane
+        https://bugs.webkit.org/show_bug.cgi?id=133700
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InspectorStyleSheet.cpp:
+        (WebCore::InspectorStyle::styleWithProperties):
+
+2014-08-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: SelectText functionality always selects text after current selection even if closer selection is behind it
+        https://bugs.webkit.org/show_bug.cgi?id=135546
+
+        Reviewed by Mario Sanchez Prada.
+
+        Logic was incorrect for comparing ranges found before the current selection.
+        ASSERT was incorrect for allowed ranges. We need to allow ranges that are right at the boundaries of our found ranges.
+
+        Extended existing test: platform/mac/accessibility/select-text.html
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::rangeClosestToRange):
+
+2014-08-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: AXSelectTextWithCriteriaParameterizedAttribute incorrectly selects the beginning letters of a word
+        https://bugs.webkit.org/show_bug.cgi?id=135547
+
+        Reviewed by Mario Sanchez Prada.
+
+        Allow text search to specify that it wants to match end of words as well as start of words.
+        This allows select text criteria to match on whole words only.
+
+        Test: platform/mac/accessibility/select-text-should-match-whole-words.html
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::rangeOfStringClosestToRangeInDirection):
+        * editing/FindOptions.h:
+        * editing/TextIterator.cpp:
+        (WebCore::SearchBuffer::isWordEndMatch):
+        (WebCore::SearchBuffer::search):
+
+2014-08-04  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Re-enqueing due to overlapping appended samples can cause stuttering playback
+        https://bugs.webkit.org/show_bug.cgi?id=135424
+
+        Reviewed by Eric Carlson.
+
+        If it become necessary to re-enqueue samples (due to appending overlapping samples which cause
+        existing samples to be removed), the previous behavior was to flush and re-enqueue the new
+        samples dependencies; i.e., everything up to and including the previous sync sample. This causes
+        the decoder to visibly stall while it decodes those non-displaying samples, which could be
+        a second or more worth of encoded video samples, depending on the frequency of sync samples.
+
+        Instead, when we are asked to re-enqueue, we will look for the next occurring sync sample.
+        If found, we can switch over to the replacement samples at that point in the decode queue.
+        This limits the overhead of a stream switch, and should allow for a visually seamless switch,
+        at the cost of having to wait for the next sync sample to occur to affect the switch.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::seekToTime): Clear the decode queue when seeking.
+        (WebCore::SourceBuffer::sourceBufferPrivateAppendComplete): Call reenqueueMediaForCurrentTime.
+        (WebCore::SourceBuffer::reenqueueMediaForCurrentTime): Switch over to the new stream only
+            at the next sync sample.
+
+2014-08-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: The Dictation command "Replace <phrase> with <phrase>" always capitalizes the replacement string
+        https://bugs.webkit.org/show_bug.cgi?id=135557
+
+        Reviewed by Mario Sanchez Prada.
+
+        When replacing text, we should match the capitalization of the word being replaced 
+        (unless the replacement looks like an abbreviation).   
+ 
+        Test: platform/mac/accessibility/find-and-replace-match-capitalization.html
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::selectText):
+
+2014-08-04  Pratik Solanki  <psolanki@apple.com>
+
+        QuickLook resources are cache-replaced with their original binary data causing ASSERT(m_data->size() == newBuffer->size()) in CachedResource.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=135548
+        <rdar://problem/17891321>
+
+        Reviewed by David Kilzer.
+
+        When loading QuickLook resources, the SharedBuffer in the CachedResource is actually a
+        converted representation of the real QuickLook resource. Replacing this with the actual
+        network resource (which is what tryReplaceEncodedData() tried to do) is wrong and triggered
+        asserts in the code.
+
+        Fix this by having CachedRawResource::mayTryReplaceEncodedData() return false if we are
+        loading a QuickLook resource.
+
+        No new tests because we don't have a way to test QuickLook documents.
+
+        * loader/ResourceLoader.cpp:
+        (WebCore::ResourceLoader::ResourceLoader):
+        (WebCore::ResourceLoader::didCreateQuickLookHandle):
+            Set a flag to indicate that we are loading a QuickLook document.
+        * loader/ResourceLoader.h:
+        (WebCore::ResourceLoader::isQuickLookResource):
+        * loader/cache/CachedRawResource.cpp:
+        (WebCore::CachedRawResource::CachedRawResource):
+        (WebCore::CachedRawResource::finishLoading):
+            Check if we were loading a QuickLook document and if so disable encoded data
+            replacement.
+        * loader/cache/CachedRawResource.h:
+            Add a new bool field returned by mayTryReplaceEncodedData(). Default is true but it is
+            set to false in finishLoading() if we were loading QuickLook document.
+
+2014-08-04  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Seeking occasionally causes many frames to be displayed in "fast forward" mode
+        https://bugs.webkit.org/show_bug.cgi?id=135422
+
+        Reviewed by Eric Carlson.
+
+        When a seek is pending, but samples for the new time is not yet present in the SourceBuffer,
+        the SourceBufferPrivate may signal that it's ready for new samples through the
+        sourceBufferPrivateDidBecomeReadyForMoreSamples() method. In this situation, we should not
+        continue to provideMediaData(), as that will append samples from the prior-to-seeking media
+        timeline. Since the timeline may have moved forward due to the seek, a decoder may decide to
+        display those frames as quickly as possible (the "fast forward" behavior) in order to catch
+        up to the new current time.
+
+        If a re-enqueue is pending, don't provide media data in response to being notified that the
+        SourceBufferPrivate is ready for more samples. Wait until samples for the new current time
+        are appended.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::sourceBufferPrivateDidBecomeReadyForMoreSamples):
+        * dom/Document.cpp:
+        (WebCore::Document::unregisterCollection):
+
+2014-08-04  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Install all unstable webkitdom headers
+        https://bugs.webkit.org/show_bug.cgi?id=135544
+
+        Reviewed by Gustavo Noronha Silva.
+
+        We were checking whether generated file existed before they had
+        been generated.
+
+        * PlatformGTK.cmake: Add Unstable.h header for all stable classes
+        to GObjectDOMBindingsUnstable_INSTALLED_HEADERS and split the
+        install command for stable and unstable headers making unstable
+        headers optional.
+
+2014-08-04  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Compile error in OpenTypeMathData.cpp.
+        https://bugs.webkit.org/show_bug.cgi?id=135541
+
+        Reviewed by Brent Fulgham.
+
+        The SharedBuffer class needs to be defined.
+        Also, the OpenTypeMathData constructor should be implemented when OPENTYPE_MATH is not enabled.
+
+        * platform/graphics/opentype/OpenTypeMathData.cpp:
+
+2014-08-03  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/17782529> REGRESSION: OS marketing version in iOS Simulator user-agent string is the host OS’s
+        https://bugs.webkit.org/show_bug.cgi?id=135549
+
+        Reviewed by Mark Rowe.
+
+        * platform/cocoa/SystemVersion.mm:
+        (WebCore::createSystemMarketingVersion): On the iOS Simulator, locate the system Library
+        directory relative to the Simulator root.
+
+2014-08-02  Jeremy Jones  <jeremyj@apple.com>
+
+        Support both window and view based video fullscreen.
+        https://bugs.webkit.org/show_bug.cgi?id=135525
+
+        Reviewed by Simon Fraser.
+
+        Presenting in a separate window gives greater flexibility for rotation separately from the app.
+        Presenting in the same window works better if the interface is rehosted in another process.
+
+        * platform/ios/WebVideoFullscreenControllerAVKit.mm:
+        (-[WebVideoFullscreenController enterFullscreen:]): Use clientRect instead of screenRect.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h: Add m_window and m_parentView.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm: 
+        (-[WebAVVideoLayer setBounds:]): Parent view might not be fullscreen; use window instead.
+        (WebVideoFullscreenInterfaceAVKit::setupFullscreen): Conditionally create UIWindow and UIViewController for fullscreen.
+        (WebVideoFullscreenInterfaceAVKit::enterFullscreen): Video, not the container should have black background.
+        (WebVideoFullscreenInterfaceAVKit::exitFullscreen): Conditionally translate finalRect.
+        (WebVideoFullscreenInterfaceAVKit::cleanupFullscreen): Clean up UIWindow and force status bar to correct orientation.
+        (WebVideoFullscreenInterfaceAVKit::invalidate): Clean up UIWindow.
+        (WebVideoFullscreenInterfaceAVKit::requestHideAndExitFullscreen): Hide window and exit without animation.
+        * platform/ios/WebVideoFullscreenModelMediaElement.mm:
+        (WebVideoFullscreenModelMediaElement::setVideoFullscreenLayer): Apply frame, because it may have been set before the layer.
+
+2014-08-02  Benjamin Poulain  <bpoulain@apple.com>
+
+        Update the SearchFieldResultsButtonElement shadow Pseudo Id when HTMLInputElement's maxResults change
+        https://bugs.webkit.org/show_bug.cgi?id=135491
+
+        Reviewed by Ryosuke Niwa.
+
+        Replace the shadowPseudoId() override + manual style invalidation by the generic pseudo ID update.
+
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::parseAttribute):
+        * html/InputType.cpp:
+        (WebCore::InputType::maxResultsAttributeChanged):
+        * html/InputType.h:
+        * html/SearchInputType.cpp:
+        (WebCore::SearchInputType::SearchInputType):
+        (WebCore::updateResultButtonPseudoType):
+        (WebCore::SearchInputType::maxResultsAttributeChanged):
+        (WebCore::SearchInputType::createShadowSubtree):
+        (WebCore::SearchInputType::destroyShadowSubtree):
+        * html/SearchInputType.h:
+        * html/shadow/TextControlInnerElements.cpp:
+        (WebCore::SearchFieldResultsButtonElement::shadowPseudoId): Deleted.
+        * html/shadow/TextControlInnerElements.h:
+
+2014-08-02  Benjamin Poulain  <bpoulain@apple.com>
+
+        Add warnings for the buggy implementations of shadowPseudoId()
+        https://bugs.webkit.org/show_bug.cgi?id=135477
+
+        Reviewed by Ryosuke Niwa.
+
+        Dean is going to look into fixing media element styling.
+        In the meantime, add warnings to prevent this from spreading.
+
+        * dom/Element.h:
+        * html/shadow/SliderThumbElement.cpp:
+        (WebCore::SliderThumbElement::shadowPseudoId):
+        (WebCore::SliderContainerElement::shadowPseudoId):
+
+2014-08-01  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r171957.
+        https://bugs.webkit.org/show_bug.cgi?id=135538
+
+        Caused GTK assertions and test failures (Requested by smfr on
+        #webkit).
+
+        Reverted changeset:
+
+        "Clean up image subsampling code, make it less iOS-specific"
+        https://bugs.webkit.org/show_bug.cgi?id=134916
+        http://trac.webkit.org/changeset/171957
+
+2014-08-01  Myles C. Maxfield  <litherum@gmail.com>
+
+        [CMake] Allow CMake to find GLib on FreeBSD
+        https://bugs.webkit.org/show_bug.cgi?id=132530
+
+        Reviewed by Gustavo Noronha Silva.
+
+        On FreeBSD, glibconfig.h is at /usr/local/include/glib-2.0/glibconfig.h.
+
+        * Source/cmake/FindGLIB.cmake:
+
 2014-08-01  Carlos Alberto Lopez Perez  <clopez@igalia.com>
 
         REGRESSION(r171942): [CMAKE] [GTK] build broken (clean build).

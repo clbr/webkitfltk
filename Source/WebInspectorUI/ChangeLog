@@ -1,3 +1,278 @@
+2014-08-05  James Craig  <jcraig@apple.com>
+
+        Web Inspector: AXI: Add label string once AccessibilityObject::computedLabel() is available
+        https://bugs.webkit.org/show_bug.cgi?id=129940
+
+        Reviewed by Chris Fleizach.
+
+        * UserInterface/Views/DOMNodeDetailsSidebarPanel.js: UI update for label field in Node Inspector.
+        (WebInspector.DOMNodeDetailsSidebarPanel.prototype._refreshAccessibility):
+
+2014-08-05  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: support storing multiple timeline recordings in the manager
+        https://bugs.webkit.org/show_bug.cgi?id=132875
+
+        Reviewed by Timothy Hatcher.
+
+        This patch adds support for capturing multiple timeline recordings and switching
+        between them in the user interface using hierarchical path components.
+
+        * Localizations/en.lproj/localizedStrings.js:
+        * UserInterface/Base/Main.js:
+        (WebInspector.contentLoaded): Remove hard-coded priming of the timeline sidebar panel.
+        Instead, load the first recording in the timeline manager after the initial load.
+
+        (WebInspector._revealAndSelectRepresentedObjectInNavigationSidebar): Don't suppress
+        onselect events when selecting the tree element for a newly shown content view. This
+        allows the sidebar to sync the current content view and timeline tree element selection
+        with what is displayed in the content browser.
+
+        * UserInterface/Controllers/TimelineManager.js: Add two new events, RecordingCreated and
+        RecordingLoaded. A recording is considered active when any new records recieved will be
+        appended to that recording. The user interface is not necessarily viewing the active
+        recording.
+
+        (WebInspector.TimelineManager.delayedWork):
+        (WebInspector.TimelineManager): Keep a list of recordings, and load the first recording
+        asynchronously so that everyone can add an event listener for it.
+
+        (WebInspector.TimelineManager.prototype.get activeRecording):
+        (WebInspector.TimelineManager.prototype.get recordings):
+        (WebInspector.TimelineManager.prototype.startCapturing):
+        (WebInspector.TimelineManager.prototype.stopCapturing): Use promises to make the iOS 7
+        fallback path better match the async semantics of the non-fallback path.
+
+        (WebInspector.TimelineManager.prototype.unloadRecording):
+        (WebInspector.TimelineManager.prototype._loadNewRecording): Stop capturing and unload
+        any existing recording before creating and loading a new recording.
+
+        (WebInspector.TimelineManager.prototype._startAutoCapturing): Create a new recording
+        rather than resetting the current recording.
+
+        * UserInterface/Models/NetworkTimeline.js:
+        (WebInspector.NetworkTimeline):
+        * UserInterface/Models/Timeline.js:
+        (WebInspector.Timeline):
+        (WebInspector.Timeline.prototype.get type): Each timeline stores its TimelineRecord.Type
+        so that other code can create type-specific views using the Timeline as a representedObject.
+
+        * UserInterface/Models/TimelineRecording.js: For each recording, add new state for a unique identifier,
+        display string, and an isWritable flag. Once a recording is unloaded, it becomes read-only.
+        (WebInspector.TimelineRecording.prototype.get displayName):
+        (WebInspector.TimelineRecording.prototype.get identifier):
+        (WebInspector.TimelineRecording.prototype.isWritable):
+        (WebInspector.TimelineRecording.prototype.unloaded):
+        (WebInspector.TimelineRecording.prototype.reset): A recording can only be reset if it is writable.
+
+        * UserInterface/Protocol/InspectorFrontendAPI.js:
+        (InspectorFrontendAPI.setTimelineProfilingEnabled): Don't make redundant start/stop capturing calls.
+
+        * UserInterface/Views/LayoutTimelineOverviewGraph.js: Use a timeline as the representedObject for all
+        timeline-specific graphs and views. Otherwise, use the recording.
+        (WebInspector.LayoutTimelineOverviewGraph):
+        * UserInterface/Views/LayoutTimelineView.js:
+        (WebInspector.LayoutTimelineView):
+        (WebInspector.LayoutTimelineView.prototype._treeElementSelected):
+        * UserInterface/Views/NetworkTimelineOverviewGraph.js:
+        (WebInspector.NetworkTimelineOverviewGraph):
+        * UserInterface/Views/NetworkTimelineView.js:
+        (WebInspector.NetworkTimelineView):
+        * UserInterface/Views/OverviewTimelineView.js:
+        (WebInspector.OverviewTimelineView.prototype._networkTimelineRecordAdded):
+        * UserInterface/Views/ScriptTimelineOverviewGraph.js:
+        (WebInspector.ScriptTimelineOverviewGraph):
+        * UserInterface/Views/ScriptTimelineView.js:
+        (WebInspector.ScriptTimelineView):
+        (WebInspector.ScriptTimelineView.prototype._treeElementSelected):
+
+        * UserInterface/Views/TimelineContentView.js: Iterate over timeline objects when setting up maps. Use timelines
+        as keys rather than their type identifiers.
+        (WebInspector.TimelineContentView.prototype.showTimelineViewForTimeline): Renamed from showTimelineView. This
+        function takes a Timeline instance rather than an identifier, since the conten view is specific to one recording.
+        (WebInspector.TimelineContentView.prototype.get selectionPathComponents): Match types against the currently
+        visible timeline's representedObject.
+        (WebInspector.TimelineContentView.prototype.get currentTimelineView): Used by the sidebar panel to sync timeline
+        tree element selections to TimelineView shown by the TimelineContentView.
+        (WebInspector.TimelineContentView.prototype.shown): Sync enablement of the "Clear Timelines" button to recording
+        read-only state.
+
+        (WebInspector.TimelineContentView.prototype.saveToCookie):
+        (WebInspector.TimelineContentView.prototype.restoreFromCookie): Added. Only handle saving/restoring the subview.
+
+        (WebInspector.TimelineContentView.prototype._pathComponentSelected):
+        (WebInspector.TimelineContentView.prototype._showTimelineView): Relax the early return so that timeline views
+        and content tree outlines are reattached when re-navigating to the same timeline view via back-forward entries.
+        (WebInspector.TimelineContentView.prototype.showTimelineView): Deleted.
+
+        * UserInterface/Views/TimelineOverviewGraph.js:
+        (WebInspector.TimelineOverviewGraph):
+
+        * UserInterface/Views/TimelineSidebarPanel.js:
+        (WebInspector.TimelineSidebarPanel): Keep a tree outline and tree element map for storing available recordings.
+        (WebInspector.TimelineSidebarPanel.createTimelineTreeElement):
+        (WebInspector.TimelineSidebarPanel.prototype.shown): Added.
+        (WebInspector.TimelineSidebarPanel.prototype.showDefaultContentView): Add a guard.
+        (WebInspector.TimelineSidebarPanel.prototype.get hasSelectedElement): Added. Selected recording tree elements
+        should be considered when deciding whether a represented object has been selected in the sidebar panel.
+
+        (WebInspector.TimelineSidebarPanel.prototype.treeElementForRepresentedObject.looselyCompareRepresentedObjects):
+        (WebInspector.TimelineSidebarPanel.prototype.treeElementForRepresentedObject.get if):
+        (WebInspector.TimelineSidebarPanel.prototype.treeElementForRepresentedObject):
+        (WebInspector.TimelineSidebarPanel.prototype.showTimelineOverview):
+        (WebInspector.TimelineSidebarPanel.prototype.showTimelineViewForType): Renamed to explicit take a type identifier.
+        Delegate the actual showing of the timeline view to the onselect handler for the timelines tree outline.
+
+        (WebInspector.TimelineSidebarPanel.prototype.matchTreeElementAgainstCustomFilters):
+        (WebInspector.TimelineSidebarPanel.prototype.saveStateToCookie): Fix a typo.
+        (WebInspector.TimelineSidebarPanel.prototype.restoreStateFromCookie): Fix a typo.
+        (WebInspector.TimelineSidebarPanel.prototype._recordingsTreeElementSelected): Sync the currently displayed
+        recording object and content view, and sync the selected tree element to the displayed timeline subview.
+
+        (WebInspector.TimelineSidebarPanel.prototype._timelinesTreeElementSelected): If this is a user action, show the timeline.
+        (WebInspector.TimelineSidebarPanel.prototype._contentBrowserCurrentContentViewDidChange): Use classList.toggle().
+        (WebInspector.TimelineSidebarPanel.prototype._recordingCreated): Dynamically add new recordings to the interface.
+        (WebInspector.TimelineSidebarPanel.prototype._recordingLoaded): Automatically show recordings when they are loaded.
+        (WebInspector.TimelineSidebarPanel.prototype._recordGlyphClicked): Shift+click will force-create a new recording.
+        (WebInspector.TimelineSidebarPanel.prototype.initialize): Deleted.
+        * UserInterface/Views/TimelineView.js:
+        (WebInspector.TimelineView):
+        (WebInspector.TimelineView.prototype.get representedObject):
+
+2014-08-05  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: ReplayManager shouldn't assume replay status when the inspector is opened
+        https://bugs.webkit.org/show_bug.cgi?id=135212
+
+        Reviewed by Timothy Hatcher.
+
+        The inspector could be closed and reopened at any point during capturing or replaying.
+        ReplayManager should query the current state on initialization rather than assuming
+        that the replay controller is still in its initial state.
+
+        ReplayManager's initialization code requires querying the backend for the current replay
+        state. This could race with replay protocol events that mutate the manager's state before
+        it is fully initialized, leading to undefined behavior.
+
+        To mitigate this, all protocol event handlers (called by ReplayObserver) are wrapped
+        with a guard that enqueues the callback if initialization is not yet complete. This
+        queue is implemented via multiple then-chaining of a shared 'initialization' promise
+        which resolves when initialization completes.
+
+        * UserInterface/Controllers/ReplayManager.js:
+        (WebInspector.ReplayManager.then):
+        (WebInspector.ReplayManager.catch):
+        (WebInspector.ReplayManager): Rewrite the initialization code to first query the replay
+        state, set the initialization flag to true, and then request and update session records.
+        The sessions must be loaded after querying initial state because ReplayManager.sessionCreated
+        requires replay state to be initialized.
+
+        (WebInspector.ReplayManager.prototype.get sessionState):
+        (WebInspector.ReplayManager.prototype.get segmentState):
+        (WebInspector.ReplayManager.prototype.get activeSessionIdentifier):
+        (WebInspector.ReplayManager.prototype.get activeSegmentIdentifier):
+        (WebInspector.ReplayManager.prototype.get playbackSpeed):
+        (WebInspector.ReplayManager.prototype.set playbackSpeed):
+        (WebInspector.ReplayManager.prototype.get currentPosition): Add assertions to catch uses of
+        manager state before the manager is fully initialized.
+
+        (WebInspector.ReplayManager.prototype.waitUntilInitialized): Added. It returns a shared promise
+        that is fulfilled when initialization is complete.
+
+        (WebInspector.ReplayManager.prototype.captureStarted):
+        (WebInspector.ReplayManager.prototype.captureStopped):
+        (WebInspector.ReplayManager.prototype.playbackStarted):
+        (WebInspector.ReplayManager.prototype.playbackHitPosition):
+        (WebInspector.ReplayManager.prototype.playbackPaused):
+        (WebInspector.ReplayManager.prototype.playbackFinished):
+        (WebInspector.ReplayManager.prototype.sessionModified):
+        (WebInspector.ReplayManager.prototype.sessionLoaded):
+        (WebInspector.ReplayManager.prototype.segmentCompleted.set catch):
+        (WebInspector.ReplayManager.prototype.segmentCompleted):
+        (WebInspector.ReplayManager.prototype.segmentRemoved.then):
+        (WebInspector.ReplayManager.prototype.segmentRemoved):
+        (WebInspector.ReplayManager.prototype.segmentLoaded): Add initialization guards.
+
+2014-08-05  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Replay: rename protocol methods for getting replay session/segment data
+        https://bugs.webkit.org/show_bug.cgi?id=135618
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Controllers/ReplayManager.js:
+        (WebInspector.ReplayManager.prototype.getSession.get var):
+        (WebInspector.ReplayManager.prototype.getSegment.get var):
+        * UserInterface/Models/ReplaySession.js:
+        (WebInspector.ReplaySession.prototype.segmentsChanged):
+
+2014-08-05  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: cannot navigate between multiple applicable dashboards
+        https://bugs.webkit.org/show_bug.cgi?id=135130
+
+        Reviewed by Timothy Hatcher.
+
+        Add navigation arrows between dashboards when multiple dashboards are applicable.
+        For example, the user should be able to go back to the default dashboard while paused
+        at a breakpoint. Dashboards form a stack based on when they are first introduced.
+
+        * UserInterface/Views/DashboardContainerView.css:
+        (.toolbar .dashboard): Increase padding-right a bit to make room for arrows.
+        (.toolbar .dashboard:not(.visible)): Fix a bug where higher dashboards in the dashboard stack
+        can shine through when animating between two lower dashboards that have transparent background.
+        This ensures that at most two dashboards (namely, the ones being animated) are displayed.
+
+        (.dashboard-container .advance-arrow): Main style class for navigation arrows.
+        (.dashboard-container .advance-arrow:hover):
+        (.dashboard-container .advance-arrow:active):
+        (.dashboard-container .advance-arrow.inactive):
+        (.toolbar.label-only .dashboard-container .advance-arrow): Make arrows slightly smaller when
+        the dashboards get shorter.
+
+        (.dashboard-container .advance-arrow.advance-forward):
+        (.dashboard-container .advance-arrow.advance-backward):
+        * UserInterface/Views/DashboardContainerView.js:
+        (WebInspector.DashboardContainerView): Arrow styles are updated when a dashboard is shown,
+        hidden, or closed. When moving away, we dismiss (i.e., set zero opacity) arrows at animation
+        start. When the animation finishes, redisplay arrows that are applicable for the new dashboard.
+
+        (WebInspector.DashboardContainerView.prototype._advanceForwardArrowClicked):
+        (WebInspector.DashboardContainerView.prototype._advanceBackwardArrowClicked):
+        (WebInspector.DashboardContainerView.prototype._dismissAdvanceArrows):
+        (WebInspector.DashboardContainerView.prototype._updateAdvanceArrowVisibility):
+        (WebInspector.DashboardContainerView.prototype._showDashboardAtIndex): There was a bug here
+        where it would unconditionally use the same animation direction when showing a dashboard, but
+        it was hard to spot without arrows that must correlate with the animation direction.
+
+        (WebInspector.DashboardContainerView.prototype.animationEnded):
+        (WebInspector.DashboardContainerView.prototype._showDashboardView):
+        (WebInspector.DashboardContainerView.prototype._hideDashboardView):
+        (WebInspector.DashboardContainerView.prototype._closeDashboardView):
+
+2014-08-05  Saam Barati  <sbarati@apple.com>
+
+        Web Inspector: shown() called on a content view when stepping over an instruction in the debugger
+        https://bugs.webkit.org/show_bug.cgi?id=135311
+
+        Reviewed by Timothy Hatcher.
+
+        ContentViewContainer should not repeatedly call ContentView.prototype.shown 
+        on ContentViews that are already visible. ContentViewContainer now passes
+        a flag to BackForwardEntry.prototype.prepareToShow indicating whether it should
+        call the shown function on the ContentView it is about to display.
+        ContentViewContainer.prototype.showBackForwardEntryForIndex passes in this
+        flag based on its ContentView being visible.
+
+        * UserInterface/Models/BackForwardEntry.js:
+        (WebInspector.BackForwardEntry.prototype.prepareToShow):
+        * UserInterface/Views/ContentViewContainer.js:
+        (WebInspector.ContentViewContainer.prototype.showBackForwardEntryForIndex):
+        (WebInspector.ContentViewContainer.prototype.replaceContentView):
+        (WebInspector.ContentViewContainer.prototype.closeAllContentViewsOfPrototype):
+        (WebInspector.ContentViewContainer.prototype.shown):
+        (WebInspector.ContentViewContainer.prototype._showEntry):
+
 2014-08-01  Jonathan Wells  <jonowells@apple.com>
 
         Web Inspector: Timeline header height doesn't match style updates.
