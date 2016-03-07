@@ -104,8 +104,17 @@ Vector<Action> ContentExtensionsBackend::actionsForResourceLoad(const ResourceLo
                 finalActions.append(action);
             }
         }
-        if (!sawIgnorePreviousRules)
+        if (!sawIgnorePreviousRules) {
+            DFABytecodeInterpreter::Actions universalActions = interpreter.actionsFromDFARoot();
+            for (auto actionLocation : universalActions) {
+                Action action = Action::deserialize(actions, actionsLength, static_cast<unsigned>(actionLocation));
+                
+                // CSS selectors were already compiled into a stylesheet using globalDisplayNoneSelectors.
+                if (action.type() != ActionType::CSSDisplayNoneSelector)
+                    finalActions.append(action);
+            }
             finalActions.append(Action(ActionType::CSSDisplayNoneStyleSheet, contentExtension->identifier()));
+        }
     }
     return finalActions;
 }

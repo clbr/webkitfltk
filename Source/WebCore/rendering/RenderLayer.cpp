@@ -48,6 +48,7 @@
 #include "BoxShape.h"
 #include "CSSPropertyNames.h"
 #include "Chrome.h"
+#include "DebugPageOverlays.h"
 #include "Document.h"
 #include "DocumentEventQueue.h"
 #include "Element.h"
@@ -360,7 +361,7 @@ RenderLayer::~RenderLayer()
 
     if (renderer().frame().page()) {
         if (ScrollingCoordinator* scrollingCoordinator = renderer().frame().page()->scrollingCoordinator())
-            scrollingCoordinator->willDestroyScrollableArea(this);
+            scrollingCoordinator->willDestroyScrollableArea(*this);
     }
 
     if (m_reflection)
@@ -2391,6 +2392,7 @@ void RenderLayer::scrollTo(int x, int y)
 #if PLATFORM(IOS) && ENABLE(TOUCH_EVENTS)
         renderer().document().dirtyTouchEventRects();
 #endif
+        DebugPageOverlays::didLayout(renderer().frame());
     }
 
     Frame& frame = renderer().frame();
@@ -5728,6 +5730,9 @@ bool RenderLayer::intersectsDamageRect(const LayoutRect& layerBounds, const Layo
     // paints the root's background.
     if (isRootLayer() || renderer().isRoot())
         return true;
+
+    if (damageRect.isEmpty())
+        return false;
 
     // If we aren't an inline flow, and our layer bounds do intersect the damage rect, then we 
     // can go ahead and return true.

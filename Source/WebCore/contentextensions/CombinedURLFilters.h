@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Igalia S.L.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,35 +23,36 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DragIcon_h
-#define DragIcon_h
+#ifndef CombinedURLFilters_h
+#define CombinedURLFilters_h
 
-#include "IntPoint.h"
-#include <RefPtrCairo.h>
-#include <wtf/gobject/GRefPtr.h>
+#if ENABLE(CONTENT_EXTENSIONS)
+
+#include "NFA.h"
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
-class DragIcon {
-public:
-    DragIcon();
-    virtual ~DragIcon();
+namespace ContentExtensions {
 
-    void draw(cairo_t*);
-    void setImage(cairo_surface_t*);
-    void useForDrag(GdkDragContext*);
-    void useForDrag(GdkDragContext*, const IntPoint& hotspot);
+class Term;
+struct PrefixTreeVertex;
+
+class WEBCORE_EXPORT CombinedURLFilters {
+public:
+    CombinedURLFilters();
+    ~CombinedURLFilters();
+    void addPattern(uint64_t patternId, const Vector<Term>& pattern);
+
+    Vector<NFA> createNFAs() const;
 
 private:
-    bool isComposited;
-    GtkWidget* m_window;
-    RefPtr<cairo_surface_t> m_image;
-    IntSize m_imageSize;
-#ifdef GTK_API_VERSION_2
-    GRefPtr<GdkPixbuf> m_pixbuf;
-#endif
+    std::unique_ptr<PrefixTreeVertex> m_prefixTreeRoot;
 };
 
-}
+} // namespace ContentExtensions
+} // namespace WebCore
 
-#endif // DragIcon_h
+#endif // ENABLE(CONTENT_EXTENSIONS)
+
+#endif // CombinedURLFilters_h

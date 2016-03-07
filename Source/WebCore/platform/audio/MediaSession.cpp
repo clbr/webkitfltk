@@ -88,8 +88,8 @@ void MediaSession::beginInterruption(InterruptionType type)
 
     m_stateToRestore = state();
     m_notifyingClient = true;
-    client().pausePlayback();
     setState(Interrupted);
+    client().suspendPlayback();
     m_notifyingClient = false;
 }
 
@@ -109,16 +109,22 @@ void MediaSession::endInterruption(EndInterruptionFlags flags)
     m_stateToRestore = Idle;
     setState(Paused);
 
-    if (flags & MayResumePlaying && stateToRestore == Playing) {
-        LOG(Media, "MediaSession::endInterruption - resuming playback");
-        client().resumePlayback();
-    }
+    bool shouldResume = flags & MayResumePlaying && stateToRestore == Playing;
+    client().mayResumePlayback(shouldResume);
 }
 
 bool MediaSession::clientWillBeginPlayback()
 {
+    if (m_notifyingClient)
+        return true;
+
+    if (!MediaSessionManager::sharedManager().sessionWillBeginPlayback(*this)) {
+        if (state() == Interrupted)
+            m_stateToRestore = Playing;
+        return false;
+    }
+
     setState(Playing);
-    MediaSessionManager::sharedManager().sessionWillBeginPlayback(*this);
 #if ENABLE(PAGE_VISIBILITY_API)
     updateClientDataBuffering();
 #endif
@@ -127,12 +133,13 @@ bool MediaSession::clientWillBeginPlayback()
 
 bool MediaSession::clientWillPausePlayback()
 {
+    if (m_notifyingClient)
+        return true;
+
     LOG(Media, "MediaSession::clientWillPausePlayback(%p)- state = %s", this, stateName(m_state));
     if (state() == Interrupted) {
-        if (!m_notifyingClient) {
-            m_stateToRestore = Paused;
-            LOG(Media, "      setting stateToRestore to \"Paused\"");
-        }
+        m_stateToRestore = Paused;
+        LOG(Media, "      setting stateToRestore to \"Paused\"");
         return false;
     }
     
@@ -146,7 +153,7 @@ bool MediaSession::clientWillPausePlayback()
 void MediaSession::pauseSession()
 {
     LOG(Media, "MediaSession::pauseSession(%p)", this);
-    m_client.pausePlayback();
+    m_client.suspendPlayback();
 }
 
 MediaSession::MediaType MediaSession::mediaType() const
