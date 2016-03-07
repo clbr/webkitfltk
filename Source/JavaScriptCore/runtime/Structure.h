@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2009, 2012, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2008, 2009, 2012, 2013, 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -120,13 +120,13 @@ public:
     static Structure* attributeChangeTransition(VM&, Structure*, PropertyName, unsigned attributes);
     JS_EXPORT_PRIVATE static Structure* toCacheableDictionaryTransition(VM&, Structure*);
     static Structure* toUncacheableDictionaryTransition(VM&, Structure*);
-    static Structure* sealTransition(VM&, Structure*);
-    static Structure* freezeTransition(VM&, Structure*);
+    JS_EXPORT_PRIVATE static Structure* sealTransition(VM&, Structure*);
+    JS_EXPORT_PRIVATE static Structure* freezeTransition(VM&, Structure*);
     static Structure* preventExtensionsTransition(VM&, Structure*);
-    static Structure* nonPropertyTransition(VM&, Structure*, NonPropertyTransition);
+    JS_EXPORT_PRIVATE static Structure* nonPropertyTransition(VM&, Structure*, NonPropertyTransition);
 
-    bool isSealed(VM&);
-    bool isFrozen(VM&);
+    JS_EXPORT_PRIVATE bool isSealed(VM&);
+    JS_EXPORT_PRIVATE bool isFrozen(VM&);
     bool isExtensible() const { return !m_preventExtensions; }
     bool didTransition() const { return m_didTransition; }
     bool putWillGrowOutOfLineStorage();
@@ -370,6 +370,22 @@ public:
     {
         return m_transitionWatchpointSet.isStillValid();
     }
+    
+    bool dfgShouldWatchIfPossible() const
+    {
+        // FIXME: We would like to not watch things that are unprofitable to watch, like
+        // dictionaries. Unfortunately, we can't do such things: a dictionary could get flattened,
+        // in which case it will start to appear watchable and so the DFG will think that it is
+        // watching it. We should come up with a comprehensive story for not watching things that
+        // aren't profitable to watch.
+        // https://bugs.webkit.org/show_bug.cgi?id=133625
+        return true;
+    }
+    
+    bool dfgShouldWatch() const
+    {
+        return dfgShouldWatchIfPossible() && transitionWatchpointSetIsStillValid();
+    }
         
     void addTransitionWatchpoint(Watchpoint* watchpoint) const
     {
@@ -502,7 +518,7 @@ private:
         
     bool checkOffsetConsistency() const;
 
-    void allocateRareData(VM&);
+    JS_EXPORT_PRIVATE void allocateRareData(VM&);
     void cloneRareDataFrom(VM&, const Structure*);
 
     static const int s_maxTransitionLength = 64;

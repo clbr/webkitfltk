@@ -35,6 +35,7 @@
 #include "DFGOperations.h"
 #include "DFGSlowPathGenerator.h"
 #include "Debugger.h"
+#include "GetterSetter.h"
 #include "JSCInlines.h"
 #include "ObjectPrototype.h"
 #include "SpillRegistersMode.h"
@@ -1019,7 +1020,12 @@ GPRReg SpeculativeJIT::fillSpeculateCell(Edge edge)
             terminateSpeculativeExecution(Uncountable, JSValueRegs(), 0);
             return gpr;
         }
-        RELEASE_ASSERT(info.spillFormat() & DataFormatJS);
+        
+        if (!(info.spillFormat() & DataFormatJS)) {
+            terminateSpeculativeExecution(Uncountable, JSValueRegs(), 0);
+            return gpr;
+        }
+        
         m_gprs.retain(gpr, virtualRegister, SpillOrderSpilled);
         m_jit.load64(JITCompiler::addressFor(virtualRegister), gpr);
 
@@ -3846,32 +3852,6 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
         
-    case StructureTransitionWatchpoint: {
-        // There is a fascinating question here of what to do about array profiling.
-        // We *could* try to tell the OSR exit about where the base of the access is.
-        // The DFG will have kept it alive, though it may not be in a register, and
-        // we shouldn't really load it since that could be a waste. For now though,
-        // we'll just rely on the fact that when a watchpoint fires then that's
-        // quite a hint already.
-
-        m_jit.addWeakReference(node->structure());
-
-#if !ASSERT_DISABLED
-        SpeculateCellOperand op1(this, node->child1());
-        JITCompiler::Jump isOK = m_jit.branchStructurePtr(
-            JITCompiler::Equal, 
-            JITCompiler::Address(op1.gpr(), JSCell::structureIDOffset()), 
-            node->structure());
-        m_jit.abortWithReason(DFGIneffectiveWatchpoint);
-        isOK.link(&m_jit);
-#else
-        speculateCell(node->child1());
-#endif
-        
-        noResult(node);
-        break;
-    }
-        
     case PhantomPutStructure: {
         ASSERT(isKnownCell(node->child1().node()));
         m_jit.jitCode()->common.notifyCompilingStructureTransition(m_jit.graph().m_plan, m_jit.codeBlock(), node);
@@ -3880,8 +3860,8 @@ void SpeculativeJIT::compile(Node* node)
     }
         
     case PutStructure: {
-        Structure* oldStructure = node->structureTransitionData().previousStructure;
-        Structure* newStructure = node->structureTransitionData().newStructure;
+        Structure* oldStructure = node->transition()->previous;
+        Structure* newStructure = node->transition()->next;
 
         m_jit.jitCode()->common.notifyCompilingStructureTransition(m_jit.graph().m_plan, m_jit.codeBlock(), node);
 
@@ -3933,7 +3913,8 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
         
-    case GetByOffset: {
+    case GetByOffset:
+    case GetGetterSetterByOffset: {
         StorageOperand storage(this, node->child1());
         GPRTemporary result(this, Reuse, storage);
         
@@ -3945,6 +3926,32 @@ void SpeculativeJIT::compile(Node* node)
         m_jit.load64(JITCompiler::Address(storageGPR, offsetRelativeToBase(storageAccessData.offset)), resultGPR);
         
         jsValueResult(resultGPR, node);
+        break;
+    }
+        
+    case GetGetter: {
+        SpeculateCellOperand op1(this, node->child1());
+        GPRTemporary result(this, Reuse, op1);
+        
+        GPRReg op1GPR = op1.gpr();
+        GPRReg resultGPR = result.gpr();
+        
+        m_jit.loadPtr(JITCompiler::Address(op1GPR, GetterSetter::offsetOfGetter()), resultGPR);
+        
+        cellResult(resultGPR, node);
+        break;
+    }
+        
+    case GetSetter: {
+        SpeculateCellOperand op1(this, node->child1());
+        GPRTemporary result(this, Reuse, op1);
+        
+        GPRReg op1GPR = op1.gpr();
+        GPRReg resultGPR = result.gpr();
+        
+        m_jit.loadPtr(JITCompiler::Address(op1GPR, GetterSetter::offsetOfSetter()), resultGPR);
+        
+        cellResult(resultGPR, node);
         break;
     }
         

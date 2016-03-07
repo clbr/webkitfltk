@@ -28,6 +28,7 @@
 
 #if ENABLE(FTL_JIT)
 
+#include "BundlePath.h"
 #include "CodeBlockWithJITType.h"
 #include "DFGAbstractInterpreterInlines.h"
 #include "DFGInPlaceAbstractState.h"
@@ -40,10 +41,12 @@
 #include "FTLOutput.h"
 #include "FTLThunks.h"
 #include "FTLWeightedTarget.h"
-#include "OperandsInlines.h"
 #include "JSCInlines.h"
+#include "OperandsInlines.h"
 #include "VirtualRegister.h"
 #include <atomic>
+#include <dlfcn.h>
+#include <llvm/InitializeLLVM.h>
 #include <wtf/ProcessID.h>
 
 namespace JSC { namespace FTL {
@@ -51,6 +54,24 @@ namespace JSC { namespace FTL {
 using namespace DFG;
 
 static std::atomic<int> compileCounter;
+
+#if ASSERT_DISABLED
+NO_RETURN_DUE_TO_CRASH static void ftlUnreachable()
+{
+    CRASH();
+}
+#else
+NO_RETURN_DUE_TO_CRASH static void ftlUnreachable(
+    CodeBlock* codeBlock, BlockIndex blockIndex, unsigned nodeIndex)
+{
+    
+    dataLog("Crashing in thought-to-be-unreachable FTL-generated code for ", pointerDump(codeBlock), " at basic block #", blockIndex);
+    if (nodeIndex != UINT_MAX)
+        dataLog(", node @", nodeIndex);
+    dataLog(".\n");
+    CRASH();
+}
+#endif
 
 // Using this instead of typeCheck() helps to reduce the load on LLVM, by creating
 // significantly less dead code.
@@ -74,6 +95,8 @@ public:
         , m_state(state.graph)
         , m_interpreter(state.graph, m_state)
         , m_stackmapIDs(0)
+        , m_tbaaKind(mdKindID(state.context, "tbaa"))
+        , m_tbaaStructKind(mdKindID(state.context, "tbaa.struct"))
     {
     }
     
@@ -90,7 +113,7 @@ public:
         m_graph.m_dominators.computeIfNecessary(m_graph);
         
         m_ftlState.module =
-            llvm->ModuleCreateWithNameInContext(name.data(), m_ftlState.context);
+            moduleCreateWithNameInContext(name.data(), m_ftlState.context);
         
         m_ftlState.function = addFunction(
             m_ftlState.module, name.data(), functionType(m_out.int64));
@@ -119,7 +142,35 @@ public:
         
         m_out.appendTo(m_prologue, stackOverflow);
         createPhiVariables();
+
+        Vector<BasicBlock*> depthFirst;
+        m_graph.getBlocksInDepthFirstOrder(depthFirst);
+
+        int maxNumberOfArguments = -1;
+        for (unsigned blockIndex = depthFirst.size(); blockIndex--; ) {
+            BasicBlock* block = depthFirst[blockIndex];
+            for (unsigned nodeIndex = block->size(); nodeIndex--; ) {
+                Node* m_node = block->at(nodeIndex);
+                if (m_node->hasKnownFunction()) {
+                    int numArgs = m_node->numChildren();
+                    NativeFunction func = m_node->knownFunction()->nativeFunction();
+                    Dl_info info;
+                    if (dladdr((void*)func, &info)) {
+                        LValue callee = getFunctionBySymbol(info.dli_sname);
+                        if (callee && numArgs > maxNumberOfArguments)
+                            maxNumberOfArguments = numArgs;
+                    }
+                }
+            }
+        }
+
         LValue capturedAlloca = m_out.alloca(arrayType(m_out.int64, m_graph.m_nextMachineLocal));
+
+        if (maxNumberOfArguments >= 0) {
+            m_execState = m_out.alloca(arrayType(m_out.int64, JSStack::CallFrameHeaderSize + maxNumberOfArguments));
+            m_execStorage = m_out.ptrToInt(m_execState, m_out.intPtr);        
+        }
+
         m_captured = m_out.add(
             m_out.ptrToInt(capturedAlloca, m_out.intPtr),
             m_out.constIntPtr(m_graph.m_nextMachineLocal * sizeof(Register)));
@@ -156,9 +207,8 @@ public:
             m_out.stackmapIntrinsic(), m_out.constInt64(m_ftlState.handleExceptionStackmapID),
             m_out.constInt32(MacroAssembler::maxJumpReplacementSize()));
         m_out.unreachable();
-        
-        Vector<BasicBlock*> depthFirst;
-        m_graph.getBlocksInDepthFirstOrder(depthFirst);
+
+
         for (unsigned i = 0; i < depthFirst.size(); ++i)
             compileBlock(depthFirst[i]);
         
@@ -201,7 +251,7 @@ private:
                     type = m_out.int64;
                     break;
                 default:
-                    RELEASE_ASSERT_NOT_REACHED();
+                    DFG_CRASH(m_graph, node, "Bad Phi node result type");
                     break;
                 }
                 m_phis.add(node, buildAlloca(m_out.m_builder, type));
@@ -236,10 +286,12 @@ private:
         m_out.appendTo(lowBlock, m_nextLowBlock);
         
         if (Options::ftlCrashes())
-            m_out.crashNonTerminal();
+            m_out.trap();
         
         if (!m_highBlock->cfaHasVisited) {
-            m_out.crash();
+            if (verboseCompilationEnabled())
+                dataLog("Bailing because CFA didn't reach.\n");
+            crash(m_highBlock->index, UINT_MAX);
             return;
         }
         
@@ -257,7 +309,26 @@ private:
     bool compileNode(unsigned nodeIndex)
     {
         if (!m_state.isValid()) {
-            m_out.unreachable();
+            if (verboseCompilationEnabled())
+                dataLog("Bailing.\n");
+            crash(m_highBlock->index, m_node->index());
+            
+            // Invalidate dominated blocks. Under normal circumstances we would expect
+            // them to be invalidated already. But you can have the CFA become more
+            // precise over time because the structures of objects change on the main
+            // thread. Failing to do this would result in weird crashes due to a value
+            // being used but not defined. Race conditions FTW!
+            for (BlockIndex blockIndex = m_graph.numBlocks(); blockIndex--;) {
+                BasicBlock* target = m_graph.block(blockIndex);
+                if (!target)
+                    continue;
+                if (m_graph.m_dominators.dominates(m_highBlock, target)) {
+                    if (verboseCompilationEnabled())
+                        dataLog("Block ", *target, " will bail also.\n");
+                    target->cfaHasVisited = false;
+                }
+            }
+            
             return false;
         }
         
@@ -401,9 +472,6 @@ private:
         case CheckStructure:
             compileCheckStructure();
             break;
-        case StructureTransitionWatchpoint:
-            compileStructureTransitionWatchpoint();
-            break;
         case CheckFunction:
             compileCheckFunction();
             break;
@@ -495,7 +563,14 @@ private:
             compileStringCharCodeAt();
             break;
         case GetByOffset:
+        case GetGetterSetterByOffset:
             compileGetByOffset();
+            break;
+        case GetGetter:
+            compileGetGetter();
+            break;
+        case GetSetter:
+            compileGetSetter();
             break;
         case MultiGetByOffset:
             compileMultiGetByOffset();
@@ -631,12 +706,7 @@ private:
         case AllocationProfileWatchpoint:
             break;
         default:
-            dataLog("Unrecognized node in FTL backend:\n");
-            m_graph.dump(WTF::dataFile(), "    ", m_node);
-            dataLog("\n");
-            dataLog("Full graph dump:\n");
-            m_graph.dump();
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Unrecognized node in FTL backend");
             break;
         }
         
@@ -670,7 +740,7 @@ private:
             m_out.set(lowJSValue(m_node->child1()), destination);
             break;
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -696,7 +766,7 @@ private:
             setJSValue(m_out.get(source));
             break;
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -739,7 +809,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
         }
     }
     
@@ -764,7 +834,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
         }
     }
     
@@ -827,7 +897,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -869,7 +939,7 @@ private:
     {
         VariableAccessData* variable = m_node->variableAccessData();
         VirtualRegister operand = variable->machineLocal();
-        RELEASE_ASSERT(operand.isArgument());
+        DFG_ASSERT(m_graph, m_node, operand.isArgument());
 
         LValue jsValue = m_out.load64(addressFor(operand));
 
@@ -890,7 +960,7 @@ private:
             setJSValue(jsValue);
             break;
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -909,7 +979,7 @@ private:
         VariableAccessData* variable = m_node->variableAccessData();
         AbstractValue& value = m_state.variables().operand(variable->local());
         
-        RELEASE_ASSERT(variable->isCaptured());
+        DFG_ASSERT(m_graph, m_node, variable->isCaptured());
         
         if (isInt32Speculation(value.m_type))
             setInt32(m_out.load32(payloadFor(variable->machineLocal())));
@@ -961,7 +1031,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad flush format");
             break;
         }
         
@@ -1137,7 +1207,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -1211,7 +1281,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -1314,7 +1384,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -1412,7 +1482,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -1463,7 +1533,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -1489,7 +1559,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -1556,7 +1626,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -1648,12 +1718,6 @@ private:
         m_out.appendTo(continuation, lastNext);
     }
     
-    void compileStructureTransitionWatchpoint()
-    {
-        addWeakReference(m_node->structure());
-        speculateCell(m_node->child1());
-    }
-    
     void compileCheckFunction()
     {
         LValue cell = lowCell(m_node->child1());
@@ -1722,7 +1786,7 @@ private:
             vmCall(m_out.operation(operationEnsureArrayStorage), m_callFrame, cell);
             break;
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad array type");
             break;
         }
         
@@ -1739,8 +1803,8 @@ private:
     {
         m_ftlState.jitCode->common.notifyCompilingStructureTransition(m_graph.m_plan, codeBlock(), m_node);
 
-        Structure* oldStructure = m_node->structureTransitionData().previousStructure;
-        Structure* newStructure = m_node->structureTransitionData().newStructure;
+        Structure* oldStructure = m_node->transition()->previous;
+        Structure* newStructure = m_node->transition()->next;
         ASSERT_UNUSED(oldStructure, oldStructure->indexingType() == newStructure->indexingType());
         ASSERT(oldStructure->typeInfo().inlineTypeFlags() == newStructure->typeInfo().inlineTypeFlags());
         ASSERT(oldStructure->typeInfo().type() == newStructure->typeInfo().type());
@@ -1796,7 +1860,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             return;
         }
     }
@@ -1922,7 +1986,7 @@ private:
     {
         checkArgumentsNotCreated();
 
-        RELEASE_ASSERT(!m_node->origin.semantic.inlineCallFrame);
+        DFG_ASSERT(m_graph, m_node, !m_node->origin.semantic.inlineCallFrame);
         setInt32(m_out.add(m_out.load32NonNegative(payloadFor(JSStack::ArgumentCount)), m_out.constInt32(-1)));
     }
     
@@ -1948,7 +2012,7 @@ private:
             // FIXME: FTL should support activations.
             // https://bugs.webkit.org/show_bug.cgi?id=129576
             
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Unimplemented");
         }
         
         TypedPointer base;
@@ -1985,7 +2049,7 @@ private:
                 return;
             }
             
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad array type");
             return;
         }
     }
@@ -2135,7 +2199,7 @@ private:
                         result = m_out.load32(pointer);
                         break;
                     default:
-                        RELEASE_ASSERT_NOT_REACHED();
+                        DFG_CRASH(m_graph, m_node, "Bad element size");
                     }
                     
                     if (elementSize(type) < 4) {
@@ -2179,14 +2243,14 @@ private:
                     result = m_out.loadDouble(pointer);
                     break;
                 default:
-                    RELEASE_ASSERT_NOT_REACHED();
+                    DFG_CRASH(m_graph, m_node, "Bad typed array type");
                 }
                 
                 setDouble(result);
                 return;
             }
             
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad array type");
             return;
         } }
     }
@@ -2292,7 +2356,7 @@ private:
             }
                 
             default:
-                RELEASE_ASSERT_NOT_REACHED();
+                DFG_CRASH(m_graph, m_node, "Bad array type");
             }
 
             m_out.jump(continuation);
@@ -2385,7 +2449,7 @@ private:
                     }
                         
                     default:
-                        RELEASE_ASSERT_NOT_REACHED();
+                        DFG_CRASH(m_graph, m_node, "Bad use kind");
                     }
                     
                     switch (elementSize(type)) {
@@ -2402,7 +2466,7 @@ private:
                         refType = m_out.ref32;
                         break;
                     default:
-                        RELEASE_ASSERT_NOT_REACHED();
+                        DFG_CRASH(m_graph, m_node, "Bad element size");
                     }
                 } else /* !isInt(type) */ {
                     LValue value = lowDouble(child3);
@@ -2416,7 +2480,7 @@ private:
                         refType = m_out.refDouble;
                         break;
                     default:
-                        RELEASE_ASSERT_NOT_REACHED();
+                        DFG_CRASH(m_graph, m_node, "Bad typed array type");
                     }
                 }
                 
@@ -2440,7 +2504,7 @@ private:
                 return;
             }
             
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad array type");
             break;
         }
     }
@@ -2512,7 +2576,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad array type");
             return;
         }
     }
@@ -2570,7 +2634,7 @@ private:
         }
 
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad array type");
             return;
         }
     }
@@ -2615,7 +2679,7 @@ private:
         Structure* structure = globalObject->arrayStructureForIndexingTypeDuringAllocation(
             m_node->indexingType());
         
-        RELEASE_ASSERT(structure->indexingType() == m_node->indexingType());
+        DFG_ASSERT(m_graph, m_node, structure->indexingType() == m_node->indexingType());
         
         if (!globalObject->isHavingABadTime() && !hasAnyArrayStorage(m_node->indexingType())) {
             unsigned numElements = m_node->numChildren();
@@ -2628,7 +2692,7 @@ private:
                 switch (m_node->indexingType()) {
                 case ALL_BLANK_INDEXING_TYPES:
                 case ALL_UNDECIDED_INDEXING_TYPES:
-                    CRASH();
+                    DFG_CRASH(m_graph, m_node, "Bad indexing type");
                     break;
                     
                 case ALL_DOUBLE_INDEXING_TYPES:
@@ -2646,7 +2710,8 @@ private:
                     break;
                     
                 default:
-                    CRASH();
+                    DFG_CRASH(m_graph, m_node, "Corrupt indexing type");
+                    break;
                 }
             }
             
@@ -2692,7 +2757,7 @@ private:
         Structure* structure = globalObject->arrayStructureForIndexingTypeDuringAllocation(
             m_node->indexingType());
         
-        RELEASE_ASSERT(structure->indexingType() == m_node->indexingType());
+        DFG_ASSERT(m_graph, m_node, structure->indexingType() == m_node->indexingType());
         
         if (!globalObject->isHavingABadTime() && !hasAnyArrayStorage(m_node->indexingType())) {
             unsigned numElements = m_node->numConstants();
@@ -2830,21 +2895,19 @@ private:
     
     void compileAllocatePropertyStorage()
     {
-        StructureTransitionData& data = m_node->structureTransitionData();
         LValue object = lowCell(m_node->child1());
-        
-        setStorage(allocatePropertyStorage(object, data.previousStructure));
+        setStorage(allocatePropertyStorage(object, m_node->transition()->previous));
     }
 
     void compileReallocatePropertyStorage()
     {
-        StructureTransitionData& data = m_node->structureTransitionData();
+        Transition* transition = m_node->transition();
         LValue object = lowCell(m_node->child1());
         LValue oldStorage = lowStorage(m_node->child2());
         
         setStorage(
             reallocatePropertyStorage(
-                object, oldStorage, data.previousStructure, data.newStructure));
+                object, oldStorage, transition->previous, transition->next));
     }
     
     void compileToString()
@@ -2929,7 +2992,7 @@ private:
         }
             
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             break;
         }
     }
@@ -3021,7 +3084,7 @@ private:
                 m_out.operation(operationMakeRope3), m_callFrame, kids[0], kids[1], kids[2]));
             break;
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad number of children");
             break;
         }
         m_out.jump(continuation);
@@ -3187,6 +3250,16 @@ private:
             lowStorage(m_node->child1()), data.identifierNumber, data.offset));
     }
     
+    void compileGetGetter()
+    {
+        setJSValue(m_out.loadPtr(lowCell(m_node->child1()), m_heaps.GetterSetter_getter));
+    }
+    
+    void compileGetSetter()
+    {
+        setJSValue(m_out.loadPtr(lowCell(m_node->child1()), m_heaps.GetterSetter_setter));
+    }
+    
     void compileMultiGetByOffset()
     {
         LValue base = lowCell(m_node->child1());
@@ -3236,7 +3309,7 @@ private:
         }
         
         m_out.appendTo(exit, continuation);
-        terminate(BadCache);
+        speculate(BadCache, noValue(), nullptr, m_out.booleanTrue);
         m_out.unreachable();
         
         m_out.appendTo(continuation, lastNext);
@@ -3308,7 +3381,7 @@ private:
         }
         
         m_out.appendTo(exit, continuation);
-        terminate(BadCache);
+        speculate(BadCache, noValue(), nullptr, m_out.booleanTrue);
         m_out.unreachable();
         
         m_out.appendTo(continuation, lastNext);
@@ -3427,7 +3500,7 @@ private:
             return;
         }
         
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, "Bad use kinds");
     }
     
     void compileCompareEqConstant()
@@ -3520,7 +3593,7 @@ private:
             return;
         }
         
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, "Bad use kinds");
     }
     
     void compileCompareStrictEqConstant()
@@ -3557,15 +3630,19 @@ private:
     {
         setBoolean(m_out.bitNot(boolify(m_node->child1())));
     }
-    
+
     void compileCallOrConstruct()
     {
         int dummyThisArgument = m_node->op() == Call ? 0 : 1;
         int numPassedArgs = m_node->numChildren() - 1;
         int numArgs = numPassedArgs + dummyThisArgument;
-        
-        LValue callee = lowJSValue(m_graph.varArgChild(m_node, 0));
-        
+
+        if (m_node->hasKnownFunction()
+            && possiblyCompileInlineableNativeCall(dummyThisArgument, numPassedArgs, numArgs))
+            return;
+
+        LValue jsCallee = lowJSValue(m_graph.varArgChild(m_node, 0));
+
         unsigned stackmapID = m_stackmapIDs++;
         
         Vector<LValue> arguments;
@@ -3573,10 +3650,10 @@ private:
         arguments.append(m_out.constInt32(sizeOfCall()));
         arguments.append(constNull(m_out.ref8));
         arguments.append(m_out.constInt32(1 + JSStack::CallFrameHeaderSize - JSStack::CallerFrameAndPCSize + numArgs));
-        arguments.append(callee); // callee -> %rax
+        arguments.append(jsCallee); // callee -> %rax
         arguments.append(getUndef(m_out.int64)); // code block
         arguments.append(getUndef(m_out.int64)); // scope chain
-        arguments.append(callee); // callee -> stack
+        arguments.append(jsCallee); // callee -> stack
         arguments.append(m_out.constInt64(numArgs)); // argument count and zeros for the tag
         if (dummyThisArgument)
             arguments.append(getUndef(m_out.int64));
@@ -3592,7 +3669,7 @@ private:
         
         setJSValue(call);
     }
-    
+
     void compileJump()
     {
         m_out.jump(lowBlock(m_node->targetBlock()));
@@ -3656,7 +3733,7 @@ private:
             }
                 
             default:
-                RELEASE_ASSERT_NOT_REACHED();
+                DFG_CRASH(m_graph, m_node, "Bad use kind");
                 break;
             }
             
@@ -3702,7 +3779,7 @@ private:
             }
                 
             default:
-                RELEASE_ASSERT_NOT_REACHED();
+                DFG_CRASH(m_graph, m_node, "Bad use kind");
                 break;
             }
             
@@ -3755,11 +3832,11 @@ private:
         }
         
         case SwitchString:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Unimplemented");
             break;
         }
         
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, "Bad switch kind");
     }
     
     void compileReturn()
@@ -3940,6 +4017,159 @@ private:
 #else
         speculate(m_node->child1());
 #endif
+    }
+    
+    bool possiblyCompileInlineableNativeCall(int dummyThisArgument, int numPassedArgs, int numArgs)
+    {
+        JSFunction* knownFunction = m_node->knownFunction();
+        NativeFunction function = knownFunction->nativeFunction();
+        Dl_info info;
+        if (dladdr((void*)function, &info)) {
+            LValue callee = getFunctionBySymbol(info.dli_sname);
+            LType typeCallee;
+            if (callee && (typeCallee = typeOf(callee)) && (typeCallee = getElementType(typeCallee))) {
+
+                JSScope* scope = knownFunction->scopeUnchecked();
+                m_out.storePtr(m_callFrame, m_execStorage, m_heaps.CallFrame_callerFrame);
+                m_out.storePtr(constNull(m_out.intPtr), addressFor(m_execStorage, JSStack::CodeBlock));
+                m_out.storePtr(weakPointer(scope), addressFor(m_execStorage, JSStack::ScopeChain));
+                m_out.storePtr(weakPointer(knownFunction), addressFor(m_execStorage, JSStack::Callee));
+
+                m_out.store64(m_out.constInt64(numArgs), addressFor(m_execStorage, JSStack::ArgumentCount));
+
+                if (dummyThisArgument) 
+                    m_out.storePtr(getUndef(m_out.int64), addressFor(m_execStorage, JSStack::ThisArgument));
+                
+                for (int i = 0; i < numPassedArgs; ++i) {
+                    m_out.storePtr(lowJSValue(m_graph.varArgChild(m_node, 1 + i)),
+                        addressFor(m_execStorage, dummyThisArgument ? JSStack::FirstArgument : JSStack::ThisArgument, i * sizeof(Register)));
+                }
+
+                LType typeCalleeArg;
+                getParamTypes(typeCallee, &typeCalleeArg);
+                LValue calleeCallFrame = m_out.address(m_execState, m_heaps.CallFrame_callerFrame).value();
+                m_out.storePtr(m_out.ptrToInt(calleeCallFrame, m_out.intPtr), m_out.absolute(&vm().topCallFrame));
+                
+                LValue call = vmCall(callee, 
+                    m_out.bitCast(calleeCallFrame, typeCalleeArg));
+
+                if (Options::verboseCompilation())
+                    dataLog("Inlining: ", info.dli_sname, "\n");
+
+                setJSValue(call);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    LValue getFunctionBySymbol(const CString symbol)
+    {
+        if (!m_ftlState.symbolTable.contains(symbol)) 
+            return nullptr;
+        if (!getModuleByPathForSymbol(m_ftlState.symbolTable.get(symbol), symbol))
+            return nullptr;
+        return getNamedFunction(m_ftlState.module, symbol.data());
+    }
+
+    bool getModuleByPathForSymbol(const CString path, const CString symbol)
+    {
+        if (m_ftlState.nativeLoadedLibraries.contains(path)) {
+            LValue function = getNamedFunction(m_ftlState.module, symbol.data());
+            if (!isInlinableSize(function)) {
+                // We had no choice but to compile this function, but don't try to inline it ever again.
+                m_ftlState.symbolTable.remove(symbol);
+                return false;
+            }
+            return true;
+        }
+
+        LMemoryBuffer memBuf;
+        
+        ASSERT(isX86() || isARM64());
+
+        const CString actualPath = toCString(bundlePath().data(), 
+            isX86() ? "/Resources/Runtime/x86_64/" : "/Resources/Runtime/arm64/",
+            path.data());
+
+        if (createMemoryBufferWithContentsOfFile(actualPath.data(), &memBuf, nullptr)) {
+            if (Options::verboseCompilation()) 
+                dataLog("Failed to load module at ", actualPath.data(), "\n for symbol ", symbol.data());
+            return false;
+        }
+
+        LModule module;
+
+        if (parseBitcodeInContext(m_ftlState.context, memBuf, &module, nullptr)) {
+            disposeMemoryBuffer(memBuf);
+            return false;
+        }
+
+        disposeMemoryBuffer(memBuf);
+        
+        if (LValue function = getNamedFunction(m_ftlState.module, symbol.data())) {
+            if (!isInlinableSize(function)) {
+                m_ftlState.symbolTable.remove(symbol);
+                disposeModule(module);
+                return false;
+            }
+        }
+
+        Vector<CString> namedFunctions;
+        for (LValue function = getFirstFunction(module); function; function = getNextFunction(function)) {
+            CString functionName(getValueName(function));
+            namedFunctions.append(functionName);
+            
+            for (LBasicBlock basicBlock = getFirstBasicBlock(function); basicBlock; basicBlock = getNextBasicBlock(basicBlock)) {
+                for (LValue instruction = getFirstInstruction(basicBlock); instruction; instruction = getNextInstruction(instruction)) {
+                    setMetadata(instruction, m_tbaaKind, nullptr);
+                    setMetadata(instruction, m_tbaaStructKind, nullptr);
+                }
+            }
+        }
+
+        Vector<CString> namedGlobals;
+        for (LValue global = getFirstGlobal(module); global; global = getNextGlobal(global)) {
+            CString globalName(getValueName(global));
+            namedGlobals.append(globalName);
+        }
+
+        if (linkModules(m_ftlState.module, module, LLVMLinkerDestroySource, nullptr))
+            return false;
+        
+        for (CString* symbol = namedFunctions.begin(); symbol != namedFunctions.end(); ++symbol) {
+            LValue function = getNamedFunction(m_ftlState.module, symbol->data());
+            setVisibility(function, LLVMHiddenVisibility);
+            if (!isDeclaration(function)) {
+                setLinkage(function, LLVMPrivateLinkage);
+
+                if (ASSERT_DISABLED)
+                    removeFunctionAttr(function, LLVMStackProtectAttribute);
+            }
+        }
+
+        for (CString* symbol = namedGlobals.begin(); symbol != namedGlobals.end(); ++symbol) {
+            LValue global = getNamedGlobal(m_ftlState.module, symbol->data());
+            setVisibility(global, LLVMHiddenVisibility);
+            if (!isDeclaration(global))
+                setLinkage(global, LLVMPrivateLinkage);
+        }
+
+        m_ftlState.nativeLoadedLibraries.add(path);
+        return true;
+    }
+
+    bool isInlinableSize(LValue function)
+    {
+        size_t instructionCount = 0;
+        size_t maxSize = Options::maximumLLVMInstructionCountForNativeInlining();
+        for (LBasicBlock basicBlock = getFirstBasicBlock(function); basicBlock; basicBlock = getNextBasicBlock(basicBlock)) {
+            for (LValue instruction = getFirstInstruction(basicBlock); instruction; instruction = getNextInstruction(instruction)) {
+                if (++instructionCount >= maxSize)
+                    return false;
+            }
+        }
+        return true;
     }
 
     LValue didOverflowStack()
@@ -4216,7 +4446,7 @@ private:
             return;
         }
         
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, "Bad use kinds");
     }
     
     void compareEqObjectOrOtherToObject(Edge leftChild, Edge rightChild)
@@ -4495,7 +4725,7 @@ private:
             return m_out.phi(m_out.boolean, fastResult, slowResult);
         }
         default:
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Bad use kind");
             return 0;
         }
     }
@@ -4742,7 +4972,8 @@ private:
     
     void terminate(ExitKind kind)
     {
-        speculate(kind, noValue(), 0, m_out.booleanTrue);
+        speculate(kind, noValue(), nullptr, m_out.booleanTrue);
+        m_state.setIsValid(false);
     }
     
     void typeCheck(
@@ -4798,7 +5029,7 @@ private:
             return result;
         }
 
-        RELEASE_ASSERT(!(m_state.forNode(edge).m_type & SpecInt32));
+        DFG_ASSERT(m_graph, m_node, !(m_state.forNode(edge).m_type & SpecInt32));
         terminate(Uncountable);
         return m_out.int32Zero;
     }
@@ -4806,7 +5037,7 @@ private:
     enum Int52Kind { StrictInt52, Int52 };
     LValue lowInt52(Edge edge, Int52Kind kind)
     {
-        RELEASE_ASSERT(edge.useKind() == Int52RepUse);
+        DFG_ASSERT(m_graph, m_node, edge.useKind() == Int52RepUse);
         
         LoweredNodeValue value;
         
@@ -4832,7 +5063,7 @@ private:
             break;
         }
 
-        RELEASE_ASSERT(!m_state.forNode(edge).m_type);
+        DFG_ASSERT(m_graph, m_node, !m_state.forNode(edge).m_type);
         terminate(Uncountable);
         return m_out.int64Zero;
     }
@@ -4868,7 +5099,7 @@ private:
         case StrictInt52:
             return Int52;
         }
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, "Bad use kind");
         return Int52;
     }
     
@@ -4899,7 +5130,7 @@ private:
             return uncheckedValue;
         }
         
-        RELEASE_ASSERT(!(m_state.forNode(edge).m_type & SpecCell));
+        DFG_ASSERT(m_graph, m_node, !(m_state.forNode(edge).m_type & SpecCell));
         terminate(Uncountable);
         return m_out.intPtrZero;
     }
@@ -4968,20 +5199,19 @@ private:
             return result;
         }
         
-        RELEASE_ASSERT(!(m_state.forNode(edge).m_type & SpecBoolean));
+        DFG_ASSERT(m_graph, m_node, !(m_state.forNode(edge).m_type & SpecBoolean));
         terminate(Uncountable);
         return m_out.booleanFalse;
     }
     
     LValue lowDouble(Edge edge)
     {
-        RELEASE_ASSERT(isDouble(edge.useKind()));
+        DFG_ASSERT(m_graph, m_node, isDouble(edge.useKind()));
         
         LoweredNodeValue value = m_doubleValues.get(edge.node());
         if (isValid(value))
             return value.value();
-        
-        RELEASE_ASSERT(!m_state.forNode(edge).m_type);
+        DFG_ASSERT(m_graph, m_node, !m_state.forNode(edge).m_type);
         terminate(Uncountable);
         return m_out.doubleZero;
     }
@@ -4989,8 +5219,8 @@ private:
     LValue lowJSValue(Edge edge, OperandSpeculationMode mode = AutomaticOperandSpeculation)
     {
         ASSERT_UNUSED(mode, mode == ManualOperandSpeculation || edge.useKind() == UntypedUse);
-        RELEASE_ASSERT(!isDouble(edge.useKind()));
-        RELEASE_ASSERT(edge.useKind() != Int52RepUse);
+        DFG_ASSERT(m_graph, m_node, !isDouble(edge.useKind()));
+        DFG_ASSERT(m_graph, m_node, edge.useKind() != Int52RepUse);
         
         if (edge->hasConstant())
             return m_out.constInt64(JSValue::encode(m_graph.valueOfJSConstant(edge.node())));
@@ -5013,7 +5243,7 @@ private:
             return result;
         }
         
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, "Value not defined");
         return 0;
     }
     
@@ -5325,8 +5555,7 @@ private:
             speculateMisc(edge);
             break;
         default:
-            dataLog("Unsupported speculation use kind: ", edge.useKind(), "\n");
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Unsupported speculation use kind");
         }
     }
     
@@ -5387,7 +5616,7 @@ private:
             
             switch (arrayMode.arrayClass()) {
             case Array::OriginalArray:
-                RELEASE_ASSERT_NOT_REACHED();
+                DFG_CRASH(m_graph, m_node, "Unexpected original array");
                 return 0;
                 
             case Array::Array:
@@ -5407,7 +5636,7 @@ private:
                     m_out.constInt8(arrayMode.shapeMask()));
             }
             
-            RELEASE_ASSERT_NOT_REACHED();
+            DFG_CRASH(m_graph, m_node, "Corrupt array class");
         }
             
         default:
@@ -5550,7 +5779,7 @@ private:
         Structure* stringObjectStructure =
             m_graph.globalObjectFor(m_node->origin.semantic)->stringObjectStructure();
         
-        if (m_state.forNode(edge).m_currentKnownStructure.isSubsetOf(StructureSet(stringObjectStructure)))
+        if (m_state.forNode(edge).m_structure.isSubsetOf(StructureSet(stringObjectStructure)))
             return;
         
         speculate(
@@ -5765,9 +5994,10 @@ private:
         
         LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("Exception check continuation"));
         
+        LValue exception = m_out.load64(m_out.absolute(vm().addressOfException()));
+        
         m_out.branch(
-            m_out.notZero64(m_out.load64(m_out.absolute(vm().addressOfException()))),
-            rarely(m_handleExceptions), usually(continuation));
+            m_out.notZero64(exception), rarely(m_handleExceptions), usually(continuation));
         
         m_out.appendTo(continuation);
     }
@@ -5854,10 +6084,8 @@ private:
                     break;
                 }
                 
-                if (Options::validateFTLOSRExitLiveness()) {
-                    dataLog("Expected r", operand, " to be available but it wasn't.\n");
-                    RELEASE_ASSERT_NOT_REACHED();
-                }
+                if (Options::validateFTLOSRExitLiveness())
+                    DFG_CRASH(m_graph, m_node, toCString("Expected r", operand, " to be available but it wasn't.").data());
                 
                 // This means that the DFG's DCE proved that the value is dead in bytecode
                 // even though the bytecode liveness analysis thinks it's live. This is
@@ -5962,10 +6190,7 @@ private:
             return;
         }
 
-        startCrashing();
-        dataLog("Cannot find value for node: ", node, " while compiling exit at ", exit.m_codeOrigin, " in node ", m_node, "\n");
-        m_graph.dump();
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, toCString("Cannot find value for node: ", node).data());
     }
     
     bool tryToSetConstantExitArgument(OSRExit& exit, unsigned index, Node* node)
@@ -6043,7 +6268,7 @@ private:
             return;
         }
         
-        RELEASE_ASSERT_NOT_REACHED();
+        DFG_CRASH(m_graph, m_node, "Corrupt int52 kind");
     }
     void setJSValue(Node* node, LValue value)
     {
@@ -6170,6 +6395,25 @@ private:
         return addressFor(operand, TagOffset);
     }
     
+    void crash(BlockIndex blockIndex, unsigned nodeIndex)
+    {
+#if ASSERT_DISABLED
+        m_out.call(m_out.operation(ftlUnreachable));
+        UNUSED_PARAM(blockIndex);
+        UNUSED_PARAM(nodeIndex);
+#else
+        m_out.call(
+            m_out.intToPtr(
+                m_out.constIntPtr(ftlUnreachable),
+                pointerType(
+                    functionType(
+                        m_out.voidType, m_out.intPtr, m_out.int32, m_out.int32))),
+            m_out.constIntPtr(codeBlock()), m_out.constInt32(blockIndex),
+            m_out.constInt32(nodeIndex));
+#endif
+        m_out.unreachable();
+    }
+    
     VM& vm() { return m_graph.m_vm; }
     CodeBlock* codeBlock() { return m_graph.m_codeBlock; }
     
@@ -6182,6 +6426,8 @@ private:
     LBasicBlock m_handleExceptions;
     HashMap<BasicBlock*, LBasicBlock> m_blocks;
     
+    LValue m_execState;
+    LValue m_execStorage;
     LValue m_callFrame;
     LValue m_captured;
     LValue m_tagTypeNumber;
@@ -6213,6 +6459,8 @@ private:
     Node* m_node;
     
     uint32_t m_stackmapIDs;
+    unsigned m_tbaaKind;
+    unsigned m_tbaaStructKind;
 };
 
 void lowerDFGToLLVM(State& state)

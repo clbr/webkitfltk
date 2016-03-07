@@ -22,6 +22,7 @@
 
 #include "config.h"
 
+#include "ArrayPrototype.h"
 #include "ButterflyInlines.h"
 #include "BytecodeGenerator.h"
 #include "Completion.h"
@@ -94,10 +95,27 @@ using namespace WTF;
 
 namespace {
 
+NO_RETURN_WITH_VALUE static void jscExit(int status)
+{
+#if ENABLE(DFG_JIT)
+    if (DFG::isCrashing()) {
+        for (;;) {
+#if OS(WINDOWS)
+            Sleep(1000);
+#else
+            pause();
+#endif
+        }
+    }
+#endif // ENABLE(DFG_JIT)
+    exit(status);
+}
+
 class Element;
 class ElementHandleOwner;
 class Masuqerader;
 class Root;
+class RuntimeArray;
 
 class Element : public JSNonFinalObject {
 public:
@@ -277,10 +295,120 @@ private:
     WriteBarrier<JSObject> m_delegate;
 };
 
+class RuntimeArray : public JSArray {
+public:
+    typedef JSArray Base;
+
+    static RuntimeArray* create(ExecState* exec)
+    {
+        VM& vm = exec->vm();
+        JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+        Structure* structure = createStructure(vm, globalObject, createPrototype(vm, globalObject));
+        RuntimeArray* runtimeArray = new (NotNull, allocateCell<RuntimeArray>(*exec->heap())) RuntimeArray(exec, structure);
+        runtimeArray->finishCreation(exec);
+        vm.heap.addFinalizer(runtimeArray, destroy);
+        return runtimeArray;
+    }
+
+    ~RuntimeArray() { }
+
+    static void destroy(JSCell* cell)
+    {
+        static_cast<RuntimeArray*>(cell)->RuntimeArray::~RuntimeArray();
+    }
+
+    static const bool needsDestruction = false;
+
+    static bool getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+    {
+        RuntimeArray* thisObject = jsCast<RuntimeArray*>(object);
+        if (propertyName == exec->propertyNames().length) {
+            slot.setCacheableCustom(thisObject, DontDelete | ReadOnly | DontEnum, thisObject->lengthGetter);
+            return true;
+        }
+
+        unsigned index = propertyName.asIndex();
+        if (index < thisObject->getLength()) {
+            ASSERT(index != PropertyName::NotAnIndex);
+            slot.setValue(thisObject, DontDelete | DontEnum, jsNumber(thisObject->m_vector[index]));
+            return true;
+        }
+
+        return JSObject::getOwnPropertySlot(thisObject, exec, propertyName, slot);
+    }
+
+    static bool getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+    {
+        RuntimeArray* thisObject = jsCast<RuntimeArray*>(object);
+        if (index < thisObject->getLength()) {
+            slot.setValue(thisObject, DontDelete | DontEnum, jsNumber(thisObject->m_vector[index]));
+            return true;
+        }
+
+        return JSObject::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    }
+
+    static NO_RETURN_DUE_TO_CRASH void put(JSCell*, ExecState*, PropertyName, JSValue, PutPropertySlot&)
+    {
+        RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    static NO_RETURN_DUE_TO_CRASH bool deleteProperty(JSCell*, ExecState*, PropertyName)
+    {
+        RELEASE_ASSERT_NOT_REACHED();
+#if !COMPILER(CLANG)
+        return true;
+#endif
+    }
+
+    unsigned getLength() const { return m_vector.size(); }
+
+    DECLARE_INFO;
+
+    static ArrayPrototype* createPrototype(VM&, JSGlobalObject* globalObject)
+    {
+        return globalObject->arrayPrototype();
+    }
+
+    static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
+    {
+        return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info(), ArrayClass);
+    }
+
+protected:
+    void finishCreation(ExecState* exec)
+    {
+        Base::finishCreation(exec->vm());
+        ASSERT(inherits(info()));
+
+        for (size_t i = 0; i < exec->argumentCount(); i++)
+            m_vector.append(exec->argument(i).toInt32(exec));
+    }
+
+    static const unsigned StructureFlags = OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | OverridesGetPropertyNames | JSArray::StructureFlags;
+
+private:
+    RuntimeArray(ExecState* exec, Structure* structure)
+        : JSArray(exec->vm(), structure, 0)
+    {
+    }
+
+    static EncodedJSValue lengthGetter(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+    {
+        RuntimeArray* thisObject = jsDynamicCast<RuntimeArray*>(JSValue::decode(thisValue));
+        if (!thisObject)
+            return throwVMTypeError(exec);
+        return JSValue::encode(jsNumber(thisObject->getLength()));
+    }
+
+    Vector<int> m_vector;
+};
+
 const ClassInfo Element::s_info = { "Element", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(Element) };
 const ClassInfo Masquerader::s_info = { "Masquerader", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(Masquerader) };
 const ClassInfo Root::s_info = { "Root", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(Root) };
 const ClassInfo ImpureGetter::s_info = { "ImpureGetter", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(ImpureGetter) };
+const ClassInfo RuntimeArray::s_info = { "RuntimeArray", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(RuntimeArray) };
 
 ElementHandleOwner* Element::handleOwner()
 {
@@ -301,6 +429,7 @@ void Element::finishCreation(VM& vm)
 static bool fillBufferWithContentsOfFile(const String& fileName, Vector<char>& buffer);
 
 static EncodedJSValue JSC_HOST_CALL functionCreateProxy(ExecState*);
+static EncodedJSValue JSC_HOST_CALL functionCreateRuntimeArray(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionCreateImpureGetter(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionSetImpureGetterDelegate(ExecState*);
 
@@ -486,6 +615,7 @@ protected:
         addFunction(vm, "makeMasquerader", functionMakeMasquerader, 0);
 
         addFunction(vm, "createProxy", functionCreateProxy, 1);
+        addFunction(vm, "createRuntimeArray", functionCreateRuntimeArray, 0);
 
         addFunction(vm, "createImpureGetter", functionCreateImpureGetter, 1);
         addFunction(vm, "setImpureGetterDelegate", functionSetImpureGetterDelegate, 2);
@@ -657,6 +787,13 @@ EncodedJSValue JSC_HOST_CALL functionCreateProxy(ExecState* exec)
     Structure* structure = JSProxy::createStructure(exec->vm(), exec->lexicalGlobalObject(), jsTarget->prototype());
     JSProxy* proxy = JSProxy::create(exec->vm(), structure, jsTarget);
     return JSValue::encode(proxy);
+}
+
+EncodedJSValue JSC_HOST_CALL functionCreateRuntimeArray(ExecState* exec)
+{
+    JSLockHolder lock(exec);
+    RuntimeArray* array = RuntimeArray::create(exec);
+    return JSValue::encode(array);
 }
 
 EncodedJSValue JSC_HOST_CALL functionCreateImpureGetter(ExecState* exec)
@@ -890,9 +1027,9 @@ EncodedJSValue JSC_HOST_CALL functionTransferArrayBuffer(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL functionQuit(ExecState*)
 {
-    exit(EXIT_SUCCESS);
+    jscExit(EXIT_SUCCESS);
 
-#if COMPILER(MSVC) && OS(WINCE)
+#if COMPILER(MSVC)
     // Without this, Visual Studio will complain that this method does not return a value.
     return JSValue::encode(jsUndefined());
 #endif
@@ -1010,7 +1147,7 @@ int main(int argc, char** argv)
     ecore_shutdown();
 #endif
 
-    return res;
+    jscExit(res);
 }
 
 static bool runWithScripts(GlobalObject* globalObject, const Vector<Script>& scripts, bool dump)
@@ -1154,7 +1291,7 @@ static NO_RETURN void printUsageStatement(bool help = false)
     fprintf(stderr, "  --<jsc VM option>=<value>  Sets the specified JSC VM option\n");
     fprintf(stderr, "\n");
 
-    exit(help ? EXIT_SUCCESS : EXIT_FAILURE);
+    jscExit(help ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 void CommandLine::parseArguments(int argc, char** argv)
@@ -1243,7 +1380,7 @@ void CommandLine::parseArguments(int argc, char** argv)
     if (needToDumpOptions)
         JSC::Options::dumpAllOptions(stderr);
     if (needToExit)
-        exit(EXIT_SUCCESS);
+        jscExit(EXIT_SUCCESS);
 }
 
 int jscmain(int argc, char** argv)

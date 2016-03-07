@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,35 +23,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#import "config.h"
-#import "InitializeLLVM.h"
+#ifndef DFGDoesGC_h
+#define DFGDoesGC_h
 
-#if HAVE(LLVM)
+#if ENABLE(DFG_JIT)
 
-#import "InitializeLLVMPOSIX.h"
-#import <Foundation/Foundation.h>
+namespace JSC { namespace DFG {
 
-// Use the "JS" prefix to make check-for-inappropriate-objc-class-names happy. I
-// think this is better than hacking that script.
+class Graph;
+struct Node;
 
-@interface JSJavaScriptCoreBundleFinder : NSObject
-@end
+bool doesGC(Graph&, Node*);
 
-@implementation JSJavaScriptCoreBundleFinder
-@end
+} } // namespace JSC::DFG
 
-namespace JSC {
+#endif // ENABLE(DFG_JIT)
 
-void initializeLLVMImpl()
-{
-    @autoreleasepool {
-        NSBundle *myBundle = [NSBundle bundleForClass:[JSJavaScriptCoreBundleFinder class]];
-        NSString *path = [[myBundle bundlePath] stringByAppendingPathComponent:@"Libraries/libllvmForJSC.dylib"];
-        
-        initializeLLVMPOSIX([path UTF8String]);
-    }
-}
+#endif // DFGDoesGC_h
 
-} // namespace JSC
-
-#endif // HAVE(LLVM)
