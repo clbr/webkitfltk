@@ -1,3 +1,446 @@
+2015-02-15  Sam Weinig  <sam@webkit.org>
+
+        Add experimental <attachment> element support
+        https://bugs.webkit.org/show_bug.cgi?id=141626
+
+        Reviewed by Tim Horton.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-02-16  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION(r180060): C Loop crashes
+        https://bugs.webkit.org/show_bug.cgi?id=141671
+
+        Reviewed by Geoffrey Garen.
+
+        Fixed a typo that only affected the C Loop in the prologue() macro in LowLevelInterpreter.asm.
+        After the stackHeightOKGetCodeBlock label, codeBlockSetter(t1) should be codeBlockGetter(t1).
+        Fixed the processing of an out of stack exception in llint_stack_check to not get the caller's
+        frame.  This isn't needed, since this helper is only called to check the stack on entry.  Any
+        exception will be handled by a call ancestor.
+
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::llint_stack_check): Changed to use the current frame for processing an exception.
+        * llint/LowLevelInterpreter.asm: Fixed a typo.
+
+2015-02-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Scope details sidebar should label objects with constructor names
+        https://bugs.webkit.org/show_bug.cgi?id=139449
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/JSInjectedScriptHost.cpp:
+        (Inspector::JSInjectedScriptHost::internalConstructorName):
+        * runtime/Structure.cpp:
+        (JSC::Structure::toStructureShape):
+        Share calculatedClassName.
+
+        * runtime/JSObject.h:        
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::calculatedClassName):
+        Elaborate on a way to get an Object's class name.
+
+2015-02-16  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG SSA should use GetLocal for arguments, and the GetArgument node type should be removed
+        https://bugs.webkit.org/show_bug.cgi?id=141623
+
+        Reviewed by Oliver Hunt.
+        
+        During development of https://bugs.webkit.org/show_bug.cgi?id=141332, I realized that I
+        needed to use GetArgument for loading something that has magically already appeared on the
+        stack, so currently trunk sort of allows this. But then I realized three things:
+        
+        - A GetArgument with a non-JSValue flush format means speculating that the value on the
+          stack obeys that format, rather than just assuming that that it already has that format.
+          In bug 141332, I want it to assume rather than speculate. That also happens to be more
+          intuitive; I don't think I was wrong to expect that.
+        
+        - The node I really want is GetLocal. I'm just getting the value of the local and I don't
+          want to do anything else.
+        
+        - Maybe it would be easier if we just used GetLocal for all of the cases where we currently
+          use GetArgument.
+        
+        This changes the FTL to do argument speculations in the prologue just like the DFG does.
+        This brings some consistency to our system, and allows us to get rid of the GetArgument
+        node. The speculations that the FTL must do are now made explicit in the m_argumentFormats
+        vector in DFG::Graph. This has natural DCE behavior: even if all uses of the argument are
+        dead we will still speculate. We already have safeguards to ensure we only speculate if
+        there are uses that benefit from speculation (which is a much more conservative criterion
+        than DCE).
+        
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDCEPhase.cpp:
+        (JSC::DFG::DCEPhase::run):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGFlushFormat.h:
+        (JSC::DFG::typeFilterFor):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dump):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::valueProfileFor):
+        (JSC::DFG::Graph::methodOfGettingAValueProfileFor):
+        * dfg/DFGInPlaceAbstractState.cpp:
+        (JSC::DFG::InPlaceAbstractState::initialize):
+        * dfg/DFGNode.cpp:
+        (JSC::DFG::Node::hasVariableAccessData):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOSRAvailabilityAnalysisPhase.cpp:
+        (JSC::DFG::OSRAvailabilityAnalysisPhase::run):
+        (JSC::DFG::LocalOSRAvailabilityCalculator::executeNode):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGPutLocalSinkingPhase.cpp:
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::lower):
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileGetLocal):
+        (JSC::FTL::LowerDFGToLLVM::compileGetArgument): Deleted.
+        * tests/stress/dead-speculating-argument-use.js: Added.
+        (foo):
+        (o.valueOf):
+
+2015-02-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Rare case profiling should actually work
+        https://bugs.webkit.org/show_bug.cgi?id=141632
+
+        Reviewed by Michael Saboff.
+        
+        This simple adjustment appears to be a 2% speed-up on Octane. Over time, the slow case
+        heuristic has essentially stopped working because the typical execution count threshold for a
+        bytecode instruction is around 66 while the slow case threshold is 100: virtually
+        guaranteeing that the DFG will never think that a bytecode instruction has taken the slow
+        case even if it took it every single time. So, this changes the slow case threshold to 20.
+        
+        I checked if we could lower this down further, like to 10. That is worse than 20, and about
+        as bad as 100.
+
+        * runtime/Options.h:
+
+2015-02-15  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: remove unused XHR replay code
+        https://bugs.webkit.org/show_bug.cgi?id=141622
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/protocol/Network.json: remove XHR replay methods.
+
+2015-02-15  David Kilzer  <ddkilzer@apple.com>
+
+        REGRESSION (r180082): WebCore Debug builds fail on Mavericks due to weak export symbols
+        <http://webkit.org/b/141607>
+
+        More work towards fixing the Mavericks Debug build.
+
+        * inspector/ScriptDebugServer.h:
+        (Inspector::ScriptDebugServer::Task):
+        * inspector/agents/InspectorDebuggerAgent.h:
+        (Inspector::InspectorDebuggerAgent::Listener):
+        - Remove subclass exports. They did not help.
+
+        * runtime/JSCJSValue.h:
+        (JSC::JSValue::toFloat): Do not mark inline method for export.
+
+2015-02-09  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: remove some unnecessary Inspector prefixes from class names in Inspector namespace
+        https://bugs.webkit.org/show_bug.cgi?id=141372
+
+        Reviewed by Joseph Pecoraro.
+
+        * inspector/ConsoleMessage.cpp:
+        (Inspector::ConsoleMessage::addToFrontend):
+        (Inspector::ConsoleMessage::updateRepeatCountInConsole):
+        * inspector/ConsoleMessage.h:
+        * inspector/InspectorAgentBase.h:
+        * inspector/InspectorAgentRegistry.cpp:
+        (Inspector::AgentRegistry::AgentRegistry):
+        (Inspector::AgentRegistry::append):
+        (Inspector::AgentRegistry::appendExtraAgent):
+        (Inspector::AgentRegistry::didCreateFrontendAndBackend):
+        (Inspector::AgentRegistry::willDestroyFrontendAndBackend):
+        (Inspector::AgentRegistry::discardAgents):
+        (Inspector::InspectorAgentRegistry::InspectorAgentRegistry): Deleted.
+        (Inspector::InspectorAgentRegistry::append): Deleted.
+        (Inspector::InspectorAgentRegistry::appendExtraAgent): Deleted.
+        (Inspector::InspectorAgentRegistry::didCreateFrontendAndBackend): Deleted.
+        (Inspector::InspectorAgentRegistry::willDestroyFrontendAndBackend): Deleted.
+        (Inspector::InspectorAgentRegistry::discardAgents): Deleted.
+        * inspector/InspectorAgentRegistry.h:
+        * inspector/InspectorBackendDispatcher.cpp:
+        (Inspector::BackendDispatcher::CallbackBase::CallbackBase):
+        (Inspector::BackendDispatcher::CallbackBase::isActive):
+        (Inspector::BackendDispatcher::CallbackBase::sendFailure):
+        (Inspector::BackendDispatcher::CallbackBase::sendIfActive):
+        (Inspector::BackendDispatcher::create):
+        (Inspector::BackendDispatcher::registerDispatcherForDomain):
+        (Inspector::BackendDispatcher::dispatch):
+        (Inspector::BackendDispatcher::sendResponse):
+        (Inspector::BackendDispatcher::reportProtocolError):
+        (Inspector::BackendDispatcher::getInteger):
+        (Inspector::BackendDispatcher::getDouble):
+        (Inspector::BackendDispatcher::getString):
+        (Inspector::BackendDispatcher::getBoolean):
+        (Inspector::BackendDispatcher::getObject):
+        (Inspector::BackendDispatcher::getArray):
+        (Inspector::BackendDispatcher::getValue):
+        (Inspector::InspectorBackendDispatcher::CallbackBase::CallbackBase): Deleted.
+        (Inspector::InspectorBackendDispatcher::CallbackBase::isActive): Deleted.
+        (Inspector::InspectorBackendDispatcher::CallbackBase::sendFailure): Deleted.
+        (Inspector::InspectorBackendDispatcher::CallbackBase::sendIfActive): Deleted.
+        (Inspector::InspectorBackendDispatcher::create): Deleted.
+        (Inspector::InspectorBackendDispatcher::registerDispatcherForDomain): Deleted.
+        (Inspector::InspectorBackendDispatcher::dispatch): Deleted.
+        (Inspector::InspectorBackendDispatcher::sendResponse): Deleted.
+        (Inspector::InspectorBackendDispatcher::reportProtocolError): Deleted.
+        (Inspector::InspectorBackendDispatcher::getInteger): Deleted.
+        (Inspector::InspectorBackendDispatcher::getDouble): Deleted.
+        (Inspector::InspectorBackendDispatcher::getString): Deleted.
+        (Inspector::InspectorBackendDispatcher::getBoolean): Deleted.
+        (Inspector::InspectorBackendDispatcher::getObject): Deleted.
+        (Inspector::InspectorBackendDispatcher::getArray): Deleted.
+        (Inspector::InspectorBackendDispatcher::getValue): Deleted.
+        * inspector/InspectorBackendDispatcher.h:
+        (Inspector::SupplementalBackendDispatcher::SupplementalBackendDispatcher):
+        (Inspector::SupplementalBackendDispatcher::~SupplementalBackendDispatcher):
+        (Inspector::InspectorSupplementalBackendDispatcher::InspectorSupplementalBackendDispatcher): Deleted.
+        (Inspector::InspectorSupplementalBackendDispatcher::~InspectorSupplementalBackendDispatcher): Deleted.
+        * inspector/InspectorFrontendChannel.h:
+        (Inspector::FrontendChannel::~FrontendChannel):
+        (Inspector::InspectorFrontendChannel::~InspectorFrontendChannel): Deleted.
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::JSGlobalObjectInspectorController):
+        (Inspector::JSGlobalObjectInspectorController::globalObjectDestroyed):
+        (Inspector::JSGlobalObjectInspectorController::connectFrontend):
+        (Inspector::JSGlobalObjectInspectorController::disconnectFrontend):
+        (Inspector::JSGlobalObjectInspectorController::dispatchMessageFromFrontend):
+        (Inspector::JSGlobalObjectInspectorController::appendExtraAgent):
+        * inspector/JSGlobalObjectInspectorController.h:
+        * inspector/agents/InspectorAgent.cpp:
+        (Inspector::InspectorAgent::didCreateFrontendAndBackend):
+        (Inspector::InspectorAgent::willDestroyFrontendAndBackend):
+        * inspector/agents/InspectorAgent.h:
+        * inspector/agents/InspectorConsoleAgent.cpp:
+        (Inspector::InspectorConsoleAgent::didCreateFrontendAndBackend):
+        (Inspector::InspectorConsoleAgent::willDestroyFrontendAndBackend):
+        * inspector/agents/InspectorConsoleAgent.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::didCreateFrontendAndBackend):
+        (Inspector::InspectorDebuggerAgent::willDestroyFrontendAndBackend):
+        (Inspector::InspectorDebuggerAgent::handleConsoleAssert):
+        (Inspector::InspectorDebuggerAgent::schedulePauseOnNextStatement):
+        (Inspector::InspectorDebuggerAgent::pause):
+        (Inspector::InspectorDebuggerAgent::scriptExecutionBlockedByCSP):
+        (Inspector::InspectorDebuggerAgent::didPause):
+        (Inspector::InspectorDebuggerAgent::breakProgram):
+        (Inspector::InspectorDebuggerAgent::clearBreakDetails):
+        * inspector/agents/InspectorDebuggerAgent.h:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::willDestroyFrontendAndBackend):
+        * inspector/agents/InspectorRuntimeAgent.h:
+        * inspector/agents/JSGlobalObjectRuntimeAgent.cpp:
+        (Inspector::JSGlobalObjectRuntimeAgent::didCreateFrontendAndBackend):
+        (Inspector::JSGlobalObjectRuntimeAgent::willDestroyFrontendAndBackend):
+        * inspector/agents/JSGlobalObjectRuntimeAgent.h:
+        * inspector/augmentable/AlternateDispatchableAgent.h:
+        * inspector/augmentable/AugmentableInspectorController.h:
+        * inspector/remote/RemoteInspectorDebuggable.h:
+        * inspector/remote/RemoteInspectorDebuggableConnection.h:
+        * inspector/scripts/codegen/cpp_generator.py:
+        (CppGenerator.cpp_type_for_formal_out_parameter):
+        (CppGenerator.cpp_type_for_stack_out_parameter):
+        * inspector/scripts/codegen/cpp_generator_templates.py:
+        (AlternateBackendDispatcher):
+        (Alternate):
+        (void):
+        (AlternateInspectorBackendDispatcher): Deleted.
+        (AlternateInspector): Deleted.
+        * inspector/scripts/codegen/generate_cpp_backend_dispatcher_header.py:
+        (CppBackendDispatcherHeaderGenerator._generate_alternate_handler_forward_declarations_for_domains.Alternate):
+        (CppBackendDispatcherHeaderGenerator._generate_dispatcher_declaration_for_command):
+        (CppBackendDispatcherHeaderGenerator._generate_alternate_handler_forward_declarations_for_domains.AlternateInspector): Deleted.
+        * inspector/scripts/codegen/generate_cpp_backend_dispatcher_implementation.py:
+        (CppBackendDispatcherImplementationGenerator._generate_handler_class_destructor_for_domain):
+        (CppBackendDispatcherImplementationGenerator._generate_large_dispatcher_switch_implementation_for_domain):
+        (CppBackendDispatcherImplementationGenerator._generate_dispatcher_implementation_for_command):
+        * inspector/scripts/codegen/generate_cpp_frontend_dispatcher_implementation.py:
+        (CppFrontendDispatcherImplementationGenerator._generate_dispatcher_implementation_for_event):
+        * inspector/scripts/codegen/generate_objc_frontend_dispatcher_implementation.py:
+        (ObjCFrontendDispatcherImplementationGenerator._generate_event):
+        * inspector/scripts/tests/expected/commands-with-async-attribute.json-result:
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+        * inspector/scripts/tests/expected/domains-with-varying-command-sizes.json-result:
+        * inspector/scripts/tests/expected/enum-values.json-result:
+        * inspector/scripts/tests/expected/events-with-optional-parameters.json-result:
+        * inspector/scripts/tests/expected/generate-domains-with-feature-guards.json-result:
+        * inspector/scripts/tests/expected/same-type-id-different-domain.json-result:
+        * inspector/scripts/tests/expected/shadowed-optional-type-setters.json-result:
+        * inspector/scripts/tests/expected/type-declaration-aliased-primitive-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-array-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-enum-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-object-type.json-result:
+        * inspector/scripts/tests/expected/type-requiring-runtime-casts.json-result:
+        * runtime/JSGlobalObjectDebuggable.cpp:
+        (JSC::JSGlobalObjectDebuggable::connect):
+        (JSC::JSGlobalObjectDebuggable::disconnect):
+        * runtime/JSGlobalObjectDebuggable.h:
+
+2015-02-14  David Kilzer  <ddkilzer@apple.com>
+
+        REGRESSION (r180082): WebCore Debug builds fail on Mavericks due to weak export symbols
+        <http://webkit.org/b/141607>
+
+        Work towards fixing the Mavericks Debug build.
+
+        * inspector/ScriptDebugServer.h:
+        (Inspector::ScriptDebugServer::Task): Export class.
+        * inspector/agents/InspectorDebuggerAgent.h:
+        (Inspector::InspectorDebuggerAgent::Listener): Export class.
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::setConsoleClient): Do not mark inline
+        method for export.
+
+2015-02-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Symbol RemoteObject should not send sub-type
+        https://bugs.webkit.org/show_bug.cgi?id=141604
+
+        Reviewed by Brian Burg.
+
+        * inspector/InjectedScriptSource.js:
+
+2015-02-13  Benjamin Poulain  <bpoulain@apple.com>
+
+        Attempt to fix 32bits build after r180098
+
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        I copied the attribute from the MathObject version of that function when I moved
+        it over. DFG has no version of a function call taking those attributes.
+
+2015-02-13  Joseph Pecoraro  <pecoraro@apple.com>
+
+        JSContext Inspector: Do not stash console messages for non-debuggable JSContext
+        https://bugs.webkit.org/show_bug.cgi?id=141589
+
+        Reviewed by Timothy Hatcher.
+
+        Consider developer extras disabled for JSContext inspection if the
+        RemoteInspector server is not enabled (typically a non-debuggable
+        process rejected by webinspectord) or if remote debugging on the
+        JSContext was explicitly disabled via SPI.
+
+        When developer extras are disabled, console message will not be stashed.
+
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::developerExtrasEnabled):
+        * inspector/JSGlobalObjectInspectorController.h:
+
+2015-02-13  Benjamin Poulain  <bpoulain@apple.com>
+
+        Add a DFG node for the Pow Intrinsics
+        https://bugs.webkit.org/show_bug.cgi?id=141540
+
+        Reviewed by Filip Pizlo.
+
+        Add a DFG Node for PowIntrinsic. This patch covers the basic cases
+        need to avoid massive regression. I will iterate over the node to cover
+        the missing types.
+
+        With this patch I get the following progressions on benchmarks:
+        -LongSpider's math-partial-sums: +5%.
+        -Kraken's imaging-darkroom: +17%
+        -AsmBench's cray.c: +6.6%
+        -CompressionBench: +2.2% globally.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        Cover a couple of trivial cases:
+        -If the exponent is zero, the result is always one, regardless of the base.
+        -If both arguments are constants, compute the result at compile time.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::handleIntrinsic):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        We only support 2 basic cases at this time:
+        -Math.pow(double, int)
+        -Math.pow(double, double).
+
+        I'll cover Math.pow(int, int) in a follow up.
+
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertToArithSqrt):
+        (JSC::DFG::Node::arithNodeFlags):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        (JSC::DFG::PredictionPropagationPhase::doDoubleVoting):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::compileArithPowIntegerFastPath):
+        (JSC::DFG::SpeculativeJIT::compileArithPow):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGStrengthReductionPhase.cpp:
+        (JSC::DFG::StrengthReductionPhase::handleNode):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::validate):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileArithPow):
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::doublePow):
+        (JSC::FTL::Output::doublePowi):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * runtime/MathObject.cpp:
+        (JSC::mathProtoFuncPow):
+        (JSC::isDenormal): Deleted.
+        (JSC::isEdgeCase): Deleted.
+        (JSC::mathPow): Deleted.
+
+        * tests/stress/math-pow-basics.js: Added.
+        * tests/stress/math-pow-integer-exponent-fastpath.js: Added.
+        * tests/stress/math-pow-nan-behaviors.js: Added.
+        * tests/stress/math-pow-with-constants.js: Added.
+        Start some basic testing of Math.pow().
+        Due to the various transform, the value change when the code tiers up,
+        I covered this by checking for approximate values.
+
 2015-02-13  Benjamin Poulain  <bpoulain@apple.com>
 
         ArithSqrt should not be conditional on supportsFloatingPointSqrt

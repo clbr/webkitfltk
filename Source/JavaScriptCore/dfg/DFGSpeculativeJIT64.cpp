@@ -2241,6 +2241,10 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
 
+    case ArithPow:
+        compileArithPow(node);
+        break;
+
     case ArithSqrt:
         compileArithSqrt(node);
         break;
@@ -4989,7 +4993,6 @@ void SpeculativeJIT::compile(Node* node)
     case LastNodeType:
     case Phi:
     case Upsilon:
-    case GetArgument:
     case ExtractOSREntryLocal:
     case CheckInBounds:
     case ArithIMul:

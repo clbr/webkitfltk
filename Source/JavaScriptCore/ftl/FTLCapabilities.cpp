@@ -51,7 +51,6 @@ inline CapabilityLevel canCompile(Node* node)
     case KillLocal:
     case MovHint:
     case ZombieHint:
-    case GetArgument:
     case Phantom:
     case HardPhantom:
     case Flush:
@@ -89,6 +88,7 @@ inline CapabilityLevel canCompile(Node* node)
     case ArithAbs:
     case ArithSin:
     case ArithCos:
+    case ArithPow:
     case ArithSqrt:
     case ArithFRound:
     case ArithNegate:
