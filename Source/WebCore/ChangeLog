@@ -1,3 +1,1019 @@
+2015-05-07  Yoav Weiss  <yoav@yoav.ws>
+
+        Calculate source-size length as a float
+        https://bugs.webkit.org/show_bug.cgi?id=144766
+
+        Reviewed by Dean Jackson.
+
+        Make sure that the source-size length is calculated as a float,
+        to align with the spec.
+
+        Test: fast/dom/HTMLImageElement/sizes/image-sizes-1x.html
+              fast/dom/HTMLImageElement/sizes/image-sizes-2x.html
+
+        * css/SourceSizeList.cpp:
+        (WebCore::parseSizesAttribute):
+        (WebCore::defaultLength):
+        (WebCore::computeLength):
+        * css/SourceSizeList.h:
+        * html/HTMLImageElement.cpp:
+        (WebCore::HTMLImageElement::parseAttribute):
+        * html/parser/HTMLPreloadScanner.cpp:
+        (WebCore::TokenPreloadScanner::StartTagScanner::processAttributes):
+        * html/parser/HTMLSrcsetParser.cpp:
+        (WebCore::pickBestImageCandidate):
+        (WebCore::bestFitSourceForImageAttributes):
+        * html/parser/HTMLSrcsetParser.h:
+
+2015-05-07  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183895.
+        https://bugs.webkit.org/show_bug.cgi?id=144786
+
+        Many tests became flaky (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "Expose more font weights for -apple-system"
+        https://bugs.webkit.org/show_bug.cgi?id=144707
+        http://trac.webkit.org/changeset/183895
+
+2015-05-07  Hyungwook Lee  <hyungwook.lee@navercorp.com>
+
+        Add first-letter assert exception in RenderButton::setupInnerStyle().
+        https://bugs.webkit.org/show_bug.cgi?id=140517OB
+
+        Reviewed by Darin Adler.
+
+        StyleResolver references inner block's render style temporary in
+        RenderBlock::styleDidChange() when we have first-letter css pseudo
+        element.
+
+        * rendering/RenderButton.cpp:
+        (WebCore::RenderButton::setupInnerStyle):
+
+2015-05-07  Chris Dumez  <cdumez@apple.com>
+
+        Unreviewed, fix build after r183970.
+
+        WEBCORE_EXPORT should not be used on inlined functions.
+
+        * platform/graphics/ca/GraphicsLayerCA.h:
+
+2015-05-07  Anders Carlsson  <andersca@apple.com>
+
+        Build fixes.
+
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (-[WebAccessibilityObjectWrapper doAXRTFForRange:]):
+        * editing/cocoa/HTMLConverter.mm:
+        (HTMLConverter::_addMarkersToList):
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::writeFileWrapperAsRTFDAttachment):
+        * platform/mac/PlatformPasteboardMac.mm:
+        (WebCore::PlatformPasteboard::setTypes):
+        Pass empty arrays and dictionaries instead of nil.
+
+        * rendering/RenderThemeMac.mm:
+        (WebCore::RenderThemeMac::paintSliderThumb):
+        Pass the document view to the AppKit paint method.
+
+2015-05-07  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Purge PassRefPtr in WebCore/html - 3
+        https://bugs.webkit.org/show_bug.cgi?id=144686
+
+        Reviewed by Andreas Kling.
+
+        Replace PassRefPtr with Ref in create() factory functions, because
+        it doesn't have to change to be null.
+
+        No new tests, no behavior changes.
+
+        * html/FTPDirectoryDocument.h:
+        * html/HTMLDetailsElement.cpp:
+        (WebCore::DetailsContentElement::create):
+        * html/HTMLKeygenElement.cpp:
+        * html/HTMLSummaryElement.cpp:
+        (WebCore::SummaryContentElement::create):
+        * html/TimeRanges.cpp:
+        (WebCore::TimeRanges::create):
+        * html/shadow/SliderThumbElement.cpp:
+        (WebCore::SliderContainerElement::create):
+        * html/shadow/SliderThumbElement.h:
+        (WebCore::SliderThumbElement::create):
+        * html/shadow/SpinButtonElement.cpp:
+        (WebCore::SpinButtonElement::create):
+        * html/shadow/SpinButtonElement.h:
+        * html/shadow/TextControlInnerElements.cpp:
+        (WebCore::TextControlInnerContainer::create):
+        (WebCore::TextControlInnerElement::create):
+        (WebCore::TextControlInnerTextElement::create):
+        (WebCore::SearchFieldResultsButtonElement::create):
+        (WebCore::SearchFieldCancelButtonElement::create):
+        * html/shadow/TextControlInnerElements.h:
+        * html/shadow/YouTubeEmbedShadowElement.cpp:
+        (WebCore::YouTubeEmbedShadowElement::create):
+        * html/track/InbandDataTextTrack.cpp:
+        (WebCore::InbandDataTextTrack::create):
+        * html/track/InbandDataTextTrack.h:
+        * html/track/InbandGenericTextTrack.cpp:
+        (WebCore::InbandGenericTextTrack::create):
+        * html/track/InbandGenericTextTrack.h:
+        * html/track/InbandWebVTTTextTrack.cpp:
+        (WebCore::InbandWebVTTTextTrack::create):
+        * html/track/InbandWebVTTTextTrack.h:
+        * html/track/LoadableTextTrack.h:
+        * html/track/TextTrack.h:
+        (WebCore::TextTrack::create):
+        * html/track/TextTrackCueGeneric.cpp:
+        * html/track/TextTrackCueGeneric.h:
+        * html/track/TextTrackList.h:
+        * html/track/VTTRegionList.h:
+        (WebCore::VTTRegionList::create):
+
+2015-05-07  Dean Jackson  <dino@apple.com>
+
+        [iOS] MediaControls: disappear while scrubbing
+        https://bugs.webkit.org/show_bug.cgi?id=144777
+        <rdar://problem/20065572>
+
+        Reviewed by Eric Carlson.
+
+        If we are scrubbing we shouldn't hide the controls.
+
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller.prototype.hideControls): Return early if we are scrubbing.
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype): Add initial value for _potentiallyScrubbing and
+        rename from non-underscored value throughout the file.
+        (ControllerIOS.prototype.handleTimelineTouchEnd): When we finish scrubbing, reset
+        the timer to hide the controls.
+
+2015-05-07  Simon Fraser  <simon.fraser@apple.com>
+
+        REGRESSION (r183300): Fixed elements flash when scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=144778
+        rdar://problem/20769741
+
+        Reviewed by Dean Jackson.
+
+        After r183300 we can detached layer backing store when outside the coverage region.
+        However, position:fixed layers are moved around by the ScrollingCoordinator behind
+        GraphicsLayer's back, so we can do layer flushes with stale information about layer
+        geometry.
+        
+        To avoid dropping backing store for layers in this situation, prevent backing
+        store detachment on layers registered with the ScrollingCoordinator as viewport-constrained
+        layers. Preventing detachment on a layer also prevents detachment on all descendant
+        layers.
+
+        * platform/graphics/GraphicsLayer.h:
+        (WebCore::GraphicsLayer::setAllowsBackingStoreDetachment):
+        (WebCore::GraphicsLayer::allowsBackingStoreDetachment):
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::GraphicsLayerCA):
+        (WebCore::GraphicsLayerCA::setVisibleAndCoverageRects): Set m_intersectsCoverageRect to true
+        if backing store detachment is prevented.
+        (WebCore::GraphicsLayerCA::recursiveCommitChanges): Set a bit in the CommitState to 
+        communicate to descendants that detachment is prevented.
+        * platform/graphics/ca/GraphicsLayerCA.h:
+        (WebCore::GraphicsLayerCA::CommitState::CommitState): Deleted.
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::setIsScrollCoordinatedWithViewportConstrainedRole):
+        * rendering/RenderLayerBacking.h:
+        (WebCore::RenderLayerBacking::setScrollingNodeIDForRole): If registering with a non-zero
+        nodeID for the ViewportConstrained role, turn off backing store detachment.
+
+2015-05-07  Sam Weinig  <sam@webkit.org>
+
+        Consider implementing Document.scrollingElement
+        <rdar://problem/20845213>
+        https://bugs.webkit.org/show_bug.cgi?id=143609
+
+        Reviewed by Simon Fraser.
+
+        Add the non-compliant implementation of Document.scrollingElement that the spec,
+        found at http://dev.w3.org/csswg/cssom-view/#dom-document-scrollingelement, 
+        says we should have while we have non-compliant implementations of Element.scrollTop
+        and Element.scrollLeft (fixing that is tracked by https://bugs.webkit.org/show_bug.cgi?id=106133).
+
+        Tests: fast/dom/Document/scrollingElement-quirks-mode.html
+               fast/dom/Document/scrollingElement-standards-mode.html
+
+        * dom/Document.cpp:
+        (WebCore::Document::scrollingElement):
+        * dom/Document.h:
+        * dom/Document.idl:
+
+2015-05-07  Dean Jackson  <dino@apple.com>
+
+        [iOS] While scrubbing and holding down, video continues to play
+        https://bugs.webkit.org/show_bug.cgi?id=144776
+        <rdar://problem/20863757>
+
+        Reviewed by Simon Fraser.
+
+        When we are scrubbing a video, we should pause playback. As we
+        let go of the scrubber playback can resume (but only if it was
+        playing originally).
+
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.createControls): Listen for touchstart on the scrubber.
+        (ControllerIOS.prototype.handleTimelineInput): Call the prototype, but pause if necessary.
+        (ControllerIOS.prototype.handleTimelineChange): Just moved this to be with the other timeline functions.
+        (ControllerIOS.prototype.handleTimelineTouchStart): Add the listeners for end and cancel. Remember that we are
+        potentially about to scrub.
+        (ControllerIOS.prototype.handleTimelineTouchEnd): Remove the listeners.
+
+2015-05-07  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        Applying a filter on an SVG element, which is larger than 4096 pixels, causes this element to be rendered shifted to the left
+        https://bugs.webkit.org/show_bug.cgi?id=144335
+
+        Reviewed by Daniel Bates.
+
+        Address comments raised by Darin Adler in review.
+
+        * platform/graphics/ImageBuffer.cpp:
+        (WebCore::ImageBuffer::sizeNeedsClamping):
+        (WebCore::ImageBuffer::clampedSize):
+        (WebCore::ImageBuffer::isSizeClamped): Deleted.
+        * platform/graphics/ImageBuffer.h:
+        The condition for the negative width/height in isSizeClamped() was wrong. Use
+        FloatSize::isEmpty() instead and rename the function to sizeNeedsClamping().
+        The new function should return the opposite of the old function return value.
+        
+        * platform/graphics/filters/FilterEffect.cpp:
+        (WebCore::FilterEffect::apply):
+        (WebCore::FilterEffect::asUnmultipliedImage):
+        (WebCore::FilterEffect::asPremultipliedImage):
+        (WebCore::FilterEffect::copyUnmultipliedImage):
+        (WebCore::FilterEffect::copyPremultipliedImage):
+        (WebCore::FilterEffect::createUnmultipliedImageResult):
+        (WebCore::FilterEffect::createPremultipliedImageResult):
+        * rendering/FilterEffectRenderer.cpp:
+        (WebCore::FilterEffectRenderer::updateBackingStoreRect):
+        (WebCore::FilterEffectRendererHelper::beginFilterEffect):
+        * rendering/svg/RenderSVGResourceFilter.cpp:
+        (WebCore::RenderSVGResourceFilter::applyResource):
+        Call the new function and negate the condition for the return value.
+
+2015-05-07  Anders Carlsson  <andersca@apple.com>
+
+        Build fix.
+
+        * editing/mac/EditorMac.mm:
+        (WebCore::dataInRTFDFormat):
+        (WebCore::dataInRTFFormat):
+
+2015-05-07  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        Applying a filter on an SVG element, which is larger than 4096 pixels, causes this element to be rendered shifted to the left
+        https://bugs.webkit.org/show_bug.cgi?id=144335
+
+        Reviewed by Darin Adler.
+
+        When the SVG element is larger than 4096x4096 pixels and it has a filter,
+        a clipper or a masker, the ImageBuffer which is created for drawing the
+        sourceGraphicBuffer has to be clamped to this size. The reason for this
+        clamping is the FilterEffect simply ignores processing any ImageBuffer
+        larger than this size.
+        
+        The bug was happening because we did not propagate the clamping logic to
+        the FilterEffect. The FilterEffect result ImageBuffer was not clamped as
+        what we do for drawing the sourceGraphicBuffer. If only the destination
+        point is specified, the GraphicsContext::drawImageBuffer() assumes the
+        source and the destination images have the same size which is not true
+        with the clamping.
+        
+        The fix is to add the clamping logic to the FilterEffect. Two places we
+        need to change. (1) FilterEffect::createImageBufferResult() has to apply
+        the same clamping we do in SVGRenderingContext::createImageBuffer(). (2)
+        FilterEffect::drawingRegionOfInputImage() has to consider the clamping 
+        when mapping from absolute coordinates to the ImageBuffer coordinates.
+        
+        Tests: svg/filters/big-sized-off-viewport-filter.svg
+
+        * platform/graphics/ImageBuffer.cpp:
+        (WebCore::ImageBuffer::isSizeClamped):
+        (WebCore::ImageBuffer::clampedSize):
+        (WebCore::ImageBuffer::clampedRect):
+        * platform/graphics/ImageBuffer.h:
+        (WebCore::ImageBuffer::setSpaceSize): Move all the clamping helper methods
+        from SVGRenderingContext and RenderSVGResourceFilter to the ImageBuffer.
+
+        * platform/graphics/filters/FEColorMatrix.cpp:
+        (WebCore::FEColorMatrix::platformApplySoftware): Use logicalSize() of the
+        result image instead of using absolutePaintRect(). The later returns the
+        rectangle of the element without clamping.
+        
+        * platform/graphics/filters/FETile.cpp:
+        (WebCore::FETile::platformApplySoftware):
+        * rendering/svg/RenderSVGResourceClipper.cpp:
+        (WebCore::RenderSVGResourceClipper::applyClippingToContext):
+        * rendering/svg/RenderSVGResourceFilter.cpp:
+        (WebCore::RenderSVGResourceFilter::applyResource):
+        (WebCore::RenderSVGResourceFilter::fitsInMaximumImageSize): Deleted.
+        * rendering/svg/RenderSVGResourceFilter.h:
+        * rendering/svg/RenderSVGResourceGradient.cpp:
+        (WebCore::createMaskAndSwapContextForTextGradient):
+        (WebCore::clipToTextMask):
+        * rendering/svg/RenderSVGResourceMasker.cpp:
+        (WebCore::RenderSVGResourceMasker::applySVGMask):
+        * rendering/svg/RenderSVGResourcePattern.cpp:
+        (WebCore::RenderSVGResourcePattern::buildPattern):
+        (WebCore::RenderSVGResourcePattern::createTileImage): Make the modifications
+        which are needed because of moving the clamping helper methods to ImageBuffer
+        and because of changing the prototype of SVGRenderingContext methods.
+
+        * platform/graphics/filters/FilterEffect.cpp:
+        (WebCore::FilterEffect::drawingRegionOfInputImage): Consider the clamping
+        when mapping from absolute coordinates to the ImageBuffer coordinates.
+
+        (WebCore::FilterEffect::createImageBufferResult): Apply the same clamping
+        we do in SVGRenderingContext::createImageBuffer() when creating the 
+        FilterEffect result ImageBuffer.
+        
+        (WebCore::FilterEffect::apply):
+        (WebCore::FilterEffect::asUnmultipliedImage):
+        (WebCore::FilterEffect::asPremultipliedImage):
+        (WebCore::FilterEffect::copyUnmultipliedImage):
+        (WebCore::FilterEffect::copyPremultipliedImage):
+        (WebCore::FilterEffect::createUnmultipliedImageResult):
+        (WebCore::FilterEffect::createPremultipliedImageResult):
+        (WebCore::FilterEffect::maxFilterArea): Deleted.
+        (WebCore::FilterEffect::isFilterSizeValid): Deleted.
+        * platform/graphics/filters/FilterEffect.h: Use the new ImageBuffer clamping
+        helper methods and delete the local ones.
+
+        * platform/graphics/transforms/AffineTransform.cpp:
+        (WebCore::AffineTransform::scaleNonUniform):
+        (WebCore::AffineTransform::scale):
+        (WebCore::AffineTransform::translate):
+        * platform/graphics/transforms/AffineTransform.h: Add new scale and translate
+        overloads to AffineTransform.
+        
+        * rendering/FilterEffectRenderer.cpp:
+        (WebCore::FilterEffectRenderer::updateBackingStoreRect):
+        (WebCore::FilterEffectRendererHelper::beginFilterEffect): Code clean up.
+        
+        * rendering/svg/SVGRenderingContext.cpp:
+        (WebCore::SVGRenderingContext::calculateScreenFontSizeScalingFactor):
+        (WebCore::SVGRenderingContext::calculateTransformationToOutermostCoordinateSystem):
+        Return the AffineTransform instead of passing it through the reference of
+        an argument.
+        
+        (WebCore::SVGRenderingContext::createImageBuffer):
+        (WebCore::SVGRenderingContext::createImageBufferForPattern): Deleted.
+        Code clean up and method rename.
+        
+        (WebCore::SVGRenderingContext::clampedAbsoluteTargetRect): Deleted.
+        (WebCore::SVGRenderingContext::clampedAbsoluteSize): Deleted.
+        * rendering/svg/SVGRenderingContext.h: Move the clamping helper methods to
+        the ImageBuffer class.
+    
+2015-05-07  Beth Dakin  <bdakin@apple.com>
+
+        New force-related DOM events should fire in WK1 views
+        https://bugs.webkit.org/show_bug.cgi?id=144663
+        -and corresponding-
+        rdar://problem/20281886
+
+        Reviewed by Sam Weinig.
+
+        All of the WK1 mouse events need to take the correspondingPressureEvent.
+        * page/EventHandler.h:
+
+        Make correspondingPressureEvent a part of CurrentEventScope. This is needed to 
+        have accurate pressure information for all of the mouse events in subframes.
+        * page/mac/EventHandlerMac.mm:
+        (WebCore::correspondingPressureEventSlot):
+        (WebCore::EventHandler::correspondingPressureEvent):
+        (WebCore::CurrentEventScope::CurrentEventScope):
+        (WebCore::CurrentEventScope::~CurrentEventScope):
+
+        These events don’t have an associated pressure, so send nil for the 
+        correspondingPressureEvent.
+        (WebCore::EventHandler::wheelEvent):
+        (WebCore::EventHandler::keyEvent):
+
+        Pipe through correspondingPressureEvent.
+        (WebCore::EventHandler::mouseDown):
+        (WebCore::EventHandler::mouseDragged):
+        (WebCore::EventHandler::mouseUp):
+        (WebCore::EventHandler::mouseMoved):
+
+        New function to handle pressure change events.
+        (WebCore::EventHandler::pressureChange):
+
+        Pipe through correspondingPressureEvent.
+        (WebCore::EventHandler::passMouseMovedEventToScrollbars):
+        (WebCore::EventHandler::currentPlatformMouseEvent):
+
+        Take the correspondingPressureEvent in order to build a PlatformMouseEvent with 
+        the correct pressure information.
+        * platform/mac/PlatformEventFactoryMac.h:
+        * platform/mac/PlatformEventFactoryMac.mm:
+        (WebCore::globalPointForEvent):
+        (WebCore::pointForEvent):
+        (WebCore::mouseButtonForEvent):
+        (WebCore::PlatformMouseEventBuilder::PlatformMouseEventBuilder):
+        (WebCore::PlatformEventFactory::createPlatformMouseEvent):
+
+2015-05-06  Roger Fong  <roger_fong@apple.com>
+
+        Media Controls: Scrubber should be independent of actual video time, causes scrubber to be jumpy.
+        https://bugs.webkit.org/show_bug.cgi?id=144700.
+        <rdar://problem/19997548>
+
+        Reviewed by Jer Noble.
+
+        Update time and timeline during the timeline input event instead of the wrapper's mousemove.
+        (Controller.prototype.handleWrapperMouseMove):
+        (Controller.prototype.handleTimelineMouseMove):
+        (Controller.prototype.drawTimelineBackground): 
+
+        (Controller.prototype.updateControlsWhileScrubbing): 
+        Updates time and scrubber to reflect timeline user input.
+
+2015-05-07  Yoav Weiss  <yoav@yoav.ws>
+
+        Handle meta viewport in HTMLPreloadScanner
+        https://bugs.webkit.org/show_bug.cgi?id=144640
+
+        Reviewed by Dean Jackson.
+
+        Add support for the <meta> tag to the HTMLPreloadScanner
+        and when the meta tag's name is viewport, get the document
+        to process the tag's attribute value, and set its ViewportArgument.
+
+        Tests: fast/dom/HTMLMetaElement/meta-preloader.html
+
+        * html/parser/HTMLPreloadScanner.cpp:
+        (WebCore::TokenPreloadScanner::tagIdFor): Added meta.
+        (WebCore::TokenPreloadScanner::initiatorFor): Added meta.
+        (WebCore::TokenPreloadScanner::StartTagScanner::StartTagScanner): Call document.processViewport is meta viewport encountered.
+        (WebCore::TokenPreloadScanner::StartTagScanner::processAttributes):
+        (WebCore::TokenPreloadScanner::StartTagScanner::processAttribute): Keep track of meta viewport tags.
+        (WebCore::testPreloadScannerViewportSupport): Testing function that makes sure this functionality is working.
+        * html/parser/HTMLPreloadScanner.h:
+        * testing/Internals.cpp:
+        (WebCore::Internals::testPreloaderSettingViewport): Calls the testing function.
+        * testing/Internals.h:
+        * testing/Internals.idl:
+
+2015-05-07  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION (r164449): Subpixel rendering: http://www.apple.com/iphone-6/ "Faster wireless." image displays vertical black line on 1x displays at specific window width.
+        https://bugs.webkit.org/show_bug.cgi?id=144723
+        rdar://problem/18307094
+
+        Reviewed by Simon Fraser.
+
+        This patch ensures that the backing store's graphics layer is always positioned on a device pixel boundary.
+
+        While calculating the backing store's graphics layer location, its ancestor layer's compositing bounds is taken into account.
+        However the compositing bounds is an unsnapped value, so in order to place the graphics layer properly,
+        we need to pixel align the ancestor compositing bounds before using it to adjust the child's graphics layer position.
+
+        Test: compositing/ancestor-compositing-layer-is-on-subpixel-position.html
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateGeometry):
+
+2015-05-07  Yoav Weiss  <yoav@yoav.ws>
+
+        Fix sizes crash and add invalid value tests.
+        https://bugs.webkit.org/show_bug.cgi?id=144739
+
+        Reviewed by Darin Adler.
+
+        Make sure that only CSS length are allowed when the sizes parser is calling computeLength.
+        Also make sure that for invalid lengths, the 100vw default is used instead.
+
+        Test: fast/dom/HTMLImageElement/sizes/image-sizes-invalids.html
+
+        * css/SourceSizeList.cpp:
+        (WebCore::computeLength):
+        (WebCore::defaultLength):
+        (WebCore::parseSizesAttribute):
+
+2015-05-07  Michael Catanzaro  <mcatanzaro@igalia.com>
+
+        [GTK] Checks for DEVELOPMENT_BUILD are all wrong
+        https://bugs.webkit.org/show_bug.cgi?id=144746
+
+        Reviewed by Martin Robinson.
+
+        Use DEVELOPER_MODE rather than DEVELOPMENT_BUILD.
+
+        * platform/gtk/GtkUtilities.cpp:
+        * platform/gtk/GtkUtilities.h:
+        * platform/text/gtk/HyphenationLibHyphen.cpp:
+        (WebCore::availableLocales):
+
+2015-05-07  Simon Fraser  <simon.fraser@apple.com>
+
+        Remove the WK1-only code path for independently composited iframes
+        https://bugs.webkit.org/show_bug.cgi?id=144722
+
+        Reviewed by Dean Jackson.
+
+        In WebKit1 on Mac, we allowed iframes to be composited independently of their
+        parent document, relying on the fact that the frame's platform view can host
+        a layer-backed view. However, this ran into bugs (rdar://problem/18862298),
+        and triggers the assertion at the end of FrameView::updateLayoutAndStyleIfNeededRecursive(),
+        because the compositing update after a layout can dirty style in notifyIFramesOfCompositingChange().
+        
+        Removing the WK1-only code path solves these problems. It also eliminates the need
+        to do compositing-specific frame overlap testing.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setIsOverlapped): No need to do compositing-related things here.
+        Any iframe that gets composited will participate in the normal compositing overlap
+        testing in its parent frame.
+        (WebCore::FrameView::hasCompositedContentIncludingDescendants): Deleted.
+        (WebCore::FrameView::hasCompositingAncestor): Deleted.
+        * page/FrameView.h:
+        * rendering/RenderLayerCompositor.cpp: Replace ownerElement() checks in this file
+        with an isMainFrameCompositor() for readability. Some 0->nullptr.
+        (WebCore::RenderLayerCompositor::cacheAcceleratedCompositingFlags):
+        (WebCore::RenderLayerCompositor::chromeClient):
+        (WebCore::RenderLayerCompositor::enclosingCompositorFlushingLayers):
+        (WebCore::RenderLayerCompositor::updateCompositingLayers):
+        (WebCore::RenderLayerCompositor::appendDocumentOverlayLayers):
+        (WebCore::RenderLayerCompositor::updateBacking):
+        (WebCore::RenderLayerCompositor::layerTreeAsText):
+        (WebCore::RenderLayerCompositor::frameContentsCompositor):
+        (WebCore::RenderLayerCompositor::setIsInWindow):
+        (WebCore::RenderLayerCompositor::requiresCompositingForScrollableFrame):
+        (WebCore::RenderLayerCompositor::requiresCompositingForFrame): frameRenderer.requiresAcceleratedCompositing()
+        already bails on no content RenderView, so the shouldPropagateCompositingToEnclosingFrame() check does
+        nothing and is removed.
+        (WebCore::RenderLayerCompositor::isAsyncScrollableStickyLayer):
+        (WebCore::RenderLayerCompositor::requiresScrollLayer):
+        (WebCore::RenderLayerCompositor::documentUsesTiledBacking):
+        (WebCore::RenderLayerCompositor::isMainFrameCompositor):
+        (WebCore::RenderLayerCompositor::shouldCompositeOverflowControls):
+        (WebCore::RenderLayerCompositor::requiresOverhangAreasLayer):
+        (WebCore::RenderLayerCompositor::requiresContentShadowLayer):
+        (WebCore::RenderLayerCompositor::updateLayerForTopOverhangArea):
+        (WebCore::RenderLayerCompositor::updateLayerForBottomOverhangArea):
+        (WebCore::RenderLayerCompositor::updateLayerForHeader):
+        (WebCore::RenderLayerCompositor::updateLayerForFooter):
+        (WebCore::RenderLayerCompositor::ensureRootLayer): Main frame attaches via ChromeClient,
+        all other frames attach via parent frame.
+        (WebCore::RenderLayerCompositor::notifyIFramesOfCompositingChange): This call to
+        scheduleSetNeedsStyleRecalc(SyntheticStyleChange) was the source of dirtying style after
+        layout, but is no longer needed so remove it.
+        (WebCore::RenderLayerCompositor::registerAllViewportConstrainedLayers):
+        (WebCore::RenderLayerCompositor::unregisterAllViewportConstrainedLayers):
+        (WebCore::RenderLayerCompositor::scrollingCoordinator):
+        (WebCore::RenderLayerCompositor::graphicsLayerFactory):
+        (WebCore::RenderLayerCompositor::allowsIndependentlyCompositedFrames): Deleted.
+        (WebCore::RenderLayerCompositor::shouldPropagateCompositingToEnclosingFrame): Deleted.
+        (WebCore::RenderLayerCompositor::mainFrameBackingIsTiled): Deleted. This was mis-named;
+        it really asks whether the document uses tiled backing, but does not check for main frame.
+        * rendering/RenderLayerCompositor.h:
+        * rendering/RenderWidget.cpp:
+        (WebCore::RenderWidget::paintContents): No need to do frame overlap testing for
+        compositing now.
+
+2015-05-06  Dean Jackson  <dino@apple.com>
+
+        Handle backdrop views that have to tile
+        https://bugs.webkit.org/show_bug.cgi?id=142317
+        <rdar://problem/20049088>
+
+        Reviewed by Simon Fraser.
+
+        Take 2 - this was rolled out because Mavericks was crashing.
+
+        Make sure backdrop layers don't tile. If they are big
+        enough, we'll leave it to the platform compositor to handle.
+
+        This also fixes a bug where if a layer changed from a backdrop
+        type to a tiled type, it would still retain its custom appearance
+        and we'd try to add children to the wrong layer.
+
+        Test: compositing/media-controls-bar-appearance-big.html
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::commitLayerChangesBeforeSublayers): Check if
+        a layer needs a backdrop before checking if it needs to tile.
+
+2015-05-05  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Revert "Introducing the Platform Abstraction Layer (PAL)"
+        https://bugs.webkit.org/show_bug.cgi?id=144751
+
+        Unreviewed.
+
+        PAL should be a new target inside WebCore, rather than a top-level folder.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-05-07  Dan Bernstein  <mitz@apple.com>
+
+        Tried to fix the build.
+
+        * Configurations/WebCoreTestSupport.xcconfig:
+
+2015-05-07  Joanmarie Diggs  <jdiggs@igalia.com>
+
+        AX: [ATK] The pre element should be mapped to ATK_ROLE_SECTION; not ATK_ROLE_PANEL
+        https://bugs.webkit.org/show_bug.cgi?id=144702
+
+        Reviewed by Chris Fleizach.
+
+        Add a new PreRole AccessibilityRole so that per-platform mapping is possible.
+        Map PreRole to ATK_ROLE_SECTION for Efl and Gtk; to NSAccessibilityGroupRole
+        for the Mac. Add PreRole to the list of "text type" ATK roles.
+
+        No new tests. Existing tests were updated to reflect the corrected mapping.
+
+        * accessibility/AccessibilityObject.h:
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::determineAccessibilityRole):
+        * accessibility/atk/AccessibilityObjectAtk.cpp:
+        (WebCore::AccessibilityObject::allowsTextRanges):
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (atkRole):
+        (roleIsTextType):
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (createAccessibilityRoleMap):
+
+2015-05-07  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/19317140> [Xcode] Remove usage of AspenFamily.xcconfig in Source/
+        https://bugs.webkit.org/show_bug.cgi?id=144727
+
+        Reviewed by Darin Adler.
+
+        * Configurations/Base.xcconfig: Don’t include AspenFamily.xcconfig.
+        * Configurations/WebCore.xcconfig: For iOS, define INSTALL_PATH in terms of
+        INSTALL_PATH_PREFIX, and set INSTALL_PATH_PREFIX for the iOS 8.x Simulator.
+        * Configurations/WebCoreTestSupport.xcconfig: Define INSTALL_PATH in terms of
+        INSTALL_PATH_PREFIX and INSTALL_PATH_ACTUAL, and define INSTALL_PATH_PREFIX for the iOS 8.x
+        Simulator.
+
+2015-05-07  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Playback target isn't set on new element
+        https://bugs.webkit.org/show_bug.cgi?id=144724
+
+        Reviewed by Jer Noble.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayer): Call setShouldPlayToPlaybackTarget
+        if necessary.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setShouldPlayToPlaybackTarget): Remember
+        the setting in case we don't have an AVPlayer yet.
+
+2015-05-07  Yoav Weiss  <yoav@yoav.ws>
+
+        Fix <script srcset> being loaded by the preloader.
+        https://bugs.webkit.org/show_bug.cgi?id=144675
+
+        Reviewed by Darin Adler.
+
+        Fix HTMLPreloadScanner to make sure that srcset is only loaded
+        when it is present on an <img>.
+
+        Tests: http/tests/loading/preload-script-src.html
+               http/tests/loading/preload-script-srcset-ignored.html
+
+        * html/parser/HTMLPreloadScanner.cpp:
+        (WebCore::TokenPreloadScanner::StartTagScanner::processAttributes):
+
+2015-05-07  Žan Doberšek  <zdobersek@igalia.com>
+
+        Add missing type traits specialization for PlatformDisplayWayland
+        https://bugs.webkit.org/show_bug.cgi?id=144671
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/graphics/wayland/PlatformDisplayWayland.h:
+        Add missing type traits specialization for the PlatformDisplayWayland
+        class via the SPECIALIZE_TYPE_TRAITS_PLATFORM_DISPLAY macro.
+
+2015-05-06  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Grid Layout] Mark grid shorthands as layout dependent
+        https://bugs.webkit.org/show_bug.cgi?id=144687
+
+        Reviewed by Darin Adler.
+
+        grid-template and grid shorthands were not marked us layout dependent,
+        so you can end up calling them before the grid has been laid out and
+        you'll get a crash at valueForGridTrackList() because of trackPositions
+        won't be initialized yet.
+
+        Tests: fast/css-grid-layout/grid-shorthand-computed-style-crash.html
+               fast/css-grid-layout/grid-template-shorthand-computed-style-crash.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::isLayoutDependent): Add the grid shorthands only if the object
+        is a RenderGrid as otherwise it's not needed (using the same condition
+        for grid-template-columns and grid-template-rows properties too).
+
+2015-05-06  Daniel Bates  <dabates@apple.com>
+
+        [iOS][WK2] Pause/resume database thread when UIProcess enters/leaves the background
+        https://bugs.webkit.org/show_bug.cgi?id=144657
+        <rdar://problem/18894598>
+
+        Reviewed by Andy Estes.
+
+        Export WebCore functionality to pause and resume the database thread so that we can
+        make use of this functionality from WebKit2.
+
+        * Modules/webdatabase/AbstractDatabaseServer.h:
+        * Modules/webdatabase/DatabaseManager.cpp:
+        (WebCore::DatabaseManager::setPauseAllDatabases): Added; turns around and calls DatabaseServer::setPauseAllDatabases().
+        * Modules/webdatabase/DatabaseManager.h:
+        * Modules/webdatabase/DatabaseServer.cpp:
+        (WebCore::DatabaseServer::setPauseAllDatabases): Added; turns around and calls
+        DatabaseTracker::tracker().setDatabasesPaused() to pause or resume the database thread.
+        For now, we guard this call with PLATFORM(IOS). We'll look to remove this guard once
+        we fix <https://bugs.webkit.org/show_bug.cgi?id=144660>.
+        * Modules/webdatabase/DatabaseServer.h:
+
+2015-05-06  Brent Fulgham  <bfulgham@apple.com>
+
+        Scroll-snap points do not handle margins and padding propertly
+        https://bugs.webkit.org/show_bug.cgi?id=144647
+        <rdar://problem/20829473>
+
+        Reviewed by Simon Fraser.
+
+        The calculation of scroll snap points was incorrect because it did not account for margins or padding.
+        This was fixed by using the "paddingBoxRect" to represent the overall size of the view area, and
+        subtracting the relevant padding when computing the size of the scroll snap offsets.
+
+        Extend testing internals with accessor methods to retrieve string representations of the scroll snap
+        offsets and scroll snap coordinates computed during layout. These values are used in the new
+        'css3/scroll-snap/scroll-snap-offsets-and-coordinates.html' test.
+
+        New tests:
+        * css3/scroll-snap/scroll-snap-offsets-and-coordinates.html: Added.
+        * platform/mac-wk2/tiled-drawing/scrolling/scroll-snap/scroll-snap-mandatory-borders.html: Added.
+        * platform/mac-wk2/tiled-drawing/scrolling/scroll-snap/scroll-snap-mandatory-padding.html: Added.
+        * platform/mac-wk2/tiled-drawing/scrolling/scroll-snap/scroll-snap-mandatory-rotated.html: Added.
+
+        * css/LengthFunctions.h: Expose the 'valueForLength' method so we can use it in WebCoreTestSupport.
+        * dom/Node.h: Expose the 'renderBox' method so we can use it in WebCoreTestSupport.
+        * page/scrolling/AxisScrollSnapOffsets.cpp:
+        (WebCore::appendChildSnapOffsets): Use 'contentBoxRect' for overall size, so that we don't use padding
+        as part of our offset calculations.
+        (WebCore::updateSnapOffsetsForScrollableArea): Ditto.
+        * rendering/RenderBox.h: Expose 'canBeScrolledAndHasScrollableArea' for use in WebCoreTestSupport.
+        * rendering/style/RenderStyle.h: Expose 'scrollSnapCoordinates' for use in WebCoreTestSupport.
+        * testing/Internals.cpp:
+        (WebCore::appendOffsets): Helper function.
+        (WebCore::Internals::scrollSnapOffsets): Added.
+        * testing/Internals.h:
+        * testing/Internals.idl:
+
+2015-05-06  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Clean up TextRun constructors
+        https://bugs.webkit.org/show_bug.cgi?id=144712
+
+        Reviewed by Zalan Bujtas.
+
+        This patch uses constructor forwarding to make TextRun's constructors much simpler. It then
+        updates the implementations of RenderBlock::constructTextRun() to be more consistent with
+        TextRun (via using StringViews).
+
+        No new tests because there is no behavior change.
+
+        * mathml/MathMLMencloseElement.cpp:
+        (WebCore::MathMLMencloseElement::longDivLeftPadding):
+        * platform/graphics/TextRun.h:
+        (WebCore::TextRun::TextRun):
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::constructTextRun):
+        (WebCore::constructTextRunInternal): Deleted.
+        * rendering/RenderBlock.h:
+        * rendering/RenderEmbeddedObject.cpp:
+        (WebCore::RenderEmbeddedObject::paintReplaced):
+        (WebCore::RenderEmbeddedObject::unavailablePluginIndicatorBounds):
+        (WebCore::RenderEmbeddedObject::isInUnavailablePluginIndicator):
+        * rendering/svg/SVGTextMetricsBuilder.cpp:
+        (WebCore::SVGTextMetricsBuilder::SVGTextMetricsBuilder):
+        * platform/win/DragImageWin.cpp:
+        (WebCore::createDragImageForLink):
+
+2015-05-06  Sungmann Cho  <sungmann.cho@navercorp.com>
+
+        Rename URL::copy() to URL::isolatedCopy() to match String.
+        https://bugs.webkit.org/show_bug.cgi?id=144684
+
+        Reviewed by Darin Adler.
+
+        No new tests, no behavior change.
+
+        * Modules/websockets/WebSocketHandshake.cpp:
+        (WebCore::WebSocketHandshake::setURL):
+        (WebCore::WebSocketHandshake::httpURLForAuthenticationAndCookies):
+        * fileapi/ThreadableBlobRegistry.cpp:
+        (WebCore::BlobRegistryContext::BlobRegistryContext):
+        * html/parser/HTMLPreloadScanner.cpp:
+        (WebCore::TokenPreloadScanner::updatePredictedBaseURL):
+        * html/parser/HTMLResourcePreloader.h:
+        (WebCore::PreloadRequest::PreloadRequest):
+        * html/parser/XSSAuditor.cpp:
+        (WebCore::XSSAuditor::init):
+        * platform/CrossThreadCopier.cpp:
+        (WebCore::URL>::copy):
+        * platform/URL.cpp:
+        (WebCore::URL::isolatedCopy):
+        (WebCore::URL::copy): Deleted.
+        * platform/URL.h:
+        (WebCore::URLCapture::URLCapture):
+        * platform/network/BlobPart.h:
+        (WebCore::BlobPart::detachFromCurrentThread):
+        * platform/network/ResourceRequestBase.cpp:
+        (WebCore::ResourceRequestBase::copyData):
+        * platform/network/ResourceResponseBase.cpp:
+        (WebCore::ResourceResponseBase::copyData):
+        * workers/WorkerThread.cpp:
+        (WebCore::WorkerThreadStartupData::WorkerThreadStartupData):
+
+2015-05-06  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183894.
+        https://bugs.webkit.org/show_bug.cgi?id=144719
+
+        crashes on mavericks (Requested by dino on #webkit).
+
+        Reverted changeset:
+
+        "Handle backdrop views that have to tile"
+        https://bugs.webkit.org/show_bug.cgi?id=142317
+        http://trac.webkit.org/changeset/183894
+
+2015-05-06  Jon Lee  <jonlee@apple.com>
+
+        CoreTextSPI.h uses wrong version number to denote Yosemite
+        https://bugs.webkit.org/show_bug.cgi?id=144701
+
+        Reviewed by Dean Jackson.
+
+        * platform/spi/cocoa/CoreTextSPI.h: Should 101000 not 10100.
+
+2015-05-06  Jon Lee  <jonlee@apple.com>
+
+        Expose more font weights for -apple-system
+        https://bugs.webkit.org/show_bug.cgi?id=144707
+
+        Reviewed by Dean Jackson.
+
+        Update to platform/mac/fast/text/systemFont.html
+
+        * platform/graphics/mac/FontCacheMac.mm:
+        (WebCore::toNSFontWeight): New static method to map font weights to NSFontWeight constants available on
+        Yosemite and later.
+        (WebCore::fontWithFamily): Request the system font with a mapped weight on Yosemite and later.
+        * platform/spi/mac/NSFontSPI.h: Add [NSFont systemFontWithSize:weight:], and the proper NSFontWeight
+        constants.
+
+2015-05-06  Dean Jackson  <dino@apple.com>
+
+        Handle backdrop views that have to tile
+        https://bugs.webkit.org/show_bug.cgi?id=142317
+        <rdar://problem/20049088>
+
+        Reviewed by Simon Fraser.
+
+        Make sure backdrop layers don't tile. If they are big
+        enough, we'll leave it to the platform compositor to handle.
+
+        This also fixes a bug where if a layer changed from a backdrop
+        type to a tiled type, it would still retain its custom appearance
+        and we'd try to add children to the wrong layer.
+
+        Test: compositing/media-controls-bar-appearance-big.html
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::commitLayerChangesBeforeSublayers): Check if
+        a layer needs a backdrop before checking if it needs to tile.
+
+2015-05-06  Carlos Garcia Campos  <cgarcia@igalia.com> and Per Arne Vollan  <peavo@outlook.com>
+
+        [WinCairo] Compile error due to undefined symbols after r183868
+        https://bugs.webkit.org/show_bug.cgi?id=144692
+
+        Reviewed by Alex Christensen.
+
+        Speculative build fix. Add dummy PlatformDisplayWin.
+
+        * PlatformWinCairo.cmake: Add PlatformDisplay.cpp to compilation.
+        * platform/graphics/PlatformDisplay.cpp:
+        (WebCore::PlatformDisplay::createPlatformDisplay):
+        * platform/graphics/PlatformDisplay.h:
+        * platform/graphics/win/PlatformDisplayWin.h:
+        Add stubs to compile.
+        * WebCore.vcxproj/WebCore.vcxproj
+        * WebCore.vcxproj/WebCore.vcxproj.filters
+        Add new files to Windows build.
+
+2015-05-06  David Hyatt  <hyatt@apple.com>
+
+        Avoid copies in scrollOffsetForFixedPosition() and inline it.
+        https://bugs.webkit.org/show_bug.cgi?id=144709
+
+        Reviewed by Simon Fraser.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::frameScaleFactor):
+        Added so that scrollOffsetForFixedPosition() can be inlined without having to
+        reference Frame's implementation.
+
+        (WebCore::FrameView::scrollOffsetForFixedPosition): Deleted.
+        Moved this to the header.
+
+        * page/FrameView.h:
+        Inline scrollOffsetForFixedPosition() and get rid of all the copying
+        it was doing.
+
+2015-05-06  David Hyatt  <hyatt@apple.com>
+
+        RenderLayer::currentTransform computes a pixel snapped rect it doesn't use.
+        https://bugs.webkit.org/show_bug.cgi?id=144708
+
+        Reviewed by Simon Fraser.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::currentTransform):
+
+        Only compute a pixel snapped rect if we actually end up needing it. The common case
+        is that this rect is not needed, so pushing it inside the two if statements
+        speeds up the common case.
+
+2015-05-06  Timothy Horton  <timothy_horton@apple.com>
+
+        Fix the build.
+
+        * platform/spi/cocoa/QuartzCoreSPI.h:
+
+2015-05-06  David Hyatt  <hyatt@apple.com>
+
+        Optimize topLeftLocationOffset() addition in updateLayerPosition
+        https://bugs.webkit.org/show_bug.cgi?id=144704
+
+        Reviewed by Dean Jackson.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::FrameView):
+        * page/FrameView.h:
+        Move the hasFlippedBlocks bit to FrameView instead of RenderView. Works better for inlining
+        the check in any renderer header, and it also makes more sense conceptually, since the RenderView
+        itself could be a flipped block.
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::layoutOverflowRectForPropagation):
+        Change over to the FrameView bit.
+
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::applyTopLeftLocationOffset):
+        Add a new inlined function that can apply the top left location offset to a point without
+        multiple LayoutSize creations and copies. It invokes a helper for flipping that is not
+        inlined only in the case where actual flipped blocks exist in the render tree.
+
+        * rendering/RenderBoxModelObject.cpp:
+        (WebCore::RenderBoxModelObject::updateFromStyle):
+        Set the bit on the FrameView now instead of the RenderView.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::updateLayerPosition):
+        Call the new applyTopLeftLocationOffset function so that the point can have offsets added
+        in without any extra copies.
+
+        (WebCore::RenderLayer::calculateClipRects):
+        * rendering/RenderLineBoxList.cpp:
+        (WebCore::RenderLineBoxList::rangeIntersectsRect):
+        Switch over to the bit on the FrameView.
+
+        * rendering/RenderView.cpp:
+        (WebCore::RenderView::RenderView):
+        * rendering/RenderView.h:
+        Get rid of the bit on the RenderView.
+
+2015-05-05  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Introducing the Platform Abstraction Layer (PAL)
+        https://bugs.webkit.org/show_bug.cgi?id=143358
+
+        Reviewed by Simon Fraser.
+
+        * WebCore.xcodeproj/project.pbxproj: Let the project know about the .a
+        * Configurations/FeatureDefines.xcconfig: Updated
+
 2015-05-06  Eric Carlson  <eric.carlson@apple.com>
 
         [iOS] remove some unnecessary iOS-only media code

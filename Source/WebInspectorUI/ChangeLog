@@ -1,3 +1,73 @@
+2015-05-07  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Expanding Object with only __proto__ looks poor should have a label
+        https://bugs.webkit.org/show_bug.cgi?id=144755
+
+        Reviewed by Timothy Hatcher.
+
+        Better handle cases where expanding an object has only a __proto__
+        and no other properties.
+
+        * UserInterface/Views/ObjectTreePropertyTreeElement.js:
+        (WebInspector.ObjectTreePropertyTreeElement.mode.prototype.this.children.length):
+        (WebInspector.ObjectTreePropertyTreeElement):
+        * UserInterface/Views/ObjectTreeView.css:
+        (.object-tree-outline li .empty-message):
+        * UserInterface/Views/ObjectTreeView.js:
+        (WebInspector.ObjectTreeView.createEmptyMessageElement):
+        (WebInspector.ObjectTreeView.comparePropertyDescriptors):
+        (WebInspector.ObjectTreeView.prototype._updateProperties):
+
+2015-05-07  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Fix querySelector in ResourceContentView.js, caught by assertion
+        https://bugs.webkit.org/show_bug.cgi?id=144756
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/ResourceContentView.js:
+        (WebInspector.ResourceContentView.prototype._hasContent):
+        Ensure querySelector call is using the class name correctly.
+
+2015-05-06  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Docking Toolbar Buttons do not respect Docking Availability
+        https://bugs.webkit.org/show_bug.cgi?id=144714
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Base/Main.js:
+        (WebInspector.contentLoaded):
+        (WebInspector.updateDockingAvailability):
+        (WebInspector._updateDockNavigationItems):
+        Update the Toolbar UI based on docking availability.
+        Assume docking is unavailable by default.
+
+        * UserInterface/Protocol/InspectorFrontendAPI.js:
+        (InspectorFrontendAPI.setDockingUnavailable):
+        Add back this API as the backend may be calling it when
+        docking availability changes. This just calls out to
+        global WebInspector functions to update the Toolbar UI.
+
+        * UserInterface/Base/Test.js:
+        (WebInspector.updateDockedState):
+        (WebInspector.updateDockingAvailability):
+        Do nothing in tests.
+
+2015-05-06  Matt Baker  <mattbaker@apple.com>
+
+        Web Inspector: The text in the left pane overlaps the "Filter Time Events" field in the Timeline after the Web Inspector is resized
+        https://bugs.webkit.org/show_bug.cgi?id=144720
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/FilterBar.css:
+        (.filter-bar):
+        (.filter-bar > .navigation-bar):
+        (.filter-bar > input[type="search"]):
+        (.filter-bar > .navigation-bar > .item): Deleted.
+        Filter bar now has opaque background and height updated to the ubiquitous 29px.
+
 2015-05-06  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: DOMStorage exception and issue with sessionStorage

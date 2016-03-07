@@ -357,6 +357,11 @@ enum ResourceLoadPriority {
     
     File createFile(DOMString url);
     void queueMicroTask(long testNumber);
+    boolean testPreloaderSettingViewport();
 
     [Conditional=CONTENT_FILTERING] readonly attribute MockContentFilterSettings mockContentFilterSettings;
+
+#if defined(ENABLE_CSS_SCROLL_SNAP) && ENABLE_CSS_SCROLL_SNAP
+    [RaisesException] DOMString scrollSnapOffsets(Element element);
+#endif
 };

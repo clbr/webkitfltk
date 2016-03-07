@@ -28,6 +28,7 @@
 
 #if ENABLE(DFG_JIT)
 
+#include "ArrayPrototype.h"
 #include "DFGGraph.h"
 #include "DFGInsertionSet.h"
 #include "DFGPhase.h"
@@ -321,6 +322,28 @@ private:
             fixDoubleOrBooleanEdge(node->child2());
             break;
         }
+
+        case ArithRound: {
+            if (node->child1()->shouldSpeculateInt32OrBooleanForArithmetic() && node->canSpeculateInt32(FixupPass)) {
+                fixIntOrBooleanEdge(node->child1());
+                insertCheck<Int32Use>(m_indexInBlock, node->child1().node());
+                node->convertToIdentity();
+                break;
+            }
+            fixDoubleOrBooleanEdge(node->child1());
+
+            if (isInt32OrBooleanSpeculation(node->getHeapPrediction()) && m_graph.roundShouldSpeculateInt32(node, FixupPass)) {
+                node->setResult(NodeResultInt32);
+                if (bytecodeCanIgnoreNegativeZero(node->arithNodeFlags()))
+                    node->setArithRoundingMode(Arith::RoundingMode::Int32);
+                else
+                    node->setArithRoundingMode(Arith::RoundingMode::Int32WithNegativeZeroCheck);
+            } else {
+                node->setResult(NodeResultDouble);
+                node->setArithRoundingMode(Arith::RoundingMode::Double);
+            }
+            break;
+        }
             
         case ArithSqrt:
         case ArithFRound:
@@ -517,10 +540,17 @@ private:
             switch (arrayMode.type()) {
             case Array::Double:
                 if (arrayMode.arrayClass() == Array::OriginalArray
-                    && arrayMode.speculation() == Array::InBounds
-                    && m_graph.globalObjectFor(node->origin.semantic)->arrayPrototypeChainIsSane()
-                    && !(node->flags() & NodeBytecodeUsesAsOther))
-                    node->setArrayMode(arrayMode.withSpeculation(Array::SaneChain));
+                    && arrayMode.speculation() == Array::InBounds) {
+                    JSGlobalObject* globalObject = m_graph.globalObjectFor(node->origin.semantic);
+                    if (globalObject->arrayPrototypeChainIsSane()
+                        && !(node->flags() & NodeBytecodeUsesAsOther)) {
+                        m_graph.watchpoints().addLazily(
+                            globalObject->arrayPrototype()->structure()->transitionWatchpointSet());
+                        m_graph.watchpoints().addLazily(
+                            globalObject->objectPrototype()->structure()->transitionWatchpointSet());
+                        node->setArrayMode(arrayMode.withSpeculation(Array::SaneChain));
+                    }
+                }
                 break;
                 
             case Array::String:
@@ -1542,10 +1572,12 @@ private:
             m_insertionSet.insertNode(
                 m_indexInBlock, SpecNone, Check, origin, Edge(array, StringUse));
         } else {
+            // Note that we only need to be using a structure check if we opt for SaneChain, since
+            // that needs to protect against JSArray's __proto__ being changed.
             Structure* structure = arrayMode.originalArrayStructure(m_graph, origin.semantic);
         
             Edge indexEdge = index ? Edge(index, Int32Use) : Edge();
-        
+            
             if (arrayMode.doesConversion()) {
                 if (structure) {
                     m_insertionSet.insertNode(
