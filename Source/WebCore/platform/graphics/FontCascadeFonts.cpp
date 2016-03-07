@@ -27,7 +27,7 @@
  */
 
 #include "config.h"
-#include "FontGlyphs.h"
+#include "FontCascadeFonts.h"
 
 #include "FontCache.h"
 #include "FontCascade.h"
@@ -36,29 +36,28 @@
 namespace WebCore {
 
 
-FontGlyphs::FontGlyphs(PassRefPtr<FontSelector> fontSelector)
-    : m_cachedPrimaryFont(0)
+FontCascadeFonts::FontCascadeFonts(PassRefPtr<FontSelector> fontSelector)
+    : m_cachedPrimaryFont(nullptr)
     , m_fontSelector(fontSelector)
     , m_fontSelectorVersion(m_fontSelector ? m_fontSelector->version() : 0)
-    , m_generation(fontCache().generation())
+    , m_generation(FontCache::singleton().generation())
 {
 }
 
-FontGlyphs::FontGlyphs(const FontPlatformData& platformData)
-    : m_cachedPrimaryFont(0)
-    , m_fontSelector(0)
+FontCascadeFonts::FontCascadeFonts(const FontPlatformData& platformData)
+    : m_cachedPrimaryFont(nullptr)
     , m_fontSelectorVersion(0)
-    , m_generation(fontCache().generation())
+    , m_generation(FontCache::singleton().generation())
     , m_isForPlatformFont(true)
 {
-    m_realizedFallbackRanges.append(FontRanges(fontCache().fontForPlatformData(platformData)));
+    m_realizedFallbackRanges.append(FontRanges(FontCache::singleton().fontForPlatformData(platformData)));
 }
 
-FontGlyphs::~FontGlyphs()
+FontCascadeFonts::~FontCascadeFonts()
 {
 }
 
-void FontGlyphs::determinePitch(const FontDescription& description)
+void FontCascadeFonts::determinePitch(const FontDescription& description)
 {
     auto& primaryRanges = realizeFallbackRangesAt(description, 0);
     unsigned numRanges = primaryRanges.size();
@@ -68,7 +67,7 @@ void FontGlyphs::determinePitch(const FontDescription& description)
         m_pitch = VariablePitch;
 }
 
-bool FontGlyphs::isLoadingCustomFonts() const
+bool FontCascadeFonts::isLoadingCustomFonts() const
 {
     for (auto& fontRanges : m_realizedFallbackRanges) {
         if (fontRanges.isLoading())
@@ -81,6 +80,7 @@ static FontRanges realizeNextFallback(const FontDescription& description, unsign
 {
     ASSERT(index < description.familyCount());
 
+    auto& fontCache = FontCache::singleton();
     while (index < description.familyCount()) {
         const AtomicString& family = description.familyAt(index++);
         if (family.isEmpty())
@@ -90,22 +90,22 @@ static FontRanges realizeNextFallback(const FontDescription& description, unsign
             if (!ranges.isNull())
                 return ranges;
         }
-        if (auto font = fontCache().fontForFamily(description, family))
+        if (auto font = fontCache.fontForFamily(description, family))
             return FontRanges(WTF::move(font));
     }
     // We didn't find a font. Try to find a similar font using our own specific knowledge about our platform.
     // For example on OS X, we know to map any families containing the words Arabic, Pashto, or Urdu to the
     // Geeza Pro font.
-    return FontRanges(fontCache().similarFont(description));
+    return FontRanges(fontCache.similarFont(description));
 }
 
-const FontRanges& FontGlyphs::realizeFallbackRangesAt(const FontDescription& description, unsigned index)
+const FontRanges& FontCascadeFonts::realizeFallbackRangesAt(const FontDescription& description, unsigned index)
 {
     if (index < m_realizedFallbackRanges.size())
         return m_realizedFallbackRanges[index];
 
     ASSERT(index == m_realizedFallbackRanges.size());
-    ASSERT(fontCache().generation() == m_generation);
+    ASSERT(FontCache::singleton().generation() == m_generation);
 
     m_realizedFallbackRanges.append(FontRanges());
     auto& fontRanges = m_realizedFallbackRanges.last();
@@ -115,7 +115,7 @@ const FontRanges& FontGlyphs::realizeFallbackRangesAt(const FontDescription& des
         if (fontRanges.isNull() && m_fontSelector)
             fontRanges = m_fontSelector->fontRangesForFamily(description, standardFamily);
         if (fontRanges.isNull())
-            fontRanges = FontRanges(fontCache().lastResortFallbackFont(description));
+            fontRanges = FontRanges(FontCache::singleton().lastResortFallbackFont(description));
         return fontRanges;
     }
 
@@ -252,7 +252,7 @@ static GlyphData glyphDataForNonCJKCharacterWithGlyphOrientation(UChar32 charact
     return data;
 }
 
-GlyphData FontGlyphs::glyphDataForSystemFallback(UChar32 c, const FontDescription& description, FontVariant variant)
+GlyphData FontCascadeFonts::glyphDataForSystemFallback(UChar32 c, const FontDescription& description, FontVariant variant)
 {
     // System fallback is character-dependent.
     auto& primaryRanges = realizeFallbackRangesAt(description, 0);
@@ -285,7 +285,7 @@ GlyphData FontGlyphs::glyphDataForSystemFallback(UChar32 c, const FontDescriptio
     return fallbackGlyphData;
 }
 
-GlyphData FontGlyphs::glyphDataForVariant(UChar32 c, const FontDescription& description, FontVariant variant, unsigned fallbackIndex)
+GlyphData FontCascadeFonts::glyphDataForVariant(UChar32 c, const FontDescription& description, FontVariant variant, unsigned fallbackIndex)
 {
     while (true) {
         auto& fontRanges = realizeFallbackRangesAt(description, fallbackIndex++);
@@ -307,7 +307,7 @@ GlyphData FontGlyphs::glyphDataForVariant(UChar32 c, const FontDescription& desc
     return glyphDataForSystemFallback(c, description, variant);
 }
 
-GlyphData FontGlyphs::glyphDataForNormalVariant(UChar32 c, const FontDescription& description)
+GlyphData FontCascadeFonts::glyphDataForNormalVariant(UChar32 c, const FontDescription& description)
 {
     const unsigned pageNumber = c / GlyphPage::size;
 
@@ -365,7 +365,7 @@ static RefPtr<GlyphPage> glyphPageFromFontRanges(unsigned pageNumber, const Font
     return const_cast<GlyphPage*>(font->glyphPage(pageNumber));
 }
 
-GlyphData FontGlyphs::glyphDataForCharacter(UChar32 c, const FontDescription& description, FontVariant variant)
+GlyphData FontCascadeFonts::glyphDataForCharacter(UChar32 c, const FontDescription& description, FontVariant variant)
 {
     ASSERT(isMainThread());
     ASSERT(variant != AutoVariant);
@@ -392,7 +392,7 @@ GlyphData FontGlyphs::glyphDataForCharacter(UChar32 c, const FontDescription& de
     return glyphData;
 }
 
-void FontGlyphs::pruneSystemFallbacks()
+void FontCascadeFonts::pruneSystemFallbacks()
 {
     if (m_systemFallbackFontSet.isEmpty())
         return;

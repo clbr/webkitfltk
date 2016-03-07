@@ -150,6 +150,7 @@ typedef int64_t JIT_OPERATION(*Q_JITOperation_D)(double);
 typedef int32_t JIT_OPERATION (*Z_JITOperation_D)(double);
 typedef int32_t JIT_OPERATION (*Z_JITOperation_E)(ExecState*);
 typedef int32_t JIT_OPERATION (*Z_JITOperation_EC)(ExecState*, JSCell*);
+typedef int32_t JIT_OPERATION (*Z_JITOperation_EJZ)(ExecState*, EncodedJSValue, int32_t);
 typedef int32_t JIT_OPERATION (*Z_JITOperation_EJZZ)(ExecState*, EncodedJSValue, int32_t, int32_t);
 typedef size_t JIT_OPERATION (*S_JITOperation_ECC)(ExecState*, JSCell*, JSCell*);
 typedef size_t JIT_OPERATION (*S_JITOperation_EJ)(ExecState*, EncodedJSValue);
@@ -189,6 +190,7 @@ typedef void JIT_OPERATION (*V_JITOperation_ESsiJJI)(ExecState*, StructureStubIn
 typedef void JIT_OPERATION (*V_JITOperation_EVwsJ)(ExecState*, VariableWatchpointSet*, EncodedJSValue);
 typedef void JIT_OPERATION (*V_JITOperation_EZ)(ExecState*, int32_t);
 typedef void JIT_OPERATION (*V_JITOperation_EZJ)(ExecState*, int32_t, EncodedJSValue);
+typedef void JIT_OPERATION (*V_JITOperation_EZJZZZ)(ExecState*, int32_t, EncodedJSValue, int32_t, int32_t, int32_t);
 typedef void JIT_OPERATION (*V_JITOperation_EVm)(ExecState*, VM*);
 typedef void JIT_OPERATION (*V_JITOperation_J)(EncodedJSValue);
 typedef void JIT_OPERATION (*V_JITOperation_Z)(int32_t);
@@ -281,7 +283,6 @@ void JIT_OPERATION operationDebug(ExecState*, int32_t) WTF_INTERNAL;
 #if ENABLE(DFG_JIT)
 SlowPathReturnType JIT_OPERATION operationOptimize(ExecState*, int32_t) WTF_INTERNAL;
 #endif
-double JIT_OPERATION operationMathPow(double x, double y) WTF_INTERNAL;
 void JIT_OPERATION operationPutByIndex(ExecState*, EncodedJSValue, int32_t, EncodedJSValue);
 #if USE(JSVALUE64)
 void JIT_OPERATION operationPutGetterSetter(ExecState*, EncodedJSValue, Identifier*, EncodedJSValue, EncodedJSValue) WTF_INTERNAL;
