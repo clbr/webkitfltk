@@ -1,3 +1,479 @@
+2014-09-05  Matt Baker  <mattbaker@apple.com>
+
+        Web Inspector: breakpoint actions should work regardless of Content Security Policy
+        https://bugs.webkit.org/show_bug.cgi?id=136542
+
+        Reviewed by Mark Lam.
+
+        Added JSC::DebuggerEvalEnabler, an RAII object which enables eval on a 
+        JSGlobalObject for the duration of a scope, returning the eval enabled state to its
+        original value when the scope exits. Used by JSC::DebuggerCallFrame::evaluate 
+        to allow breakpoint actions to execute JS in pages with a Content Security Policy
+        that would normally prohibit this (such as Inspector's Main.html).
+
+        Refactored Inspector::InjectedScriptBase to use the RAII object instead of manually
+        setting eval enabled and then resetting the original eval enabled state.
+
+        NOTE: The JS::DebuggerEvalEnabler constructor checks the passed in ExecState pointer
+        for null to be equivalent with the original code in Inspector::InjectedScriptBase.
+        InjectedScriptBase is getting the ExecState from ScriptObject::scriptState(), which
+        can currently be null.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * debugger/DebuggerCallFrame.cpp:
+        (JSC::DebuggerCallFrame::evaluate):
+        * debugger/DebuggerEvalEnabler.h: Added.
+        (JSC::DebuggerEvalEnabler::DebuggerEvalEnabler):
+        (JSC::DebuggerEvalEnabler::~DebuggerEvalEnabler):
+        * inspector/InjectedScriptBase.cpp:
+        (Inspector::InjectedScriptBase::callFunctionWithEvalEnabled):
+
+2014-09-05  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] jsc.exe won't run.
+        https://bugs.webkit.org/show_bug.cgi?id=136481
+
+        Reviewed by Alex Christensen.
+        
+        We need to define WIN_CAIRO to avoid looking for the AAS folder.
+
+        * JavaScriptCore.vcxproj/jsc/DLLLauncherWinCairo.props: Added.
+        * JavaScriptCore.vcxproj/jsc/jscLauncher.vcxproj:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpLauncher.vcxproj:
+        * JavaScriptCore.vcxproj/testapi/testapiCommonCFLite.props:
+        * JavaScriptCore.vcxproj/testapi/testapiLauncher.vcxproj:
+
+2014-09-05  David Kilzer  <ddkilzer@apple.com>
+
+        JavaScriptCore should build with newer clang
+        <http://webkit.org/b/136002>
+        <rdar://problem/18020616>
+
+        Reviewed by Geoffrey Garen.
+
+        Other than the JSC::SourceProvider::asID() change (which simply
+        removes code that the optimizing compiler would have discarded
+        in Release builds), we move the |this| checks in OpaqueJSString
+        to NULL checks in to JSBase, JSObjectRef, JSScriptRef,
+        JSStringRef{CF} and JSValueRef.
+
+        Note that the following function arguments are _not_ NULL-checked
+        since doing so would just cover up bugs (and were not needed to
+        prevent any tests from failing):
+        - |script| in JSEvaluateScript(), JSCheckScriptSyntax();
+        - |body| in JSObjectMakeFunction();
+        - |source| in JSScriptCreateReferencingImmortalASCIIText()
+          (which is a const char* anyway);
+        - |source| in JSScriptCreateFromString().
+
+        * API/JSBase.cpp:
+        (JSEvaluateScript): Add NULL check for |sourceURL|.
+        (JSCheckScriptSyntax): Ditto.
+        * API/JSObjectRef.cpp:
+        (JSObjectMakeFunction): Ditto.
+        * API/JSScriptRef.cpp:
+        (JSScriptCreateReferencingImmortalASCIIText): Ditto.
+        (JSScriptCreateFromString): Add NULL check for |url|.
+        * API/JSStringRef.cpp:
+        (JSStringGetLength): Return early if NULL pointer is passed in.
+        (JSStringGetCharactersPtr): Ditto.
+        (JSStringGetUTF8CString): Ditto.  Also check |buffer| parameter.
+        * API/JSStringRefCF.cpp:
+        (JSStringCopyCFString): Ditto.
+        * API/JSValueRef.cpp:
+        (JSValueMakeString): Add NULL check for |string|.
+
+        * API/OpaqueJSString.cpp:
+        (OpaqueJSString::string): Remove code that checks |this|.
+        (OpaqueJSString::identifier): Ditto.
+        (OpaqueJSString::characters): Ditto.
+        * API/OpaqueJSString.h:
+        (OpaqueJSString::is8Bit): Remove code that checks |this|.
+        (OpaqueJSString::characters8): Ditto.
+        (OpaqueJSString::characters16): Ditto.
+        (OpaqueJSString::length): Ditto.
+
+        * parser/SourceProvider.h:
+        (JSC::SourceProvider::asID): Remove code that checks |this|.
+
+2014-06-06  Jer Noble  <jer.noble@apple.com>
+
+        Refactoring: make MediaTime the primary time type for audiovisual times.
+        https://bugs.webkit.org/show_bug.cgi?id=133579
+
+        Reviewed by Eric Carlson.
+
+        Add a utility function which converts a MediaTime to a JSNumber.
+
+        * runtime/JSCJSValue.h:
+        (JSC::jsNumber):
+
+2014-09-04  Michael Saboff  <msaboff@apple.com>
+
+        ARM: Add more coverage to ARMv7 disassembler
+        https://bugs.webkit.org/show_bug.cgi?id=136565
+
+        Reviewed by Mark Lam.
+
+        Added ARMV7 disassembler support for Push/Pop multiple and floating point instructions
+        VCMP, VCVT[R] between floating point and integer, and VLDR.
+
+        * disassembler/ARMv7/ARMv7DOpcode.cpp:
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPushPopMultiple::appendRegisterList):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPopMultiple::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPushMultiple::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVLDR::format):
+        * disassembler/ARMv7/ARMv7DOpcode.h:
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPushPopMultiple::registerList):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPushPopMultiple::condition):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::condition):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::dBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::vd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::szBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::eBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::mBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCMP::vm):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::condition):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::dBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::op2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::vd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::szBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::mBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVCVTBetweenFPAndInt::vm):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVLDR::condition):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVLDR::uBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVLDR::rn):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVLDR::vd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVLDR::doubleReg):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVLDR::immediate8):
+
+2014-09-04  Mark Lam  <mark.lam@apple.com>
+
+        Move PropertySlot's inline functions back to PropertySlot.h.
+        <https://webkit.org/b/136547>
+
+        Reviewed by Filip Pizlo.
+
+        * runtime/JSObject.h:
+        (JSC::PropertySlot::getValue): Deleted.
+        * runtime/PropertySlot.h:
+        (JSC::PropertySlot::getValue):
+
+2014-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Make sure that deleting all code first processes the call edge log, and reenable call edge profiling.
+
+        Rubber stamped by Sam Weinig.
+
+        * debugger/Debugger.cpp:
+        (JSC::Debugger::forEachCodeBlock):
+        (JSC::Debugger::setSteppingMode):
+        (JSC::Debugger::recompileAllJSFunctions):
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::recompileAllJSFunctionsForTypeProfiling):
+        * runtime/Options.h: Reenable call edge profiling.
+        * runtime/VM.cpp:
+        (JSC::VM::prepareToDiscardCode): Make sure this also processes the call edge log, in case any call edge profiles are about to be destroyed.
+        (JSC::VM::discardAllCode):
+        (JSC::VM::releaseExecutableMemory):
+        (JSC::VM::setEnabledProfiler):
+        (JSC::VM::waitForCompilationsToComplete): Deleted.
+        * runtime/VM.h: Rename waitForCompilationsToComplete() back to prepareToDiscardCode() because the purpose of the method - now as ever - is to do all of the things that need to be done to ensure that code may be safely deleted.
+
+2014-09-04  Akos Kiss  <akiss@inf.u-szeged.hu>
+
+        Ensure that the call frame set up by vmEntryToNative does not overlap with the stack of the callee
+        https://bugs.webkit.org/show_bug.cgi?id=136485
+
+        Reviewed by Michael Saboff.
+
+        Changed makeHostFunctionCall to keep the stack pointer above the call
+        frame set up by doVMEntry. Thus the callee will/can not override the top
+        of the call frame.
+
+        Refactored the two (32_64 and 64) versions of makeHostFunctionCall to be
+        more alike to help future maintenance.
+
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+
+2014-09-04  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION(r173031): crashes during run-layout-jsc on x86/Linux
+        https://bugs.webkit.org/show_bug.cgi?id=136436
+
+        Reviewed by Geoffrey Garen.
+
+        Instead of trying to calculate a stack pointer that allows for possible
+        stacked argument space, just use the "home" stack pointer location.
+        That stack pointer provides space for the worst case number of stacked
+        arguments on architectures that use stacked arguments.  It also provides
+        stack space so that the return PC and caller frame pointer that are stored
+        as part of making the call to operationCallEval will not override any part
+        of the callee frame created on the stack.
+
+        Changed compileCallEval() to use the stackPointer value of the calling
+        function.  That stack pointer is calculated to have enough space for
+        outgoing stacked arguments.  By moving the stack pointer to its "home"
+        position, the caller frame and return PC are not set as part of making
+        the call to operationCallEval().  Moved the explicit setting of the
+        callerFrame field of the callee CallFrame from operationCallEval() to
+        compileCallEval() since it has been the artifact of making a call for
+        most architectures.  Simplified the exception logic in compileCallEval()
+        as a result of the change.  To be compliant with the stack state
+        expected by virtualCallThunkGenerator(), moved the stack pointer to
+        point above the CallerFrameAndPC of the callee CallFrame.
+
+        * jit/JIT.h: Changed callOperationNoExceptionCheck(J_JITOperation_EE, ...)
+        to callOperation(J_JITOperation_EE, ...) as it now can do a typical exception
+        check.
+        * jit/JITCall.cpp & jit/JITCall32_64.cpp:
+        (JSC::JIT::compileCallEval): Use the home stack pointer when making the call
+        to operationCallEval.  Since the stack pointer adjustment no longer needs
+        to be done after making the call to operationCallEval(), the exception check
+        logic can be simplified.
+        (JSC::JIT::compileCallEvalSlowCase): Restored the stack pointer to point
+        to above the calleeFrame as this is what the generated thunk expects.
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation): Refactor of callOperationNoExceptionCheck
+        with the addition of a standard exception check.
+        (JSC::JIT::callOperationNoExceptionCheck): Deleted.
+        * jit/JITOperations.cpp:
+        (JSC::operationCallEval): Eliminated the explicit setting of caller frame
+        as that is now done in the code generated by compileCallEval().
+
+2014-09-03  Filip Pizlo  <fpizlo@apple.com>
+
+        Beef up the DFG's CFG analyses to include iterated dominance frontiers and more user-friendly BlockSets
+        https://bugs.webkit.org/show_bug.cgi?id=136520
+
+        Reviewed by Geoffrey Garen.
+        
+        Add code to compute iterated dominance frontiers. This involves using BlockSet a lot, so
+        this patch also makes BlockSet a lot more user-friendly.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * dfg/DFGBasicBlock.h:
+        * dfg/DFGBlockSet.cpp: Added.
+        (JSC::DFG::BlockSet::dump):
+        * dfg/DFGBlockSet.h:
+        (JSC::DFG::BlockSet::iterator::iterator):
+        (JSC::DFG::BlockSet::iterator::operator++):
+        (JSC::DFG::BlockSet::iterator::operator==):
+        (JSC::DFG::BlockSet::iterator::operator!=):
+        (JSC::DFG::BlockSet::Iterable::Iterable):
+        (JSC::DFG::BlockSet::Iterable::begin):
+        (JSC::DFG::BlockSet::Iterable::end):
+        (JSC::DFG::BlockSet::iterable):
+        (JSC::DFG::BlockAdder::BlockAdder):
+        (JSC::DFG::BlockAdder::operator()):
+        * dfg/DFGBlockSetInlines.h: Added.
+        (JSC::DFG::BlockSet::iterator::operator*):
+        * dfg/DFGDominators.cpp:
+        (JSC::DFG::Dominators::strictDominatorsOf):
+        (JSC::DFG::Dominators::dominatorsOf):
+        (JSC::DFG::Dominators::blocksStrictlyDominatedBy):
+        (JSC::DFG::Dominators::blocksDominatedBy):
+        (JSC::DFG::Dominators::dominanceFrontierOf):
+        (JSC::DFG::Dominators::iteratedDominanceFrontierOf):
+        * dfg/DFGDominators.h:
+        (JSC::DFG::Dominators::forAllStrictDominatorsOf):
+        (JSC::DFG::Dominators::forAllDominatorsOf):
+        (JSC::DFG::Dominators::forAllBlocksStrictlyDominatedBy):
+        (JSC::DFG::Dominators::forAllBlocksDominatedBy):
+        (JSC::DFG::Dominators::forAllBlocksInDominanceFrontierOf):
+        (JSC::DFG::Dominators::forAllBlocksInIteratedDominanceFrontierOf):
+        (JSC::DFG::Dominators::forAllBlocksInDominanceFrontierOfImpl):
+        (JSC::DFG::Dominators::forAllBlocksInIteratedDominanceFrontierOfImpl):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dumpBlockHeader):
+        * dfg/DFGInvalidationPointInjectionPhase.cpp:
+        (JSC::DFG::InvalidationPointInjectionPhase::run):
+
+2014-09-04  Mark Lam  <mark.lam@apple.com>
+
+        Fixed indentations and some style warnings in JavaScriptCore/runtime.
+        <https://webkit.org/b/136518>
+
+        Reviewed by Michael Saboff.
+
+        Also removed some superflous spaces.  There are no semantic changes.
+
+        * runtime/Completion.h:
+        * runtime/ConstructData.h:
+        * runtime/DateConstructor.h:
+        * runtime/DateInstance.h:
+        * runtime/DateInstanceCache.h:
+        * runtime/DatePrototype.h:
+        * runtime/Error.h:
+        * runtime/ErrorConstructor.h:
+        * runtime/ErrorInstance.h:
+        * runtime/ErrorPrototype.h:
+        * runtime/FunctionConstructor.h:
+        * runtime/FunctionPrototype.h:
+        * runtime/GetterSetter.h:
+        * runtime/Identifier.h:
+        * runtime/InitializeThreading.h:
+        * runtime/InternalFunction.h:
+        * runtime/JSAPIValueWrapper.h:
+        * runtime/JSFunction.h:
+        * runtime/JSLock.h:
+        * runtime/JSNotAnObject.h:
+        * runtime/JSONObject.h:
+        * runtime/JSString.h:
+        * runtime/JSTypeInfo.h:
+        * runtime/JSWrapperObject.h:
+        * runtime/Lookup.h:
+        * runtime/MathObject.h:
+        * runtime/NativeErrorConstructor.h:
+        * runtime/NativeErrorPrototype.h:
+        * runtime/NumberConstructor.h:
+        * runtime/NumberObject.h:
+        * runtime/NumberPrototype.h:
+        * runtime/NumericStrings.h:
+        * runtime/ObjectConstructor.h:
+        * runtime/ObjectPrototype.h:
+        * runtime/PropertyDescriptor.h:
+        * runtime/Protect.h:
+        * runtime/PutPropertySlot.h:
+        * runtime/RegExp.h:
+        * runtime/RegExpCachedResult.h:
+        * runtime/RegExpConstructor.h:
+        * runtime/RegExpMatchesArray.h:
+        * runtime/RegExpObject.h:
+        * runtime/RegExpPrototype.h:
+        * runtime/SmallStrings.h:
+        * runtime/StringConstructor.h:
+        * runtime/StringObject.h:
+        * runtime/StringPrototype.h:
+        * runtime/StructureChain.h:
+        * runtime/VM.h:
+
+2014-09-04  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
+
+        Remove CSS_FILTERS flag
+        https://bugs.webkit.org/show_bug.cgi?id=136529
+
+        Reviewed by Dirk Schulze.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-09-04  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r173248.
+        https://bugs.webkit.org/show_bug.cgi?id=136536
+
+        call edge profiling and polymorphic call inlining are still
+        causing crashes (Requested by eric_carlson on #webkit).
+
+        Reverted changeset:
+
+        "Reenable call edge profiling and polymorphic call inlining,
+        now that a bunch of the bugs"
+        http://trac.webkit.org/changeset/173248
+
+2014-09-04  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: the profiler should not accrue time to nodes while the debugger is paused
+        https://bugs.webkit.org/show_bug.cgi?id=136352
+
+        Reviewed by Timothy Hatcher.
+
+        Hook up pause/continue events to the LegacyProfiler and any active
+        ProfilerGenerators. If the debugger is paused, all intervening call
+        entries will be created with totalTime as 0.0.
+
+        * inspector/ScriptDebugServer.cpp:
+        (Inspector::ScriptDebugServer::handlePause):
+        * profiler/LegacyProfiler.cpp: Move from typedef'd callbacks to using
+        std::function. This allows callbacks to take different argument types.
+
+        (JSC::callFunctionForProfilesWithGroup):
+        (JSC::LegacyProfiler::willExecute):
+        (JSC::LegacyProfiler::didExecute):
+        (JSC::LegacyProfiler::exceptionUnwind):
+        (JSC::LegacyProfiler::didPause):
+        (JSC::LegacyProfiler::didContinue):
+        (JSC::dispatchFunctionToProfiles): Deleted.
+        * profiler/LegacyProfiler.h:
+        * profiler/ProfileGenerator.cpp:
+        (JSC::ProfileGenerator::ProfileGenerator):
+        (JSC::ProfileGenerator::endCallEntry):
+        (JSC::ProfileGenerator::didExecute): Deleted.
+        * profiler/ProfileGenerator.h:
+        (JSC::ProfileGenerator::didPause):
+        (JSC::ProfileGenerator::didContinue):
+
+2014-09-04  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r173245.
+        https://bugs.webkit.org/show_bug.cgi?id=136533
+
+        Broke JSC tests. (Requested by ddkilzer on #webkit).
+
+        Reverted changeset:
+
+        "JavaScriptCore should build with newer clang"
+        https://bugs.webkit.org/show_bug.cgi?id=136002
+        http://trac.webkit.org/changeset/173245
+
+2014-09-04  Brian J. Burg  <burg@cs.washington.edu>
+
+        LegacyProfiler: ProfileNodes should be used more like structs
+        https://bugs.webkit.org/show_bug.cgi?id=136381
+
+        Reviewed by Timothy Hatcher.
+
+        Previously, both the profile generator and individual profile nodes
+        were collectively responsible for creating new Call entries and
+        maintaining data structure invariants. This complexity is unnecessary.
+
+        This patch centralizes profile data creation inside the profile generator.
+        The profile nodes manage nextSibling and parent pointers, but do not
+        collect the current time or create new Call entries themselves.
+
+        Since ProfileNode::nextSibling and its callers are only used within
+        debug printing code, it should be compiled out for release builds.
+
+        * profiler/ProfileGenerator.cpp:
+        (JSC::ProfileGenerator::ProfileGenerator):
+        (JSC::AddParentForConsoleStartFunctor::operator()):
+        (JSC::ProfileGenerator::beginCallEntry): create a new Call entry.
+        (JSC::ProfileGenerator::endCallEntry): finish the last Call entry.
+        (JSC::ProfileGenerator::willExecute): inline ProfileNode::willExecute()
+        (JSC::ProfileGenerator::didExecute): inline ProfileNode::didExecute()
+        (JSC::ProfileGenerator::stopProfiling): Only walk up the spine.
+        (JSC::ProfileGenerator::removeProfileStart):
+        (JSC::ProfileGenerator::removeProfileEnd):
+        * profiler/ProfileGenerator.h:
+        * profiler/ProfileNode.cpp:
+        (JSC::ProfileNode::ProfileNode):
+        (JSC::ProfileNode::addChild):
+        (JSC::ProfileNode::removeChild):
+        (JSC::ProfileNode::spliceNode): Renamed from insertNode.
+        (JSC::ProfileNode::debugPrintRecursively):
+        (JSC::ProfileNode::willExecute): Deleted.
+        (JSC::ProfileNode::insertNode): Deleted.
+        (JSC::ProfileNode::stopProfiling): Deleted.
+        (JSC::ProfileNode::traverseNextNodePostOrder):
+        (JSC::ProfileNode::endAndRecordCall): Deleted.
+        (JSC::ProfileNode::debugPrintDataSampleStyle):
+        * profiler/ProfileNode.h:
+        (JSC::ProfileNode::Call::setStartTime):
+        (JSC::ProfileNode::Call::setTotalTime):
+        (JSC::ProfileNode::appendCall):
+        (JSC::ProfileNode::firstChild):
+        (JSC::ProfileNode::lastChild):
+        (JSC::ProfileNode::nextSibling):
+        (JSC::ProfileNode::setNextSibling):
+
 2014-09-02  Brian J. Burg  <burg@cs.washington.edu>
 
         Web Inspector: fix prefixes for subclasses of JSC::ConsoleClient

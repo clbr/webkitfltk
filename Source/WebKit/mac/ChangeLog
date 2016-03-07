@@ -1,3 +1,212 @@
+2014-09-05  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r173340 and r173342.
+        https://bugs.webkit.org/show_bug.cgi?id=136596
+
+        Broke many tests (Requested by ap on #webkit).
+
+        Reverted changesets:
+
+        "Remove PLATFORM(IOS) from WebCore/editing (Part 3)."
+        https://bugs.webkit.org/show_bug.cgi?id=136474
+        http://trac.webkit.org/changeset/173340
+
+        "Build fix after r173340."
+        http://trac.webkit.org/changeset/173342
+
+2014-09-05  Enrica Casucci  <enrica@apple.com>
+
+        Build fix after r173340.
+
+        * WebCoreSupport/WebEditorClient.h:
+        (kit):
+        (core):
+
+2014-09-05  Enrica Casucci  <enrica@apple.com>
+
+        Remove PLATFORM(IOS) from WebCore/editing (Part 3).
+        https://bugs.webkit.org/show_bug.cgi?id=136474
+
+        Reviewed by Benjamin Poulain.
+
+        This patch removes the use of PLATFORM(IOS) from TextAffinity.h
+        and removes the assumption that EAffinity values match NSSelectionAffinity
+        values. It also removes the includes in TextAffinity.h, creating the need to
+        include explicitly the files when necessary. It also removes the unnecessary
+        use of platform specific types, replacing them with WebCore types.
+
+        * WebCoreSupport/WebEditorClient.h: Added kit and core for EAffinity.
+        * WebView/WebFrameView.mm:
+        (-[WebFrameView _scrollToBeginningOfDocument]):
+        (-[WebFrameView _scrollToEndOfDocument]):
+
+2014-09-05  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Another attempt to fix the iOS build after <http://trac.webkit.org/changeset/173309>
+        (https://bugs.webkit.org/show_bug.cgi?id=136564)
+
+        Move #endif inside -viewDidMoveToWindow up one line such that the closing brace ('}') is after it.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView viewDidMoveToWindow]):
+
+2014-09-05  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Another attempt to fix the iOS build after <http://trac.webkit.org/changeset/173309>
+        (https://bugs.webkit.org/show_bug.cgi?id=136564)
+
+        Add !PLATFORM(IOS)-guard in -viewDidMoveToWindow around code that references WebHTMLViewPrivate.flagsChangedEventMonitor.
+        The instance variable WebHTMLViewPrivate.flagsChangedEventMonitor is guarded by !PLATFORM(IOS).
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView viewDidMoveToWindow]):
+
+2014-09-05  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Fix the iOS build after <http://trac.webkit.org/changeset/173309>
+        (https://bugs.webkit.org/show_bug.cgi?id=136564)
+
+        Include more code inside the !PLATFORM(IOS)-guarded section in -setDataSource:.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView setDataSource:]):
+
+2014-09-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Use tracking areas instead of (SPI) mouse moved notifications, and follow flags changes with an event monitor
+        https://bugs.webkit.org/show_bug.cgi?id=136564
+
+        Reviewed by Dan Bernstein.
+        
+        WebKit1 depended on mouse moved event notifications to track mouse
+        moves, and on being specially called by Safari to track flags
+        changes. WebKit2 does both these things better - it uses a tracking area
+        and event monitors. Copy those approaches.
+
+        * WebKit.order: Remove reference to obsolete call.
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLViewPrivate dealloc]): No need to deallocate tracking
+        area, since we now just always have one.
+        (-[WebHTMLViewPrivate clear]): ditto
+        (-[WebHTMLView _postFakeMouseMovedEventForFlagsChangedEvent:]):
+        New method that posts a fake mouse move event in response to
+        a flags change event, for use by the event monitor.
+        (+[WebHTMLView _postFlagsChangedEvent:]): Empty this old call,
+        still kept around for benefit of older Safari.
+        (-[WebHTMLView _updateMouseoverWithEvent:]): Handle Dashboard's
+        special mouseover mode (previously handled in a weird way).
+        (-[WebHTMLView close]): No more need to mess with mouse moved observer.
+        (-[WebHTMLView viewWillMoveToWindow:]): ditto
+        (-[WebHTMLView viewDidMoveToWindow]): ditto; but now hook up a flags
+        changed monitor.
+        (-[WebHTMLView windowDidBecomeKey:]): No need to handle non-key window
+        tracking area or mouse moved observer.
+        (-[WebHTMLView windowDidResignKey:]): ditto
+        (-[WebHTMLView windowWillOrderOnScreen:]): No need to mess with mouse
+        moved observer.
+        (-[WebHTMLView windowWillOrderOffScreen:]): ditto
+        (-[WebHTMLView mouseMoved:]): Converted from the old mouseMovedNotification:
+        (-[WebHTMLView setDataSource:]): Change if around body to early return. Hook
+        up tracking area - we have to do it here, because before this point, the
+        WebHTMLView does not know its WebView, which is where dashboard settings
+        live.
+        (-[WebHTMLView _removeMouseMovedObserverUnconditionally]): Deleted.
+        (-[WebHTMLView addMouseMovedObserver]): Deleted.
+        (-[WebHTMLView removeMouseMovedObserver]): Deleted.
+
+2014-09-04  Pratik Solanki  <psolanki@apple.com>
+
+        Bring back [WebPreferences setDiskImageCacheEnabled:] for backwards compatibility
+        https://bugs.webkit.org/show_bug.cgi?id=136560
+
+        Reviewed by Joseph Pecoraro.
+
+        I removed the disk image caching code in r173265. However, we still have clients that call
+        setDiskImageCacheEnabled. Add in a stub method until we can wean the clients off this call.
+
+        * WebView/WebPreferences.mm:
+        (-[WebPreferences setDiskImageCacheEnabled:]):
+        * WebView/WebPreferencesPrivate.h:
+
+2014-09-03  Andy Estes  <aestes@apple.com>
+
+        [Cocoa] Some WebKitLegacy headers migrated from WebCore incorrectly contain WEBCORE_EXPORT
+        https://bugs.webkit.org/show_bug.cgi?id=136521
+
+        Reviewed by Anders Carlsson.
+
+        Taught MigrateHeaders.make to remove WEBCORE_EXPORT from headers using this sed expression:
+
+            s/(^ *)WEBCORE_EXPORT /\1/g
+
+        This removes WEBCORE_EXPORT and a single following space character but preserves preceeding spaces.
+
+        * MigrateHeaders.make:
+
+2014-09-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Remove WebCoreSystemInterface glue for otherwise unused WKSI calls
+        https://bugs.webkit.org/show_bug.cgi?id=136527
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebCoreSupport/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+
+2014-09-04  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
+
+        Remove CSS_FILTERS flag
+        https://bugs.webkit.org/show_bug.cgi?id=136529
+
+        Reviewed by Dirk Schulze.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-09-04  Pratik Solanki  <psolanki@apple.com>
+
+        Remove iOS specific disk image cache
+        https://bugs.webkit.org/show_bug.cgi?id=136517
+
+        Reviewed by Antti Koivisto.
+
+        Disk image cache code unnecessarily complicates SharedBuffer implementation. We can remove
+        this now since we don't enable it in WebKit2 on iOS.
+
+        * Misc/WebCache.mm:
+        (+[WebCache statistics]):
+        * WebView/WebDataSource.mm:
+        (-[WebDataSource _setAllowToBeMemoryMapped]):
+        (-[WebDataSource setDataSourceDelegate:]):
+        (-[WebDataSource dataSourceDelegate]):
+        (-[WebDataSource dealloc]):
+        (BufferMemoryMapped): Deleted.
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.mm:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences diskImageCacheEnabled]): Deleted.
+        (-[WebPreferences setDiskImageCacheEnabled:]): Deleted.
+        (-[WebPreferences diskImageCacheMinimumImageSize]): Deleted.
+        (-[WebPreferences setDiskImageCacheMinimumImageSize:]): Deleted.
+        (-[WebPreferences diskImageCacheMaximumCacheSize]): Deleted.
+        (-[WebPreferences setDiskImageCacheMaximumCacheSize:]): Deleted.
+        (-[WebPreferences _diskImageCacheSavedCacheDirectory]): Deleted.
+        (-[WebPreferences _setDiskImageCacheSavedCacheDirectory:]): Deleted.
+        * WebView/WebPreferencesPrivate.h:
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        (+[WebView _handleMemoryWarning]):
+        (-[WebView _preferencesChanged:]):
+
+2014-09-04  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Make iOS build when ENABLE_TOUCH_EVENT and ENABLE_IOS_TOUCH_EVENTS disabled
+        https://bugs.webkit.org/show_bug.cgi?id=136494
+
+        Reviewed by Andy Estes.
+
+        * MigrateHeaders.make: Migrate header WebEventRegion.h only when ENABLE_IOS_TOUCH_EVENTS is defined.
+        * WebView/WebView.mm: Substitute ENABLE(IOS_TOUCH_EVENTS) for ENABLE(TOUCH_EVENTS).
+
 2014-09-02  Brian J. Burg  <burg@cs.washington.edu>
 
         Web Inspector: fix prefixes for subclasses of JSC::ConsoleClient

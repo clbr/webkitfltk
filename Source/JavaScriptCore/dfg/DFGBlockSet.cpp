@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,21 +23,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef MediaTimeMac_h
-#define MediaTimeMac_h
+#include "config.h"
+#include "DFGBlockSet.h"
 
-#if USE(COREMEDIA)
+#if ENABLE(DFG_JIT)
 
-#include <CoreMedia/CMTime.h>
-#include <wtf/MediaTime.h>
+namespace JSC { namespace DFG {
 
-namespace WebCore {
-
-CMTime toCMTime(const MediaTime&);
-MediaTime toMediaTime(const CMTime&);
-
+void BlockSet::dump(PrintStream& out) const
+{
+    CommaPrinter comma(" ");
+    for (BlockIndex blockIndex = m_set.findBit(0, true); blockIndex < m_set.size(); blockIndex = m_set.findBit(blockIndex + 1, true))
+        out.print(comma, "#", blockIndex);
 }
 
-#endif
+} } // namespace JSC::DFG
 
-#endif
+#endif // ENABLE(DFG_JIT)
+

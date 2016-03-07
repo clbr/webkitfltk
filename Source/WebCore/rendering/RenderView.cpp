@@ -110,9 +110,7 @@ RenderView::RenderView(Document& document, PassRef<RenderStyle> style)
     , m_renderQuoteHead(0)
     , m_renderCounterCount(0)
     , m_selectionWasCaret(false)
-#if ENABLE(CSS_FILTERS)
     , m_hasSoftwareFilters(false)
-#endif
 #if ENABLE(SERVICE_CONTROLS)
     , m_selectionRectGatherer(*this)
 #endif
@@ -710,7 +708,7 @@ void RenderView::computeRectForRepaint(const RenderLayerModelObject* repaintCont
         rect = LayoutRect(layer()->transform()->mapRect(snapRectToDevicePixels(rect, document().deviceScaleFactor())));
 }
 
-bool RenderView::isScrollableOrRubberbandable() const
+bool RenderView::isScrollableOrRubberbandableBox() const
 {
     // The main frame might be allowed to rubber-band even if there is no content to scroll to. This is unique to
     // the main frame; subframes and overflow areas have to have content that can be scrolled to in order to rubber-band.

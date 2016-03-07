@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,24 +23,42 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DiskImageCacheClientIOS_h
-#define DiskImageCacheClientIOS_h
+#include "config.h"
+#include "MediaTimeQTKit.h"
 
-#if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+#if PLATFORM(MAC)
 
-#include <wtf/RefCounted.h>
-#include <wtf/text/WTFString.h>
+#import "SoftLinking.h"
+#import <QTKit/QTTime.h>
+
+SOFT_LINK_FRAMEWORK(QTKit);
+SOFT_LINK_CONSTANT(QTKit, QTIndefiniteTime, QTTime);
+SOFT_LINK_CONSTANT(QTKit, QTZeroTime, QTTime);
+SOFT_LINK(QTKit, QTTimeCompare, NSComparisonResult, (QTTime time, QTTime otherTime), (time, otherTime));
+SOFT_LINK(QTKit, QTMakeTime, QTTime, (long long timeValue, long timeScale), (timeValue, timeScale));
 
 namespace WebCore {
 
-class DiskImageCacheClient : public RefCounted<DiskImageCacheClient> {
-public:
-    virtual ~DiskImageCacheClient() { }
-    virtual void didCreateDiskImageCacheDirectory(const String& directory) = 0;
-};
+MediaTime toMediaTime(const QTTime& qtTime)
+{
+    if (qtTime.flags & kQTTimeIsIndefinite)
+        return MediaTime::indefiniteTime();
+    return MediaTime(qtTime.timeValue, qtTime.timeScale);
+}
 
-} // namespace WebCore
+QTTime toQTTime(const MediaTime& mediaTime)
+{
+    if (mediaTime.isIndefinite() || mediaTime.isInvalid())
+        return getQTIndefiniteTime();
+    if (!mediaTime)
+        return getQTZeroTime();
 
-#endif // ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return QTMakeTime(mediaTime.timeValue(), mediaTime.timeScale());
+#pragma clang diagnostic pop
+}
 
-#endif // DiskImageCacheClientIOS_h
+}
+
+#endif

@@ -522,11 +522,6 @@ HTMLElement* HTMLTextAreaElement::placeholderElement() const
     return m_placeholder;
 }
 
-bool HTMLTextAreaElement::matchesReadOnlyPseudoClass() const
-{
-    return isReadOnly();
-}
-
 bool HTMLTextAreaElement::matchesReadWritePseudoClass() const
 {
     return !isDisabledOrReadOnly();

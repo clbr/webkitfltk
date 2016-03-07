@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,17 +23,21 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+#ifndef MediaTimeQTKit_h
+#define MediaTimeQTKit_h
 
-#import <WebCore/DiskImageCacheClientIOS.h>
+#if PLATFORM(MAC)
 
-class WebDiskImageCacheClient final : public WebCore::DiskImageCacheClient {
-public:
-    static PassRefPtr<WebDiskImageCacheClient> create() { return adoptRef(new WebDiskImageCacheClient()); }
-private:
-    virtual void didCreateDiskImageCacheDirectory(const WTF::String& directory) override;
-};
+#include <QTKit/QTTime.h>
+#include <wtf/MediaTime.h>
 
-void WebKitInitializeWebDiskImageCache();
+namespace WebCore {
+
+QTTime toQTTime(const MediaTime&);
+MediaTime toMediaTime(const QTTime&);
+    
+}
 
 #endif
+
+#endif // MediaTimeQTKit_h

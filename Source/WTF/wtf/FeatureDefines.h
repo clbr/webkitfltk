@@ -70,10 +70,6 @@
 #define ENABLE_CURSOR_SUPPORT 0
 #endif
 
-#if !defined(ENABLE_DISK_IMAGE_CACHE)
-#define ENABLE_DISK_IMAGE_CACHE 1
-#endif
-
 #if !defined(ENABLE_DRAG_SUPPORT)
 #define ENABLE_DRAG_SUPPORT 0
 #endif
@@ -374,10 +370,6 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 
 #if !defined(ENABLE_CSS_COMPOSITING)
 #define ENABLE_CSS_COMPOSITING 0
-#endif
-
-#if !defined(ENABLE_CSS_FILTERS)
-#define ENABLE_CSS_FILTERS 0
 #endif
 
 #if !defined(ENABLE_CSS_IMAGE_ORIENTATION)
