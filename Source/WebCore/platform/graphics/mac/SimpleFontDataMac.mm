@@ -474,13 +474,13 @@ bool SimpleFontData::canRenderCombiningCharacterSequence(const UChar* characters
     ASSERT(isMainThread());
 
     if (!m_combiningCharacterSequenceSupport)
-        m_combiningCharacterSequenceSupport = adoptPtr(new HashMap<String, bool>);
+        m_combiningCharacterSequenceSupport = std::make_unique<HashMap<String, bool>>();
 
     WTF::HashMap<String, bool>::AddResult addResult = m_combiningCharacterSequenceSupport->add(String(characters, length), false);
     if (!addResult.isNewEntry)
         return addResult.iterator->value;
 
-    RetainPtr<CGFontRef> cgFont = adoptCF(CTFontCopyGraphicsFont(platformData().ctFont(), 0));
+    RetainPtr<CFTypeRef> fontEqualityObject = platformData().objectForEqualityCheck();
 
     ProviderInfo info = { characters, length, getCFStringAttributes(0, platformData().orientation()) };
     RetainPtr<CTLineRef> line = adoptCF(CTLineCreateWithUniCharProvider(&provideStringAndAttributes, 0, &info));
@@ -493,8 +493,7 @@ bool SimpleFontData::canRenderCombiningCharacterSequence(const UChar* characters
         ASSERT(CFGetTypeID(ctRun) == CTRunGetTypeID());
         CFDictionaryRef runAttributes = CTRunGetAttributes(ctRun);
         CTFontRef runFont = static_cast<CTFontRef>(CFDictionaryGetValue(runAttributes, kCTFontAttributeName));
-        RetainPtr<CGFontRef> runCGFont = adoptCF(CTFontCopyGraphicsFont(runFont, 0));
-        if (!CFEqual(runCGFont.get(), cgFont.get()))
+        if (!CFEqual(fontEqualityObject.get(), FontPlatformData::objectForEqualityCheck(runFont).get()))
             return false;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,35 +23,30 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LoaderStrategy_h
-#define LoaderStrategy_h
+#ifndef SecurityOriginPolicy_h
+#define SecurityOriginPolicy_h
 
-#include "ResourceHandleTypes.h"
-#include <wtf/Vector.h>
+#include <wtf/Ref.h>
+#include <wtf/RefCounted.h>
 
 namespace WebCore {
 
-class BlobRegistry;
-class NetworkingContext;
-class ResourceError;
-class ResourceLoadScheduler;
-class ResourceRequest;
-class ResourceResponse;
+class SecurityOrigin;
 
-class WEBCORE_EXPORT LoaderStrategy {
+class SecurityOriginPolicy : public RefCounted<SecurityOriginPolicy> {
 public:
-    WEBCORE_EXPORT virtual ResourceLoadScheduler* resourceLoadScheduler();
+    static Ref<SecurityOriginPolicy> create(Ref<SecurityOrigin>&&);
+    ~SecurityOriginPolicy();
 
-    WEBCORE_EXPORT virtual void loadResourceSynchronously(NetworkingContext*, unsigned long identifier, const ResourceRequest&, StoredCredentials, ClientCredentialPolicy, ResourceError&, ResourceResponse&, Vector<char>& data);
+    // FIXME: This should return a const reference.
+    SecurityOrigin& origin() { return m_securityOrigin; }
 
-    WEBCORE_EXPORT virtual BlobRegistry* createBlobRegistry();
+private:
+    explicit SecurityOriginPolicy(Ref<SecurityOrigin>&&);
 
-protected:
-    virtual ~LoaderStrategy()
-    {
-    }
+    Ref<SecurityOrigin> m_securityOrigin;
 };
 
-} // namespace WebCore
+}
 
-#endif // LoaderStrategy_h
+#endif // SecurityOriginPolicy_h

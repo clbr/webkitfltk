@@ -1,3 +1,1318 @@
+2014-12-26  Andreas Kling  <akling@apple.com>
+
+        Purge PassRefPtr from Element and ElementRareData.
+        <https://webkit.org/b/139949>
+
+        Reviewed by Anders Carlsson.
+
+        Make functions that used to take PassRefPtr now take Ref&& or RefPtr&&
+        instead depending on possible nullity of incoming values.
+
+        * dom/Element.cpp:
+        (WebCore::Element::addShadowRoot):
+        (WebCore::Element::setBeforePseudoElement):
+        (WebCore::Element::setAfterPseudoElement):
+        * dom/Element.h:
+        * dom/ElementRareData.h:
+        (WebCore::ElementRareData::setShadowRoot):
+        (WebCore::ElementRareData::setBeforePseudoElement):
+        (WebCore::ElementRareData::setAfterPseudoElement):
+        * dom/PseudoElement.h:
+        * dom/ShadowRoot.h:
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::setBeforeOrAfterPseudoElement):
+        (WebCore::Style::attachBeforeOrAfterPseudoElementIfNeeded):
+
+2014-12-26  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/19348208> REGRESSION (r177027): iOS builds use the wrong toolchain
+        https://bugs.webkit.org/show_bug.cgi?id=139950
+
+        Reviewed by David Kilzer.
+
+        * Configurations/Base.xcconfig: Only define TOOLCHAINS when building for OS X, doing so
+        in a manner that works with Xcode 5.1.1.
+
+2014-12-25  Dhi Aurrahman  <diorahman@rockybars.com>
+
+        Allow strings as argument to :lang()
+        https://bugs.webkit.org/show_bug.cgi?id=139678
+
+        Reviewed by Benjamin Poulain.
+
+        Allow strings as argument to :lang()[1]. The selector with empty string argument (e.g. :lang(""))
+        is handled as never matching.
+
+        [1] http://www.w3.org/blog/CSS/2014/12/11/minutes-telecon-231/
+
+        Test: fast/css/css-lang-selector-with-string-arguments-text.html
+              fast/selectors/lang-extended-filtering-with-string-arguments.html
+
+        * css/CSSGrammar.y.in:
+        * css/SelectorCheckerTestFunctions.h:
+        (WebCore::matchesLangPseudoClass):
+
+2014-12-25  Andreas Kling  <akling@apple.com>
+
+        DOM exception creator functions should return Ref.
+        <https://webkit.org/b/139947>
+
+        Reviewed by Chris Dumez.
+
+        Tweak all the FooException::create() to return Ref instead of
+        PassRefPtr since construction always succeeds.
+
+        Also add a toJS() overload for ImplType& to keep bindings building.
+
+        * Modules/indexeddb/IDBDatabaseException.h:
+        (WebCore::IDBDatabaseException::create):
+        * Modules/webdatabase/SQLException.h:
+        (WebCore::SQLException::create):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateHeader):
+        * dom/DOMCoreException.h:
+        (WebCore::DOMCoreException::create):
+        * dom/EventException.h:
+        (WebCore::EventException::create):
+        * dom/RangeException.h:
+        (WebCore::RangeException::create):
+        * fileapi/FileException.h:
+        (WebCore::FileException::create):
+        * svg/SVGException.h:
+        (WebCore::SVGException::create):
+        * xml/XMLHttpRequestException.h:
+        (WebCore::XMLHttpRequestException::create):
+        * xml/XPathException.h:
+        (WebCore::XPathException::create):
+
+2014-12-25  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, fix build break on win debug build since r177737.
+
+        Partial revert some code in r177737 because it causes build error on win debug buildbot.
+
+        * dom/ElementIteratorAssertions.h:
+        (WebCore::ElementIteratorAssertions::ElementIteratorAssertions):
+
+2014-12-25  Dan Bernstein  <mitz@apple.com>
+
+        Give extract-localizable-strings an option to treat warnings as errors
+        https://bugs.webkit.org/show_bug.cgi?id=139943
+
+        Reviewed by Darin Adler.
+
+        Add a --treat-warnings-as-errors option, which makes the script emit its warnings as errors
+        and exit with a non-0 return code if it emitted any warnings.
+
+        * extract-localizable-strings.pl:
+        Added $treatWarningsAsErrors variable, set to true if the option is passed in.
+
+        (emitWarning): Added. If $treatWarningsAsErrors is true, omits the "warning: " token from
+        the message, which makes it appear as an error in Xcode, and sets $sawError to 1.
+
+        Replaced all print statements that printed warnings with calls to emitWarning.
+
+2014-12-25  Dan Bernstein  <mitz@apple.com>
+
+        Bring the state of WEBCORE_EXPORT annotations closer to what the exports file specifies.
+        https://bugs.webkit.org/show_bug.cgi?id=136172
+
+        Reviewed by Darin Adler.
+
+        * bridge/NP_jsobject.cpp: Give functions from npruntime_impl.h defined in this file default
+        using a compiler pragma, in lieu of introducing WebCore-specific macros into that header.
+        * bridge/npruntime.cpp: Ditto.
+
+        * platform/mac/WebCoreSystemInterface.mm: Similarly for WebCoreSystemInterface.h.
+
+        Added or removed WEBCORE_EXPORT in these files as necessary to match what is currently in
+        the exports file:
+
+        * Modules/mediasource/SourceBuffer.h:
+        * bindings/js/JSDOMBinding.h:
+        * css/CSSComputedStyleDeclaration.h:
+        * dom/ContainerNode.h:
+        * dom/Document.h:
+        * dom/MouseEvent.h:
+        * dom/Range.h:
+        * dom/SecurityContext.h:
+        * editing/Editor.h:
+        * editing/mac/DictionaryLookup.h:
+        * loader/FrameLoaderClient.h:
+        * loader/LoaderStrategy.h:
+        * loader/icon/IconDatabaseBase.h:
+        * page/ChromeClient.h:
+        * page/EventHandler.h:
+        * page/FrameSnapshotting.h:
+        * page/Page.h:
+        * page/PageOverlay.h:
+        * page/PageOverlayController.h:
+        * page/TextIndicator.h:
+        * page/UserContentController.h:
+        * page/WheelEventDeltaTracker.h:
+        * page/mac/TextIndicatorWindow.h:
+        * platform/DatabaseStrategy.h:
+        * platform/ScrollableArea.h:
+        * platform/SuddenTermination.h:
+        * platform/URL.h:
+        * platform/animation/Animation.h:
+        * platform/cocoa/MachSendRight.h:
+        * platform/graphics/FloatRoundedRect.h:
+        * platform/graphics/GraphicsContext.h:
+        * platform/graphics/GraphicsLayer.h:
+        * platform/graphics/Path.h:
+        * platform/graphics/TextRun.h:
+        * platform/graphics/ca/TileController.h:
+        * platform/graphics/cocoa/IOSurface.h:
+        * platform/graphics/mac/ColorMac.h:
+        * platform/mac/SoftLinking.h:
+        * platform/mac/WebCoreNSStringExtras.h:
+        * platform/mock/mediasource/MockMediaPlayerMediaSource.h:
+        * platform/network/BlobRegistry.h:
+        * platform/network/ResourceRequestBase.h:
+        * platform/network/ResourceResponseBase.h:
+        * rendering/HitTestResult.h:
+        * rendering/RenderInline.h:
+        * rendering/RenderLayerBacking.h:
+        * rendering/RenderLayerCompositor.cpp:
+        * rendering/RenderView.h:
+        * storage/StorageNamespaceImpl.h:
+        * storage/StorageNamespaceProvider.h:
+        * testing/Internals.h:
+
+2014-12-25  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log better using FeatureCounter why PageCache is failing due to pruned resources
+        https://bugs.webkit.org/show_bug.cgi?id=139921
+
+        Reviewed by Gavin Barraclough and Alexey Proskuryakov.
+
+        Log better using FeatureCounter why PageCache is failing due to pruned
+        resources. In particular, we now distinguish if the resource was pruned
+        due to:
+        - Memory pressure
+        - Page cache capacity reached
+        - WebProcess suspended (WK2)
+
+        * WebCore.exp.in:
+        * history/HistoryItem.cpp:
+        (WebCore::HistoryItem::HistoryItem):
+        * history/HistoryItem.h:
+        * history/PageCache.cpp:
+        (WebCore::PageCache::pruneToCapacityNow):
+        (WebCore::PageCache::setCapacity):
+        (WebCore::pruningReasonToFeatureCounterKey):
+        (WebCore::PageCache::add):
+        (WebCore::PageCache::take):
+        (WebCore::PageCache::get):
+        (WebCore::PageCache::prune):
+        * history/PageCache.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::commitProvisionalLoad):
+        * platform/FeatureCounterKeys.h:
+        * platform/MemoryPressureHandler.cpp:
+        (WebCore::MemoryPressureHandler::releaseCriticalMemory):
+
+2014-12-25  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Use std::unique_ptr<> in WebCore/dom, plugin, and graphics
+        https://bugs.webkit.org/show_bug.cgi?id=139938
+        
+        Reviewed by Darin Adler.
+
+        Replace OwnPtr with std::unique_ptr<> and std::make_unique<>.
+
+        * dom/ElementIteratorAssertions.h:
+        (WebCore::ElementIteratorAssertions::ElementIteratorAssertions):
+        * dom/MutationObserverRegistration.cpp:
+        (WebCore::MutationObserverRegistration::observedSubtreeNodeWillDetach):
+        (WebCore::MutationObserverRegistration::clearTransientRegistrations):
+        * dom/MutationObserverRegistration.h:
+        * dom/StyledElement.cpp:
+        (WebCore::StyledElement::rebuildPresentationAttributeStyle):
+        * platform/graphics/SimpleFontData.h:
+        (WebCore::SimpleFontData::boundsForGlyph):
+        * platform/graphics/freetype/SimpleFontDataFreeType.cpp:
+        (WebCore::SimpleFontData::canRenderCombiningCharacterSequence):
+        * platform/graphics/mac/SimpleFontDataMac.mm:
+        (WebCore::SimpleFontData::canRenderCombiningCharacterSequence):
+        * plugins/PluginStream.cpp:
+        (WebCore::PluginStream::didReceiveData):
+        * plugins/PluginStream.h:
+
+2014-12-25  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177712 and r177717.
+        https://bugs.webkit.org/show_bug.cgi?id=139944
+
+        Caused flaky assertion failures (Requested by ap on #webkit).
+
+        Reverted changesets:
+
+        "[iOS] Log better using FeatureCounter why PageCache is
+        failing due to pruned resources"
+        https://bugs.webkit.org/show_bug.cgi?id=139921
+        http://trac.webkit.org/changeset/177712
+
+        "Unreviewed, fix build warning after r177712"
+        http://trac.webkit.org/changeset/177717
+
+2014-12-25  Andreas Kling  <akling@apple.com>
+
+        Rebaseline bindings tests after r177733.
+
+        * bindings/scripts/test/JS/JSTestCallback.h:
+        (WebCore::JSTestCallback::create):
+
+2014-12-24  Andreas Kling  <akling@apple.com>
+
+        Convert more creator functions to return Ref instead of PassRefPtr.
+        <https://webkit.org/b/139939>
+
+        Reviewed by Darin Adler.
+
+        Convert a slew of functions to return Ref<T> instead of PassRefPtr<T>
+        where the result is guaranteed to never be null.
+
+        * Modules/geolocation/Coordinates.h:
+        (WebCore::Coordinates::create):
+        (WebCore::Coordinates::isolatedCopy):
+        * Modules/plugins/QuickTimePluginReplacement.mm:
+        (WebCore::QuickTimePluginReplacement::isolatedWorld):
+        * Modules/webaudio/AnalyserNode.h:
+        (WebCore::AnalyserNode::create):
+        * Modules/webaudio/AudioBuffer.cpp:
+        (WebCore::AudioBuffer::create):
+        (WebCore::AudioBuffer::createFromAudioFileData):
+        * Modules/webaudio/AudioBuffer.h:
+        * Modules/webaudio/AudioBufferSourceNode.cpp:
+        (WebCore::AudioBufferSourceNode::create):
+        * Modules/webaudio/AudioBufferSourceNode.h:
+        * Modules/webaudio/AudioContext.cpp:
+        (WebCore::AudioContext::create):
+        * Modules/webaudio/AudioContext.h:
+        * Modules/webaudio/AudioListener.h:
+        (WebCore::AudioListener::create):
+        * Modules/webaudio/AudioParam.h:
+        (WebCore::AudioParam::create):
+        * Modules/webaudio/BiquadFilterNode.h:
+        (WebCore::BiquadFilterNode::create):
+        * Modules/webaudio/ConvolverNode.h:
+        (WebCore::ConvolverNode::create):
+        * Modules/webaudio/DelayNode.h:
+        (WebCore::DelayNode::create):
+        * Modules/webaudio/DynamicsCompressorNode.h:
+        (WebCore::DynamicsCompressorNode::create):
+        * Modules/webdatabase/ChangeVersionWrapper.h:
+        (WebCore::ChangeVersionWrapper::create):
+        * Modules/webdatabase/DatabaseAuthorizer.cpp:
+        (WebCore::DatabaseAuthorizer::create):
+        * Modules/webdatabase/DatabaseAuthorizer.h:
+        * Modules/webdatabase/DatabaseThread.h:
+        (WebCore::DatabaseThread::create):
+        * Modules/websockets/WorkerThreadableWebSocketChannel.cpp:
+        (WebCore::WorkerThreadableWebSocketChannel::Bridge::send):
+        * accessibility/AXObjectCache.cpp:
+        (WebCore::createFromRenderer):
+        (WebCore::createFromNode):
+        * accessibility/AccessibilityARIAGrid.cpp:
+        (WebCore::AccessibilityARIAGrid::create):
+        * accessibility/AccessibilityARIAGrid.h:
+        * accessibility/AccessibilityARIAGridCell.cpp:
+        (WebCore::AccessibilityARIAGridCell::create):
+        * accessibility/AccessibilityARIAGridCell.h:
+        * accessibility/AccessibilityARIAGridRow.cpp:
+        (WebCore::AccessibilityARIAGridRow::create):
+        * accessibility/AccessibilityARIAGridRow.h:
+        * accessibility/AccessibilityImageMapLink.cpp:
+        (WebCore::AccessibilityImageMapLink::create):
+        * accessibility/AccessibilityImageMapLink.h:
+        * accessibility/AccessibilityList.cpp:
+        (WebCore::AccessibilityList::create):
+        * accessibility/AccessibilityList.h:
+        * accessibility/AccessibilityListBox.cpp:
+        (WebCore::AccessibilityListBox::create):
+        * accessibility/AccessibilityListBox.h:
+        * accessibility/AccessibilityListBoxOption.cpp:
+        (WebCore::AccessibilityListBoxOption::create):
+        * accessibility/AccessibilityListBoxOption.h:
+        * accessibility/AccessibilityMediaControls.cpp:
+        (WebCore::AccessibilityMediaControl::create):
+        (WebCore::AccessibilityMediaControlsContainer::create):
+        (WebCore::AccessibilityMediaTimeline::create):
+        (WebCore::AccessibilityMediaTimeDisplay::create):
+        * accessibility/AccessibilityMediaControls.h:
+        * accessibility/AccessibilityMenuList.cpp:
+        (WebCore::AccessibilityMenuList::create):
+        * accessibility/AccessibilityMenuList.h:
+        * accessibility/AccessibilityMenuListOption.h:
+        * accessibility/AccessibilityMenuListPopup.h:
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::create):
+        * accessibility/AccessibilityNodeObject.h:
+        * accessibility/AccessibilityProgressIndicator.cpp:
+        (WebCore::AccessibilityProgressIndicator::create):
+        * accessibility/AccessibilityProgressIndicator.h:
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::create):
+        * accessibility/AccessibilityRenderObject.h:
+        * accessibility/AccessibilitySVGRoot.cpp:
+        (WebCore::AccessibilitySVGRoot::create):
+        * accessibility/AccessibilitySVGRoot.h:
+        * accessibility/AccessibilityScrollView.cpp:
+        (WebCore::AccessibilityScrollView::create):
+        * accessibility/AccessibilityScrollView.h:
+        * accessibility/AccessibilityScrollbar.cpp:
+        (WebCore::AccessibilityScrollbar::create):
+        * accessibility/AccessibilityScrollbar.h:
+        * accessibility/AccessibilitySearchFieldButtons.cpp:
+        (WebCore::AccessibilitySearchFieldCancelButton::create):
+        * accessibility/AccessibilitySearchFieldButtons.h:
+        * accessibility/AccessibilitySlider.cpp:
+        (WebCore::AccessibilitySlider::create):
+        (WebCore::AccessibilitySliderThumb::create):
+        * accessibility/AccessibilitySlider.h:
+        * accessibility/AccessibilitySpinButton.cpp:
+        (WebCore::AccessibilitySpinButton::create):
+        (WebCore::AccessibilitySpinButtonPart::create):
+        * accessibility/AccessibilitySpinButton.h:
+        * accessibility/AccessibilityTable.cpp:
+        (WebCore::AccessibilityTable::create):
+        * accessibility/AccessibilityTable.h:
+        * accessibility/AccessibilityTableCell.cpp:
+        (WebCore::AccessibilityTableCell::create):
+        * accessibility/AccessibilityTableCell.h:
+        * accessibility/AccessibilityTableColumn.cpp:
+        (WebCore::AccessibilityTableColumn::create):
+        * accessibility/AccessibilityTableColumn.h:
+        * accessibility/AccessibilityTableHeaderContainer.cpp:
+        (WebCore::AccessibilityTableHeaderContainer::create):
+        * accessibility/AccessibilityTableHeaderContainer.h:
+        * accessibility/AccessibilityTableRow.cpp:
+        (WebCore::AccessibilityTableRow::create):
+        * accessibility/AccessibilityTableRow.h:
+        * bindings/js/CachedScriptSourceProvider.h:
+        (WebCore::CachedScriptSourceProvider::create):
+        * bindings/js/DOMWrapperWorld.h:
+        (WebCore::DOMWrapperWorld::create):
+        * bindings/js/SerializedScriptValue.cpp:
+        (WebCore::CloneDeserializer::getJSValue):
+        * bindings/objc/DOMCustomXPathNSResolver.h:
+        (WebCore::DOMCustomXPathNSResolver::create):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateCallbackHeader):
+        * bridge/c/c_instance.h:
+        (JSC::Bindings::CInstance::create):
+        * crypto/CryptoKeyPair.h:
+        (WebCore::CryptoKeyPair::create):
+        * crypto/keys/CryptoKeyAES.h:
+        * crypto/keys/CryptoKeyHMAC.h:
+        * crypto/keys/CryptoKeyRSA.h:
+        * crypto/mac/CryptoKeyRSAMac.cpp:
+        (WebCore::CryptoKeyRSA::generatePair):
+        * css/DOMWindowCSS.cpp:
+        (WebCore::DOMWindowCSS::create):
+        * css/DOMWindowCSS.h:
+        * css/DashboardRegion.h:
+        (WebCore::DashboardRegion::create):
+        * css/FontLoader.h:
+        * dom/DOMError.h:
+        (WebCore::DOMError::create):
+        * dom/DOMStringList.h:
+        (WebCore::DOMStringList::create):
+        * dom/DataTransfer.cpp:
+        (WebCore::DataTransfer::createForCopyAndPaste):
+        (WebCore::DataTransfer::createForDragAndDrop):
+        * dom/DataTransfer.h:
+        * dom/DeviceMotionData.cpp:
+        (WebCore::DeviceMotionData::Acceleration::create):
+        (WebCore::DeviceMotionData::RotationRate::create):
+        (WebCore::DeviceMotionData::create):
+        * dom/DeviceMotionData.h:
+        * dom/DeviceOrientationData.cpp:
+        (WebCore::DeviceOrientationData::create):
+        * dom/DeviceOrientationData.h:
+        * dom/DocumentMarker.cpp:
+        (WebCore::DocumentMarkerDescription::create):
+        * editing/AlternativeTextController.cpp:
+        (WebCore::AutocorrectionAlternativeDetails::create):
+        (WebCore::DictationAlternativeDetails::create):
+        * editing/AlternativeTextController.h:
+        (WebCore::DictationMarkerDetails::create):
+        * editing/AppendNodeCommand.h:
+        (WebCore::AppendNodeCommand::create):
+        * editing/ApplyStyleCommand.h:
+        (WebCore::ApplyStyleCommand::create):
+        * editing/BreakBlockquoteCommand.h:
+        (WebCore::BreakBlockquoteCommand::create):
+        * editing/CompositeEditCommand.cpp:
+        (WebCore::EditCommandComposition::create):
+        * editing/CompositeEditCommand.h:
+        * editing/CreateLinkCommand.h:
+        (WebCore::CreateLinkCommand::create):
+        * editing/DeleteFromTextNodeCommand.h:
+        (WebCore::DeleteFromTextNodeCommand::create):
+        * editing/DeleteSelectionCommand.h:
+        (WebCore::DeleteSelectionCommand::create):
+        * editing/DictationCommand.cpp:
+        (WebCore::DictationMarkerSupplier::create):
+        * editing/DictationCommand.h:
+        (WebCore::DictationCommand::create):
+        * editing/EditingStyle.h:
+        (WebCore::EditingStyle::create):
+        * editing/Editor.cpp:
+        (WebCore::Editor::applyStyle):
+        (WebCore::Editor::applyParagraphStyle):
+        * editing/FormatBlockCommand.h:
+        (WebCore::FormatBlockCommand::create):
+        * editing/IndentOutdentCommand.h:
+        (WebCore::IndentOutdentCommand::create):
+        * editing/InsertIntoTextNodeCommand.h:
+        (WebCore::InsertIntoTextNodeCommand::create):
+        * editing/InsertLineBreakCommand.h:
+        (WebCore::InsertLineBreakCommand::create):
+        * editing/InsertNodeBeforeCommand.h:
+        (WebCore::InsertNodeBeforeCommand::create):
+        * editing/InsertParagraphSeparatorCommand.h:
+        (WebCore::InsertParagraphSeparatorCommand::create):
+        * editing/InsertTextCommand.h:
+        (WebCore::InsertTextCommand::create):
+        (WebCore::InsertTextCommand::createWithMarkerSupplier):
+        * editing/MergeIdenticalElementsCommand.h:
+        (WebCore::MergeIdenticalElementsCommand::create):
+        * editing/ModifySelectionListLevel.h:
+        (WebCore::IncreaseSelectionListLevelCommand::create):
+        (WebCore::DecreaseSelectionListLevelCommand::create):
+        * editing/MoveSelectionCommand.h:
+        (WebCore::MoveSelectionCommand::create):
+        * editing/RemoveCSSPropertyCommand.h:
+        (WebCore::RemoveCSSPropertyCommand::create):
+        * editing/RemoveFormatCommand.h:
+        (WebCore::RemoveFormatCommand::create):
+        * editing/RemoveNodeCommand.h:
+        (WebCore::RemoveNodeCommand::create):
+        * editing/RemoveNodePreservingChildrenCommand.h:
+        (WebCore::RemoveNodePreservingChildrenCommand::create):
+        * editing/ReplaceNodeWithSpanCommand.h:
+        (WebCore::ReplaceNodeWithSpanCommand::create):
+        * editing/ReplaceSelectionCommand.h:
+        (WebCore::ReplaceSelectionCommand::create):
+        * editing/SetNodeAttributeCommand.h:
+        (WebCore::SetNodeAttributeCommand::create):
+        * editing/SetSelectionCommand.h:
+        (WebCore::SetSelectionCommand::create):
+        * editing/SimplifyMarkupCommand.h:
+        (WebCore::SimplifyMarkupCommand::create):
+        * editing/SpellChecker.cpp:
+        (WebCore::SpellCheckRequest::create):
+        * editing/SpellChecker.h:
+        * editing/SpellingCorrectionCommand.cpp:
+        (WebCore::SpellingCorrectionRecordUndoCommand::create):
+        * editing/SpellingCorrectionCommand.h:
+        (WebCore::SpellingCorrectionCommand::create):
+        * editing/SplitElementCommand.h:
+        (WebCore::SplitElementCommand::create):
+        * editing/SplitTextNodeCommand.h:
+        (WebCore::SplitTextNodeCommand::create):
+        * editing/SplitTextNodeContainingElementCommand.h:
+        (WebCore::SplitTextNodeContainingElementCommand::create):
+        * editing/TypingCommand.h:
+        (WebCore::TypingCommand::create):
+        * editing/UnlinkCommand.h:
+        (WebCore::UnlinkCommand::create):
+        * editing/WrapContentsInDummySpanCommand.h:
+        (WebCore::WrapContentsInDummySpanCommand::create):
+        * editing/ios/DictationCommandIOS.h:
+        (WebCore::DictationCommandIOS::create):
+        * fileapi/Blob.h:
+        (WebCore::Blob::create):
+        (WebCore::Blob::deserialize):
+        (WebCore::Blob::slice):
+        * fileapi/File.h:
+        * fileapi/FileList.h:
+        (WebCore::FileList::create):
+        * fileapi/FileReader.cpp:
+        (WebCore::FileReader::create):
+        * fileapi/FileReader.h:
+        * fileapi/FileReaderSync.h:
+        (WebCore::FileReaderSync::create):
+        * history/BackForwardList.h:
+        (WebCore::BackForwardList::create):
+        * history/HistoryItem.h:
+        (WebCore::HistoryItem::create):
+        * html/DOMURL.cpp:
+        (WebCore::DOMURL::create):
+        * html/DOMURL.h:
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::plugInImageElementIsolatedWorld):
+        * html/canvas/CanvasGradient.h:
+        (WebCore::CanvasGradient::create):
+        * html/canvas/CanvasPattern.cpp:
+        (WebCore::CanvasPattern::create):
+        * html/canvas/CanvasPattern.h:
+        * html/canvas/DOMPath.h:
+        * html/shadow/DetailsMarkerControl.cpp:
+        (WebCore::DetailsMarkerControl::create):
+        * html/shadow/DetailsMarkerControl.h:
+        * html/track/AudioTrack.h:
+        * html/track/AudioTrackList.h:
+        * html/track/DataCue.h:
+        * inspector/CommandLineAPIHost.cpp:
+        (WebCore::CommandLineAPIHost::create):
+        * inspector/CommandLineAPIHost.h:
+        * loader/DocumentLoader.h:
+        (WebCore::DocumentLoader::create):
+        * loader/FormState.cpp:
+        (WebCore::FormState::create):
+        * loader/FormState.h:
+        * loader/FormSubmission.cpp:
+        (WebCore::FormSubmission::create):
+        * loader/FormSubmission.h:
+        * loader/TextResourceDecoder.h:
+        (WebCore::TextResourceDecoder::create):
+        * loader/ThreadableLoaderClientWrapper.h:
+        (WebCore::ThreadableLoaderClientWrapper::create):
+        * loader/WorkerThreadableLoader.h:
+        (WebCore::WorkerThreadableLoader::create):
+        * loader/appcache/ApplicationCache.h:
+        (WebCore::ApplicationCache::create):
+        * loader/appcache/ApplicationCacheResource.h:
+        (WebCore::ApplicationCacheResource::create):
+        * loader/appcache/DOMApplicationCache.h:
+        * loader/archive/ArchiveResource.cpp:
+        (WebCore::ArchiveResource::create):
+        * loader/archive/ArchiveResource.h:
+        * loader/icon/IconDatabaseBase.h:
+        (WebCore::EnumCallback::create):
+        (WebCore::ObjectCallback::create):
+        * loader/icon/IconRecord.h:
+        (WebCore::IconRecord::create):
+        * mathml/MathMLInlineContainerElement.cpp:
+        (WebCore::MathMLInlineContainerElement::create):
+        * mathml/MathMLInlineContainerElement.h:
+        * mathml/MathMLMathElement.cpp:
+        (WebCore::MathMLMathElement::create):
+        * mathml/MathMLMathElement.h:
+        * mathml/MathMLMencloseElement.cpp:
+        (WebCore::MathMLMencloseElement::create):
+        * mathml/MathMLMencloseElement.h:
+        * mathml/MathMLSelectElement.cpp:
+        (WebCore::MathMLSelectElement::create):
+        * mathml/MathMLSelectElement.h:
+        * mathml/MathMLTextElement.cpp:
+        (WebCore::MathMLTextElement::create):
+        * mathml/MathMLTextElement.h:
+        * page/BarProp.h:
+        (WebCore::BarProp::create):
+        * page/Crypto.h:
+        (WebCore::Crypto::create):
+        * page/DOMSecurityPolicy.h:
+        (WebCore::DOMSecurityPolicy::create):
+        * page/DOMSelection.h:
+        (WebCore::DOMSelection::create):
+        * page/DOMWindow.h:
+        * page/DOMWindowExtension.h:
+        (WebCore::DOMWindowExtension::create):
+        * page/FrameView.cpp:
+        (WebCore::FrameView::create):
+        * page/FrameView.h:
+        * page/animation/CompositeAnimation.h:
+        (WebCore::CompositeAnimation::create):
+        * page/scrolling/AsyncScrollingCoordinator.h:
+        * platform/Cursor.h:
+        (WebCore::SharedCursor::create):
+        * platform/FileChooser.cpp:
+        (WebCore::FileChooser::create):
+        * platform/FileChooser.h:
+        * platform/animation/Animation.h:
+        (WebCore::Animation::create):
+        * platform/audio/AudioBus.cpp:
+        (WebCore::AudioBus::create):
+        (WebCore::AudioBus::createBufferFromRange):
+        (WebCore::AudioBus::createBySampleRateConverting):
+        (WebCore::AudioBus::createByMixingToMono):
+        * platform/audio/AudioBus.h:
+        * platform/audio/AudioHardwareListener.cpp:
+        (WebCore::AudioHardwareListener::create):
+        * platform/audio/AudioHardwareListener.h:
+        * platform/audio/mac/AudioHardwareListenerMac.cpp:
+        (WebCore::AudioHardwareListener::create):
+        (WebCore::AudioHardwareListenerMac::create):
+        * platform/audio/mac/AudioHardwareListenerMac.h:
+        * platform/graphics/AudioTrackPrivate.h:
+        (WebCore::AudioTrackPrivate::create):
+        * platform/graphics/BitmapImage.h:
+        * platform/graphics/CrossfadeGeneratedImage.h:
+        * platform/graphics/FontFeatureSettings.h:
+        (WebCore::FontFeatureSettings::create):
+        * platform/graphics/Image.cpp:
+        (WebCore::Image::nullImage):
+        * platform/graphics/avfoundation/AudioSourceProviderAVFObjC.h:
+        * platform/graphics/avfoundation/AudioSourceProviderAVFObjC.mm:
+        (WebCore::AudioSourceProviderAVFObjC::create):
+        * platform/graphics/filters/DistantLightSource.h:
+        (WebCore::DistantLightSource::create):
+        * platform/graphics/filters/FEBlend.cpp:
+        (WebCore::FEBlend::create):
+        * platform/graphics/filters/FEBlend.h:
+        * platform/graphics/filters/FEColorMatrix.cpp:
+        (WebCore::FEColorMatrix::create):
+        * platform/graphics/filters/FEColorMatrix.h:
+        * platform/graphics/filters/FEComponentTransfer.cpp:
+        (WebCore::FEComponentTransfer::create):
+        * platform/graphics/filters/FEComponentTransfer.h:
+        * platform/graphics/filters/FEComposite.cpp:
+        (WebCore::FEComposite::create):
+        * platform/graphics/filters/FEComposite.h:
+        * platform/graphics/filters/FEConvolveMatrix.cpp:
+        (WebCore::FEConvolveMatrix::create):
+        * platform/graphics/filters/FEConvolveMatrix.h:
+        * platform/graphics/filters/FEDiffuseLighting.cpp:
+        (WebCore::FEDiffuseLighting::create):
+        * platform/graphics/filters/FEDiffuseLighting.h:
+        * platform/graphics/filters/FEDisplacementMap.cpp:
+        (WebCore::FEDisplacementMap::create):
+        * platform/graphics/filters/FEDisplacementMap.h:
+        * platform/graphics/filters/FEDropShadow.cpp:
+        (WebCore::FEDropShadow::create):
+        * platform/graphics/filters/FEDropShadow.h:
+        * platform/graphics/filters/FEFlood.cpp:
+        (WebCore::FEFlood::create):
+        * platform/graphics/filters/FEFlood.h:
+        * platform/graphics/filters/FEGaussianBlur.cpp:
+        (WebCore::FEGaussianBlur::create):
+        * platform/graphics/filters/FEGaussianBlur.h:
+        * platform/graphics/filters/FEMerge.cpp:
+        (WebCore::FEMerge::create):
+        * platform/graphics/filters/FEMerge.h:
+        * platform/graphics/filters/FEMorphology.cpp:
+        (WebCore::FEMorphology::create):
+        * platform/graphics/filters/FEMorphology.h:
+        * platform/graphics/filters/FEOffset.cpp:
+        (WebCore::FEOffset::create):
+        * platform/graphics/filters/FEOffset.h:
+        * platform/graphics/filters/FESpecularLighting.cpp:
+        (WebCore::FESpecularLighting::create):
+        * platform/graphics/filters/FESpecularLighting.h:
+        * platform/graphics/filters/FETile.cpp:
+        (WebCore::FETile::create):
+        * platform/graphics/filters/FETile.h:
+        * platform/graphics/filters/FETurbulence.cpp:
+        (WebCore::FETurbulence::create):
+        * platform/graphics/filters/FETurbulence.h:
+        * platform/graphics/ios/DisplayRefreshMonitorIOS.h:
+        (WebCore::DisplayRefreshMonitorIOS::create):
+        * platform/graphics/mac/ComplexTextController.h:
+        (WebCore::ComplexTextController::ComplexTextRun::create):
+        * platform/network/BlobData.h:
+        (WebCore::RawData::create):
+        (WebCore::BlobData::create):
+        * platform/network/BlobDataFileReference.h:
+        (WebCore::BlobDataFileReference::create):
+        * platform/network/cf/FormDataStreamCFNet.cpp:
+        * platform/text/BidiContext.cpp:
+        (WebCore::BidiContext::createUncached):
+        (WebCore::BidiContext::create):
+        * platform/text/BidiContext.h:
+        * plugins/DOMMimeType.h:
+        (WebCore::DOMMimeType::create):
+        * plugins/DOMMimeTypeArray.cpp:
+        (WebCore::DOMMimeTypeArray::item):
+        (WebCore::DOMMimeTypeArray::namedItem):
+        * plugins/DOMMimeTypeArray.h:
+        (WebCore::DOMMimeTypeArray::create):
+        * plugins/DOMPlugin.cpp:
+        (WebCore::DOMPlugin::item):
+        (WebCore::DOMPlugin::namedItem):
+        * plugins/DOMPlugin.h:
+        (WebCore::DOMPlugin::create):
+        * plugins/DOMPluginArray.cpp:
+        (WebCore::DOMPluginArray::item):
+        (WebCore::DOMPluginArray::namedItem):
+        * plugins/DOMPluginArray.h:
+        (WebCore::DOMPluginArray::create):
+        * plugins/PluginData.h:
+        (WebCore::PluginData::create):
+        * rendering/ClipPathOperation.h:
+        * rendering/CounterNode.cpp:
+        (WebCore::CounterNode::create):
+        * rendering/CounterNode.h:
+        * rendering/style/BasicShapes.h:
+        * rendering/style/CursorList.h:
+        (WebCore::CursorList::create):
+        * replay/CapturingInputCursor.cpp:
+        (WebCore::CapturingInputCursor::create):
+        * replay/CapturingInputCursor.h:
+        * storage/Storage.cpp:
+        (WebCore::Storage::create):
+        * storage/Storage.h:
+        * storage/StorageAreaImpl.cpp:
+        (WebCore::StorageAreaImpl::create):
+        * storage/StorageAreaImpl.h:
+        * storage/StorageAreaSync.cpp:
+        (WebCore::StorageAreaSync::create):
+        * storage/StorageAreaSync.h:
+        * storage/StorageMap.cpp:
+        (WebCore::StorageMap::create):
+        * storage/StorageMap.h:
+        * storage/StorageSyncManager.cpp:
+        (WebCore::StorageSyncManager::create):
+        * storage/StorageSyncManager.h:
+        * workers/DedicatedWorkerGlobalScope.cpp:
+        (WebCore::DedicatedWorkerGlobalScope::create):
+        * workers/DedicatedWorkerGlobalScope.h:
+        * workers/DedicatedWorkerThread.cpp:
+        (WebCore::DedicatedWorkerThread::create):
+        (WebCore::DedicatedWorkerThread::createWorkerGlobalScope):
+        * workers/DedicatedWorkerThread.h:
+        * workers/DefaultSharedWorkerRepository.cpp:
+        * workers/SharedWorkerGlobalScope.cpp:
+        (WebCore::SharedWorkerGlobalScope::create):
+        * workers/SharedWorkerGlobalScope.h:
+        * workers/SharedWorkerThread.cpp:
+        (WebCore::SharedWorkerThread::create):
+        (WebCore::SharedWorkerThread::createWorkerGlobalScope):
+        * workers/SharedWorkerThread.h:
+        * workers/WorkerGlobalScope.cpp:
+        (WebCore::WorkerGlobalScope::importScripts):
+        * workers/WorkerLocation.h:
+        (WebCore::WorkerLocation::create):
+        * workers/WorkerScriptLoader.h:
+        (WebCore::WorkerScriptLoader::create):
+        * workers/WorkerThread.h:
+        * xml/DOMParser.h:
+        (WebCore::DOMParser::create):
+        * xml/NativeXPathNSResolver.h:
+        (WebCore::NativeXPathNSResolver::create):
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::create):
+        * xml/XMLHttpRequest.h:
+        * xml/XMLHttpRequestProgressEventThrottle.cpp:
+        (WebCore::XMLHttpRequestProgressEventThrottle::flushProgressEvent):
+        * xml/XMLSerializer.h:
+        (WebCore::XMLSerializer::create):
+        * xml/XPathEvaluator.h:
+        (WebCore::XPathEvaluator::create):
+        * xml/XPathResult.h:
+        (WebCore::XPathResult::create):
+        * xml/XSLStyleSheet.h:
+        * xml/XSLTProcessor.h:
+        (WebCore::XSLTProcessor::create):
+
+2014-12-24  Benjamin Poulain  <bpoulain@apple.com>
+
+        Small cleanup of RenderBlock::paint()
+        https://bugs.webkit.org/show_bug.cgi?id=139849
+
+        Reviewed by Daniel Bates.
+
+        Remove a couple of instructions by putting variable in the right scope.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::paint):
+
+2014-12-24  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] WebCoreSystemInterface.h declares two unused symbols
+        https://bugs.webkit.org/show_bug.cgi?id=139937
+
+        Reviewed by Tim Horton.
+
+        * platform/graphics/FontPlatformData.h: Removed unused typedefs.
+
+        * platform/graphics/mac/FontCustomPlatformData.cpp:
+        (WebCore::createFontCustomPlatformData): Stop passing always-zero containerRef parameter to
+        FontCustomPlatformData constructor.
+
+        * platform/graphics/mac/FontCustomPlatformData.h: Removed unused typedefs.
+        (WebCore::FontCustomPlatformData::FontCustomPlatformData): Removed unused container
+        parameter and m_atsContainer member variable.
+
+        * platform/mac/WebCoreSystemInterface.h: Removed unused typedefs and symbols.
+
+2014-12-23  Chris Dumez  <cdumez@apple.com>
+
+        Simplify RenderStyle::invalidColor() function
+        https://bugs.webkit.org/show_bug.cgi?id=139898
+
+        Reviewed by Andreas Kling.
+
+        Simplify RenderStyle::invalidColor() function by getting rid of the
+        static variable. The default constructor for Color is very cheap
+        anyway.
+
+        * rendering/style/RenderStyle.h:
+
+2014-12-23  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        Unreviewed, fix build warning after r177712
+
+        ../../Source/WebCore/history/PageCache.cpp: In function ‘const char* WebCore::pruningReasonToFeatureCounterKey(WebCore::PruningReason)’:
+        ../../Source/WebCore/history/PageCache.cpp:449:1: error: control reaches end of non-void function [-Werror=return-type]
+
+        No new tests, no behavior changes.
+
+        * history/PageCache.cpp:
+        (WebCore::pruningReasonToFeatureCounterKey):
+
+2014-12-23  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log better using FeatureCounter why PageCache is failing due to pruned resources
+        https://bugs.webkit.org/show_bug.cgi?id=139921
+        <rdar://problem/19255690>
+
+        Reviewed by Gavin Barraclough.
+
+        Log better using FeatureCounter why PageCache is failing due to pruned
+        resources. In particular, we now distinguish if the resource was pruned
+        due to:
+        - Memory pressure
+        - Page cache capacity reached
+        - WebProcess suspended (WK2)
+
+        * WebCore.exp.in:
+        * history/HistoryItem.cpp:
+        (WebCore::HistoryItem::HistoryItem):
+        * history/HistoryItem.h:
+        * history/PageCache.cpp:
+        (WebCore::PageCache::pruneToCapacityNow):
+        (WebCore::PageCache::setCapacity):
+        (WebCore::pruningReasonToFeatureCounterKey):
+        (WebCore::PageCache::add):
+        (WebCore::PageCache::take):
+        (WebCore::PageCache::get):
+        (WebCore::PageCache::prune):
+        * history/PageCache.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::commitProvisionalLoad):
+        * platform/FeatureCounterKeys.h:
+        * platform/MemoryPressureHandler.cpp:
+        (WebCore::MemoryPressureHandler::releaseCriticalMemory):
+
+2014-12-23  Andreas Kling  <akling@apple.com>
+
+        [Mac] Fix nullptr dereference in EventHandler::platformPrepareForWheelEvents().
+        <https://webkit.org/b/139923>
+        <rdar://problem/19182531>
+
+        Reviewed by Chris Dumez.
+
+        Don't dereference 'wheelEventTarget' until we know it's non-null.
+        This manifested as a crash in Node::renderBox() with some versions of LLVM.
+
+        The compiler was free to assume that the ContainerNode* 'candidate' in
+        findEnclosingScrollableContainer() would always be non-null on the first
+        iteration of the loop.
+
+        I suspect that we can get here with a null 'wheelEventTarget' during the
+        rubberbanding phase of a wheel scroll; if the cursor is sitting over the
+        exposed "gutter" area.
+
+        * page/mac/EventHandlerMac.mm:
+        (WebCore::findEnclosingScrollableContainer):
+        (WebCore::EventHandler::platformPrepareForWheelEvents):
+
+2014-12-23  Timothy Horton  <timothy_horton@apple.com>
+
+        Install a TextIndicator for link immediate actions
+        https://bugs.webkit.org/show_bug.cgi?id=139897
+        <rdar://problem/19333076>
+
+        Reviewed by Anders Carlsson.
+
+        * platform/spi/mac/QuickLookMacSPI.h:
+        Add a new piece of SPI.
+
+2014-12-23  Sam Weinig  <sam@webkit.org>
+
+        Rename WebContext to WebProcessPool
+        https://bugs.webkit.org/show_bug.cgi?id=139909
+
+        Rubber-stamped by Anders Carlsson.
+
+        Merge SessionID and SessionIDHash into one file to make auto-generation of
+        HashMaps with SessionIDs easier.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * loader/cache/MemoryCache.h:
+        * page/SessionID.h:
+        (WTF::SessionIDHash::hash):
+        (WTF::SessionIDHash::equal):
+        (WTF::HashTraits<WebCore::SessionID>::emptyValue):
+        (WTF::HashTraits<WebCore::SessionID>::constructDeletedValue):
+        (WTF::HashTraits<WebCore::SessionID>::isDeletedValue):
+        * page/SessionIDHash.h: Removed.
+
+2014-12-23  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        platform/mac/editing/input/devanagari-ligature.html is flaky on Yosemite, ligature fails to form
+        https://bugs.webkit.org/show_bug.cgi?id=138683
+
+        Reviewed by Darin Adler.
+
+        This patch changes how we check fonts for equality. In particular, this patch adds a
+        objectForEqualityCheck() to Cocoa's FontPlatformData, and callers should pass this object
+        to CFEqual() to determine if two platform fonts are equal. This patch also migrates all
+        call sites to using this function.
+
+        I don't want to implement operator==() because there are many cases where the same font
+        is compared against many others, and this solution is cleaner than caching a comparison
+        object inside the font object itself.
+
+        No new tests because this is covered by platform/mac/editing/input/devanagari-ligature.html.
+
+        * platform/graphics/FontPlatformData.h:
+        * platform/graphics/cocoa/FontPlatformDataCocoa.mm:
+        (WebCore::FontPlatformData::objectForEqualityCheck):
+        * platform/graphics/mac/ComplexTextControllerCoreText.mm:
+        (WebCore::ComplexTextController::collectComplexTextRunsForCharacters):
+        * platform/graphics/mac/GlyphPageTreeNodeMac.cpp:
+        (WebCore::GlyphPage::fill):
+        * platform/graphics/mac/SimpleFontDataMac.mm:
+        (WebCore::SimpleFontData::canRenderCombiningCharacterSequence):
+        * platform/spi/cocoa/CoreTextSPI.h:
+
+2014-12-23  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Make Placeholder a move-only type
+        https://bugs.webkit.org/show_bug.cgi?id=139870
+
+        Reviewed by Anders Carlsson.
+
+        No new tests because there is no behavior change.
+
+        * svg/SVGToOTFFontConversion.cpp:
+        (WebCore::SVGToOTFFontConverter::Placeholder::Placeholder):
+        (WebCore::SVGToOTFFontConverter::Placeholder::populate):
+        (WebCore::SVGToOTFFontConverter::Placeholder::~Placeholder):
+
+2014-12-23  Chris Dumez  <cdumez@apple.com>
+
+        Move color CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139898
+
+        Reviewed by Antti Koivisto.
+
+        Move color CSS properties to the new StyleBuilder by teaching the
+        StyleBuilder generator how to handle them.
+
+        * css/CSSPropertyNames.in:
+        - Move color properties to the new StyleBuilder.
+
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::defaultInitialColor): Deleted.
+        (WebCore::ApplyPropertyColor::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyColor::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyColor::applyValue): Deleted.
+        (WebCore::ApplyPropertyColor::applyColorValue): Deleted.
+        (WebCore::ApplyPropertyColor::createHandler): Deleted.
+        - Drop color properties support from the DeprecatedStyleBuilder.
+
+        * css/makeprop.pl:
+        - Teach the StyleBuilder generator how to handle color properties.
+        - Use a class for StyleBuilderFunctions instead of a namespace so
+          that it can be made a friend of RenderStyle class.
+
+        * rendering/style/RenderStyle.h:
+        - Mark StyleBuilderFunctions class as friend as its functions
+          can set RenderStyle members directly. This is similar to what
+          is already done for StyleBuilderCustom class. The new color
+          properties handling calls private methods on RenderStyle.
+        - Mark invalidColor() method as static as it does not require
+          an instance.
+
+2014-12-23  Zalan Bujtas  <zalan@apple.com>
+
+        Incorrect dashed and dotted border painting.
+        https://bugs.webkit.org/show_bug.cgi?id=139872
+        rdar://problem/18024205
+
+        Reviewed by Simon Fraser.
+
+        This patch makes dashed/dotted border painting symmetric and consistent.
+        It also works with subpixel positioning.
+
+        Tests: fast/borders/border-painting-correctness-dashed.html
+               fast/borders/border-painting-correctness-dotted.html
+
+        * platform/graphics/cg/GraphicsContextCG.cpp:
+        (WebCore::GraphicsContext::drawLine):
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::drawLineForBoxSide):
+
+2014-12-22  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log which type of resources are commonly loaded using FeatureCounter
+        https://bugs.webkit.org/show_bug.cgi?id=139890
+
+        Reviewed by Darin Adler.
+
+        Log which type of resources are commonly loaded using FeatureCounter
+        (e.g. stylesheets, scripts, fonts, images, ...).
+
+        * loader/SubresourceLoader.cpp:
+        (WebCore::logResourceLoadedUsingFeatureCounter):
+        (WebCore::SubresourceLoader::didFinishLoading):
+        * platform/FeatureCounterKeys.h:
+
+2014-12-22  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log using FeatureCounter when a PacheCache fails due to memory pressure
+        https://bugs.webkit.org/show_bug.cgi?id=139874
+        <rdar://problem/19255690>
+
+        Reviewed by Darin Adler.
+
+        Log using FeatureCounter when a PacheCache fails due to memory
+        pressure. To detect this, a flag is added to HistoryItem to mark
+        items that are no longer in the page becaused they were pruned
+        (either because of a low memory handling or because the page cache
+        reached its maximum capacity).
+
+        * history/HistoryItem.cpp:
+        (WebCore::HistoryItem::HistoryItem):
+        * history/HistoryItem.h:
+        * history/PageCache.cpp:
+        (WebCore::PageCache::add):
+        (WebCore::PageCache::take):
+        (WebCore::PageCache::get):
+        (WebCore::PageCache::prune):
+        * platform/FeatureCounterKeys.h:
+
+2014-12-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177658.
+        https://bugs.webkit.org/show_bug.cgi?id=139900
+
+        Caused many assertion failures (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "Incorrect dashed and dotted border painting."
+        https://bugs.webkit.org/show_bug.cgi?id=139872
+        http://trac.webkit.org/changeset/177658
+
+2014-12-22  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        Unreviewed build fix after r177661 and r177662
+
+        * dom/SecurityOriginPolicy.cpp: Modify #include path.
+
+2014-12-22  Mark Rowe  <mrowe@apple.com>
+
+        [Mac] Engineering builds of WebCore on OS X 10.8 and 10.9 shouldn't build with -gline-tables-only
+        <https://webkit.org/b/139883> / <rdar://problem/19297261>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/DebugRelease.xcconfig: Override the setting using conditional settings
+        so that they take precedence over the conditional settings in Base.xcconfig.
+
+2014-12-22  Alexey Proskuryakov  <ap@apple.com>
+
+        Unreviewed build fix.
+
+        * WebCore.exp.in: Move SQLiteDatabaseTracker::setClient export out of PLATFORM(IOS) section.
+
+2014-12-22  Anders Carlsson  <andersca@apple.com>
+
+        Remove two functions from SecurityOrigin
+        https://bugs.webkit.org/show_bug.cgi?id=139885
+
+        Reviewed by Andreas Kling.
+
+        * page/SecurityOrigin.h:
+        (WebCore::SecurityOrigin::canAccessPasswordManager): Deleted.
+        (WebCore::SecurityOrigin::canAccessFileSystem): Deleted.
+
+2014-12-22  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log using FeatureCounter user-triggered zooming
+        https://bugs.webkit.org/show_bug.cgi?id=139879
+        <rdar://problem/19329130>
+
+        Reviewed by Benjamin Poulain.
+
+        Log using FeatureCounter user-triggered zooming on iOS.
+
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/FeatureCounter.h:
+        * platform/FeatureCounterKeys.h:
+
+2014-12-22  Benjamin Poulain  <bpoulain@apple.com>
+
+        Form elements should match :valid and :invalid based on their associated elements
+        https://bugs.webkit.org/show_bug.cgi?id=139850
+
+        Reviewed by Darin Adler.
+
+        In the latest HTML spec, form elements can match :valid or :invalid based
+        on their associated element.
+
+        The tricky part is that object lifetime is a mess. When elements are associated
+        with forms by the parser, the form is set by the constructor of HTMLFormControlElement.
+        At that point, the real object has not been initialized yet which
+        makes it impossible to find its validity.
+
+        To work around the lifetime problem, the code of HTMLFormControlElement::didChangeForm()
+        uses m_willValidateInitialized and m_willValidate direclty instead
+        of invoking willValidate(). That way we don't try to validate an incomplete object.
+
+        When the object really validates, HTMLFormControlElement::setNeedsWillValidateCheck()
+        takes care of updating the form.
+
+        Tests: fast/css/pseudo-invalid-form-and-fieldset-basics.html
+               fast/css/pseudo-invalid-form-basics.html
+               fast/css/pseudo-invalid-form-dynamically-created-basics.html
+               fast/css/pseudo-invalid-form-invalidation-optimization.html
+               fast/css/pseudo-valid-form-and-fieldset-basics.html
+               fast/css/pseudo-valid-form-basics.html
+               fast/css/pseudo-valid-form-dynamically-created-basics.html
+               fast/css/pseudo-valid-form-invalidation-optimization.html
+               fast/selectors/invalid-form-style-update-1.html
+               fast/selectors/invalid-form-style-update-2.html
+               fast/selectors/invalid-form-style-update-3.html
+               fast/selectors/valid-form-style-update-1.html
+               fast/selectors/valid-form-style-update-2.html
+               fast/selectors/valid-form-style-update-3.html
+
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::canShareStyleWithControl):
+        (WebCore::StyleResolver::canShareStyleWithElement):
+        HTMLFormElement is not a FormControl, we have to generalize the test
+        for :valid/:invalid with style sharing.
+
+        * html/HTMLFormControlElement.cpp:
+        (WebCore::HTMLFormControlElement::~HTMLFormControlElement):
+        Since we now have willChangeForm(), didChangeForm(), we have to null
+        the form ourself, as documented by FormAssociatedElement.
+
+        (WebCore::HTMLFormControlElement::setNeedsWillValidateCheck):
+        (WebCore::HTMLFormControlElement::willChangeForm):
+        (WebCore::HTMLFormControlElement::didChangeForm):
+        (WebCore::HTMLFormControlElement::updateValidity):
+        Update the owner form when any of the associated form element changes
+        to invalid.
+
+        * html/HTMLFormControlElement.h:
+        * html/HTMLFormElement.cpp:
+        (WebCore::HTMLFormElement::registerInvalidAssociatedFormControl):
+        (WebCore::HTMLFormElement::removeInvalidAssociatedFormControlIfNeeded):
+        (WebCore::HTMLFormElement::matchesValidPseudoClass):
+        (WebCore::HTMLFormElement::matchesInvalidPseudoClass):
+        This is very similar to the code of fieldset, but we have much weaker
+        invariants due to the insane way FormAssociatedElement initializes.
+
+        * html/HTMLFormElement.h:
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::initializeInputType):
+        For completeness, we should always validate when changing the type.
+        The code was only doing that when the element was inserted into the tree,
+        that was too fragile.
+
+2014-12-22  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix the Windows build.
+
+        * dom/DOMAllInOne.cpp:
+
+2014-12-22  Anders Carlsson  <andersca@apple.com>
+
+        Add a SecurityOriginPolicy class
+        https://bugs.webkit.org/show_bug.cgi?id=139875
+
+        Reviewed by Sam Weinig.
+
+        This is the first step towards making SecurityOrigin immutable. SecurityOriginPolicy will hold a
+        SecurityOrigin and will handle things that would otherwise mutate SecurityOrigin.
+
+        * CMakeLists.txt:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/DOMImplementation.cpp:
+        (WebCore::DOMImplementation::createDocument):
+        (WebCore::DOMImplementation::createHTMLDocument):
+        * dom/Document.cpp:
+        (WebCore::Document::create):
+        (WebCore::Document::open):
+        (WebCore::Document::cloneDataFromDocument):
+        (WebCore::Document::initSecurityContext):
+        * dom/ScriptExecutionContext.h:
+        * dom/SecurityContext.cpp:
+        (WebCore::SecurityContext::setSecurityOriginPolicy):
+        (WebCore::SecurityContext::securityOrigin):
+        (WebCore::SecurityContext::isSecureTransitionTo):
+        (WebCore::SecurityContext::enforceSandboxFlags):
+        (WebCore::SecurityContext::setSecurityOrigin): Deleted.
+        * dom/SecurityContext.h:
+        (WebCore::SecurityContext::securityOriginPolicy):
+        (WebCore::SecurityContext::securityOrigin): Deleted.
+        * dom/SecurityOriginPolicy.cpp: Added.
+        (WebCore::SecurityOriginPolicy::create):
+        (WebCore::SecurityOriginPolicy::SecurityOriginPolicy):
+        (WebCore::SecurityOriginPolicy::~SecurityOriginPolicy):
+        * dom/SecurityOriginPolicy.h: Added.
+        (WebCore::SecurityOriginPolicy::origin):
+        * loader/DocumentWriter.cpp:
+        (WebCore::DocumentWriter::begin):
+        * workers/WorkerGlobalScope.cpp:
+        (WebCore::WorkerGlobalScope::WorkerGlobalScope):
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::responseXML):
+        * xml/XMLTreeViewer.cpp:
+        (WebCore::XMLTreeViewer::transformDocumentToTreeView):
+        * xml/XSLTProcessor.cpp:
+        (WebCore::XSLTProcessor::createDocumentFromSource):
+
+2014-12-22  Zalan Bujtas  <zalan@apple.com>
+
+        Incorrect dashed and dotted border painting.
+        https://bugs.webkit.org/show_bug.cgi?id=139872
+        rdar://problem/18024205
+
+        Reviewed by Simon Fraser.
+
+        This patch makes dashed/dotted border painting symmetric and consistent.
+        It also works with subpixel positioning.
+
+        Tests: fast/borders/border-painting-correctness-dashed.html
+               fast/borders/border-painting-correctness-dotted.html
+
+        * platform/graphics/cg/GraphicsContextCG.cpp:
+        (WebCore::GraphicsContext::drawLine):
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::drawLineForBoxSide):
+
+2014-12-22  Timothy Horton  <timothy_horton@apple.com>
+
+        TextIndicatorWindow is larger than it needs to be, especially when not bouncing
+        https://bugs.webkit.org/show_bug.cgi?id=139876
+        <rdar://problem/19311017>
+
+        Reviewed by Sam Weinig.
+
+        * page/TextIndicator.cpp:
+        (WebCore::TextIndicator::wantsBounce):
+        (WebCore::TextIndicator::wantsContentCrossfade):
+        (WebCore::TextIndicator::wantsFadeIn):
+        * page/TextIndicator.h:
+        * page/mac/TextIndicatorWindow.mm:
+        (-[WebTextIndicatorView initWithFrame:textIndicator:margin:]):
+        (-[WebTextIndicatorView _animationDuration]):
+        (-[WebTextIndicatorView present]):
+        (WebCore::TextIndicatorWindow::setTextIndicator):
+        (-[WebTextIndicatorView _textIndicatorWantsBounce]): Deleted.
+        (-[WebTextIndicatorView _textIndicatorWantsContentCrossfade]): Deleted.
+        (-[WebTextIndicatorView _textIndicatorWantsFadeIn]): Deleted.
+        Move the various switches over TextIndicatorPresentationTransition into TextIndicator.
+        Adjust the margin; only inflate by the shadow if we're not bouncing.
+        If we are bouncing, fix the math to more tightly fit the bounce.
+        Previously we were inflating by way too much, and even when we didn't need to.
+
 2014-12-22  Chris Dumez  <cdumez@apple.com>
 
         [iOS] Log using FeatureCounter when a PacheCache entry is not reused because it expired

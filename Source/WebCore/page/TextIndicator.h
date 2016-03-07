@@ -64,11 +64,11 @@ struct TextIndicatorData {
 
 class TextIndicator : public RefCounted<TextIndicator> {
 public:
-    static PassRefPtr<TextIndicator> create(const TextIndicatorData&);
-    static PassRefPtr<TextIndicator> createWithSelectionInFrame(Frame&, TextIndicatorPresentationTransition);
-    static PassRefPtr<TextIndicator> createWithRange(const Range&, TextIndicatorPresentationTransition);
+    WEBCORE_EXPORT static PassRefPtr<TextIndicator> create(const TextIndicatorData&);
+    WEBCORE_EXPORT static PassRefPtr<TextIndicator> createWithSelectionInFrame(Frame&, TextIndicatorPresentationTransition);
+    WEBCORE_EXPORT static PassRefPtr<TextIndicator> createWithRange(const Range&, TextIndicatorPresentationTransition);
 
-    ~TextIndicator();
+    WEBCORE_EXPORT ~TextIndicator();
 
     FloatRect selectionRectInWindowCoordinates() const { return m_data.selectionRectInWindowCoordinates; }
     FloatRect textBoundingRectInWindowCoordinates() const { return m_data.textBoundingRectInWindowCoordinates; }
@@ -81,6 +81,10 @@ public:
     void setPresentationTransition(TextIndicatorPresentationTransition transition) { m_data.presentationTransition = transition; }
 
     TextIndicatorData data() const { return m_data; }
+    
+    bool wantsBounce() const;
+    bool wantsContentCrossfade() const;
+    bool wantsFadeIn() const;
 
 private:
     TextIndicator(const TextIndicatorData&);

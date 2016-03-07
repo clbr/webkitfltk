@@ -42,6 +42,7 @@
 #include "ScheduledAction.h"
 #include "ScriptSourceCode.h"
 #include "SecurityOrigin.h"
+#include "SecurityOriginPolicy.h"
 #include "URL.h"
 #include "WorkerInspectorController.h"
 #include "WorkerLocation.h"
@@ -76,7 +77,7 @@ WorkerGlobalScope::WorkerGlobalScope(const URL& url, const String& userAgent, st
     , m_eventQueue(*this)
     , m_topOrigin(topOrigin)
 {
-    setSecurityOrigin(SecurityOrigin::create(url));
+    setSecurityOriginPolicy(SecurityOriginPolicy::create(SecurityOrigin::create(url)));
 }
 
 WorkerGlobalScope::~WorkerGlobalScope()
@@ -189,7 +190,7 @@ void WorkerGlobalScope::importScripts(const Vector<String>& urls, ExceptionCode&
     Vector<URL>::const_iterator end = completedURLs.end();
 
     for (Vector<URL>::const_iterator it = completedURLs.begin(); it != end; ++it) {
-        RefPtr<WorkerScriptLoader> scriptLoader(WorkerScriptLoader::create());
+        Ref<WorkerScriptLoader> scriptLoader = WorkerScriptLoader::create();
         scriptLoader->loadSynchronously(scriptExecutionContext(), *it, AllowCrossOriginRequests);
 
         // If the fetching attempt failed, throw a NETWORK_ERR exception and abort all these steps.

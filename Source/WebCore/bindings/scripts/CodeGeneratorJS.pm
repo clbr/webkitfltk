@@ -1171,6 +1171,7 @@ sub GenerateHeader
     }
     if (ShouldGenerateToJSDeclaration($hasParent, $interface)) {
         push(@headerContent, "WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, $implType*);\n");
+        push(@headerContent, "inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, $implType& impl) { return toJS(exec, globalObject, &impl); }\n");
     }
     if ($usesToJSNewlyCreated{$interfaceName}) {
         push(@headerContent, "JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, $interfaceName*);\n");
@@ -3413,9 +3414,9 @@ sub GenerateCallbackHeader
     push(@headerContent, "public:\n");
 
     # The static create() method.
-    push(@headerContent, "    static PassRefPtr<$className> create(JSC::JSObject* callback, JSDOMGlobalObject* globalObject)\n");
+    push(@headerContent, "    static Ref<$className> create(JSC::JSObject* callback, JSDOMGlobalObject* globalObject)\n");
     push(@headerContent, "    {\n");
-    push(@headerContent, "        return adoptRef(new $className(callback, globalObject));\n");
+    push(@headerContent, "        return adoptRef(*new $className(callback, globalObject));\n");
     push(@headerContent, "    }\n\n");
 
     # ScriptExecutionContext

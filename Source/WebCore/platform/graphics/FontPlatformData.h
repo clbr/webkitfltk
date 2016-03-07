@@ -51,9 +51,6 @@ OBJC_CLASS NSFont;
 #endif
 
 typedef const struct __CTFont* CTFontRef;
-typedef UInt32 FMFont;
-typedef FMFont ATSUFontID;
-typedef UInt32 ATSFontRef;
 
 #endif
 
@@ -120,6 +117,8 @@ public:
     void setFont(CTFontRef);
 
     CTFontRef ctFont() const;
+    static RetainPtr<CFTypeRef> objectForEqualityCheck(CTFontRef);
+    RetainPtr<CFTypeRef> objectForEqualityCheck() const;
 
     bool allowsLigatures() const;
     bool roundsGlyphAdvances() const;

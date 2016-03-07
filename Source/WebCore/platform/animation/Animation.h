@@ -36,10 +36,10 @@ namespace WebCore {
 
 class Animation : public RefCounted<Animation> {
 public:
-    ~Animation();
+    WEBCORE_EXPORT ~Animation();
 
-    static PassRefPtr<Animation> create() { return adoptRef(new Animation); }
-    static PassRefPtr<Animation> create(const Animation& other) { return adoptRef(new Animation(other)); }
+    static Ref<Animation> create() { return adoptRef(*new Animation); }
+    static Ref<Animation> create(const Animation& other) { return adoptRef(*new Animation(other)); }
 
     bool isDelaySet() const { return m_delaySet; }
     bool isDirectionSet() const { return m_directionSet; }
@@ -147,7 +147,7 @@ public:
     bool fillsForwards() const { return m_fillModeSet && (m_fillMode == AnimationFillModeForwards || m_fillMode == AnimationFillModeBoth); }
 
 private:
-    Animation();
+    WEBCORE_EXPORT Animation();
     Animation(const Animation& o);
     
     String m_name;

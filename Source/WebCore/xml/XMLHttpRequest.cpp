@@ -43,6 +43,7 @@
 #include "ResourceError.h"
 #include "ResourceRequest.h"
 #include "ScriptController.h"
+#include "SecurityOriginPolicy.h"
 #include "Settings.h"
 #include "SharedBuffer.h"
 #include "TextResourceDecoder.h"
@@ -111,12 +112,11 @@ static void logConsoleError(ScriptExecutionContext* context, const String& messa
     context->addConsoleMessage(MessageSource::JS, MessageLevel::Error, message);
 }
 
-PassRefPtr<XMLHttpRequest> XMLHttpRequest::create(ScriptExecutionContext& context)
+Ref<XMLHttpRequest> XMLHttpRequest::create(ScriptExecutionContext& context)
 {
-    RefPtr<XMLHttpRequest> xmlHttpRequest(adoptRef(new XMLHttpRequest(context)));
+    Ref<XMLHttpRequest> xmlHttpRequest = adoptRef(*new XMLHttpRequest(context));
     xmlHttpRequest->suspendIfNeeded();
-
-    return xmlHttpRequest.release();
+    return xmlHttpRequest;
 }
 
 XMLHttpRequest::XMLHttpRequest(ScriptExecutionContext& context)
@@ -222,7 +222,7 @@ Document* XMLHttpRequest::responseXML(ExceptionCode& ec)
                 m_responseDocument = Document::create(0, m_url);
             // FIXME: Set Last-Modified.
             m_responseDocument->setContent(m_responseBuilder.toStringPreserveCapacity());
-            m_responseDocument->setSecurityOrigin(securityOrigin());
+            m_responseDocument->setSecurityOriginPolicy(scriptExecutionContext()->securityOriginPolicy());
             m_responseDocument->overrideMIMEType(mimeType);
 
             if (!m_responseDocument->wellFormed())
