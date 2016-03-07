@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,33 +23,25 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AuthenticationClient_h
-#define AuthenticationClient_h
+#include "config.h"
+#include "CustomGetterSetter.h"
 
-namespace WebCore {
+#include "JSCJSValueInlines.h"
+#include "SlotVisitorInlines.h"
+#include <wtf/Assertions.h>
 
-class AuthenticationChallenge;
-class Credential;
+namespace JSC {
 
-class AuthenticationClient {
-public:
-    virtual void receivedCredential(const AuthenticationChallenge&, const Credential&) = 0;
-    virtual void receivedRequestToContinueWithoutCredential(const AuthenticationChallenge&) = 0;
-    virtual void receivedCancellation(const AuthenticationChallenge&) = 0;
-    virtual void receivedRequestToPerformDefaultHandling(const AuthenticationChallenge&) = 0;
-    virtual void receivedChallengeRejection(const AuthenticationChallenge&) = 0;
+STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(CustomGetterSetter);
 
-    void ref() { refAuthenticationClient(); }
-    void deref() { derefAuthenticationClient(); }
+const ClassInfo CustomGetterSetter::s_info = { "CustomGetterSetter", 0, 0, 0, CREATE_METHOD_TABLE(CustomGetterSetter) };
 
-protected:
-    virtual ~AuthenticationClient() { }
-
-private:
-    virtual void refAuthenticationClient() = 0;
-    virtual void derefAuthenticationClient() = 0;
-};
-
+void callCustomSetter(ExecState* exec, JSValue customGetterSetter, JSObject* base, JSValue thisValue, JSValue value)
+{
+    CustomGetterSetter::CustomSetter setter = jsCast<CustomGetterSetter*>(customGetterSetter)->setter();
+    if (!setter)
+        return;
+    setter(exec, base, JSValue::encode(thisValue), JSValue::encode(value));
 }
 
-#endif
+} // namespace JSC

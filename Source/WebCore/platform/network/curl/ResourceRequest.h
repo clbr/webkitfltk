@@ -30,6 +30,8 @@
 #include <CrossThreadTask.h>
 #include "ResourceRequestBase.h"
 
+#include <wtf/PassOwnPtr.h>
+
 typedef const struct _CFURLRequest* CFURLRequestRef;
 
 namespace WebCore {

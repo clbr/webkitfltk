@@ -324,6 +324,16 @@ void SocketStreamHandle::receivedCancellation(const AuthenticationChallenge&)
     notImplemented();
 }
 
+void SocketStreamHandle::receivedRequestToPerformDefaultHandling(const AuthenticationChallenge&)
+{
+    notImplemented();
+}
+
+void SocketStreamHandle::receivedChallengeRejection(const AuthenticationChallenge&)
+{
+    notImplemented();
+}
+
 }  // namespace WebCore
 
 #endif
