@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,43 +23,37 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-.sidebar > .panel.navigation.resource > :matches(.content, .empty-content-placeholder) {
-    top: 28px;
-}
+WebInspector.TimelineTabContentView = function(identifier)
+{
+    var tabBarItem = new WebInspector.TabBarItem("Images/Timeline.svg", WebInspector.UIString("Timelines"));
+    var detailsSidebarPanels = [WebInspector.resourceDetailsSidebarPanel, WebInspector.probeDetailsSidebarPanel, WebInspector.renderingFrameDetailsSidebarPanel];
 
-body.mac-platform.legacy .sidebar > .panel.navigation.resource > :matches(.content, .empty-content-placeholder) {
-    top: 21px;
-}
+    // FIME: Until TimelineSidebarPanel supports instantiating after inspector launch, disable closing.
+    tabBarItem.hideCloseButton = true;
 
-.sidebar > .panel.navigation.resource > .search-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    WebInspector.ContentBrowserTabContentView.call(this, identifier || "timeline", "timeline", tabBarItem, WebInspector.TimelineSidebarPanel, detailsSidebarPanels);
+};
 
-    display: flex;
+WebInspector.TimelineTabContentView.prototype = {
+    constructor: WebInspector.TimelineTabContentView,
+    __proto__: WebInspector.ContentBrowserTabContentView.prototype,
 
-    box-shadow: inset rgba(255, 255, 255, 0.2) 0 1px 0;
+    // Public
 
-    height: 28px;
+    get type()
+    {
+        return WebInspector.TimelineTabContentView.Type;
+    },
 
-    white-space: nowrap;
-    overflow: hidden;
-}
+    canShowRepresentedObject: function(representedObject)
+    {
+        return representedObject instanceof WebInspector.TimelineRecording;
+    },
 
-body.mac-platform.legacy .sidebar > .panel.navigation.resource > .search-bar {
-    height: 21px;
-}
+    get supportsSplitContentBrowser()
+    {
+        return false;
+    }
+};
 
-.sidebar > .panel.navigation.resource > .search-bar > input[type="search"] {
-    display: flex;
-    flex: 1;
-
-    margin: 3px 6px;
-    padding-left: 4px;
-}
-
-body.mac-platform.legacy .sidebar > .panel.navigation.resource > .search-bar > input[type="search"] {
-    margin: 1px 6px;
-    padding-left: 0;
-}
+WebInspector.TimelineTabContentView.Type = "timeline";

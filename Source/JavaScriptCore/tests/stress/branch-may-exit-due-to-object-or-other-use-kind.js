@@ -1,7 +1,5 @@
 /*
- * Copyright (C) 2009, 2013 Apple Inc. All rights reserved.
- * Copyright (C) 2009 Torch Mobile, Inc.
- * Copyright (C) 2010 Company 100 Inc.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,18 +23,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WTF_OwnPtrCommon_h
-#define WTF_OwnPtrCommon_h
+// Regression test for https://bugs.webkit.org/show_bug.cgi?id=144152
 
-namespace WTF {
+// The bug in 144152 needs 3 conditions to manifest:
+// 1. The branch test value in the inlined function is of useKind ObjectOrOtherUse.
+// 2. The branch test value is proven to be a known useKind.
+// 3. The masqueradesAsUndefined watchpoint is no longer valid.
+// With the bug fixed, this test should not crash on debug builds.
 
-    template <typename T> inline void deleteOwnedPtr(T* ptr)
-    {
-        typedef char known[sizeof(T) ? 1 : -1];
-        if (sizeof(known))
-            delete ptr;
-    }
+function inlinedFunction(x) {
+    if (x) // Conditional branch that will assert on a debug build if the bug is present.
+        new Object;
+}
 
-} // namespace WTF
+function foo(x) {
+    if (x) // Testing x before calling the inlined function sets up condition 2.
+        inlinedFunction(x);
+}
 
-#endif // WTF_OwnPtrCommon_h
+makeMasquerader(); // Invalidates the masqueradesAsUndefined watchpoint for condition 3.
+for (var i = 0; i < 10000; i++)
+    foo({}); // Pass an object argument to set up condition 1.

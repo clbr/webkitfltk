@@ -867,7 +867,7 @@ static Ref<CSSValue> computedTransform(RenderObject* renderer, const RenderStyle
 
     TransformationMatrix transform;
     style->applyTransform(transform, pixelSnappedRect, RenderStyle::ExcludeTransformOrigin);
-    // Note that this does not flatten to an affine transform if ENABLE(3D_RENDERING) is off, by design.
+    // Note that this does not flatten to an affine transform if ENABLE(3D_TRANSFORMS) is off, by design.
 
     // FIXME: Need to print out individual functions (https://bugs.webkit.org/show_bug.cgi?id=23924)
     auto list = CSSValueList::createSpaceSeparated();
@@ -1611,6 +1611,19 @@ static Ref<CSSPrimitiveValue> fontWeightFromStyle(RenderStyle* style)
     return cssValuePool().createIdentifierValue(CSSValueNormal);
 }
 
+static Ref<CSSValue> fontSynthesisFromStyle(RenderStyle& style)
+{
+    if (style.fontSynthesis() == FontSynthesisNone)
+        return cssValuePool().createIdentifierValue(CSSValueNone);
+
+    auto list = CSSValueList::createSpaceSeparated();
+    if (style.fontSynthesis() & FontSynthesisStyle)
+        list.get().append(cssValuePool().createIdentifierValue(CSSValueStyle));
+    if (style.fontSynthesis() & FontSynthesisWeight)
+        list.get().append(cssValuePool().createIdentifierValue(CSSValueWeight));
+    return Ref<CSSValue>(list.get());
+}
+
 typedef const Length& (RenderStyle::*RenderStyleLengthGetter)() const;
 typedef LayoutUnit (RenderBoxModelObject::*RenderBoxComputedCSSValueGetter)() const;
 
@@ -2234,6 +2247,8 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
             return fontVariantFromStyle(style.get());
         case CSSPropertyFontWeight:
             return fontWeightFromStyle(style.get());
+        case CSSPropertyFontSynthesis:
+            return fontSynthesisFromStyle(*style.get());
         case CSSPropertyWebkitFontFeatureSettings: {
             const FontFeatureSettings* featureSettings = style->fontDescription().featureSettings();
             if (!featureSettings || !featureSettings->size())

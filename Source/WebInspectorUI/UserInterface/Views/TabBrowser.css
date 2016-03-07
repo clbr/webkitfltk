@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,44 +23,26 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OwnPtrX11_h
-#define OwnPtrX11_h
-
-namespace WebCore {
-
-template<typename T>
-struct OwnPtrX11 {
-
-    OwnPtrX11() : m_xResource(0) { }
-    OwnPtrX11(T* xResource) : m_xResource(xResource) { }
-
-    ~OwnPtrX11()
-    {
-        if (m_xResource)
-            XFree(m_xResource);
-    }
-
-    OwnPtrX11& operator=(T* xResource)
-    {
-        if (m_xResource)
-            XFree(m_xResource);
-
-        m_xResource = xResource;
-        return *this;
-    }
-
-    operator T*() const { return m_xResource; }
-    T* operator->() const { return m_xResource; }
-    T* get() const { return m_xResource; }
-
-private:
-    OwnPtrX11(const OwnPtrX11&);
-    OwnPtrX11& operator=(const OwnPtrX11&);
-    static void* operator new (size_t);
-    static void operator delete (void*);
-    T* m_xResource;
-};
-
+.tab-browser {
+    position: relative;
+    overflow: hidden;
 }
 
-#endif
+.tab-browser > .tab-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.tab-browser > .content-view-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.tab-browser > .tab-bar + .content-view-container {
+    top: 31px;
+}

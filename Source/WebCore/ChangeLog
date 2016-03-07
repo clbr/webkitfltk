@@ -1,3 +1,928 @@
+2015-04-25  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        font-synthesis's initial value is "style weight"
+        https://bugs.webkit.org/show_bug.cgi?id=144195
+
+        Reviewed by Darin Adler.
+
+        Updated fast/css3-text/font-synthesis-parse.html.
+
+        * rendering/style/RenderStyle.h:
+
+2015-04-25  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183305.
+        https://bugs.webkit.org/show_bug.cgi?id=144213
+
+        Crashes on wikipedia (Requested by litherum on #webkit).
+
+        Reverted changeset:
+
+        "[Cocoa] FontPlatformData's equality check should always use
+        reference URLs"
+        https://bugs.webkit.org/show_bug.cgi?id=144168
+        http://trac.webkit.org/changeset/183305
+
+2015-04-25  Dan Bernstein  <mitz@apple.com>
+
+        WebCore part of <rdar://problem/20697966> Avoid using TBD as an argument to NS_AVAILABLE
+        https://bugs.webkit.org/show_bug.cgi?id=144201
+
+        Reviewed by Darin Adler.
+
+        Instead of TBD, use the high version number to which it corresponds in CFAvailability.h,
+        9876.5.
+
+        * bindings/objc/WebKitAvailability.h: Added a definition of __NSi_9876_5, so that we can
+        use 9876_5 in availability macros. Removed the definition of
+        __AVAILABILITY_INTERNAL__MAC_TBD, which will no longer be used.
+
+        * bindings/scripts/CodeGeneratorObjC.pm:
+        (ReadPublicInterfaces): Use 9876_5 instead of TBD.
+
+2015-04-25  Timothy Hatcher  <timothy@apple.com>
+
+        Update localized strings.
+
+        * English.lproj/Localizable.strings: Updated.
+
+2015-04-25  Darin Adler  <darin@apple.com>
+
+        Crash if IDBTransaction is aborted right after it's created
+        https://bugs.webkit.org/show_bug.cgi?id=144199
+
+        Reviewed by Simon Fraser.
+
+        Test: storage/indexeddb/transaction-abort.html
+
+        * Modules/indexeddb/IDBTransactionBackend.cpp:
+        (WebCore::IDBTransactionBackend::IDBTransactionBackend): Don't start the
+        transaction if it is already complete (has been aborted).
+
+2015-04-25  Martin Robinson  <mrobinson@igalia.com>
+
+        Rename ENABLE_3D_RENDERING to ENABLE_3D_TRANSFORMS
+        https://bugs.webkit.org/show_bug.cgi?id=144182
+
+        Reviewed by Simon Fraser.
+
+        * Configurations/FeatureDefines.xcconfig: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * WebCore.vcxproj/WebCoreCommon.props: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * WebCore.vcxproj/WebCoreTestSupportCommon.props: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * css/CSSComputedStyleDeclaration.cpp: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * css/MediaQueryEvaluator.cpp: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * platform/graphics/GraphicsContext.h: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * platform/graphics/cairo/GraphicsContextCairo.cpp: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * platform/graphics/texmap/TextureMapperImageBuffer.cpp: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * rendering/RenderLayer.cpp: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * rendering/RenderLayerCompositor.cpp: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+        * rendering/RenderObject.cpp: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+
+2015-04-24  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [Cocoa] FontPlatformData's equality check should always use reference URLs
+        https://bugs.webkit.org/show_bug.cgi?id=144168
+
+        Reviewed by Tim Horton.
+
+        <rdar://problem/18985642> is not fixed, so we need to continue using the older
+        objectForEqualityCheck().
+
+        No new tests because there is no behavior change.
+
+        * platform/graphics/cocoa/FontPlatformDataCocoa.mm:
+        (WebCore::FontPlatformData::objectForEqualityCheck):
+
+2015-04-24  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Implement parsing support for font-synthesis CSS property
+        https://bugs.webkit.org/show_bug.cgi?id=144180
+        <rdar://problem/20692791>
+        <rdar://problem/20625024>
+
+        Reviewed by Tim Horton.
+
+        See http://www.w3.org/TR/css-fonts-3/#font-synthesis-prop
+
+        This property allows web authors to opt out of font synthesis. This patch only
+        implements parsing support for the property.
+
+        Test: fast/css3-text/font-synthesis-parse.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::fontSynthesisFromStyle): Create a CSSValue for the existing style object.
+        (WebCore::ComputedStyleExtractor::propertyValue): Call fontSynthesisFromStyle().
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseValue): Call parseFontSynthesis().
+        (WebCore::CSSParser::parseFontSynthesis): Accept the grammar
+        "none | [ weight || style ]"
+        * css/CSSParser.h: Function signature.
+        * css/CSSPropertyNames.in: New CSS property name.
+        * css/CSSValueKeywords.in: New CSS value names.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyValueFontSynthesis): Construct an internal
+        representation of font-synthesis for a given CSSValue.
+        * rendering/style/RenderStyle.h: Function signature.
+        * rendering/style/RenderStyleConstants.h: Internal representation of
+        font-synthesis.
+        * rendering/style/StyleRareInheritedData.h: Where we actually store the bits
+        related to this internal representation.
+
+2015-04-24  Simon Fraser  <simon.fraser@apple.com>
+
+        Have the web inspector report accurate memory use for layers with detached backing store
+        https://bugs.webkit.org/show_bug.cgi?id=144179
+
+        Reviewed by Dean Jackson.
+
+        Only report memory use for layers whose backing store is attached.
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        * platform/graphics/ca/PlatformCALayer.h: Add backingContributesToMemoryEstimate()
+        which platforms can override if they allow backing store detaching.
+
+2015-04-24  Simon Fraser  <simon.fraser@apple.com>
+
+        Track a coverage rect through GraphicsLayerCA flushes, use it to mark backing store attached
+        https://bugs.webkit.org/show_bug.cgi?id=144165
+
+        Reviewed by Dean Jackson.
+        
+        Push in the clipRect as the secondary rect when doing a GraphicsLayerCA flush,
+        which maps this rect through all the layers. Each layer tests intersection with
+        this rect to determine if its backing store should be attached.
+        
+        This will cause us to drop backing store for layers that don't intersect the
+        visible part of the view, which is too aggressive. A future patch will add
+        some padding.
+
+        Tests: compositing/visible-rect/coverage-clipped.html
+               compositing/visible-rect/coverage-scrolling.html
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::GraphicsLayerCA): Remove initialization of things with
+        C++11 initializers. Initialize the new m_intersectsCoverageRect bit.
+        (WebCore::GraphicsLayerCA::flushCompositingState): Push the clipRect in as the
+        secondary coverage rect. A future patch will inflate this on the way down the tree.
+        (WebCore::GraphicsLayerCA::computeVisibleRect): If we're clipping, and
+        we have a secondary coverage rect, that rect can be clipped to us too.
+        (WebCore::GraphicsLayerCA::setVisibleAndCoverageRects):
+        (WebCore::GraphicsLayerCA::recursiveCommitChanges):
+        (WebCore::GraphicsLayerCA::commitLayerChangesBeforeSublayers):
+        (WebCore::GraphicsLayerCA::updateBackingStoreAttachment):
+        (WebCore::GraphicsLayerCA::dumpAdditionalProperties):
+        * platform/graphics/ca/GraphicsLayerCA.h: New CoverageRectChanged bit.
+        Use more C++11 initializers.
+        (WebCore::GraphicsLayerCA::coverageRect):
+
+2015-04-24  Dean Jackson  <dino@apple.com>
+
+        AnimationController::scrollWasUpdated() shows up in scrolling profiles on pages that don't use scroll triggers
+        https://bugs.webkit.org/show_bug.cgi?id=144173
+        <rdar://problem/20526168>
+
+        Reviewed by Simon Fraser.
+
+        Keep a list of Animations that care about scroll updates, and only
+        run the animation update if the list is not empty.
+
+        Covered by existing tests.
+
+        * page/animation/AnimationBase.cpp:
+        (WebCore::AnimationBase::updateStateMachine): Tell the AnimationController
+        if this is an animation that depends on scrolling.
+        * page/animation/AnimationController.cpp:
+        (WebCore::AnimationControllerPrivate::animationWillBeRemoved): Call the
+        new removeFromAnimationsDependentOnScroll as this animation is deleted.
+        (WebCore::AnimationControllerPrivate::addToAnimationsDependentOnScroll):
+        (WebCore::AnimationControllerPrivate::removeFromAnimationsDependentOnScroll):
+        (WebCore::AnimationControllerPrivate::scrollWasUpdated): Only update if
+        there are animations that care.
+        (WebCore::AnimationController::wantsScrollUpdates): Helper to expose this
+        value to FrameView.
+        * page/animation/AnimationController.h:
+        * page/animation/AnimationControllerPrivate.h:
+        (WebCore::AnimationControllerPrivate::wantsScrollUpdates):
+
+2015-04-24  Tim Horton  <timothy_horton@apple.com>
+
+        WKPDFView does not support password-protected PDFs
+        https://bugs.webkit.org/show_bug.cgi?id=144162
+        <rdar://problem/18411512>
+
+        Reviewed by Andy Estes.
+
+        * English.lproj/Localizable.strings:
+        Add some localizable strings.
+
+2015-04-24  David Kilzer  <ddkilzer@apple.com>
+
+        Fix iOS EWS builds after updating to iOS 8.3 SDK
+
+        * platform/spi/cocoa/CoreTextSPI.h:
+        * rendering/RenderThemeIOS.mm:
+        (WebCore::RenderThemeIOS::updateCachedSystemFontDescription):
+        - Update __IPHONE_OS_VERSION_MIN_REQUIRED for these constants.
+
+2015-04-24  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed iOS build fix; add declarations to AVKitSPI.h
+
+        * platform/spi/cocoa/AVKitSPI.h:
+
+2015-04-24  Enrica Casucci  <enrica@apple.com>
+
+        Make rangeExpandedAroundPositionByCharacters to all platforms.
+        https://bugs.webkit.org/show_bug.cgi?id=144161
+
+        Reviewed by Tim Horton.
+
+        No change in functionality, simply making this available
+        to all platforms.
+
+        * editing/VisibleUnits.cpp:
+        (WebCore::rangeExpandedAroundPositionByCharacters):
+        * editing/VisibleUnits.h:
+        * editing/mac/DataDetection.mm:
+        * editing/mac/DictionaryLookup.h:
+        * editing/mac/DictionaryLookup.mm:
+        (WebCore::rangeExpandedAroundPositionByCharacters): Deleted.
+
+2015-04-24  Andreas Kling  <akling@apple.com>
+
+        Purge PassRefPtr from NamedNodeMap.
+        <https://webkit.org/b/144091>
+
+        Reviewed by Antti Koivisto.
+
+        Use RefPtr instead of PassRefPtr in NamedNodeMap.
+
+        * dom/NamedNodeMap.cpp:
+        (WebCore::NamedNodeMap::getNamedItem):
+        (WebCore::NamedNodeMap::getNamedItemNS):
+        (WebCore::NamedNodeMap::removeNamedItem):
+        (WebCore::NamedNodeMap::removeNamedItemNS):
+        (WebCore::NamedNodeMap::setNamedItem):
+        (WebCore::NamedNodeMap::setNamedItemNS):
+        (WebCore::NamedNodeMap::item):
+        * dom/NamedNodeMap.h:
+
+2015-04-24  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183266.
+        https://bugs.webkit.org/show_bug.cgi?id=144164
+
+        Broke 32-bit build and a test. (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "AX: richer text change notifications (142719)"
+        https://bugs.webkit.org/show_bug.cgi?id=142719
+        http://trac.webkit.org/changeset/183266
+
+2015-04-24  Brady Eidson  <beidson@apple.com>
+
+        Origin header is preserved on cross-origin redirects.
+        https://bugs.webkit.org/show_bug.cgi?id=144157.
+
+        Reviewed by Sam Weinig.
+
+        Tests: http/tests/security/cors-post-redirect-301.html
+               http/tests/security/cors-post-redirect-302.html
+               http/tests/security/cors-post-redirect-307.html
+               http/tests/security/cors-post-redirect-308.html
+
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::ResourceHandle::willSendRequest): Always clear any origin header for cross-origin redirects.
+        * platform/network/mac/ResourceHandleMac.mm:
+        (WebCore::ResourceHandle::willSendRequest): Ditto.
+
+2015-04-24  Brent Fulgham  <bfulgham@apple.com>
+
+        Immediate action not functional for embedded PDFs
+        https://bugs.webkit.org/show_bug.cgi?id=143952
+        <rdar://problem/19842365>        
+
+        Reviewed by Tim Horton.
+
+        Add a dictionary lookup method to allow us to retrieve
+        relevant information for PDFs.
+
+        * editing/mac/DictionaryLookup.mm:
+        (WebCore::dictionaryLookupForPDFSelection): Updated to properly handle cases
+        where the Lookup engine selects a smaller range than the initial automatic
+        selection performed on clicking.
+
+2015-04-24  Simon Fraser  <simon.fraser@apple.com>
+
+        Make it possible to map a secondary quad through TransformState
+        https://bugs.webkit.org/show_bug.cgi?id=144156
+
+        Reviewed by Dean Jackson.
+
+        A future patch will need to map two quads simultaneously through TransformState,
+        so add the ability to provide an optional secondary quad.
+        
+        This patch also firms up the setQuad() contract, fixing webkit.org/b/106680,
+        requiring the state to be flattened when setting the quad (and now, the secondary quad).
+        Previously, setQuad implicitly flattened but failed to update m_mapPoint when
+        doing so.
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::computeVisibleRect): Now we have to explicitly flatten
+        before setting the quad.
+        * platform/graphics/ca/GraphicsLayerCA.h: Drive-up #include removal.
+        * platform/graphics/transforms/TransformState.cpp:
+        (WebCore::TransformState::operator=): Copy the secondary quad if we have one.
+        (WebCore::TransformState::translateMappedCoordinates): Move the secondary quad
+        if we have one.
+        (WebCore::TransformState::mappedQuad): Code factored into mapQuad().
+        (WebCore::TransformState::mappedSecondaryQuad): Return the secondary quad mapped
+        into the state's current coordinate space.
+        (WebCore::TransformState::mapQuad): Factored code.
+        * platform/graphics/transforms/TransformState.h:
+        (WebCore::TransformState::setQuad): Make the contract more explicit with assertions.
+        (WebCore::TransformState::setSecondaryQuad): Ditto when setting the secondary quad.
+        (WebCore::TransformState::lastPlanarSecondaryQuad):
+        (WebCore::TransformState::lastPlanarQuad): Deleted.
+
+2015-04-24  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [iOS] Reimplement r182512 and r183153 in a cleaner way
+        https://bugs.webkit.org/show_bug.cgi?id=144151
+
+        Reviewed by Enrica Casucci.
+
+        On iOS, we create FontPlatformData's ctFont() by round tripping it through a CGFontRef.
+        This causes the resultant ctFont() to lose system-font-ness. Patches r182512 and r183153
+        react to this fact by making users of a FontPlatformData use the original font passed in
+        to the FontPlatformData instead of the FontPlatformData's ctFont(), but only if we
+        detect that the FontPlatformData represents a system font (the underlying APIs have
+        different behavior for system fonts and non-system-fonts).
+
+        However, on OS X, we create a FontPlatformData's ctFont() directly from the original
+        font passed in to the constructor. This preserves system-font-ness (because it no
+        longer has the CGFontRef in the middle of the transformation). Therefore, OS X has the
+        correct behavior regarding system fonts.
+
+        The difference between the two ctFont() creation codepaths seems to be historical
+        rather than intentional. Rather than change all the call sites of ctFont() to use a
+        different platform font object if a system font is detected, a cleaner solution is to
+        simply unify the two ctFont() creation codepaths to the version which preserves system-
+        font-ness. Doing this will make all users of FontPlatformData automatically have the
+        correct behavior with no updates.
+
+        This patch reverts the relevant parts of r182512 and r183153 in favor of this new
+        solution.
+
+        No new tests because there is no behavior change.
+
+        * platform/graphics/FontPlatformData.h:
+        (WebCore::FontPlatformData::hashTableDeletedFontValue): Deleted.
+        * platform/graphics/cocoa/FontCocoa.mm:
+        (WebCore::Font::platformWidthForGlyph):
+        * platform/graphics/cocoa/FontPlatformDataCocoa.mm:
+        (WebCore::FontPlatformData::ctFontSize):
+        (WebCore::FontPlatformData::ctFont):
+        * platform/graphics/mac/SimpleFontDataCoreText.cpp:
+        (WebCore::Font::getCFStringAttributes):
+
+2015-04-24  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Unreviewed build fix.
+
+        * platform/graphics/cocoa/FontPlatformDataCocoa.mm:
+        (WebCore::FontPlatformData::FontPlatformData):
+
+2015-04-24  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [Cocoa] Start cleaning up FontPlatformData
+        https://bugs.webkit.org/show_bug.cgi?id=144133
+
+        Reviewed by Enrica Casucci.
+
+        This is the start of a crusade to ultimately remove one of the CTFontRefs which we have inside
+        FontPlatformData. This patch starts this effort out by removing the FontPlatformData
+        constructor which accepts an NSFont. This constructor simply casts the NSFont to a CTFontRef,
+        and forwards to another constructor. This patch moves this cast to callers of this constructor,
+        thereby enumerating the places we have left that use NSFont with FontPlatformData.
+
+        This patch also cleans up two of the constructors in FontPlatformData.cpp to forward on to
+        a common constructor.
+
+        This patch also collects places inside FontPlatformDataCocoa.mm where we check if a pointer is
+        not 0 and not -1, and puts this common code inside a new function,
+        FontPlatformData::isValidCTFontRef().
+
+        No new tests because there is no behavior change.
+
+        * platform/graphics/FontPlatformData.cpp:
+        (WebCore::FontPlatformData::FontPlatformData): Coalesce constructors.
+        * platform/graphics/FontPlatformData.h:
+        (WebCore::FontPlatformData::isValidCTFontRef): Check if a pointer is not 0 and not -1.
+        (WebCore::FontPlatformData::hashTableDeletedFontValue): Deleted.
+        * platform/graphics/cocoa/FontCocoa.mm:
+        (WebCore::Font::platformCreateScaledFont): Receive cast which has been hoisted from the deleted
+        FontPlatformData constructor.
+        (WebCore::Font::compositeFontReferenceFont): Ditto.
+        * platform/graphics/cocoa/FontPlatformDataCocoa.mm:
+        (WebCore::FontPlatformData::~FontPlatformData): Use isValidCTFontRef().
+        (WebCore::FontPlatformData::platformDataInit): Ditto.
+        (WebCore::FontPlatformData::platformDataAssign): Ditto.
+        (WebCore::FontPlatformData::platformIsEqual): Simplify preprocessor macros.
+        (WebCore::FontPlatformData::allowsLigatures): Remove unnecessary NSFont use.
+        (WebCore::FontPlatformData::FontPlatformData): Deleted.
+        * platform/graphics/mac/ComplexTextControllerCoreText.mm:
+        (WebCore::ComplexTextController::collectComplexTextRunsForCharacters): Remove unnecessary
+        NSFont use.
+        * platform/graphics/mac/FontCacheMac.mm:
+        (WebCore::FontCache::systemFallbackForCharacters): Receive cast which has been hoisted from the
+        deleted FontPlatformData constructor.
+        (WebCore::FontCache::createFontPlatformData): Ditto.
+        * platform/mac/DragImageMac.mm:
+        (WebCore::fontFromNSFont): Ditto.
+        (WebCore::widthWithFont): Ditto.
+        (WebCore::drawAtPoint): Ditto.
+
+2015-04-24  Doug Russell  <d_russell@apple.com>
+
+        AX: richer text change notifications (142719)
+        https://bugs.webkit.org/show_bug.cgi?id=142719
+
+        Reviewed by Darin Adler.
+
+        Richer accessibility value change notifications. Introduce AXTextEditType, postTextStateChangeNotification and postTextReplacementNotification to give assistive tech apps more reliable context for responding to changes in web content. Also implement a mechanism to post value changes in password form fields in coalesced ticks to thwart analyzing the cadence of changes.
+
+        Richer accessibility selection change notifications. Introduce AXTextStateChangeIntent, and an overload of postTextReplacementNotification to give assistive tech apps more reliable context for responding to changes in web content selection. Also block posting selection changes on password fields.
+
+        Tests: platform/mac/accessibility/input-replacevalue-userinfo.html
+               platform/mac/accessibility/selection-change-userinfo.html
+               platform/mac/accessibility/value-change-userinfo.html
+
+        * CMakeLists.txt:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * accessibility/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::AXObjectCache):
+        (WebCore::AXObjectCache::notificationPostTimerFired):
+        (WebCore::AXObjectCache::passwordNotificationPostTimerFired):
+        (WebCore::AXObjectCache::showIntent):
+        (WebCore::AXObjectCache::setTextSelectionIntent):
+        (WebCore::isPasswordFieldOrContainedByPasswordField):
+        (WebCore::AXObjectCache::postTextStateChangeNotification):
+        (WebCore::AXObjectCache::postTextReplacementNotification):
+        (WebCore::AXObjectCache::enqueuePasswordValueChangeNotification):
+        (WebCore::AXObjectCache::rootWebArea):
+        (WebCore::AXObjectCache::selectedChildrenChanged): Deleted.
+        * accessibility/AXObjectCache.h:
+        (WebCore::AXObjectCache::postTextStateChangeNotification):
+        (WebCore::AXObjectCache::postTextReplacementNotification):
+        (WebCore::AXObjectCache::postTextStateChangePlatformNotification):
+        (WebCore::AXObjectCache::postTextReplacementPlatformNotification):
+        (WebCore::AXObjectCache::textChangeForEditType):
+        (WebCore::AXObjectCache::nodeTextChangePlatformNotification):
+        (WebCore::AXObjectCache::computedObjectAttributeCache): Deleted.
+        (WebCore::AXObjectCache::getOrCreate): Deleted.
+        (WebCore::AXObjectCache::attachWrapper): Deleted.
+        * accessibility/AXTextStateChangeIntent.h: Added.
+        (WebCore::AXTextStateChangeIntent::AXTextStateChangeIntent):
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::passwordFieldOrContainingPasswordField):
+        * accessibility/AccessibilityNodeObject.h:
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::isContainedByPasswordField):
+        * accessibility/AccessibilityObject.h:
+        (WebCore::AccessibilityObject::passwordFieldOrContainingPasswordField):
+        (WebCore::AccessibilityObject::isPasswordField): Deleted.
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::setSelectedTextRange):
+        (WebCore::AccessibilityRenderObject::setSelectedVisiblePositionRange):
+        * accessibility/AccessibilityScrollView.h:
+        * accessibility/atk/AXObjectCacheAtk.cpp:
+        (WebCore::AXObjectCache::textChangeForEditType):
+        (WebCore::AXObjectCache::nodeTextChangePlatformNotification):
+        (WebCore::AXObjectCache::postPlatformNotification): Deleted.
+        * accessibility/ios/AXObjectCacheIOS.mm:
+        (WebCore::AXObjectCache::postTextStateChangePlatformNotification):
+        (WebCore::AXObjectCache::postTextReplacementPlatformNotification):
+        * accessibility/mac/AXObjectCacheMac.mm:
+        (WebCore::AXObjectCache::setShouldRepostNotificationsForTests):
+        (WebCore::AXPostNotificationWithUserInfo):
+        (WebCore::AXObjectCache::postPlatformNotification):
+        (WebCore::AXObjectCache::postTextStateChangePlatformNotification):
+        (WebCore::textReplacementChangeDictionary):
+        (WebCore::AXObjectCache::postTextReplacementPlatformNotification):
+        * accessibility/mac/WebAccessibilityObjectWrapperBase.h:
+        * accessibility/mac/WebAccessibilityObjectWrapperBase.mm:
+        (+[WebAccessibilityObjectWrapperBase accessibilitySetShouldRepostNotifications:]):
+        (-[WebAccessibilityObjectWrapperBase accessibilityPostedNotification:]):
+        (arrayRemovingNonJSONTypes):
+        (dictionaryRemovingNonJSONTypes):
+        (-[WebAccessibilityObjectWrapperBase accessibilityPostedNotification:userInfo:]):
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.h:
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (textMarkerRangeFromVisiblePositions):
+        (-[WebAccessibilityObjectWrapper textMarkerRangeFromVisiblePositions:endPosition:]):
+        * editing/AppendNodeCommand.cpp:
+        (WebCore::AppendNodeCommand::AppendNodeCommand):
+        (WebCore::sendAXTextChangedIgnoringLineBreaks):
+        (WebCore::AppendNodeCommand::doApply):
+        (WebCore::AppendNodeCommand::doUnapply):
+        * editing/AppendNodeCommand.h:
+        (WebCore::AppendNodeCommand::create):
+        * editing/ApplyStyleCommand.cpp:
+        (WebCore::ApplyStyleCommand::ApplyStyleCommand):
+        (WebCore::ApplyStyleCommand::applyBlockStyle): Deleted.
+        * editing/ApplyStyleCommand.h:
+        * editing/CompositeEditCommand.cpp:
+        (WebCore::EditCommandComposition::unapplyEditType):
+        (WebCore::CompositeEditCommand::CompositeEditCommand):
+        (WebCore::CompositeEditCommand::apply):
+        (WebCore::CompositeEditCommand::insertParagraphSeparator):
+        (WebCore::CompositeEditCommand::insertNodeBefore):
+        (WebCore::CompositeEditCommand::appendNode):
+        (WebCore::CompositeEditCommand::removeNodePreservingChildren):
+        (WebCore::CompositeEditCommand::insertTextIntoNode):
+        (WebCore::CompositeEditCommand::deleteTextFromNode):
+        (WebCore::CompositeEditCommand::replaceTextInNode):
+        (WebCore::CompositeEditCommand::moveParagraphs):
+        (WebCore::EditCommandComposition::getNodesInCommand): Deleted.
+        (WebCore::CompositeEditCommand::applyStyle): Deleted.
+        (WebCore::CompositeEditCommand::insertLineBreak): Deleted.
+        (WebCore::CompositeEditCommand::insertNodeAt): Deleted.
+        (WebCore::CompositeEditCommand::removeChildrenInRange): Deleted.
+        (WebCore::CompositeEditCommand::inputText): Deleted.
+        * editing/CompositeEditCommand.h:
+        * editing/DeleteFromTextNodeCommand.cpp:
+        (WebCore::DeleteFromTextNodeCommand::DeleteFromTextNodeCommand):
+        (WebCore::DeleteFromTextNodeCommand::doApply):
+        (WebCore::DeleteFromTextNodeCommand::doUnapply):
+        * editing/DeleteFromTextNodeCommand.h:
+        (WebCore::DeleteFromTextNodeCommand::create):
+        (WebCore::DeleteFromTextNodeCommand::deletedText):
+        * editing/DeleteSelectionCommand.cpp:
+        (WebCore::DeleteSelectionCommand::DeleteSelectionCommand):
+        (WebCore::DeleteSelectionCommand::preservesTypingStyle): Deleted.
+        * editing/DeleteSelectionCommand.h:
+        (WebCore::DeleteSelectionCommand::create):
+        * editing/DictationCommand.cpp:
+        (WebCore::DictationCommand::insertTextRunWithoutNewlines):
+        (WebCore::DictationCommand::insertParagraphSeparator):
+        * editing/EditAction.h:
+        * editing/EditCommand.cpp:
+        (WebCore::EditCommand::EditCommand):
+        (WebCore::EditCommand::editingAction):
+        (WebCore::EditCommand::applyEditType):
+        (WebCore::EditCommand::unapplyEditType):
+        (WebCore::SimpleEditCommand::SimpleEditCommand):
+        (WebCore::SimpleEditCommand::notifyAccessibilityForTextChange):
+        (WebCore::EditCommand::setParent): Deleted.
+        * editing/EditCommand.h:
+        * editing/EditingAllInOne.cpp:
+        * editing/Editor.cpp:
+        (WebCore::Editor::handleTextEvent):
+        (WebCore::Editor::deleteSelectionWithSmartDelete):
+        (WebCore::Editor::replaceSelectionWithFragment):
+        (WebCore::Editor::replaceSelectionWithText):
+        (WebCore::Editor::appliedEditing):
+        (WebCore::Editor::unappliedEditing):
+        (WebCore::Editor::performCutOrCopy):
+        (WebCore::Editor::markMisspellingsAfterTypingToWord):
+        (WebCore::Editor::changeBackToReplacedString):
+        (WebCore::Editor::transpose):
+        (WebCore::Editor::changeSelectionAfterCommand):
+        * editing/Editor.h:
+        * editing/EditorCommand.cpp:
+        (WebCore::executeInsertFragment):
+        * editing/FrameSelection.cpp:
+        (WebCore::FrameSelection::moveTo):
+        (WebCore::FrameSelection::moveWithoutValidationTo):
+        (WebCore::FrameSelection::setSelectionByMouseIfDifferent):
+        (WebCore::FrameSelection::setSelectionWithoutUpdatingAppearance):
+        (WebCore::FrameSelection::setSelection):
+        (WebCore::FrameSelection::updateAndRevealSelection):
+        (WebCore::isBoundary):
+        (WebCore::FrameSelection::textSelectionIntent):
+        (WebCore::FrameSelection::modify):
+        (WebCore::FrameSelection::selectAll):
+        (WebCore::FrameSelection::wordSelectionContainingCaretSelection):
+        (WebCore::FrameSelection::modifyMovingBackward): Deleted.
+        (WebCore::FrameSelection::selectFrameElementInParentIfFullySelected): Deleted.
+        (WebCore::FrameSelection::selectionAtWordStart): Deleted.
+        * editing/FrameSelection.h:
+        (WebCore::FrameSelection::notifyAccessibilityForSelectionChange):
+        (WebCore::FrameSelection::selection): Deleted.
+        * editing/InsertIntoTextNodeCommand.cpp:
+        (WebCore::InsertIntoTextNodeCommand::InsertIntoTextNodeCommand):
+        (WebCore::InsertIntoTextNodeCommand::doApply):
+        (WebCore::InsertIntoTextNodeCommand::doUnapply):
+        * editing/InsertIntoTextNodeCommand.h:
+        (WebCore::InsertIntoTextNodeCommand::create):
+        (WebCore::InsertIntoTextNodeCommand::insertedText):
+        * editing/InsertNodeBeforeCommand.cpp:
+        (WebCore::InsertNodeBeforeCommand::InsertNodeBeforeCommand):
+        (WebCore::InsertNodeBeforeCommand::doApply):
+        (WebCore::InsertNodeBeforeCommand::doUnapply):
+        * editing/InsertNodeBeforeCommand.h:
+        (WebCore::InsertNodeBeforeCommand::create):
+        * editing/InsertParagraphSeparatorCommand.cpp:
+        (WebCore::InsertParagraphSeparatorCommand::InsertParagraphSeparatorCommand):
+        * editing/InsertParagraphSeparatorCommand.h:
+        (WebCore::InsertParagraphSeparatorCommand::create):
+        * editing/InsertTextCommand.cpp:
+        (WebCore::InsertTextCommand::InsertTextCommand):
+        * editing/InsertTextCommand.h:
+        (WebCore::InsertTextCommand::create):
+        (WebCore::InsertTextCommand::createWithMarkerSupplier):
+        * editing/MoveSelectionCommand.cpp:
+        (WebCore::MoveSelectionCommand::doApply):
+        * editing/RemoveNodePreservingChildrenCommand.cpp:
+        (WebCore::RemoveNodePreservingChildrenCommand::RemoveNodePreservingChildrenCommand):
+        * editing/RemoveNodePreservingChildrenCommand.h:
+        (WebCore::RemoveNodePreservingChildrenCommand::create):
+        * editing/ReplaceDeleteFromTextNodeCommand.cpp: Copied from Source/WebCore/editing/AppendNodeCommand.h.
+        (WebCore::ReplaceDeleteFromTextNodeCommand::ReplaceDeleteFromTextNodeCommand):
+        (WebCore::ReplaceDeleteFromTextNodeCommand::notifyAccessibilityForTextChange):
+        * editing/ReplaceDeleteFromTextNodeCommand.h: Copied from Source/WebCore/editing/AppendNodeCommand.h.
+        * editing/ReplaceInsertIntoTextNodeCommand.cpp: Added.
+        (WebCore::ReplaceInsertIntoTextNodeCommand::ReplaceInsertIntoTextNodeCommand):
+        (WebCore::ReplaceInsertIntoTextNodeCommand::notifyAccessibilityForTextChange):
+        * editing/ReplaceInsertIntoTextNodeCommand.h: Copied from Source/WebCore/editing/RemoveNodePreservingChildrenCommand.h.
+        * editing/ReplaceSelectionCommand.cpp:
+        (WebCore::ReplaceSelectionCommand::ReplaceSelectionCommand):
+        (WebCore::ReplaceSelectionCommand::InsertedNodes::didReplaceNode): Deleted.
+        (WebCore::ReplaceSelectionCommand::insertAsListItems): Deleted.
+        * editing/ReplaceSelectionCommand.h:
+        (WebCore::ReplaceSelectionCommand::create):
+        * editing/TypingCommand.cpp:
+        (WebCore::TypingCommand::insertTextRunWithoutNewlines):
+        (WebCore::TypingCommand::insertParagraphSeparator):
+        * editing/atk/FrameSelectionAtk.cpp:
+        (WebCore::FrameSelection::notifyAccessibilityForSelectionChange):
+        * editing/ios/DictationCommandIOS.cpp:
+        (WebCore::DictationCommandIOS::DictationCommandIOS):
+        * editing/ios/DictationCommandIOS.h:
+        * editing/mac/FrameSelectionMac.mm:
+        (WebCore::FrameSelection::notifyAccessibilityForSelectionChange):
+        * html/HTMLTextFormControlElement.cpp:
+        (WebCore::HTMLTextFormControlElement::setInnerTextValue):
+        * page/DragController.cpp:
+        (WebCore::DragController::concludeEditDrag):
+        * page/EventHandler.cpp:
+        (WebCore::setInitialKeyboardSelection):
+        * page/FocusController.cpp:
+        (WebCore::FocusController::advanceFocusInDocumentOrder):
+
+2015-04-24  Darin Adler  <darin@apple.com>
+
+        Convert OwnPtr and PassOwnPtr uses to std::unique_ptr
+        https://bugs.webkit.org/show_bug.cgi?id=128007
+
+        Reviewed by Anders Carlsson.
+
+        * PlatformEfl.cmake: Removed OwnPtrCairo source files.
+        * PlatformGTK.cmake: Ditto.
+        * PlatformWinCairo.cmake: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+
+        * platform/CrossThreadCopier.cpp: Removed OwnPtr specialization.
+        * platform/CrossThreadCopier.h: Ditto.
+
+        * platform/ScrollAnimatorNone.cpp: Removed unneeded include.
+        * platform/ThreadGlobalData.cpp: Ditto.
+        * platform/ThreadGlobalData.h: Ditto.
+        * platform/graphics/avfoundation/cf/CDMSessionAVFoundationCF.h: Ditto.
+
+        * platform/graphics/avfoundation/cf/MediaPlayerPrivateAVFoundationCF.cpp:
+        (WebCore::AVFWrapper::processNotification): Use unique_ptr.
+        (WebCore::AVFWrapper::notificationCallback): Use make_unique.
+        (WebCore::AVFWrapper::platformLayer): Ditto.
+
+        * platform/graphics/cairo/CairoUtilities.cpp:
+        (WebCore::appendPathToCairoContext): Use cairo_path_destroy directly
+        instead of a smart pointer; the code path is simple enough that it is
+        clear this way.
+
+        * platform/graphics/cairo/ImageBufferCairo.cpp:
+        (WebCore::ImageBuffer::ImageBuffer): Use make_unique.
+        * platform/graphics/cairo/ImageBufferDataCairo.h: Use unique_ptr.
+
+        * platform/graphics/cairo/OwnPtrCairo.cpp: Removed.
+        * platform/graphics/cairo/OwnPtrCairo.h: Removed.
+
+        * platform/graphics/cairo/PathCairo.cpp:
+        (WebCore::Path::Path): Use cairo_path_destroy directly instead of a
+        smart pointer; the code path is simple enough that it is clear this way.
+        (WebCore::Path::operator=): Ditto.
+        (WebCore::Path::addPath): Ditto.
+        (WebCore::Path::apply): Ditto.
+        * platform/graphics/cairo/PlatformContextCairo.cpp:
+        (WebCore::PlatformContextCairo::clipForPatternFilling): Ditto.
+
+        * platform/graphics/freetype/FontCacheFreeType.cpp: Removed unneeded include.
+        * platform/graphics/glx/GLContextGLX.cpp: Ditto.
+
+        * platform/graphics/surfaces/egl/EGLSurface.cpp:
+        (WebCore::EGLOffScreenSurface::EGLOffScreenSurface): Use make_unique.
+
+        * platform/graphics/surfaces/glx/GLXConfigSelector.h:
+        (WebCore::GLXConfigSelector::findMatchingConfig): Use unique_ptr with X11Deleter.
+        (WebCore::GLXConfigSelector::findMatchingConfigWithVisualId): Ditto.
+        * platform/graphics/surfaces/glx/GLXSurface.cpp:
+        (WebCore::GLXTransportSurface::GLXTransportSurface): Ditto.
+        (WebCore::GLXOffScreenSurface::initialize): Ditto.
+
+        * platform/graphics/surfaces/glx/OwnPtrX11.h: Removed.
+
+        * platform/graphics/surfaces/glx/X11Helper.cpp:
+        (WebCore::X11Helper::createOffScreenWindow): Use unique_ptr with X11Deleter.
+        (WebCore::X11Helper::createPixmap): Ditto.
+
+        * platform/graphics/surfaces/glx/X11Helper.h: Added X11Deleter,
+        which can be used with unique_ptr to make it call XFree instead of delete.
+
+        * platform/graphics/win/FullScreenController.cpp: Use unique_ptr.
+        (FullScreenController::FullScreenController): Use make_unique.
+        (FullScreenController::enterFullScreen): Ditto.
+        * platform/graphics/win/FullScreenController.h: Use unique_ptr.
+
+        * platform/graphics/win/GraphicsContext3DWin.cpp: Removed unneeded includes.
+
+        * platform/graphics/win/WKCAImageQueue.cpp:
+        (WebCore::WKCAImageQueue::WKCAImageQueue): Use make_unique.
+        * platform/graphics/win/WKCAImageQueue.h: Use unique_ptr.
+
+        * platform/network/NetworkStorageSessionStub.cpp: Removed unneeded include.
+
+        * platform/network/ResourceHandleInternal.h: Use unique_ptr.
+
+        * platform/network/curl/MultipartHandle.cpp:
+        (WebCore::MultipartHandle::create): Deleted.
+        * platform/network/curl/MultipartHandle.h: Deleted the create function.
+
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::headerCallback): Use make_unique.
+
+2015-04-24  Per Arne Vollan  <peavo@outlook.com>
+
+        [Win] Popup menu is not accessible.
+        https://bugs.webkit.org/show_bug.cgi?id=141704
+
+        Reviewed by Brent Fulgham.
+
+        Get accessibility information for items in popup menus.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenuWin::onGetObject):
+        (WebCore::PopupMenuWin::wndProc):
+        (WebCore::AccessiblePopupMenu::AccessiblePopupMenu):
+        (WebCore::AccessiblePopupMenu::~AccessiblePopupMenu):
+        (WebCore::AccessiblePopupMenu::QueryInterface):
+        (WebCore::AccessiblePopupMenu::AddRef):
+        (WebCore::AccessiblePopupMenu::Release):
+        (WebCore::AccessiblePopupMenu::GetTypeInfoCount):
+        (WebCore::AccessiblePopupMenu::GetTypeInfo):
+        (WebCore::AccessiblePopupMenu::GetIDsOfNames):
+        (WebCore::AccessiblePopupMenu::Invoke):
+        (WebCore::AccessiblePopupMenu::get_accParent):
+        (WebCore::AccessiblePopupMenu::get_accChildCount):
+        (WebCore::AccessiblePopupMenu::get_accChild):
+        (WebCore::AccessiblePopupMenu::get_accName):
+        (WebCore::AccessiblePopupMenu::get_accValue):
+        (WebCore::AccessiblePopupMenu::get_accDescription):
+        (WebCore::AccessiblePopupMenu::get_accRole):
+        (WebCore::AccessiblePopupMenu::get_accState):
+        (WebCore::AccessiblePopupMenu::get_accHelp):
+        (WebCore::AccessiblePopupMenu::get_accKeyboardShortcut):
+        (WebCore::AccessiblePopupMenu::get_accFocus):
+        (WebCore::AccessiblePopupMenu::get_accSelection):
+        (WebCore::AccessiblePopupMenu::get_accDefaultAction):
+        (WebCore::AccessiblePopupMenu::accSelect):
+        (WebCore::AccessiblePopupMenu::accLocation):
+        (WebCore::AccessiblePopupMenu::accNavigate):
+        (WebCore::AccessiblePopupMenu::accHitTest):
+        (WebCore::AccessiblePopupMenu::accDoDefaultAction):
+        (WebCore::AccessiblePopupMenu::put_accName):
+        (WebCore::AccessiblePopupMenu::put_accValue):
+        (WebCore::AccessiblePopupMenu::get_accHelpTopic):
+        * platform/win/PopupMenuWin.h:
+        * platform/win/ScrollbarThemeWin.h:
+        (WebCore::ScrollbarThemeWin::hasButtons): Deleted.
+
+2015-04-23  Antti Koivisto  <antti@apple.com>
+
+        Memory cache live resources repeatedly purged during painting
+        https://bugs.webkit.org/show_bug.cgi?id=144104
+        <rdar://problem/20667695>
+
+        Reviewed by Chris Dumez.
+
+        On some PLT pages (like nytimes.com) we get into state where painting repeatedly purges live bitmaps.
+        This slows down page loads significantly.
+
+        This might have regressed because improvements in page caching keep more pages and so resources 'live'.
+
+        With this path we do all regular cache pruning asynchronously. If memory is really critical
+        the low memory handling code will still prune synchronously.
+
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::removeClient):
+        (WebCore::CachedResource::didAccessDecodedData):
+
+            prune() -> pruneSoon()
+
+        * loader/cache/MemoryCache.cpp:
+
+            Decrease the pruning size target from 0.95 to 0.8 so we don't need to prune so often.
+
+        (WebCore::MemoryCache::needsPruning):
+
+            Factor into a function.
+
+        (WebCore::MemoryCache::prune):
+        (WebCore::MemoryCache::pruneSoon):
+
+            Prune asynchronously.
+
+        * loader/cache/MemoryCache.h:
+
+2015-04-24  Antti Koivisto  <antti@apple.com>
+
+        Unreviewed, rolling out r183259.
+
+        Wrong ChangeLog.
+
+        Reverted changeset:
+
+        "Memory cache live resources repeatedly purged during
+        painting"
+        https://bugs.webkit.org/show_bug.cgi?id=144104
+        http://trac.webkit.org/changeset/183259
+
+2015-04-24  Antti Koivisto  <antti@apple.com>
+
+        CrashTracer: WebProcess at com.apple.WebCore: WebCore::toScriptElementIfPossible + 4
+        https://bugs.webkit.org/show_bug.cgi?id=144050
+
+        Reviewed by Chris Dumez.
+
+        We are seeing null Element pointer crashes with this stack:
+
+        47 com.apple.WebCore:  WebCore::toScriptElementIfPossible + 4 <==
+        47 com.apple.WebCore:  WebCore::ScriptRunner::timerFired + 452
+        47 com.apple.WebCore:  WebCore::ThreadTimers::sharedTimerFiredInternal + 175
+
+        The most likely cause seems to be that this code
+
+            ASSERT(m_pendingAsyncScripts.contains(scriptElement));
+            m_scriptsToExecuteSoon.append(m_pendingAsyncScripts.take(scriptElement));
+
+        in ScriptRunner::notifyScriptReady fails to find scriptElement and we are left with null entry in
+        m_scriptsToExecuteSoon. However I haven't managed to repro this or find the exact path how this
+        could happen. The related code is fragile with lot of state (especially in ScriptElement class)
+        and involves many opportunities for re-entry via scripts.
+
+        No repro, no test case.
+
+        * dom/ScriptRunner.cpp:
+        (WebCore::ScriptRunner::timerFired):
+
+            Paper this over by adding a null check. We could check m_pendingAsyncScripts.take() above
+            but this also covers possibility this is caused by something else.
+
+2015-04-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [SOUP] Use a webkit subdirectory for the disk cache
+        https://bugs.webkit.org/show_bug.cgi?id=144048
+
+        Reviewed by Martin Robinson.
+
+        Add a static method to SoupNetworkSession to clear a soup cache
+        given its directory.
+
+        * platform/network/soup/SoupNetworkSession.cpp:
+        (WebCore::strIsNumeric):
+        (WebCore::SoupNetworkSession::clearCache):
+        * platform/network/soup/SoupNetworkSession.h:
+
+2015-04-23  Andy Estes  <aestes@apple.com>
+
+        Fix the iOS build after r183234.
+
+        * platform/ios/LegacyTileCache.mm:
+        (WebCore::LegacyTileCache::commitScaleChange):
+
+2015-04-23  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix Windows build.
+
+        * platform/graphics/ca/win/PlatformCALayerWin.cpp:
+        (PlatformCALayerWin::setBackingStoreAttached):
+        (PlatformCALayerWin::backingStoreAttached):
+        * platform/graphics/ca/win/PlatformCALayerWin.h:
+
 2015-04-23  Simon Fraser  <simon.fraser@apple.com>
 
         Make it possible to detach GraphicsLayerCA backing store

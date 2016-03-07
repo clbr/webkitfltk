@@ -1,3 +1,380 @@
+2015-04-25  Jordan Harband  <ljharb@gmail.com>
+
+        Set#keys !== Set#values
+        https://bugs.webkit.org/show_bug.cgi?id=144190
+
+        Reviewed by Darin Adler.
+
+        per https://people.mozilla.org/~jorendorff/es6-draft.html#sec-set.prototype.keys
+        Set#keys should === Set#values
+
+        * runtime/SetPrototype.cpp:
+        (JSC::SetPrototype::finishCreation):
+        (JSC::setProtoFuncValues):
+        (JSC::setProtoFuncEntries):
+        (JSC::setProtoFuncKeys): Deleted.
+
+2015-04-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Allow for pausing a JSContext when opening a Web Inspector
+        <rdar://problem/20564788>
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::receivedSetupMessage):
+        * inspector/remote/RemoteInspectorConstants.h:
+        * inspector/remote/RemoteInspectorDebuggable.h:
+        * inspector/remote/RemoteInspectorDebuggableConnection.h:
+        * inspector/remote/RemoteInspectorDebuggableConnection.mm:
+        (Inspector::RemoteInspectorDebuggableConnection::setup):
+        On any incoming setup message, we may want to automatically
+        pause the debuggable. If requested, pause the debuggable
+        after we have setup the frontend connection.
+
+        * runtime/JSGlobalObjectDebuggable.h:
+        * runtime/JSGlobalObjectDebuggable.cpp:
+        (JSC::JSGlobalObjectDebuggable::pause):
+        Pass through to the inspector controller.
+
+        * inspector/JSGlobalObjectInspectorController.h:
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::pause):
+        Enable pause on next statement.
+
+2015-04-23  Ryosuke Niwa  <rniwa@webkit.org>
+
+        class methods should be non-enumerable
+        https://bugs.webkit.org/show_bug.cgi?id=143181
+
+        Reviewed by Darin Adler.
+
+        Fixed the bug by using Object.defineProperty to define methods.
+
+        This patch adds the concept of link time constants and uses it to resolve Object.defineProperty
+        inside CodeBlock's constructor since bytecode can be linked against multiple global objects.
+
+        * bytecode/CodeBlock.cpp: 
+        (JSC::CodeBlock::CodeBlock): Resolve link time constants that are used. Ignore ones with register
+        index of zero.
+        * bytecode/SpecialPointer.h: Added a new enum for link time constants. It currently contains
+        exactly one entry for Object.defineProperty.
+        * bytecode/UnlinkedCodeBlock.h:
+        (JSC::UnlinkedCodeBlock::addConstant): Added. Like addConstant that takes JSValue, allocate a new
+        constant register for the link time constant we're adding.
+        (JSC::UnlinkedCodeBlock::registerIndexForLinkTimeConstant): Added.
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitMoveLinkTimeConstant): Added. Like addConstantValue, allocate a new
+        register for the specified link time constant and notify UnlinkedCodeBlock about it.
+        (JSC::BytecodeGenerator::emitCallDefineProperty): Added. Create a new property descriptor and call
+        Object.defineProperty with it.
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::PropertyListNode::emitBytecode): Make static and non-static getters and setters for classes
+        non-enumerable by using emitCallDefineProperty to define them.
+        (JSC::PropertyListNode::emitPutConstantProperty): Ditto for a non-accessor properties.
+        (JSC::ClassExprNode::emitBytecode): Make prototype.constructor non-enumerable and make prototype
+        property on the class non-writable, non-configurable, and non-enumerable by using defineProperty.
+        * runtime/CommonIdentifiers.h:
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init): Set m_definePropertyFunction.
+        (JSC::JSGlobalObject::visitChildren): Visit m_definePropertyFunction.
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::definePropertyFunction): Added.
+        (JSC::JSGlobalObject::actualPointerFor): Added a variant that takes LinkTimeConstant.
+        (JSC::JSGlobalObject::jsCellForLinkTimeConstant): Like actualPointerFor, takes LinkTimeConstant and
+        returns a JSCell; e.g. Object.defineProperty.
+        * runtime/ObjectConstructor.cpp:
+        (JSC::ObjectConstructor::addDefineProperty): Added. Returns Object.defineProperty.
+        * runtime/ObjectConstructor.h:
+
+2015-04-25  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Implement String.fromCodePoint
+        https://bugs.webkit.org/show_bug.cgi?id=144160
+
+        Reviewed by Darin Adler.
+
+        This patch implements String.fromCodePoint.
+        It accepts multiple code points and generates a string that consists of given code points.
+        The range [0x0000 - 0x10FFFF] is valid for code points.
+        If the given value is out of range, throw a range error.
+
+        When a 0xFFFF <= valid code point is given,
+        String.fromCodePoint generates a string that contains surrogate pairs.
+
+        * runtime/StringConstructor.cpp:
+        (JSC::stringFromCodePoint):
+        (JSC::constructWithStringConstructor):
+        * tests/stress/string-from-code-point.js: Added.
+        (shouldBe):
+        (shouldThrow):
+        (toCodePoints):
+        (passThrough):
+
+2015-04-25  Martin Robinson  <mrobinson@igalia.com>
+
+        Rename ENABLE_3D_RENDERING to ENABLE_3D_TRANSFORMS
+        https://bugs.webkit.org/show_bug.cgi?id=144182
+
+        Reviewed by Simon Fraser.
+
+        * Configurations/FeatureDefines.xcconfig: Replace all instances of 3D_RENDERING with 3D_TRANSFORMS.
+
+2015-04-25  Mark Lam  <mark.lam@apple.com>
+
+        mayExit() is wrong about Branch nodes with ObjectOrOtherUse: they can exit.
+        https://bugs.webkit.org/show_bug.cgi?id=144152
+
+        Reviewed by Filip Pizlo.
+
+        Changed the EdgeMayExit functor to recognize ObjectUse, ObjectOrOtherUse,
+        StringObjectUse, and StringOrStringObjectUse kinds as potentially triggering
+        OSR exits.  This was overlooked in the original code.
+
+        While only the ObjectOrOtherUse kind is relevant for manifesting this bug with
+        the Branch node, the other 3 may also trigger the same bug for other nodes.
+        To prevent this bug from manifesting with other nodes (and future ones that
+        are yet to be added to mayExits()'s "potential won't exit" set), we fix the
+        EdgeMayExit functor to handle all 4 use kinds (instead of just ObjectOrOtherUse).
+
+        Also added a test to exercise a code path that will trigger this bug with
+        the Branch node before the fix is applied.
+
+        * dfg/DFGMayExit.cpp:
+        * tests/stress/branch-may-exit-due-to-object-or-other-use-kind.js: Added.
+        (inlinedFunction):
+        (foo):
+
+2015-04-24  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183288.
+        https://bugs.webkit.org/show_bug.cgi?id=144189
+
+        Made js/sort-with-side-effecting-comparisons.html time out in
+        debug builds (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "It shouldn't take 1846 lines of code and 5 FIXMEs to sort an
+        array."
+        https://bugs.webkit.org/show_bug.cgi?id=144013
+        http://trac.webkit.org/changeset/183288
+
+2015-04-24  Filip Pizlo  <fpizlo@apple.com>
+
+        CRASH in operationCreateDirectArgumentsDuringExit()
+        https://bugs.webkit.org/show_bug.cgi?id=143962
+
+        Reviewed by Geoffrey Garen.
+        
+        We shouldn't assume that constant-like OSR exit values are always recoverable. They are only
+        recoverable so long as they are live. Therefore, OSR exit should track liveness of
+        constants instead of assuming that they are always live.
+
+        * dfg/DFGGenerationInfo.h:
+        (JSC::DFG::GenerationInfo::noticeOSRBirth):
+        (JSC::DFG::GenerationInfo::appendBirth):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileCurrentBlock):
+        * dfg/DFGVariableEvent.cpp:
+        (JSC::DFG::VariableEvent::dump):
+        * dfg/DFGVariableEvent.h:
+        (JSC::DFG::VariableEvent::birth):
+        (JSC::DFG::VariableEvent::id):
+        (JSC::DFG::VariableEvent::dataFormat):
+        * dfg/DFGVariableEventStream.cpp:
+        (JSC::DFG::VariableEventStream::reconstruct):
+        * tests/stress/phantom-direct-arguments-clobber-argument-count.js: Added.
+        (foo):
+        (bar):
+        * tests/stress/phantom-direct-arguments-clobber-callee.js: Added.
+        (foo):
+        (bar):
+
+2015-04-24  Benjamin Poulain  <bpoulain@apple.com>
+
+        [JSC] When inserting a NaN into a Int32 array, we convert it to DoubleArray then to ContiguousArray
+        https://bugs.webkit.org/show_bug.cgi?id=144169
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::convertInt32ForValue):
+        DoubleArray do not store NaN, they are used for holes.
+        What happened was:
+        1) We fail to insert the NaN in the Int32 array because it is a double.
+        2) We were converting the array to DoubleArray.
+        3) We were trying to insert the value again. We would fail again because
+           DoubleArray does not store NaN.
+        4) We would convert the DoubleArrayt to Contiguous Array, converting the values
+           to boxed values.
+
+        * tests/stress/int32array-transition-on-nan.js: Added.
+        The behavior is not really observable. This only test nothing crashes in those
+        cases.
+
+        (insertNaNWhileFilling):
+        (testInsertNaNWhileFilling):
+        (insertNaNAfterFilling):
+        (testInsertNaNAfterFilling):
+        (pushNaNWhileFilling):
+        (testPushNaNWhileFilling):
+
+2015-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        It shouldn't take 1846 lines of code and 5 FIXMEs to sort an array.
+        https://bugs.webkit.org/show_bug.cgi?id=144013
+
+        Reviewed by Mark Lam.
+
+        This patch implements Array.prototype.sort in JavaScript, removing the
+        C++ implementations. It is simpler and less error-prone to express our
+        operations in JavaScript, which provides memory safety, exception safety,
+        and recursion safety.
+
+        The performance result is mixed, but net positive in my opinion. It's
+        difficult to enumerate all the results, since we used to have so many
+        different sorting modes, and there are lots of different data patterns
+        across which you might want to measure sorting. Suffice it to say:
+
+            (*) The benchmarks we track are faster or unchanged.
+
+            (*) Sorting random input using a comparator -- which we think is
+            common -- is 3X faster.
+
+            (*) Sorting random input in a non-array object -- which jQuery does
+            -- is 4X faster.
+
+            (*) Sorting random input in a compact array of integers using a
+            trivial pattern-matchable comparator is 2X *slower*.
+
+        * builtins/Array.prototype.js:
+        (sort.min):
+        (sort.stringComparator):
+        (sort.compactSparse): Special case compaction for sparse arrays because
+        we don't want to hang when sorting new Array(BIG).
+
+        (sort.compact):
+        (sort.merge):
+        (sort.mergeSort): Use merge sort because it's a reasonably efficient
+        stable sort. We have evidence that some sites depend on stable sort,
+        even though the ES6 spec does not mandate it. (See
+        <http://trac.webkit.org/changeset/33967>.)
+
+        This is a textbook implementation of merge sort with three optimizations:
+
+            (1) Use iteration instead of recursion;
+
+            (2) Use array subscripting instead of array copying in order to
+            create logical sub-lists without creating physical sub-lists;
+
+            (3) Swap src and dst at each iteration instead of copying src into
+            dst, and only copy src into the subject array at the end if src is
+            not the subject array.
+
+        (sort.inflate):
+        (sort.comparatorSort):
+        (sort): Sort in JavaScript for the win.
+
+        * builtins/BuiltinExecutables.cpp:
+        (JSC::BuiltinExecutables::createExecutableInternal): Allow non-private
+        names so we can use helper functions.
+
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::isNumericCompareFunction): Deleted.
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedCodeBlock::UnlinkedCodeBlock):
+        * bytecode/UnlinkedCodeBlock.h:
+        (JSC::UnlinkedCodeBlock::setIsNumericCompareFunction): Deleted.
+        (JSC::UnlinkedCodeBlock::isNumericCompareFunction): Deleted.
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::setIsNumericCompareFunction): Deleted.
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::FunctionNode::emitBytecode): We don't do this special casing based
+        on pattern matching anymore. This was mainly an optimization to avoid 
+        the overhead of calling from C++ to JS, which we now avoid by
+        sorting in JS.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::markRoots):
+        (JSC::Heap::pushTempSortVector): Deleted.
+        (JSC::Heap::popTempSortVector): Deleted.
+        (JSC::Heap::visitTempSortVectors): Deleted.
+        * heap/Heap.h: We don't have temp sort vectors anymore because we sort
+        in JavaScript using a normal JavaScript array for our temporary storage.
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseInner): Allow capturing so we can use
+        helper functions.
+
+        * runtime/ArrayPrototype.cpp:
+        (JSC::isNumericCompareFunction): Deleted.
+        (JSC::attemptFastSort): Deleted.
+        (JSC::performSlowSort): Deleted.
+        (JSC::arrayProtoFuncSort): Deleted.
+
+        * runtime/CommonIdentifiers.h: New strings used by sort.
+
+        * runtime/JSArray.cpp:
+        (JSC::compareNumbersForQSortWithInt32): Deleted.
+        (JSC::compareNumbersForQSortWithDouble): Deleted.
+        (JSC::compareNumbersForQSort): Deleted.
+        (JSC::compareByStringPairForQSort): Deleted.
+        (JSC::JSArray::sortNumericVector): Deleted.
+        (JSC::JSArray::sortNumeric): Deleted.
+        (JSC::ContiguousTypeAccessor::getAsValue): Deleted.
+        (JSC::ContiguousTypeAccessor::setWithValue): Deleted.
+        (JSC::ContiguousTypeAccessor::replaceDataReference): Deleted.
+        (JSC::ContiguousTypeAccessor<ArrayWithDouble>::getAsValue): Deleted.
+        (JSC::ContiguousTypeAccessor<ArrayWithDouble>::setWithValue): Deleted.
+        (JSC::ContiguousTypeAccessor<ArrayWithDouble>::replaceDataReference): Deleted.
+        (JSC::JSArray::sortCompactedVector): Deleted.
+        (JSC::JSArray::sort): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::get_less): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::set_less): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::get_greater): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::set_greater): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::get_balance_factor): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::set_balance_factor): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::compare_key_key): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::compare_key_node): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::compare_node_node): Deleted.
+        (JSC::AVLTreeAbstractorForArrayCompare::null): Deleted.
+        (JSC::JSArray::sortVector): Deleted.
+        (JSC::JSArray::compactForSorting): Deleted.
+        * runtime/JSArray.h:
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::ObjectConstructor::finishCreation): Provide some builtins used
+        by sort.
+
+2015-04-24  Matthew Mirman  <mmirman@apple.com>
+
+        Made Object.prototype.__proto__ native getter and setter check that this object not null or undefined
+        https://bugs.webkit.org/show_bug.cgi?id=141865
+        rdar://problem/19927273
+
+        Reviewed by Filip Pizlo.
+
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::globalFuncProtoGetter):
+        (JSC::globalFuncProtoSetter):
+
+2015-04-23  Benjamin Poulain  <bpoulain@apple.com>
+
+        Remove a useless branch on DFGGraph::addShouldSpeculateMachineInt()
+        https://bugs.webkit.org/show_bug.cgi?id=144118
+
+        Reviewed by Geoffrey Garen.
+
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::addShouldSpeculateMachineInt):
+        Both block do the same thing.
+
 2015-04-23  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Speculative fix for non-main thread auto-attach failures
