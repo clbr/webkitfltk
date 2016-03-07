@@ -100,6 +100,8 @@ static Color colorFromSVGColorCSSValue(SVGColor* svgColor, const Color& fgColor)
     return color;
 }
 
+// FIXME: This method should go away once all SVG CSS properties have been
+// ported to the new generated StyleBuilder.
 void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
 {
     ASSERT(value);
@@ -120,15 +122,6 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
     switch (id)
     {
         // ident only properties
-        case CSSPropertyAlignmentBaseline:
-        {
-            HANDLE_INHERIT_AND_INITIAL(alignmentBaseline, AlignmentBaseline)
-            if (!primitiveValue)
-                break;
-
-            svgStyle.setAlignmentBaseline(*primitiveValue);
-            break;
-        }
         case CSSPropertyBaselineShift:
         {
             HANDLE_INHERIT_AND_INITIAL(baselineShift, BaselineShift);
@@ -151,107 +144,9 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
                 }
             } else {
                 svgStyle.setBaselineShift(BS_LENGTH);
-                svgStyle.setBaselineShiftValue(SVGLength::fromCSSPrimitiveValue(primitiveValue));
+                svgStyle.setBaselineShiftValue(SVGLength::fromCSSPrimitiveValue(*primitiveValue));
             }
 
-            break;
-        }
-        case CSSPropertyKerning:
-        {
-            HANDLE_INHERIT_AND_INITIAL(kerning, Kerning);
-            if (primitiveValue)
-                svgStyle.setKerning(SVGLength::fromCSSPrimitiveValue(primitiveValue));
-            break;
-        }
-        case CSSPropertyDominantBaseline:
-        {
-            HANDLE_INHERIT_AND_INITIAL(dominantBaseline, DominantBaseline)
-            if (primitiveValue)
-                svgStyle.setDominantBaseline(*primitiveValue);
-            break;
-        }
-        case CSSPropertyColorInterpolation:
-        {
-            HANDLE_INHERIT_AND_INITIAL(colorInterpolation, ColorInterpolation)
-            if (primitiveValue)
-                svgStyle.setColorInterpolation(*primitiveValue);
-            break;
-        }
-        case CSSPropertyColorInterpolationFilters:
-        {
-            HANDLE_INHERIT_AND_INITIAL(colorInterpolationFilters, ColorInterpolationFilters)
-            if (primitiveValue)
-                svgStyle.setColorInterpolationFilters(*primitiveValue);
-            break;
-        }
-        case CSSPropertyColorProfile:
-        {
-            // Not implemented.
-            break;
-        }
-        case CSSPropertyColorRendering:
-        {
-            HANDLE_INHERIT_AND_INITIAL(colorRendering, ColorRendering)
-            if (primitiveValue)
-                svgStyle.setColorRendering(*primitiveValue);
-            break;
-        }
-        case CSSPropertyClipRule:
-        {
-            HANDLE_INHERIT_AND_INITIAL(clipRule, ClipRule)
-            if (primitiveValue)
-                svgStyle.setClipRule(*primitiveValue);
-            break;
-        }
-        case CSSPropertyPaintOrder: {
-            HANDLE_INHERIT_AND_INITIAL(paintOrder, PaintOrder)
-            // 'normal' is the only primitiveValue
-            if (primitiveValue)
-                svgStyle.setPaintOrder(PaintOrderNormal);
-            if (!is<CSSValueList>(*value))
-                break;
-            CSSValueList& orderTypeList = downcast<CSSValueList>(*value);
-
-            // Serialization happened during parsing. No additional checking needed.
-            unsigned length = orderTypeList.length();
-            primitiveValue = downcast<CSSPrimitiveValue>(orderTypeList.itemWithoutBoundsCheck(0));
-            PaintOrder paintOrder;
-            switch (primitiveValue->getValueID()) {
-            case CSSValueFill:
-                paintOrder = length > 1 ? PaintOrderFillMarkers : PaintOrderFill;
-                break;
-            case CSSValueStroke:
-                paintOrder = length > 1 ? PaintOrderStrokeMarkers : PaintOrderStroke;
-                break;
-            case CSSValueMarkers:
-                paintOrder = length > 1 ? PaintOrderMarkersStroke : PaintOrderMarkers;
-                break;
-            default:
-                ASSERT_NOT_REACHED();
-                paintOrder = PaintOrderNormal;
-            }
-            svgStyle.setPaintOrder(static_cast<PaintOrder>(paintOrder));
-            break;
-        }
-        case CSSPropertyFillRule:
-        {
-            HANDLE_INHERIT_AND_INITIAL(fillRule, FillRule)
-            if (primitiveValue)
-                svgStyle.setFillRule(*primitiveValue);
-            break;
-        }
-        case CSSPropertyStrokeLinejoin:
-        {
-            HANDLE_INHERIT_AND_INITIAL(joinStyle, JoinStyle)
-            if (primitiveValue)
-                svgStyle.setJoinStyle(*primitiveValue);
-            break;
-        }
-        case CSSPropertyShapeRendering:
-        {
-            HANDLE_INHERIT_AND_INITIAL(shapeRendering, ShapeRendering)
-            if (primitiveValue)
-                svgStyle.setShapeRendering(*primitiveValue);
             break;
         }
         // end of ident only properties
@@ -287,30 +182,6 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
                 SVGPaint& svgPaint = downcast<SVGPaint>(*value);
                 svgStyle.setStrokePaint(svgPaint.paintType(), colorFromSVGColorCSSValue(&svgPaint, state.style()->color()), svgPaint.uri(), applyPropertyToRegularStyle(), applyPropertyToVisitedLinkStyle());
             }
-            break;
-        }
-        case CSSPropertyStrokeDasharray:
-        {
-            HANDLE_INHERIT_AND_INITIAL(strokeDashArray, StrokeDashArray)
-            if (!is<CSSValueList>(*value)) {
-                svgStyle.setStrokeDashArray(SVGRenderStyle::initialStrokeDashArray());
-                break;
-            }
-
-            CSSValueList& dashes = downcast<CSSValueList>(*value);
-
-            Vector<SVGLength> array;
-            size_t length = dashes.length();
-            for (size_t i = 0; i < length; ++i) {
-                CSSValue* currValue = dashes.itemWithoutBoundsCheck(i);
-                if (!is<CSSPrimitiveValue>(*currValue))
-                    continue;
-
-                CSSPrimitiveValue* dash = downcast<CSSPrimitiveValue>(dashes.itemWithoutBoundsCheck(i));
-                array.append(SVGLength::fromCSSPrimitiveValue(dash));
-            }
-
-            svgStyle.setStrokeDashArray(array);
             break;
         }
         case CSSPropertyFillOpacity:
@@ -409,13 +280,6 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
             svgStyle.setMarkerEndResource(SVGURIReference::fragmentIdentifierFromIRIString(s, state.document()));
             break;
         }
-        case CSSPropertyStrokeLinecap:
-        {
-            HANDLE_INHERIT_AND_INITIAL(capStyle, CapStyle)
-            if (primitiveValue)
-                svgStyle.setCapStyle(*primitiveValue);
-            break;
-        }
         case CSSPropertyStrokeMiterlimit:
         {
             HANDLE_INHERIT_AND_INITIAL(strokeMiterLimit, StrokeMiterLimit)
@@ -472,20 +336,6 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
                 s = primitiveValue->getStringValue();
 
             svgStyle.setClipperResource(SVGURIReference::fragmentIdentifierFromIRIString(s, state.document()));
-            break;
-        }
-        case CSSPropertyTextAnchor:
-        {
-            HANDLE_INHERIT_AND_INITIAL(textAnchor, TextAnchor)
-            if (primitiveValue)
-                svgStyle.setTextAnchor(*primitiveValue);
-            break;
-        }
-        case CSSPropertyWritingMode:
-        {
-            HANDLE_INHERIT_AND_INITIAL(writingMode, WritingMode)
-            if (primitiveValue)
-                svgStyle.setWritingMode(*primitiveValue);
             break;
         }
         case CSSPropertyStopColor:
@@ -558,13 +408,6 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
 
             break;
         }
-        case CSSPropertyEnableBackground:
-            // Silently ignoring this property for now
-            // http://bugs.webkit.org/show_bug.cgi?id=6022
-            break;
-        case CSSPropertyWebkitInitialLetter:
-            // Not Implemented
-            break;
         case CSSPropertyWebkitSvgShadow: {
             if (isInherit)
                 return svgStyle.setShadow(state.parentStyle()->svgStyle().shadow() ? std::make_unique<ShadowData>(*state.parentStyle()->svgStyle().shadow()) : nullptr);
@@ -596,30 +439,6 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
             auto shadowData = std::make_unique<ShadowData>(location, blur, 0, Normal, false, color.isValid() ? color : Color::transparent);
             svgStyle.setShadow(WTF::move(shadowData));
             return;
-        }
-        case CSSPropertyVectorEffect: {
-            HANDLE_INHERIT_AND_INITIAL(vectorEffect, VectorEffect)
-            if (!primitiveValue)
-                break;
-
-            svgStyle.setVectorEffect(*primitiveValue);
-            break;
-        }
-        case CSSPropertyBufferedRendering: {
-            HANDLE_INHERIT_AND_INITIAL(bufferedRendering, BufferedRendering)
-            if (!primitiveValue)
-                break;
-
-            svgStyle.setBufferedRendering(*primitiveValue);
-            break;
-        }
-        case CSSPropertyMaskType: {
-            HANDLE_INHERIT_AND_INITIAL(maskType, MaskType)
-            if (!primitiveValue)
-                break;
-
-            svgStyle.setMaskType(*primitiveValue);
-            break;
         }
         default:
             // If you crash here, it's because you added a css property and are not handling it

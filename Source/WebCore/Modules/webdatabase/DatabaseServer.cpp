@@ -31,8 +31,6 @@
 #include "Database.h"
 #include "DatabaseBackend.h"
 #include "DatabaseBackendContext.h"
-#include "DatabaseBackendSync.h"
-#include "DatabaseSync.h"
 #include "DatabaseTracker.h"
 
 namespace WebCore {
@@ -117,9 +115,7 @@ void DatabaseServer::interruptAllDatabasesForContext(const DatabaseBackendContex
     DatabaseTracker::tracker().interruptAllDatabasesForContext(context);
 }
 
-PassRefPtr<DatabaseBackendBase> DatabaseServer::openDatabase(RefPtr<DatabaseBackendContext>& backendContext,
-    DatabaseType type, const String& name, const String& expectedVersion, const String& displayName,
-    unsigned long estimatedSize, bool setVersionInNewDatabase, DatabaseError &error, String& errorMessage,
+PassRefPtr<DatabaseBackendBase> DatabaseServer::openDatabase(RefPtr<DatabaseBackendContext>& backendContext, const String& name, const String& expectedVersion, const String& displayName, unsigned long estimatedSize, bool setVersionInNewDatabase, DatabaseError &error, String& errorMessage,
     OpenAttempt attempt)
 {
     RefPtr<DatabaseBackendBase> database;
@@ -134,22 +130,13 @@ PassRefPtr<DatabaseBackendBase> DatabaseServer::openDatabase(RefPtr<DatabaseBack
     }
 
     if (success)
-        database = createDatabase(backendContext, type, name, expectedVersion, displayName, estimatedSize, setVersionInNewDatabase, error, errorMessage);
+        database = createDatabase(backendContext, name, expectedVersion, displayName, estimatedSize, setVersionInNewDatabase, error, errorMessage);
     return database.release();
 }
 
-PassRefPtr<DatabaseBackendBase> DatabaseServer::createDatabase(RefPtr<DatabaseBackendContext>& backendContext,
-    DatabaseType type, const String& name, const String& expectedVersion, const String& displayName,
-    unsigned long estimatedSize, bool setVersionInNewDatabase, DatabaseError& error, String& errorMessage)
+PassRefPtr<DatabaseBackendBase> DatabaseServer::createDatabase(RefPtr<DatabaseBackendContext>& backendContext, const String& name, const String& expectedVersion, const String& displayName, unsigned long estimatedSize, bool setVersionInNewDatabase, DatabaseError& error, String& errorMessage)
 {
-    RefPtr<DatabaseBackendBase> database;
-    switch (type) {
-    case DatabaseType::Async:
-        database = adoptRef(new Database(backendContext, name, expectedVersion, displayName, estimatedSize));
-        break;
-    case DatabaseType::Sync:
-        database = adoptRef(new DatabaseSync(backendContext, name, expectedVersion, displayName, estimatedSize));
-    }
+    RefPtr<DatabaseBackendBase> database = adoptRef(new Database(backendContext, name, expectedVersion, displayName, estimatedSize));
 
     if (!database->openAndVerifyVersion(setVersionInNewDatabase, error, errorMessage))
         return 0;

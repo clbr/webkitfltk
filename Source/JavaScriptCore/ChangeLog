@@ -1,3 +1,227 @@
+2015-01-09  Michael Saboff  <msaboff@apple.com>
+
+        Breakpoint doesn't fire in this HTML5 game
+        https://bugs.webkit.org/show_bug.cgi?id=140269
+
+        Reviewed by Mark Lam.
+
+        When parsing a single line cached function, use the lineStartOffset of the
+        location where we found the cached function instead of the cached lineStartOffset.
+        The cache location's lineStartOffset has not been adjusted for any possible
+        containing functions.
+
+        This change is not needed for multi-line cached functions.  Consider the
+        single line source:
+
+        function outer(){function inner1(){doStuff();}; (function inner2() {doMoreStuff()})()}
+
+        The first parser pass, we parse and cache inner1() and inner2() with a lineStartOffset
+        of 0.  Later when we parse outer() and find inner1() in the cache, SourceCode start
+        character is at outer()'s outermost open brace.  That is what we should use for
+        lineStartOffset for inner1().  When done parsing inner1() we set the parsing token
+        to the saved location for inner1(), including the lineStartOffset of 0.  We need
+        to use the value of lineStartOffset before we started parsing inner1().  That is
+        what the fix does.  When we parse inner2() the lineStartOffset will be correct.
+
+        For a multi-line function, the close brace is guaranteed to be on a different line
+        than the open brace.  Hence, its lineStartOffset will not change with the change of
+        the SourceCode start character
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseFunctionInfo):
+
+2015-01-09  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Uncaught Exception in ProbeManager deleting breakpoint
+        https://bugs.webkit.org/show_bug.cgi?id=140279
+        rdar://problem/19422299
+
+        Reviewed by Oliver Hunt.
+
+        * runtime/MapData.cpp:
+        (JSC::MapData::replaceAndPackBackingStore):
+        The cell table also needs to have its values fixed.
+
+2015-01-09  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Remove or use TimelineAgent Resource related event types
+        https://bugs.webkit.org/show_bug.cgi?id=140155
+
+        Reviewed by Timothy Hatcher.
+
+        Remove unused / stale Timeline event types.
+
+        * inspector/protocol/Timeline.json:
+
+2015-01-09  Csaba Osztrogonác  <ossy@webkit.org>
+
+        REGRESSION(r177925): It broke the !ENABLE(INSPECTOR) build
+        https://bugs.webkit.org/show_bug.cgi?id=140098
+
+        Reviewed by Brian Burg.
+
+        * inspector/InspectorBackendDispatcher.h: Missing ENABLE(INSPECTOR) guard added.
+
+2015-01-08  Mark Lam  <mark.lam@apple.com>
+
+        Argument object created by "Function dot arguments" should use a clone of the argument values.
+        <https://webkit.org/b/140093>
+
+        Reviewed by Geoffrey Garen.
+
+        After the change in <https://webkit.org/b/139827>, the dfg-tear-off-arguments-not-activation.js
+        test will crash.  The relevant code which manifests the issue is as follows:
+
+            function bar() {
+                return foo.arguments;
+            }
+
+            function foo(p) {
+                var x = 42;
+                if (p)
+                    return (function() { return x; });
+                else
+                    return bar();
+            }
+
+        In this case, foo() has no knowledge of bar() needing its LexicalEnvironment and
+        has dead code eliminated the SetLocal that stores it into its designated local.
+        In bar(), the factory for the Arguments object (for creating foo.arguments) tries
+        to read foo's LexicalEnvironment from its designated lexicalEnvironment local,
+        but instead, finds it to be uninitialized.  This results in a null pointer access
+        which causes a crash.
+
+        This can be resolved by having bar() instantiate a clone of the Arguments object
+        instead, and populate its elements with values fetched directly from foo's frame.
+        There's no need to reference foo's LexicalEnvironment (whether present or not).
+
+        * interpreter/StackVisitor.cpp:
+        (JSC::StackVisitor::Frame::createArguments):
+        * runtime/Arguments.h:
+        (JSC::Arguments::finishCreation):
+
+2015-01-08  Mark Lam  <mark.lam@apple.com>
+
+        Make the LLINT and Baseline JIT's op_create_arguments and op_get_argument_by_val use their lexicalEnvironment operand.
+        <https://webkit.org/b/140236>
+
+        Reviewed by Geoffrey Garen.
+
+        Will change the DFG to use the operand on a subsequent pass.  For now,
+        the DFG uses a temporary thunk (operationCreateArgumentsForDFG()) to
+        retain the old behavior of getting the lexicalEnviroment from the
+        ExecState.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        (JSC::BytecodeGenerator::emitGetArgumentByVal):
+        (JSC::BytecodeGenerator::createArgumentsIfNecessary):
+        - When the lexicalEnvironment is not available, pass the invalid VirtualRegister
+          instead of an empty JSValue as the lexicalEnvironment operand.
+
+        * dfg/DFGOperations.cpp:
+        - Use the lexicalEnvironment from the ExecState for now.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        - Use the operationCreateArgumentsForDFG() thunk for now.
+
+        * interpreter/CallFrame.cpp:
+        (JSC::CallFrame::lexicalEnvironmentOrNullptr):
+        * interpreter/CallFrame.h:
+        - Added this convenience function to return either the
+          lexicalEnvironment or a nullptr so that we don't need to do a
+          conditional check on codeBlock->needsActivation() at multiple sites.
+
+        * interpreter/StackVisitor.cpp:
+        (JSC::StackVisitor::Frame::createArguments):
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_create_arguments):
+        (JSC::JIT::emitSlow_op_get_argument_by_val):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_create_arguments):
+        (JSC::JIT::emitSlow_op_get_argument_by_val):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/Arguments.h:
+        (JSC::Arguments::create):
+        (JSC::Arguments::finishCreation):
+        * runtime/CommonSlowPaths.cpp:
+        (JSC::SLOW_PATH_DECL):
+        * runtime/JSLexicalEnvironment.cpp:
+        (JSC::JSLexicalEnvironment::argumentsGetter):
+
+2015-01-08  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Pause Reason Improvements (Breakpoint, Debugger Statement, Pause on Next Statement)
+        https://bugs.webkit.org/show_bug.cgi?id=138991
+
+        Reviewed by Timothy Hatcher.
+
+        * debugger/Debugger.cpp:
+        (JSC::Debugger::Debugger):
+        (JSC::Debugger::pauseIfNeeded):
+        (JSC::Debugger::didReachBreakpoint):
+        When actually pausing, if we hit a breakpoint ensure the reason
+        is PausedForBreakpoint, otherwise use the current reason.
+
+        * debugger/Debugger.h:
+        Make pause reason and pausing breakpoint ID public.
+
+        * inspector/agents/InspectorDebuggerAgent.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::buildAssertPauseReason):
+        (Inspector::buildCSPViolationPauseReason):
+        (Inspector::InspectorDebuggerAgent::buildBreakpointPauseReason):
+        (Inspector::InspectorDebuggerAgent::buildExceptionPauseReason):
+        (Inspector::InspectorDebuggerAgent::handleConsoleAssert):
+        (Inspector::buildObjectForBreakpointCookie):
+        (Inspector::InspectorDebuggerAgent::setBreakpointByUrl):
+        (Inspector::InspectorDebuggerAgent::removeBreakpoint):
+        (Inspector::InspectorDebuggerAgent::resolveBreakpoint):
+        (Inspector::InspectorDebuggerAgent::pause):
+        (Inspector::InspectorDebuggerAgent::scriptExecutionBlockedByCSP):
+        (Inspector::InspectorDebuggerAgent::currentCallFrames):
+        (Inspector::InspectorDebuggerAgent::clearDebuggerBreakpointState):
+        Clean up creation of pause reason objects and other cleanup
+        of PassRefPtr use and InjectedScript use.
+
+        (Inspector::InspectorDebuggerAgent::didPause):
+        Clean up so that we first check for an Exception, and then fall
+        back to including a Pause Reason derived from the Debugger.
+
+        * inspector/protocol/Debugger.json:
+        Add new DebuggerStatement, Breakpoint, and PauseOnNextStatement reasons.
+
+2015-01-08  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Type check NSArray's in ObjC Interfaces have the right object types
+        https://bugs.webkit.org/show_bug.cgi?id=140209
+
+        Reviewed by Timothy Hatcher.
+
+        Check the types of objects in NSArrays for all interfaces (commands, events, types)
+        when the user can set an array of objects. Previously we were only type checking
+        they were RWIJSONObjects, now we add an explicit check for the exact object type.
+
+        * inspector/scripts/codegen/generate_objc_backend_dispatcher_implementation.py:
+        (ObjCConfigurationImplementationGenerator._generate_success_block_for_command):
+        * inspector/scripts/codegen/generate_objc_frontend_dispatcher_implementation.py:
+        (ObjCFrontendDispatcherImplementationGenerator._generate_event):
+        * inspector/scripts/codegen/generate_objc_protocol_types_implementation.py:
+        (ObjCProtocolTypesImplementationGenerator._generate_init_method_for_required_members):
+        (ObjCProtocolTypesImplementationGenerator._generate_setter_for_member):
+        * inspector/scripts/codegen/objc_generator.py:
+        (ObjCGenerator.objc_class_for_array_type):
+        (ObjCGenerator):
+
 2015-01-07  Mark Lam  <mark.lam@apple.com>
 
         Add the lexicalEnvironment as an operand to op_get_argument_by_val.

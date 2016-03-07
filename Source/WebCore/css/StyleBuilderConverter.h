@@ -29,6 +29,7 @@
 
 #include "BasicShapeFunctions.h"
 #include "CSSCalculationValue.h"
+#include "CSSFontFeatureValue.h"
 #include "CSSFunctionValue.h"
 #include "CSSGridLineNamesValue.h"
 #include "CSSGridTemplateAreasValue.h"
@@ -110,6 +111,11 @@ public:
 #if ENABLE(ACCELERATED_OVERFLOW_SCROLLING)
     static bool convertOverflowScrolling(StyleResolver&, CSSValue&);
 #endif
+    static RefPtr<FontFeatureSettings> convertFontFeatureSettings(StyleResolver&, CSSValue&);
+    static SVGLength convertSVGLength(StyleResolver&, CSSValue&);
+    static Vector<SVGLength> convertSVGLengthVector(StyleResolver&, CSSValue&);
+    static Vector<SVGLength> convertStrokeDashArray(StyleResolver&, CSSValue&);
+    static PaintOrder convertPaintOrder(StyleResolver&, CSSValue&);
 
 private:
     friend class StyleBuilderCustom;
@@ -1055,6 +1061,21 @@ inline bool StyleBuilderConverter::convertMaskImageOperations(StyleResolver& sty
     return true;
 }
 
+inline RefPtr<FontFeatureSettings> StyleBuilderConverter::convertFontFeatureSettings(StyleResolver&, CSSValue& value)
+{
+    if (is<CSSPrimitiveValue>(value)) {
+        ASSERT(downcast<CSSPrimitiveValue>(value).getValueID() == CSSValueNormal);
+        return nullptr;
+    }
+
+    RefPtr<FontFeatureSettings> settings = FontFeatureSettings::create();
+    for (auto& item : downcast<CSSValueList>(value)) {
+        auto& feature = downcast<CSSFontFeatureValue>(item.get());
+        settings->append(FontFeature(feature.tag(), feature.value()));
+    }
+    return WTF::move(settings);
+}
+
 #if PLATFORM(IOS)
 inline bool StyleBuilderConverter::convertTouchCallout(StyleResolver&, CSSValue& value)
 {
@@ -1075,6 +1096,54 @@ inline bool StyleBuilderConverter::convertOverflowScrolling(StyleResolver&, CSSV
     return downcast<CSSPrimitiveValue>(value).getValueID() == CSSValueTouch;
 }
 #endif
+
+inline SVGLength StyleBuilderConverter::convertSVGLength(StyleResolver&, CSSValue& value)
+{
+    return SVGLength::fromCSSPrimitiveValue(downcast<CSSPrimitiveValue>(value));
+}
+
+inline Vector<SVGLength> StyleBuilderConverter::convertSVGLengthVector(StyleResolver& styleResolver, CSSValue& value)
+{
+    auto& valueList = downcast<CSSValueList>(value);
+
+    Vector<SVGLength> svgLengths;
+    svgLengths.reserveInitialCapacity(valueList.length());
+    for (auto& item : valueList)
+        svgLengths.uncheckedAppend(convertSVGLength(styleResolver, item));
+
+    return svgLengths;
+}
+
+inline Vector<SVGLength> StyleBuilderConverter::convertStrokeDashArray(StyleResolver& styleResolver, CSSValue& value)
+{
+    if (is<CSSPrimitiveValue>(value)) {
+        ASSERT(downcast<CSSPrimitiveValue>(value).getValueID() == CSSValueNone);
+        return SVGRenderStyle::initialStrokeDashArray();
+    }
+
+    return convertSVGLengthVector(styleResolver, value);
+}
+
+inline PaintOrder StyleBuilderConverter::convertPaintOrder(StyleResolver&, CSSValue& value)
+{
+    if (is<CSSPrimitiveValue>(value)) {
+        ASSERT(downcast<CSSPrimitiveValue>(value).getValueID() == CSSValueNormal);
+        return PaintOrderNormal;
+    }
+
+    auto& orderTypeList = downcast<CSSValueList>(value);
+    switch (downcast<CSSPrimitiveValue>(*orderTypeList.itemWithoutBoundsCheck(0)).getValueID()) {
+    case CSSValueFill:
+        return orderTypeList.length() > 1 ? PaintOrderFillMarkers : PaintOrderFill;
+    case CSSValueStroke:
+        return orderTypeList.length() > 1 ? PaintOrderStrokeMarkers : PaintOrderStroke;
+    case CSSValueMarkers:
+        return orderTypeList.length() > 1 ? PaintOrderMarkersStroke : PaintOrderMarkers;
+    default:
+        ASSERT_NOT_REACHED();
+        return PaintOrderNormal;
+    }
+}
 
 } // namespace WebCore
 

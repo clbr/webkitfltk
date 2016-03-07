@@ -30,20 +30,25 @@
 
 #include "ChangeVersionData.h"
 #include "ChangeVersionWrapper.h"
+#include "Database.h"
 #include "DatabaseBackendContext.h"
 #include "DatabaseTask.h"
 #include "DatabaseThread.h"
 #include "DatabaseTracker.h"
 #include "Logging.h"
+#include "SQLError.h"
 #include "SQLTransaction.h"
 #include "SQLTransactionBackend.h"
+#include "SQLTransactionCallback.h"
 #include "SQLTransactionClient.h"
 #include "SQLTransactionCoordinator.h"
+#include "SQLTransactionErrorCallback.h"
+#include "VoidCallback.h"
 
 namespace WebCore {
 
 DatabaseBackend::DatabaseBackend(PassRefPtr<DatabaseBackendContext> databaseContext, const String& name, const String& expectedVersion, const String& displayName, unsigned long estimatedSize)
-    : DatabaseBackendBase(databaseContext, name, expectedVersion, displayName, estimatedSize, DatabaseType::Async)
+    : DatabaseBackendBase(databaseContext, name, expectedVersion, displayName, estimatedSize)
     , m_transactionInProgress(false)
     , m_isTransactionQueueEnabled(true)
 {

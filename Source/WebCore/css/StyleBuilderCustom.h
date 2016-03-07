@@ -102,6 +102,8 @@ public:
     // Custom handling of initial + inherit value setting only.
     static void applyInitialWebkitMaskImage(StyleResolver&) { }
     static void applyInheritWebkitMaskImage(StyleResolver&) { }
+    static void applyInitialWebkitFontFeatureSettings(StyleResolver&) { }
+    static void applyInheritWebkitFontFeatureSettings(StyleResolver&) { }
 
     // Custom handling of inherit + value setting only.
     static void applyInheritDisplay(StyleResolver&);
@@ -1260,24 +1262,8 @@ inline void StyleBuilderCustom::applyValueFont(StyleResolver& styleResolver, CSS
         }
         return;
     }
-    if (is<CSSFontValue>(value)) {
-        auto& font = downcast<CSSFontValue>(value);
-        if (!font.style || !font.variant || !font.weight || !font.size || !font.lineHeight || !font.family)
-            return;
-        styleResolver.applyProperty(CSSPropertyFontStyle, font.style.get());
-        styleResolver.applyProperty(CSSPropertyFontVariant, font.variant.get());
-        styleResolver.applyProperty(CSSPropertyFontWeight, font.weight.get());
-        // The previous properties can dirty our font but they don't try to read the font's
-        // properties back, which is safe. However if font-size is using the 'ex' unit, it will
-        // need query the dirtied font's x-height to get the computed size. To be safe in this
-        // case, let's just update the font now.
-        styleResolver.updateFont();
-        styleResolver.applyProperty(CSSPropertyFontSize, font.size.get());
-
-        styleResolver.state().setLineHeightValue(font.lineHeight.get());
-
-        styleResolver.applyProperty(CSSPropertyFontFamily, font.family.get());
-    }
+    if (is<CSSFontValue>(value))
+        styleResolver.applyFont(downcast<CSSFontValue>(value));
 }
 
 inline void StyleBuilderCustom::applyInitialContent(StyleResolver& styleResolver)

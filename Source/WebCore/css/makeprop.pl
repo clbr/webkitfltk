@@ -54,6 +54,9 @@ my %styleBuilderOptions = (
   Initial => 1,
   NameForMethods => 1,
   NoDefaultColor => 1,
+  SVG => 1,
+  Shorthand => 1,
+  SkipBuilder => 1,
   Setter => 1,
   TypeName => 1,
   VisitedLinkColorSupport => 1,
@@ -96,6 +99,8 @@ foreach (@NAMES) {
         $isUsingLegacyStyleBuilder = 1;
         delete $propertiesWithStyleBuilderOptions{$_};
       } elsif ($styleBuilderOptions{$optionName}) {
+        # FIXME: Temporary until all SVG properties have been ported to the new StyleBuilder.
+        next if ($optionName eq "SVG" && $isUsingLegacyStyleBuilder);
         die "\"" . $optionName . "\" option was used with \"LegacyStyleBuilder\" option for " . $_ . " property." if $isUsingLegacyStyleBuilder;
         $propertiesWithStyleBuilderOptions{$_}{$optionName} = $optionValue;
       } else {
@@ -684,12 +689,23 @@ sub generateFillLayerPropertyValueSetter {
   return $setterContent;
 }
 
+sub generateSetValueStatement
+{
+  my $name = shift;
+  my $value = shift;
+
+  my $isSVG = exists $propertiesWithStyleBuilderOptions{$name}{"SVG"};
+  my $setter = $propertiesWithStyleBuilderOptions{$name}{"Setter"};
+  return "styleResolver.style()->" .  ($isSVG ? "accessSVGStyle()." : "") . $setter . "(" . $value . ")";
+}
+
 sub generateInitialValueSetter {
   my $name = shift;
   my $indent = shift;
 
   my $setter = $propertiesWithStyleBuilderOptions{$name}{"Setter"};
   my $initial = $propertiesWithStyleBuilderOptions{$name}{"Initial"};
+  my $isSVG = exists $propertiesWithStyleBuilderOptions{$name}{"SVG"};
   my $setterContent = "";
   $setterContent .= $indent . "static void applyInitial" . $nameToId{$name} . "(StyleResolver& styleResolver)\n";
   $setterContent .= $indent . "{\n";
@@ -708,8 +724,8 @@ sub generateInitialValueSetter {
   } elsif (exists $propertiesWithStyleBuilderOptions{$name}{"FillLayerProperty"}) {
     $setterContent .= generateFillLayerPropertyInitialValueSetter($name, $indent . "    ");
   } else {
-    my $setValue = $style . "->" . $setter;
-    $setterContent .= $indent . "    " . $setValue . "(RenderStyle::" . $initial . "());\n";
+    my $initialValue = ($isSVG ? "SVGRenderStyle" : "RenderStyle") . "::" . $initial . "()";
+    $setterContent .= $indent . "    " . generateSetValueStatement($name, $initialValue) . ";\n";
   }
   $setterContent .= $indent . "}\n";
 
@@ -723,6 +739,7 @@ sub generateInheritValueSetter {
   my $setterContent = "";
   $setterContent .= $indent . "static void applyInherit" . $nameToId{$name} . "(StyleResolver& styleResolver)\n";
   $setterContent .= $indent . "{\n";
+  my $isSVG = exists $propertiesWithStyleBuilderOptions{$name}{"SVG"};
   my $parentStyle = "styleResolver.parentStyle()";
   my $style = "styleResolver.style()";
   my $getter = $propertiesWithStyleBuilderOptions{$name}{"Getter"};
@@ -754,9 +771,8 @@ sub generateInheritValueSetter {
     $didCallSetValue = 1;
   }
   if (!$didCallSetValue) {
-    my $inheritedValue = $parentStyle . "->" .  $getter . "()";
-    my $setValue = $style . "->" . $setter;
-    $setterContent .= $indent . "    " . $setValue . "(" . $inheritedValue . ");\n";
+    my $inheritedValue = $parentStyle . "->" . ($isSVG ? "svgStyle()." : "") .  $getter . "()";
+    $setterContent .= $indent . "    " . generateSetValueStatement($name, $inheritedValue) . ";\n";
   }
   $setterContent .= $indent . "}\n";
 
@@ -809,12 +825,11 @@ sub generateValueSetter {
     $didCallSetValue = 1;
   }
   if (!$didCallSetValue) {
-    my $setValue = $style . "->" . $setter;
     if (exists($propertiesWithStyleBuilderOptions{$name}{"ConditionalConverter"})) {
       $setterContent .= $indent . "    if (StyleBuilderConverter::convert" . $propertiesWithStyleBuilderOptions{$name}{"ConditionalConverter"} . "(styleResolver, value, " . $convertedValue . "))\n";
       $setterContent .= "    ";
     }
-    $setterContent .= $indent . "    " . $setValue . "(" . $convertedValue . ");\n";
+    $setterContent .= $indent . "    " . generateSetValueStatement($name, $convertedValue) . ";\n";
   }
   $setterContent .= $indent . "}\n";
 
@@ -833,6 +848,7 @@ print STYLEBUILDER << "EOF";
 #include "RenderStyle.h"
 #include "StyleBuilderConverter.h"
 #include "StyleBuilderCustom.h"
+#include "StylePropertyShorthand.h"
 #include "StyleResolver.h"
 
 namespace WebCore {
@@ -844,6 +860,10 @@ EOF
 foreach my $name (@names) {
   # Skip properties still using the legacy style builder.
   next unless exists($propertiesWithStyleBuilderOptions{$name});
+
+  # Skip Shorthand properties and properties that do not use the StyleBuilder.
+  next if (exists $propertiesWithStyleBuilderOptions{$name}{"Shorthand"});
+  next if (exists $propertiesWithStyleBuilderOptions{$name}{"SkipBuilder"});
 
   my $indent = "    ";
   if (!$propertiesWithStyleBuilderOptions{$name}{"Custom"}{"Initial"}) {
@@ -863,6 +883,8 @@ print STYLEBUILDER << "EOF";
 bool StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleResolver, CSSValue& value, bool isInitial, bool isInherit)
 {
     switch (property) {
+    case CSSPropertyInvalid:
+        return true;
 EOF
 
 foreach my $name (@names) {
@@ -870,12 +892,17 @@ foreach my $name (@names) {
   next unless exists($propertiesWithStyleBuilderOptions{$name});
 
   print STYLEBUILDER "    case CSSProperty" . $nameToId{$name} . ":\n";
-  print STYLEBUILDER "        if (isInitial)\n";
-  print STYLEBUILDER "            " . getScopeForFunction($name, "Initial") . "::applyInitial" . $nameToId{$name} . "(styleResolver);\n";
-  print STYLEBUILDER "        else if (isInherit)\n";
-  print STYLEBUILDER "            " . getScopeForFunction($name, "Inherit") . "::applyInherit" . $nameToId{$name} . "(styleResolver);\n";
-  print STYLEBUILDER "        else\n";
-  print STYLEBUILDER "            " . getScopeForFunction($name, "Value") . "::applyValue" . $nameToId{$name} . "(styleResolver, value);\n";
+  if (exists $propertiesWithStyleBuilderOptions{$name}{"Shorthand"}) {
+    print STYLEBUILDER "        ASSERT(isExpandedShorthand(property));\n";
+    print STYLEBUILDER "        ASSERT_NOT_REACHED();\n";
+  } elsif (!exists $propertiesWithStyleBuilderOptions{$name}{"SkipBuilder"}) {
+    print STYLEBUILDER "        if (isInitial)\n";
+    print STYLEBUILDER "            " . getScopeForFunction($name, "Initial") . "::applyInitial" . $nameToId{$name} . "(styleResolver);\n";
+    print STYLEBUILDER "        else if (isInherit)\n";
+    print STYLEBUILDER "            " . getScopeForFunction($name, "Inherit") . "::applyInherit" . $nameToId{$name} . "(styleResolver);\n";
+    print STYLEBUILDER "        else\n";
+    print STYLEBUILDER "            " . getScopeForFunction($name, "Value") . "::applyValue" . $nameToId{$name} . "(styleResolver, value);\n";
+  }
   print STYLEBUILDER "        return true;\n";
 }
 
