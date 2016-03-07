@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2014 Igalia S.L.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,9 +17,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
-[
-    Conditional=GAMEPAD,
-] partial interface Navigator {
-    GamepadList webkitGetGamepads();
-};
+#ifndef WebKitDOMNodeFilterPrivate_h
+#define WebKitDOMNodeFilterPrivate_h
 
+#include <webkitdom/WebKitDOMNodeFilter.h>
+#include <wtf/PassRefPtr.h>
+
+namespace WebCore {
+class NodeFilter;
+}
+
+namespace WebKit {
+WebKitDOMNodeFilter* kit(WebCore::NodeFilter*);
+PassRefPtr<WebCore::NodeFilter> core(WebKitDOMNodeFilter*);
+} // namespace WebKit
+
+#endif /* WebKitDOMNodeFilterPrivate_h */

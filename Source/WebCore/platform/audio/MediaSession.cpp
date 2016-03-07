@@ -169,7 +169,6 @@ void MediaSession::didReceiveRemoteControlCommand(RemoteControlCommandType comma
     m_client.didReceiveRemoteControlCommand(command);
 }
 
-#if ENABLE(PAGE_VISIBILITY_API)
 void MediaSession::visibilityChanged()
 {
     updateClientDataBuffering();
@@ -180,7 +179,6 @@ void MediaSession::updateClientDataBuffering()
     bool shouldBuffer = m_state == Playing || !m_client.elementIsHidden();
     m_client.setShouldBufferData(shouldBuffer);
 }
-#endif
 
 String MediaSessionClient::mediaSessionTitle() const
 {
