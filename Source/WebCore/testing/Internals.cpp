@@ -166,6 +166,10 @@
 #include "MockMediaPlayerMediaSource.h"
 #endif
 
+#if PLATFORM(MAC)
+#include "DictionaryLookup.h"
+#endif
+
 using JSC::CodeBlock;
 using JSC::FunctionExecutable;
 using JSC::JSFunction;
@@ -407,6 +411,17 @@ String Internals::xhrResponseSource(XMLHttpRequest* xhr)
 void Internals::clearMemoryCache()
 {
     MemoryCache::singleton().evictResources();
+}
+
+void Internals::pruneMemoryCacheToSize(unsigned size)
+{
+    MemoryCache::singleton().pruneDeadResourcesToSize(size);
+    MemoryCache::singleton().pruneLiveResourcesToSize(size, true);
+}
+
+unsigned Internals::memoryCacheSize() const
+{
+    return MemoryCache::singleton().size();
 }
 
 Node* Internals::treeScopeRootNode(Node* node, ExceptionCode& ec)
@@ -1073,6 +1088,28 @@ PassRefPtr<Range> Internals::subrange(Range* range, int rangeLocation, int range
     }
 
     return TextIterator::subrange(range, rangeLocation, rangeLength);
+}
+
+RefPtr<Range> Internals::rangeForDictionaryLookupAtLocation(int x, int y, ExceptionCode& ec)
+{
+#if PLATFORM(MAC)
+    Document* document = contextDocument();
+    if (!document || !document->frame()) {
+        ec = INVALID_ACCESS_ERR;
+        return nullptr;
+    }
+
+    document->updateLayoutIgnorePendingStylesheets();
+    
+    HitTestResult result = document->frame()->mainFrame().eventHandler().hitTestResultAtPoint(IntPoint(x, y));
+    NSDictionary *options = nullptr;
+    return rangeForDictionaryLookupAtHitTestResult(result, &options);
+#else
+    UNUSED_PARAM(x);
+    UNUSED_PARAM(y);
+    ec = INVALID_ACCESS_ERR;
+    return nullptr;
+#endif
 }
 
 void Internals::setDelegatesScrolling(bool enabled, ExceptionCode& ec)

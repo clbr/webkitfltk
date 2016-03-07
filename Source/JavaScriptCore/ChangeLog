@@ -1,3 +1,223 @@
+2015-02-07  Chris Dumez  <cdumez@apple.com>
+
+        Add Vector::removeFirstMatching() / removeAllMatching() methods taking lambda functions
+        https://bugs.webkit.org/show_bug.cgi?id=141321
+
+        Reviewed by Darin Adler.
+
+        Use new Vector::removeFirstMatching() / removeAllMatching() methods.
+
+2015-02-06  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG SSA shouldn't have SetArgument nodes
+        https://bugs.webkit.org/show_bug.cgi?id=141342
+
+        Reviewed by Mark Lam.
+
+        I was wondering why we kept the SetArgument around for captured
+        variables. It turns out we did so because we thought we had to, even
+        though we didn't have to. The node is meaningless in SSA.
+
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+
+2015-02-06  Filip Pizlo  <fpizlo@apple.com>
+
+        It should be possible to use the DFG SetArgument node to indicate that someone set the value of a local out-of-band
+        https://bugs.webkit.org/show_bug.cgi?id=141337
+
+        Reviewed by Mark Lam.
+
+        This mainly involved ensuring that SetArgument behaves just like SetLocal from a CPS standpoint, but with a special case for those SetArguments that
+        are associated with the prologue.
+
+        * dfg/DFGCPSRethreadingPhase.cpp:
+        (JSC::DFG::CPSRethreadingPhase::run):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeSet):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeLocalsInBlock):
+        (JSC::DFG::CPSRethreadingPhase::specialCaseArguments):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeSetLocal): Deleted.
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeSetArgument): Deleted.
+
+2015-02-06  Mark Lam  <mark.lam@apple.com>
+
+        MachineThreads should be ref counted.
+        <https://webkit.org/b/141317>
+
+        Reviewed by Filip Pizlo.
+
+        The VM's MachineThreads registry object is being referenced from other
+        threads as a raw pointer.  In a scenario where the VM is destructed on
+        the main thread, there is no guarantee that another thread isn't still
+        holding a reference to the registry and will eventually invoke
+        removeThread() on it on thread exit.  Hence, there's a possible use
+        after free scenario here.
+
+        The fix is to make MachineThreads ThreadSafeRefCounted, and have all
+        threads that references keep a RefPtr to it to ensure that it stays
+        alive until the very last thread is done with it.
+
+        * API/tests/testapi.mm:
+        (useVMFromOtherThread): - Renamed to be more descriptive.
+        (useVMFromOtherThreadAndOutliveVM):
+        - Added a test that has another thread which uses the VM outlive the
+          VM to confirm that there is no crash.
+
+          However, I was not actually able to get the VM to crash without this
+          patch because I wasn't always able to the thread destructor to be
+          called.  With this patch applied, I did verify with some logging that
+          the MachineThreads registry is only destructed after all threads
+          have removed themselves from it.
+
+        (threadMain): Deleted.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::~Heap):
+        (JSC::Heap::gatherStackRoots):
+        * heap/Heap.h:
+        (JSC::Heap::machineThreads):
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::Thread::Thread):
+        (JSC::MachineThreads::addCurrentThread):
+        (JSC::MachineThreads::removeCurrentThread):
+        * heap/MachineStackMarker.h:
+
+2015-02-06  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179743.
+        https://bugs.webkit.org/show_bug.cgi?id=141335
+
+        caused missing symbols in non-WebKit clients of WTF::Vector
+        (Requested by kling on #webkit).
+
+        Reverted changeset:
+
+        "Remove WTF::fastMallocGoodSize()."
+        https://bugs.webkit.org/show_bug.cgi?id=141020
+        http://trac.webkit.org/changeset/179743
+
+2015-02-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Remove BytecodeGenerator::preserveLastVar() and replace it with a more robust mechanism for preserving non-temporary registers
+        https://bugs.webkit.org/show_bug.cgi?id=141211
+
+        Reviewed by Mark Lam.
+
+        Previously, the way non-temporary registers were preserved (i.e. not reclaimed anytime
+        we did newTemporary()) by calling preserveLastVar() after all non-temps are created. It
+        would raise the refcount on the last (highest-numbered) variable created, and rely on
+        the fact that register reclamation started at higher-numbered registers and worked its
+        way down. So any retained register would block any lower-numbered registers from being
+        reclaimed.
+        
+        Also, preserveLastVar() sets a thing called m_firstConstantIndex. It's unused.
+        
+        This removes preserveLastVar() and makes addVar() retain each register it creates. This
+        is more explicit, since addVar() is the mechanism for creating non-temporary registers.
+        
+        To make this work I had to remove an assertion that Register::setIndex() can only be
+        called when the refcount is zero. This method might be called after a var is created to
+        change its index. This previously worked because preserveLastVar() would be called after
+        we had already made all index changes, so the vars would still have refcount zero. Now
+        they have refcount 1. I think it's OK to lose this assertion; I can't remember this
+        assertion ever firing in a way that alerted me to a serious issue.
+        
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        (JSC::BytecodeGenerator::preserveLastVar): Deleted.
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::addVar):
+        * bytecompiler/RegisterID.h:
+        (JSC::RegisterID::setIndex):
+
+2015-02-06  Andreas Kling  <akling@apple.com>
+
+        Remove WTF::fastMallocGoodSize().
+        <https://webkit.org/b/141020>
+
+        Reviewed by Anders Carlsson.
+
+        * assembler/AssemblerBuffer.h:
+        (JSC::AssemblerData::AssemblerData):
+        (JSC::AssemblerData::grow):
+
+2015-02-05  Michael Saboff  <msaboff@apple.com>
+
+        CodeCache is not thread safe when adding the same source from two different threads
+        https://bugs.webkit.org/show_bug.cgi?id=141275
+
+        Reviewed by Mark Lam.
+
+        The issue for this bug is that one thread, takes a cache miss in CodeCache::getGlobalCodeBlock,
+        but in the process creates a cache entry with a nullptr UnlinkedCodeBlockType* which it
+        will fill in later in the function.  During the body of that function, it allocates
+        objects that may garbage collect.  During that garbage collection, we drop the all locks.
+        While the locks are released by the first thread, another thread can enter the VM and might
+        have exactly the same source and enter CodeCache::getGlobalCodeBlock() itself.  When it
+        looks up the code block, it sees it as a cache it and uses the nullptr UnlinkedCodeBlockType*
+        and crashes.  This fixes the problem by not dropping the locks during garbage collection.
+        There are other likely scenarios where we have a data structure like this code cache in an
+        unsafe state for arbitrary reentrance.
+
+        Moved the functionality of DelayedReleaseScope directly into Heap.  Changed it into
+        a simple list that is cleared with the new function Heap::releaseDelayedReleasedObjects.
+        Now we accumulate objects to be released and release them when all locks are dropped or
+        when destroying the Heap.  This eliminated the dropping and reaquiring of locks associated
+        with the old scope form of this list.
+
+        Given that all functionality of DelayedReleaseScope is now used and referenced by Heap
+        and the lock management no longer needs to be done, just made the list a member of Heap.
+        We do need to guard against the case that releasing an object can create more objects
+        by calling into JS.  That is why releaseDelayedReleasedObjects() is written to remove
+        an object to release so that we aren't recursively in Vector code.  The other thing we
+        do in releaseDelayedReleasedObjects() is to guard against recursive calls to itself using
+        the m_delayedReleaseRecursionCount.  We only release at the first entry into the function.
+        This case is already tested by testapi.mm.
+
+        * heap/DelayedReleaseScope.h: Removed file
+
+        * API/JSAPIWrapperObject.mm:
+        * API/ObjCCallbackFunction.mm:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * heap/IncrementalSweeper.cpp:
+        (JSC::IncrementalSweeper::doSweep):
+        * heap/MarkedAllocator.cpp:
+        (JSC::MarkedAllocator::tryAllocateHelper):
+        (JSC::MarkedAllocator::tryAllocate):
+        * heap/MarkedBlock.cpp:
+        (JSC::MarkedBlock::sweep):
+        * heap/MarkedSpace.cpp:
+        (JSC::MarkedSpace::MarkedSpace):
+        (JSC::MarkedSpace::lastChanceToFinalize):
+        (JSC::MarkedSpace::didFinishIterating):
+        * heap/MarkedSpace.h:
+        * heap/Heap.cpp:
+        (JSC::Heap::collectAllGarbage):
+        (JSC::Heap::zombifyDeadObjects):
+        Removed references to DelayedReleaseScope and DelayedReleaseScope.h.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap): Initialized m_delayedReleaseRecursionCount.
+        (JSC::Heap::lastChanceToFinalize): Call releaseDelayedObjectsNow() as the VM is going away.
+        (JSC::Heap::releaseDelayedReleasedObjects): New function that released the accumulated
+        delayed release objects.
+
+        * heap/Heap.h:
+        (JSC::Heap::m_delayedReleaseObjects): List of objects to be released later.
+        (JSC::Heap::m_delayedReleaseRecursionCount): Counter to indicate that
+        releaseDelayedReleasedObjects is being called recursively.
+        * heap/HeapInlines.h:
+        (JSC::Heap::releaseSoon): Changed location of list to add delayed release objects.
+        
+        * runtime/JSLock.cpp:
+        (JSC::JSLock::willReleaseLock):
+        Call Heap::releaseDelayedObjectsNow() when releasing the lock.
+
 2015-02-05  Youenn Fablet  <youenn.fablet@crf.canon.fr> and Xabier Rodriguez Calvar <calvaris@igalia.com>
 
         [Streams API] Implement a barebone ReadableStream interface

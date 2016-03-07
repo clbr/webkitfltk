@@ -5710,6 +5710,13 @@ LayoutRect HTMLMediaElement::mediaPlayerContentBoxRect() const
     return LayoutRect();
 }
 
+float HTMLMediaElement::mediaPlayerContentsScale() const
+{
+    if (auto page = document().page())
+        return page->pageScaleFactor() * page->deviceScaleFactor();
+    return 1;
+}
+
 void HTMLMediaElement::mediaPlayerSetSize(const IntSize& size)
 {
     setIntegralAttribute(widthAttr, size.width());

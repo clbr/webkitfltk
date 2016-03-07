@@ -680,10 +680,9 @@ WebInspector.Resource.prototype = {
             return WebInspector.SourceCode.prototype.requestContent.call(this);
 
         if (this._failed)
-            return Promise.resolve({ error: WebInspector.UIString("An error occurred trying to load the resource.") });
+            return Promise.resolve({error: WebInspector.UIString("An error occurred trying to load the resource.")});
 
         if (!this._finishThenRequestContentPromise) {
-            var listener = new WebInspector.EventListener(this, true);
             this._finishThenRequestContentPromise = new Promise(function (resolve, reject) {
                 this.addEventListener(WebInspector.Resource.Event.LoadingDidFinish, resolve);
                 this.addEventListener(WebInspector.Resource.Event.LoadingDidFail, reject);
