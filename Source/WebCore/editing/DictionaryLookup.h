@@ -23,51 +23,33 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MediaSessionManageriOS_h
-#define MediaSessionManageriOS_h
+#ifndef DictionaryLookup_h
+#define DictionaryLookup_h
 
-#if PLATFORM(IOS)
+#if !PLATFORM(IOS)
 
-#include "MediaSessionManager.h"
-#include <wtf/RetainPtr.h>
+#include <wtf/PassRefPtr.h>
 
-OBJC_CLASS WebMediaSessionHelper;
-
-#if defined(__OBJC__) && __OBJC__
-extern NSString* WebUIApplicationWillResignActiveNotification;
-extern NSString* WebUIApplicationWillEnterForegroundNotification;
-extern NSString* WebUIApplicationDidBecomeActiveNotification;
-#endif
+@class NSDictionary;
 
 namespace WebCore {
 
-class MediaSessionManageriOS : public MediaSessionManager {
-public:
-    virtual ~MediaSessionManageriOS();
+class HitTestResult;
+class Range;
+class VisiblePosition;
+class VisibleSelection;
 
-private:
-    friend class MediaSessionManager;
+// FIXME: Some of these functions should probably be in a more generic class.
+// https://bugs.webkit.org/show_bug.cgi?id=138567
+bool isPositionInRange(const VisiblePosition&, Range*);
+bool shouldUseSelection(const VisiblePosition&, const VisibleSelection&);
 
-    virtual void sessionWillBeginPlayback(MediaSession&) override;
-    virtual void sessionWillEndPlayback(MediaSession&) override;
-    
-    void updateNowPlayingInfo();
-    
-    virtual void resetRestrictions() override;
-
-#if ENABLE(IOS_AIRPLAY)
-    virtual bool hasWirelessTargetsAvailable() override;
-    virtual void configureWireLessTargetMonitoring() override;
-#endif
-
-    virtual bool sessionCanLoadMedia(const MediaSession&) const override;
-
-    MediaSessionManageriOS();
-    RetainPtr<WebMediaSessionHelper> m_objcObserver;
-};
+PassRefPtr<Range> rangeExpandedAroundPositionByCharacters(const VisiblePosition&, int numberOfCharactersToExpand);
+PassRefPtr<Range> rangeForDictionaryLookupForSelection(const VisibleSelection&, NSDictionary **options);
+PassRefPtr<Range> rangeForDictionaryLookupAtHitTestResult(const HitTestResult&, NSDictionary **options);
 
 } // namespace WebCore
 
-#endif // MediaSessionManageriOS_h
+#endif // !PLATFORM(IOS)
 
-#endif // PLATFORM(IOS)
+#endif // DictionaryLookup_h

@@ -134,11 +134,11 @@ PassRefPtr<HTMLInputElement> HTMLInputElement::create(const QualifiedName& tagNa
     return inputElement.release();
 }
 
-HTMLImageLoader* HTMLInputElement::imageLoader()
+HTMLImageLoader& HTMLInputElement::ensureImageLoader()
 {
     if (!m_imageLoader)
         m_imageLoader = std::make_unique<HTMLImageLoader>(*this);
-    return m_imageLoader.get();
+    return *m_imageLoader;
 }
 
 void HTMLInputElement::didAddUserAgentShadowRoot(ShadowRoot*)
@@ -958,9 +958,6 @@ void HTMLInputElement::setValue(const String& value, TextFieldEventBehavior even
     setLastChangeWasNotUserEdit();
     setFormControlValueMatchesRenderer(false);
     m_inputType->setValue(sanitizedValue, valueChanged, eventBehavior);
-
-    if (!valueChanged)
-        return;
 }
 
 void HTMLInputElement::setValueInternal(const String& sanitizedValue, TextFieldEventBehavior eventBehavior)
@@ -1439,7 +1436,7 @@ void HTMLInputElement::removedFrom(ContainerNode& insertionPoint)
 
 void HTMLInputElement::didMoveToNewDocument(Document* oldDocument)
 {
-    if (hasImageLoader())
+    if (imageLoader())
         imageLoader()->elementDidMoveToNewDocument();
 
     bool needsSuspensionCallback = this->needsSuspensionCallback();
@@ -1677,6 +1674,11 @@ bool HTMLInputElement::supportsPlaceholder() const
 void HTMLInputElement::updatePlaceholderText()
 {
     return m_inputType->updatePlaceholderText();
+}
+
+bool HTMLInputElement::isEmptyValue() const
+{
+    return m_inputType->isEmptyValue();
 }
 
 void HTMLInputElement::parseMaxLengthAttribute(const AtomicString& value)

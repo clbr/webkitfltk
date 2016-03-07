@@ -1,3 +1,107 @@
+2014-11-09  Akos Kiss  <akiss@inf.u-szeged.hu>
+
+        Fix 'noreturn' function does return warning in LLVMOverrides.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=138306
+
+        Reviewed by Filip Pizlo.
+
+        Adding NO_RETURN where needed.
+
+        * llvm/library/LLVMExports.cpp:
+        (initializeAndGetJSCLLVMAPI):
+        * llvm/library/LLVMOverrides.cpp:
+        * llvm/library/LLVMTrapCallback.h:
+
+2014-11-07  Dániel Bátyai  <dbatyai.u-szeged@partner.samsung.com>
+
+        Fix an alignment issue with operationPushCatchScope on ARMv7
+        https://bugs.webkit.org/show_bug.cgi?id=138510
+
+        Reviewed by Csaba Osztrogonác.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+
+2014-11-07  Michael Saboff  <msaboff@apple.com>
+
+        Update scope related slow path code to use scope register added to opcodes
+        https://bugs.webkit.org/show_bug.cgi?id=138254
+
+        Reviewed by Mark Lam.
+
+        Updated slow paths for op_pop_scope, op_push_name_scope and op_push_with_scope.
+        Added scope register index parameter to the front of the relevant argument lists of the
+        slow functions.  In the case of op_push_name_scope for x86 (32 bit), there aren't enough
+        registers to accomodate all the parameters.  Therefore, added two new JSVALUE32_64 slow
+        paths called operationPushCatchScope() and operationPushFunctionNameScope() to eliminate
+        the last "type" argument.
+        
+
+        * assembler/MacroAssemblerCodeRef.h:
+        (JSC::FunctionPtr::FunctionPtr): Added a new template to take 6 arguments.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        New variants of setupArgumentsWithExecState() and callOperation() to handle the new
+        combinations of argument types and counts.
+
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_push_with_scope):
+        (JSC::JIT::emit_op_pop_scope):
+        (JSC::JIT::emit_op_push_name_scope):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_push_with_scope):
+        (JSC::JIT::emit_op_pop_scope):
+        (JSC::JIT::emit_op_push_name_scope):
+        Use the new slow paths.
+
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        Updates to set the scope result using the scope register index.  Added operationPushCatchScope()
+        and operationPushFunctionNameScope().
+
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        Updated the scope slow paths to use the scope register index in the instruction to read and
+        write the register instead of using CallFrame::scope() and CallFrame::setScope().
+
+2014-11-07  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Apply std::unique_ptr to slowPathCall()
+        https://bugs.webkit.org/show_bug.cgi?id=138489
+
+        Reviewed by Mark Lam.
+
+        As a step to use std::unique_ptr<>, this patch makes slowPathCall() use std::unique_ptr<>,
+        std::make_unique<>, and WTF::move(). 
+
+        * dfg/DFGSlowPathGenerator.h:
+        (JSC::DFG::slowPathCall):
+        (JSC::DFG::slowPathMove):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::emitAllocateJSArray):
+        (JSC::DFG::SpeculativeJIT::addSlowPathGenerator):
+        (JSC::DFG::SpeculativeJIT::arrayify):
+        (JSC::DFG::SpeculativeJIT::compileIn):
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnString):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::cachedGetById):
+        (JSC::DFG::SpeculativeJIT::cachedPutById):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompare):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::cachedGetById):
+        (JSC::DFG::SpeculativeJIT::cachedPutById):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompare):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeStrictEq):
+        (JSC::DFG::SpeculativeJIT::compile):
+
 2014-11-06  Mark Lam  <mark.lam@apple.com>
 
         slow_path_get_direct_pname() needs to be hardened against a constant baseValue.

@@ -132,6 +132,7 @@ void InitWebCoreSystemInterface(void)
     INIT(GetScreenScaleFactor);
     INIT(IsGB18030ComplianceRequired);
     INIT(IsOptimizedFullscreenSupported);
+    INIT(GetMediaUIImageData);
 #endif
 
     INIT(CreateCTLineWithUniCharProvider);
@@ -145,6 +146,7 @@ void InitWebCoreSystemInterface(void)
 #if !PLATFORM(IOS)
     INIT(RecommendedScrollerStyle);
     INIT(ExecutableWasLinkedOnOrBeforeSnowLeopard);
+    INIT(ExtractWordDefinitionTokenRangeFromContextualString);
     INIT(CopyDefaultSearchProviderDisplayName);
     INIT(Cursor);
 #endif
