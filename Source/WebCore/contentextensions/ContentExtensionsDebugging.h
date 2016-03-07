@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,23 +23,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "NFANode.h"
+#ifndef ContentExtensionsDebugging_h
+#define ContentExtensionsDebugging_h
 
 #if ENABLE(CONTENT_EXTENSIONS)
 
-namespace WebCore {
+#define CONTENT_EXTENSIONS_STATE_MACHINE_DEBUGGING 0
 
-namespace ContentExtensions {
-
-NFANode::NFANode(uint64_t ruleId)
-    : isFinal(false)
-    , ruleId(ruleId)
-{
-}
-
-}
-
-} // namespace WebCore
+#define CONTENT_EXTENSIONS_PERFORMANCE_REPORTING 0
 
 #endif // ENABLE(CONTENT_EXTENSIONS)
+
+#endif // ContentExtensionsDebugging_h

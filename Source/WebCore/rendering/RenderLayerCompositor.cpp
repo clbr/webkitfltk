@@ -885,7 +885,7 @@ static bool styleChangeRequiresLayerRebuild(const RenderLayer& layer, const Rend
     if (!oldStyle.opacity() != !newStyle.opacity()) {
         RenderLayerModelObject* repaintContainer = layer.renderer().containerForRepaint();
         if (RenderLayerBacking* ancestorBacking = repaintContainer ? repaintContainer->layer()->backing() : nullptr) {
-            if (newStyle.opacity() != ancestorBacking->graphicsLayer()->drawsContent())
+            if (static_cast<bool>(newStyle.opacity()) != ancestorBacking->graphicsLayer()->drawsContent())
                 return true;
         }
     }
@@ -2417,7 +2417,7 @@ bool RenderLayerCompositor::clippedByAncestor(RenderLayer& layer) const
             return false;
     }
 
-    return layer.backgroundClipRect(RenderLayer::ClipRectsContext(computeClipRoot, TemporaryClipRects)).rect() != LayoutRect::infiniteRect(); // FIXME: Incorrect for CSS regions.
+    return !layer.backgroundClipRect(RenderLayer::ClipRectsContext(computeClipRoot, TemporaryClipRects)).isInfinite(); // FIXME: Incorrect for CSS regions.
 }
 
 // Return true if the given layer is a stacking context and has compositing child

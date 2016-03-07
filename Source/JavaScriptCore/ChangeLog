@@ -1,3 +1,106 @@
+2015-01-15  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(SQL_DATABASE) guards
+        https://bugs.webkit.org/show_bug.cgi?id=140434
+
+        Reviewed by Darin Adler.
+
+        * CMakeLists.txt:
+        * Configurations/FeatureDefines.xcconfig:
+        * DerivedSources.make:
+        * inspector/protocol/Database.json:
+
+2015-01-14  Alexey Proskuryakov  <ap@apple.com>
+
+        Web Inspector and regular console use different source code locations for messages
+        https://bugs.webkit.org/show_bug.cgi?id=140478
+
+        Reviewed by Brian Burg.
+
+        * inspector/ConsoleMessage.h: Expose computed source location.
+
+        * inspector/agents/InspectorConsoleAgent.cpp:
+        (Inspector::InspectorConsoleAgent::addMessageToConsole):
+        (Inspector::InspectorConsoleAgent::stopTiming):
+        (Inspector::InspectorConsoleAgent::count):
+        * inspector/agents/InspectorConsoleAgent.h:
+        addMessageToConsole() now takes a pre-made ConsoleMessage object.
+
+        * inspector/JSGlobalObjectConsoleClient.cpp:
+        (Inspector::JSGlobalObjectConsoleClient::messageWithTypeAndLevel):
+        (Inspector::JSGlobalObjectConsoleClient::warnUnimplemented):
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::reportAPIException):
+        * inspector/agents/JSGlobalObjectDebuggerAgent.cpp:
+        (Inspector::JSGlobalObjectDebuggerAgent::breakpointActionLog):
+        Updated for the above changes.
+
+2015-01-15  Mark Lam  <mark.lam@apple.com>
+
+        [Part 2] Argument object created by "Function dot arguments" should use a clone of argument values.
+        <https://webkit.org/b/140093>
+
+        Reviewed by Geoffrey Garen.
+
+        * interpreter/StackVisitor.cpp:
+        (JSC::StackVisitor::Frame::createArguments):
+        - We should not fetching the lexicalEnvironment here.  The reason we've
+          introduced the ClonedArgumentsCreationMode is because the lexicalEnvironment
+          may not be available to us at this point.  Instead, we'll just pass a nullptr.
+
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::tearOffForCloning):
+        * runtime/Arguments.h:
+        (JSC::Arguments::finishCreation):
+        - Use the new tearOffForCloning() to tear off arguments right out of the values
+          passed on the stack.  tearOff() is not appropriate for this purpose because
+          it takes slowArgumentsData into account.
+
+2015-01-14  Matthew Mirman  <mmirman@apple.com>
+
+        Removed accidental commit of "invalid_array.js" 
+        http://trac.webkit.org/changeset/178439
+
+        * tests/stress/invalid_array.js: Removed.
+
+2015-01-14  Matthew Mirman  <mmirman@apple.com>
+
+        Fixes operationPutByIdOptimizes such that they check that the put didn't
+        change the structure of the object who's property access is being
+        cached.  Also removes uses of the new base value from the cache generation code.
+        https://bugs.webkit.org/show_bug.cgi?id=139500
+
+        Reviewed by Filip Pizlo.
+
+        * jit/JITOperations.cpp:
+        (JSC::operationPutByIdStrictOptimize): saved the structure before the put.
+        (JSC::operationPutByIdNonStrictOptimize): ditto.
+        (JSC::operationPutByIdDirectStrictOptimize): ditto.
+        (JSC::operationPutByIdDirectNonStrictOptimize): ditto.
+        * jit/Repatch.cpp:
+        (JSC::generateByIdStub):
+        (JSC::tryCacheGetByID):
+        (JSC::tryBuildGetByIDList):
+        (JSC::emitPutReplaceStub):
+        (JSC::emitPutTransitionStubAndGetOldStructure): Added.
+        (JSC::tryCachePutByID):
+        (JSC::repatchPutByID):
+        (JSC::tryBuildPutByIdList):
+        (JSC::tryRepatchIn):
+        (JSC::emitPutTransitionStub): Deleted.
+        * jit/Repatch.h:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/JSPropertyNameEnumerator.h:
+        (JSC::genericPropertyNameEnumerator):
+        * runtime/Operations.h:
+        (JSC::normalizePrototypeChainForChainAccess): restructured to not use the base value.
+        (JSC::normalizePrototypeChain): restructured to not use the base value.
+        * tests/mozilla/mozilla-tests.yaml:
+        * tests/stress/proto-setter.js: Added.
+        * tests/stress/put-by-id-build-list-order-recurse.js: Added.
+        Added test that fails without this patch.
+
 2015-01-13  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Remove unused ResizeImage and DecodeImageData timeline events

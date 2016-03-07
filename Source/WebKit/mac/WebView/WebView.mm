@@ -917,7 +917,6 @@ static void WebKitInitializeGamepadProviderIfNecessary()
         // of the initialization code which may depend on the strategies.
         WebPlatformStrategies::initializeIfNecessary();
 
-#if ENABLE(SQL_DATABASE)
 #if PLATFORM(IOS)
         // Set the WebSQLiteDatabaseTrackerClient.
         SQLiteDatabaseTracker::setClient(WebSQLiteDatabaseTrackerClient::sharedWebSQLiteDatabaseTrackerClient());
@@ -925,7 +924,6 @@ static void WebKitInitializeGamepadProviderIfNecessary()
         if ([standardPreferences databasesEnabled])
 #endif
         [WebDatabaseManager sharedWebDatabaseManager];
-#endif
 
 #if PLATFORM(IOS)        
         if ([standardPreferences storageTrackerEnabled])
@@ -1490,7 +1488,7 @@ static NSMutableSet *knownPluginMIMETypes()
 
 + (void)_setAlwaysUsesComplexTextCodePath:(BOOL)f
 {
-    Font::setCodePath(f ? Font::Complex : Font::Auto);
+    FontCascade::setCodePath(f ? FontCascade::Complex : FontCascade::Auto);
 }
 
 + (void)_setAllowsRoundingHacks:(BOOL)allowsRoundingHacks
@@ -2392,9 +2390,7 @@ static bool needsSelfRetainWhileLoadingQuirk()
     settings.setQTKitEnabled([preferences isQTKitEnabled]);
 #endif // PLATFORM(MAC)
 
-#if ENABLE(SQL_DATABASE)
     DatabaseManager::manager().setIsAvailable([preferences databasesEnabled]);
-#endif
 
 #if ENABLE(MEDIA_SOURCE)
     settings.setMediaSourceEnabled([preferences mediaSourceEnabled]);
@@ -3168,12 +3164,12 @@ static inline IMP getMethod(id o, SEL s)
 
 + (void)_setShouldUseFontSmoothing:(BOOL)f
 {
-    Font::setShouldUseSmoothing(f);
+    FontCascade::setShouldUseSmoothing(f);
 }
 
 + (BOOL)_shouldUseFontSmoothing
 {
-    return Font::shouldUseSmoothing();
+    return FontCascade::shouldUseSmoothing();
 }
 
 #if !PLATFORM(IOS)
@@ -4710,7 +4706,7 @@ static Vector<String> toStringVector(NSArray* patterns)
     grammarCheckingEnabled = [defaults boolForKey:WebGrammarCheckingEnabled];
 #endif
 
-    Font::setDefaultTypesettingFeatures([defaults boolForKey:WebKitKerningAndLigaturesEnabledByDefaultDefaultsKey] ? Kerning | Ligatures : 0);
+    FontCascade::setDefaultTypesettingFeatures([defaults boolForKey:WebKitKerningAndLigaturesEnabledByDefaultDefaultsKey] ? Kerning | Ligatures : 0);
 
 #if !PLATFORM(IOS)
     automaticQuoteSubstitutionEnabled = [self _shouldAutomaticQuoteSubstitutionBeEnabled];
