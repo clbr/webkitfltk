@@ -852,16 +852,13 @@ LayoutRect AccessibilityRenderObject::elementRect() const
     
 bool AccessibilityRenderObject::supportsPath() const
 {
-    if (m_renderer && m_renderer->isSVGShape())
-        return true;
-    
-    return false;
+    return is<RenderSVGShape>(m_renderer);
 }
 
 Path AccessibilityRenderObject::elementPath() const
 {
-    if (m_renderer && m_renderer->isSVGShape() && toRenderSVGShape(m_renderer)->hasPath()) {
-        Path path = toRenderSVGShape(m_renderer)->path();
+    if (is<RenderSVGShape>(m_renderer) && downcast<RenderSVGShape>(*m_renderer).hasPath()) {
+        Path path = downcast<RenderSVGShape>(*m_renderer).path();
         
         // The SVG path is in terms of the parent's bounding box. The path needs to be offset to frame coordinates.
         if (auto svgRoot = ancestorsOfType<RenderSVGRoot>(*m_renderer).first()) {
@@ -1329,9 +1326,9 @@ bool AccessibilityRenderObject::computeAccessibilityIsIgnored() const
         if (canvasHasFallbackContent())
             return false;
 
-        if (m_renderer->isBox()) {
-            RenderBox* canvasBox = toRenderBox(m_renderer);
-            if (canvasBox->height() <= 1 || canvasBox->width() <= 1)
+        if (is<RenderBox>(*m_renderer)) {
+            auto& canvasBox = downcast<RenderBox>(*m_renderer);
+            if (canvasBox.height() <= 1 || canvasBox.width() <= 1)
                 return true;
         }
         // Otherwise fall through; use presence of help text, title, or description to decide.
@@ -2180,7 +2177,7 @@ AccessibilityObject* AccessibilityRenderObject::accessibilityHitTest(const IntPo
     
     m_renderer->document().updateLayout();
 
-    RenderLayer* layer = toRenderBox(m_renderer)->layer();
+    RenderLayer* layer = downcast<RenderBox>(*m_renderer).layer();
      
     HitTestRequest request(HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::AccessibilityHitTest);
     HitTestResult hitTestResult = HitTestResult(point);
@@ -3456,27 +3453,26 @@ ScrollableArea* AccessibilityRenderObject::getScrollableAreaIfScrollable() const
     if (parentObject() && parentObject()->isAccessibilityScrollView())
         return nullptr;
 
-    if (!m_renderer || !m_renderer->isBox())
+    if (!is<RenderBox>(m_renderer))
         return nullptr;
 
-    RenderBox* box = toRenderBox(m_renderer);
-    if (!box->canBeScrolledAndHasScrollableArea())
+    auto& box = downcast<RenderBox>(*m_renderer);
+    if (!box.canBeScrolledAndHasScrollableArea())
         return nullptr;
 
-    return box->layer();
+    return box.layer();
 }
 
 void AccessibilityRenderObject::scrollTo(const IntPoint& point) const
 {
-    if (!m_renderer || !m_renderer->isBox())
+    if (!is<RenderBox>(m_renderer))
         return;
 
-    RenderBox* box = toRenderBox(m_renderer);
-    if (!box->canBeScrolledAndHasScrollableArea())
+    auto& box = downcast<RenderBox>(*m_renderer);
+    if (!box.canBeScrolledAndHasScrollableArea())
         return;
 
-    RenderLayer* layer = box->layer();
-    layer->scrollToOffset(toIntSize(point), RenderLayer::ScrollOffsetClamped);
+    box.layer()->scrollToOffset(toIntSize(point), RenderLayer::ScrollOffsetClamped);
 }
 
 #if ENABLE(MATHML)

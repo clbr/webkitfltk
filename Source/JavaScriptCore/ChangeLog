@@ -1,3 +1,238 @@
+2014-10-17  Mark Lam  <mark.lam@apple.com>
+
+        Web Process crash when starting the web inspector after r174025.
+        <https://webkit.org/b/137340>
+
+        Reviewed by Filip Pizlo.
+
+        After r174025, we can generate a bad graph in the DFG fixup phase like so:
+
+            102:<!0:-> StoreBarrier(Check:KnownCell:@19, ..., bc#44)
+            60:<!0:->  PutStructure(Check:KnownCell:@19, ..., bc#44)
+            103:<!0:-> Check(Check:NotCell:@54, ..., bc#44)
+                    // ^-- PutByOffset's StoreBarrier has been elided and replaced
+                    //     with a speculation check which can OSR exit.
+            61:<!0:->  PutByOffset(Check:KnownCell:@19, ..., bc#44)
+
+        As a result, the structure change will get executed even if we end up OSR
+        exiting before the PutByOffset.  In the baseline JIT code, the structure now
+        erroneously tells the put operation that there is a value in that property
+        slot when it is actually uninitialized (hence, the crash).
+
+        The fix is to insert the Check at the earliest point possible:
+
+        1. If the checked node is in the same bytecode as the PutByOffset, then
+           the earliest point where we can insert the Check is right after the
+           checked node.
+
+        2. If the checked node is from a preceding bytecode (before the PutByOffset),
+           then the earliest point where we can insert the Check is at the start
+           of the current bytecode.
+
+        Also reverted the workaround from r174749: https://webkit.org/b/137758.
+
+        Benchmark results appear to be a wash on aggregate.
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::indexOfNode):
+        (JSC::DFG::FixupPhase::indexOfFirstNodeOfExitOrigin):
+        (JSC::DFG::FixupPhase::fixupNode):
+        (JSC::DFG::FixupPhase::insertCheck):
+        * dfg/DFGInsertionSet.h:
+        (JSC::DFG::InsertionSet::insertOutOfOrder):
+        (JSC::DFG::InsertionSet::insertOutOfOrderNode):
+
+2014-10-10  Oliver Hunt  <oliver@apple.com>
+
+        Various arguments optimisations in codegen fail to account for arguments being in lexical record
+        https://bugs.webkit.org/show_bug.cgi?id=137617
+
+        Reviewed by Michael Saboff.
+
+        Rework the way we track |arguments| references so that we don't try
+        to use the |arguments| reference on the stack if it's not safe.
+
+        To do this without nuking performance it was necessary to update
+        the parser to track modification of the |arguments| reference
+        itself.
+
+        * bytecode/CodeBlock.cpp:
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        (JSC::BytecodeGenerator::willResolveToArguments):
+        (JSC::BytecodeGenerator::uncheckedLocalArgumentsRegister):
+        (JSC::BytecodeGenerator::emitCall):
+        (JSC::BytecodeGenerator::emitConstruct):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        (JSC::BytecodeGenerator::uncheckedRegisterForArguments): Deleted.
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::hasSafeLocalArgumentsRegister):
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::BracketAccessorNode::emitBytecode):
+        (JSC::DotAccessorNode::emitBytecode):
+        (JSC::getArgumentByVal):
+        (JSC::CallFunctionCallDotNode::emitBytecode):
+        (JSC::ApplyFunctionCallDotNode::emitBytecode):
+        (JSC::ArrayPatternNode::emitDirectBinding):
+        * interpreter/StackVisitor.cpp:
+        (JSC::StackVisitor::Frame::existingArguments):
+        * parser/Nodes.h:
+        (JSC::ScopeNode::modifiesArguments):
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseInner):
+        * parser/Parser.h:
+        (JSC::Scope::getCapturedVariables):
+        * parser/ParserModes.h:
+
+2014-10-17  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Use WTF::move() instead of std::move() to help ensure move semantics in JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=137809
+
+        Reviewed by Csaba Osztrogonác.
+
+        Substitution of WTF::move() for std::move(). Clean up std::move() in JavaScriptCore.
+
+        * bytecode/GetByIdStatus.cpp:
+        (JSC::GetByIdStatus::computeForStubInfo):
+        * bytecode/PutByIdStatus.cpp:
+        (JSC::PutByIdStatus::computeForStubInfo):
+        * bytecode/PutByIdVariant.cpp:
+        (JSC::PutByIdVariant::setter):
+
+2014-10-15  Oliver Hunt  <oliver@apple.com>
+
+        Use a single allocation for the Arguments object
+        https://bugs.webkit.org/show_bug.cgi?id=137751
+
+        Reviewed by Filip Pizlo.
+
+        This patch removes the secondary allocation for parameters in the Arguments
+        object.  This is faily simple, but we needed to make it possible for the JIT
+        to allocate a variable GC object.  To do this i've added a new 
+        emitAllocateVariableSizedJSObject function to the JIT that does the work to
+        find the correct heap for a variable sized allocation and then bump that
+        allocator.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::emitAllocateArguments):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::emitAllocateVariableSizedJSObject):
+        * heap/CopyToken.h:
+        * heap/Heap.h:
+        (JSC::Heap::subspaceForObjectWithoutDestructor):
+        (JSC::Heap::subspaceForObjectNormalDestructor):
+        (JSC::Heap::subspaceForObjectsWithImmortalStructure):
+        * heap/MarkedSpace.h:
+        (JSC::MarkedSpace::subspaceForObjectsWithNormalDestructor):
+        (JSC::MarkedSpace::subspaceForObjectsWithImmortalStructure):
+        (JSC::MarkedSpace::subspaceForObjectsWithoutDestructor):
+        * interpreter/StackVisitor.cpp:
+        (JSC::StackVisitor::Frame::createArguments):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::visitChildren):
+        (JSC::Arguments::copyBackingStore):
+        (JSC::Arguments::tearOff):
+        (JSC::Arguments::allocateRegisterArray): Deleted.
+        * runtime/Arguments.h:
+        (JSC::Arguments::create):
+        (JSC::Arguments::isTornOff):
+        (JSC::Arguments::offsetOfRegisterArray):
+        (JSC::Arguments::registerArraySizeInBytes):
+        (JSC::Arguments::registerArray):
+        (JSC::Arguments::allocationSize): Deleted.
+
+2014-10-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Apparently we've had a hole in arguments capture all along
+        https://bugs.webkit.org/show_bug.cgi?id=137767
+
+        Reviewed by Oliver Hunt.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::getArgument):
+        * tests/stress/arguments-captured.js: Added.
+        (foo):
+        (bar):
+
+2014-10-16  Saam Barati  <saambarati1@gmail.com>
+
+        Have the ProfileType node in the DFG convert to a structure check where it can
+        https://bugs.webkit.org/show_bug.cgi?id=137596
+
+        Reviewed by Filip Pizlo.
+
+        TypeSet now keeps track of the live set of Structures it has seen.
+        It no longer nukes everything during GC. It now only removes unmarked
+        structures during GC. This modification allows the ProfileType node 
+        to convert into a CheckStructure node safely in the DFG. 
+
+        This change brings up the conversion rate from ProfileType to Check 
+        or CheckStructrue from ~45% to ~65%. This change also speeds the 
+        type profiler up significantly: consistently between 2x-20x faster. 
+
+        This patch also does some slight refactoring: a few type profiler
+        related fields are moved from VM to TypeProfiler.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertToCheckStructure):
+        * heap/Heap.cpp:
+        (JSC::Heap::collect):
+        * runtime/SymbolTable.cpp:
+        (JSC::SymbolTable::uniqueIDForVariable):
+        * runtime/SymbolTable.h:
+        * runtime/TypeLocationCache.cpp:
+        (JSC::TypeLocationCache::getTypeLocation):
+        * runtime/TypeProfiler.cpp:
+        (JSC::TypeProfiler::TypeProfiler):
+        (JSC::TypeProfiler::nextTypeLocation):
+        (JSC::TypeProfiler::invalidateTypeSetCache):
+        (JSC::TypeProfiler::dumpTypeProfilerData):
+        * runtime/TypeProfiler.h:
+        (JSC::TypeProfiler::getNextUniqueVariableID):
+        * runtime/TypeProfilerLog.cpp:
+        (JSC::TypeProfilerLog::processLogEntries):
+        * runtime/TypeSet.cpp:
+        (JSC::TypeSet::addTypeInformation):
+        (JSC::TypeSet::invalidateCache):
+        * runtime/TypeSet.h:
+        (JSC::TypeSet::structureSet):
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        (JSC::VM::enableTypeProfiler):
+        (JSC::VM::disableTypeProfiler):
+        (JSC::VM::dumpTypeProfilerData):
+        (JSC::VM::nextTypeLocation): Deleted.
+        (JSC::VM::invalidateTypeSetCache): Deleted.
+        * runtime/VM.h:
+        (JSC::VM::typeProfiler):
+        (JSC::VM::getNextUniqueVariableID): Deleted.
+        * tests/typeProfiler/dfg-jit-optimizations.js:
+
+2014-10-16  Adrien Destugues  <pulkomandy@gmail.com>
+
+        Use isnan from std namespace in ProfileGenerator.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=137653
+
+        Reviewed by Darin Adler.
+
+        The C++ isnan() function is in the std namespace. The unprefixed isnan
+        may be available because of C99 headers leakage in C++, but should not
+        be used.
+
+        No new tests: no functional change, build fix on platforms which don't
+        export C99 functions in C++.
+
+        * profiler/ProfileGenerator.cpp:
+        (JSC::ProfileGenerator::beginCallEntry):
+        (JSC::ProfileGenerator::endCallEntry):
+        (JSC::ProfileGenerator::didPause):
+        (JSC::ProfileGenerator::didContinue):
+
 2014-10-15  Michael Saboff  <msaboff@apple.com>
 
         REGRESSION(r174025): remote inspector crashes frequently when executing inspector frontend's JavaScript
