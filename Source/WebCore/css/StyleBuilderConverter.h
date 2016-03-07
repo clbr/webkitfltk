@@ -42,10 +42,12 @@
 #include "LengthRepeat.h"
 #include "Pair.h"
 #include "QuotesData.h"
+#include "SVGURIReference.h"
 #include "Settings.h"
 #include "StyleResolver.h"
 #include "StyleScrollSnapPoints.h"
 #include "TransformFunctions.h"
+#include "WebKitCSSResourceValue.h"
 
 namespace WebCore {
 
@@ -98,6 +100,16 @@ public:
     static bool convertPerspective(StyleResolver&, CSSValue&, float&);
     static bool convertMarqueeIncrement(StyleResolver&, CSSValue&, Length&);
     static bool convertFilterOperations(StyleResolver&, CSSValue&, FilterOperations&);
+    static bool convertMaskImageOperations(StyleResolver&, CSSValue&, Vector<RefPtr<MaskImageOperation>>&);
+#if PLATFORM(IOS)
+    static bool convertTouchCallout(StyleResolver&, CSSValue&);
+#endif
+#if ENABLE(TOUCH_EVENTS)
+    static Color convertTapHighlightColor(StyleResolver&, CSSValue&);
+#endif
+#if ENABLE(ACCELERATED_OVERFLOW_SCROLLING)
+    static bool convertOverflowScrolling(StyleResolver&, CSSValue&);
+#endif
 
 private:
     friend class StyleBuilderCustom;
@@ -990,6 +1002,79 @@ inline bool StyleBuilderConverter::convertFilterOperations(StyleResolver& styleR
 {
     return styleResolver.createFilterOperations(value, operations);
 }
+
+inline bool StyleBuilderConverter::convertMaskImageOperations(StyleResolver& styleResolver, CSSValue& value, Vector<RefPtr<MaskImageOperation>>& operations)
+{
+    RefPtr<WebKitCSSResourceValue> maskImageValue;
+    RefPtr<CSSValueList> maskImagesList;
+    CSSValueList::iterator listIterator;
+    if (is<WebKitCSSResourceValue>(value))
+        maskImageValue = &downcast<WebKitCSSResourceValue>(value);
+    else if (is<CSSValueList>(value)) {
+        maskImagesList = &downcast<CSSValueList>(value);
+        listIterator = maskImagesList->begin();
+        if (listIterator != maskImagesList->end())
+            maskImageValue = &downcast<WebKitCSSResourceValue>(listIterator->get());
+    }
+
+    while (maskImageValue.get()) {
+        RefPtr<CSSValue> maskInnerValue = maskImageValue->innerValue();
+
+        RefPtr<MaskImageOperation> newMaskImage;
+        if (is<CSSPrimitiveValue>(maskInnerValue.get())) {
+            RefPtr<CSSPrimitiveValue> primitiveValue = downcast<CSSPrimitiveValue>(maskInnerValue.get());
+            if (primitiveValue->isValueID() && primitiveValue->getValueID() == CSSValueNone)
+                newMaskImage = MaskImageOperation::create();
+            else {
+                String cssUrl = primitiveValue->getStringValue();
+                URL url = styleResolver.document().completeURL(cssUrl);
+
+                bool isExternalDocument = SVGURIReference::isExternalURIReference(cssUrl, styleResolver.document());
+                newMaskImage = MaskImageOperation::create(maskImageValue, cssUrl, url.fragmentIdentifier(), isExternalDocument, styleResolver.document().cachedResourceLoader());
+                if (isExternalDocument)
+                    styleResolver.state().maskImagesWithPendingSVGDocuments().append(newMaskImage);
+            }
+        } else {
+            if (RefPtr<StyleImage> image = styleResolver.styleImage(CSSPropertyWebkitMaskImage, *maskInnerValue))
+                newMaskImage = MaskImageOperation::create(image);
+        }
+
+        // If we didn't get a valid value, use None so we keep the correct number and order of masks.
+        if (!newMaskImage)
+            newMaskImage = MaskImageOperation::create();
+
+        operations.append(newMaskImage);
+
+        if (maskImagesList) {
+            ++listIterator;
+            maskImageValue = listIterator != maskImagesList->end() ? &downcast<WebKitCSSResourceValue>(listIterator->get()) : nullptr;
+        } else
+            maskImageValue = nullptr;
+    }
+
+    return true;
+}
+
+#if PLATFORM(IOS)
+inline bool StyleBuilderConverter::convertTouchCallout(StyleResolver&, CSSValue& value)
+{
+    return !equalIgnoringCase(downcast<CSSPrimitiveValue>(value).getStringValue(), "none");
+}
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+inline Color StyleBuilderConverter::convertTapHighlightColor(StyleResolver& styleResolver, CSSValue& value)
+{
+    return styleResolver.colorFromPrimitiveValue(downcast<CSSPrimitiveValue>(value));
+}
+#endif
+
+#if ENABLE(ACCELERATED_OVERFLOW_SCROLLING)
+inline bool StyleBuilderConverter::convertOverflowScrolling(StyleResolver&, CSSValue& value)
+{
+    return downcast<CSSPrimitiveValue>(value).getValueID() == CSSValueTouch;
+}
+#endif
 
 } // namespace WebCore
 

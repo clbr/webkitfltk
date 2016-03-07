@@ -1,3 +1,1633 @@
+2015-01-08  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        REGRESSION(r177637) [HarfBuzz][GTK][EFL] It made 3 performance tests crash and +24 layout tests crashes/failures
+        https://bugs.webkit.org/show_bug.cgi?id=139905
+
+        Reviewed by Antti Koivisto.
+
+        * platform/graphics/harfbuzz/HarfBuzzShaper.cpp:
+        (WebCore::HarfBuzzShaper::collectHarfBuzzRuns): Fallback to
+        primary font data for missing glyphs.
+
+2015-01-08  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Borders inside box-decoration-break: clone after a br do not contribute to line breaking
+        https://bugs.webkit.org/show_bug.cgi?id=140238
+
+        Reviewed by Darin Adler.
+
+        When we iterate through renderers for line breaking, we determine which of the renderers
+        is responsible for inserting its parent's border width. However, this determination didn't
+        take a <br> and box-decoration-break: clone into account.
+
+        Test: fast/box-decoration-break/box-decoration-break-clone-line-break.html
+
+        * rendering/line/BreakingContextInlineHeaders.h:
+        (WebCore::shouldAddBorderPaddingMargin):
+        (WebCore::previousInFlowSibling): Clean up to use a do / while block.
+
+2015-01-08  Gwang Yoon Hwang  <yoon@igalia.com>
+
+        [GTK] Seperate updateBackingStore from flushCompositingState.
+        https://bugs.webkit.org/show_bug.cgi?id=136887
+
+        Reviewed by Žan Doberšek.
+
+        When LayerTreeHostGtk flushes pending layer changes, it updates backing
+        stores using same loop. This makes requesting layer flush during
+        flushing in certain condition which causes a assertion failure.
+
+        Animated GIF's animations are drived by the painting cycle,
+        GraphicsLayerTextureMapper::updateBackingStoreIfNeeded would request
+        scheduleLayerFlush during flushing layers, if animated GIF needs to
+        advance its frame immediately. It doesn't mean the advanced frame should
+        be painted in this painting phase. This frame advancing happens after
+        painting a current frame to the backing store. It means the advanced
+        frame should be painted ASAP without using its frame timer.
+
+        This patch seperates updateBackingStore from flushCompositingState
+        to avoid above behavior.
+
+        No new tests. The bug is timing-dependent.
+
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+        (WebCore::GraphicsLayerTextureMapper::flushCompositingStateForThisLayerOnly):
+        (WebCore::toGraphicsLayerTextureMapper):
+        (WebCore::GraphicsLayerTextureMapper::updateBackingStoreIncludingSubLayers):
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.h:
+
+2015-01-07  Chris Dumez  <cdumez@apple.com>
+
+        Move -webkit-tap-highlight-color / -webkit-overflow-scrolling / -webkit-touch-callout to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140219
+
+        Reviewed by Darin Adler.
+
+        Move -webkit-tap-highlight-color / -webkit-overflow-scrolling /
+        -webkit-touch-callout to the new StyleBuilder.
+
+        * css/CSSGradientValue.cpp:
+        (WebCore::CSSGradientValue::gradientWithStylesResolved):
+        * css/CSSPropertyNames.in:
+        * css/SVGCSSStyleSelector.cpp:
+        (WebCore::StyleResolver::applySVGProperty):
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertTouchCallout):
+        (WebCore::StyleBuilderConverter::convertTapHighlightColor):
+        (WebCore::StyleBuilderConverter::convertOverflowScrolling):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        (WebCore::StyleResolver::colorFromPrimitiveValueIsDerivedFromElement):
+        (WebCore::StyleResolver::colorFromPrimitiveValue):
+        (WebCore::StyleResolver::createFilterOperations):
+        * css/StyleResolver.h:
+
+2015-01-07  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: Editing Inline Styles Not Working
+        https://bugs.webkit.org/show_bug.cgi?id=140239
+
+        Reviewed by Joseph Pecoraro.
+
+        Fix a regression introduced in r178060, where we no longer set
+        m_ordinal in InspectorCSSId. The original refactoring should have
+        passed m_ordinal. Fix this and introduce a sensible default value.
+
+        * inspector/InspectorStyleSheet.h:
+        (WebCore::InspectorCSSId::InspectorCSSId):
+
+2015-01-07  Chris Dumez  <cdumez@apple.com>
+
+        Assert should never be reached hit in WebCore::CSSCalcPrimitiveValue::doubleValue
+        https://bugs.webkit.org/show_bug.cgi?id=140180
+
+        Reviewed by Darin Adler.
+
+        Add support for using floating-point angles with 'turn' unit, as per the
+        specification:
+        http://dev.w3.org/csswg/css-values-3/#angles
+
+        Previously, we only supported integer values for the 'turn' unit even
+        though other angle units (e.g. 'deg') handle floating-point values just
+        fine. Trying to use a floating-point value with 'turn' unit would cause
+        us to hit an assertion in CSSCalcPrimitiveValue::doubleValue().
+
+        Also fix the support for angles in calc().
+        CSSPrimitiveValue::computeDegrees() was accessing m_primitiveUnitType
+        member directly, which would be incorrect in the case of calculated
+        values. This patch switches to calling CSSPrimitiveValue::primitiveType()
+        which handles calculated values.
+
+        Test: fast/css/turn-angle-double.html
+
+        * css/CSSCalculationValue.cpp:
+        (WebCore::hasDoubleValue):
+        * css/CSSPrimitiveValue.cpp:
+        (WebCore::CSSPrimitiveValue::computeDegrees):
+
+2015-01-07  Chris Dumez  <cdumez@apple.com>
+
+        Move 'font' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140181
+
+        Reviewed by Darin Adler.
+
+        Move 'font' CSS property to the new StyleBuilder.
+
+2015-01-07  Chris Dumez  <cdumez@apple.com>
+
+        Move '-webkit-dashboard-region' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140204
+
+        Reviewed by Darin Adler.
+
+        Move '-webkit-dashboard-region' CSS property to the new StyleBuilder.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderCustom.h:
+        (WebCore::convertToIntLength):
+        (WebCore::StyleBuilderCustom::applyValueWebkitDashboardRegion):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        (WebCore::convertToIntLength): Deleted.
+
+2015-01-07  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        The ASCII decoding for non ASCII character is incorrect if this character comes after going through the fast decoding code path and before the end of the text by less than a machine word size of characters.
+        https://bugs.webkit.org/show_bug.cgi?id=140173.
+
+        Reviewed by Darin Adler.
+
+        Tests: fast/encoding/char-after-fast-path-ascii-decoding.html.
+
+        * platform/text/TextCodecLatin1.cpp:
+        (WebCore::TextCodecLatin1::decode):
+        This function has a bug when it goes through the fast decoding code path. After copying
+        one or more all ASCII MachineWords from source to the destination, the following byte
+        is copied as is from the source to the destination even if it is non ASCII byte. This
+        causes the decoded bytes to be incorrect. The fix is to ensure that the current byte
+        is still ASCII after exiting the fast decoding code path.
+ 
+2015-01-07  Shivakumar JM  <shiva.jm@samsung.com>
+
+        HTMLSelectElement and HTMLOptionsCollection add() method should support index as second argument.
+        https://bugs.webkit.org/show_bug.cgi?id=139179
+
+        Reviewed by Darin Adler.
+
+        HTMLSelectElement and HTMLOptionsCollection add() method should support index as second argument as per specification
+        http://www.w3.org/html/wg/drafts/html/master/forms.html#the-select-element.
+        Also this matches the behavior of Chrome and FireFox.
+
+        Tests: fast/dom/HTMLSelectElement/add.html
+               fast/dom/HTMLSelectElement/options-collection-add.html
+
+        * bindings/js/JSHTMLOptionsCollectionCustom.cpp:
+        (WebCore::JSHTMLOptionsCollection::add): Deleted.
+        * html/HTMLOptionsCollection.cpp:
+        (WebCore::HTMLOptionsCollection::add):
+        * html/HTMLOptionsCollection.h:
+        * html/HTMLOptionsCollection.idl:
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::add):
+        * html/HTMLSelectElement.h:
+        * html/HTMLSelectElement.idl:
+
+2015-01-07  Gwang Yoon Hwang  <yoon@igalia.com>
+
+        [GTK][ThreadedCompositor] Add support for threaded compositor.
+        https://bugs.webkit.org/show_bug.cgi?id=118265
+
+        Reviewed by Martin Robinson.
+
+        * PlatformGTK.cmake:
+        Adds CoodinatedGraphics and threaded compositor related classes to
+        support threaded compositor
+
+        * platform/graphics/texmap/coordinated/CoordinatedTile.cpp:
+        * platform/graphics/texmap/coordinated/CoordinatedTile.h:
+        This class should be guarded by COORDINATED_GRAPHICS instead of
+        TILED_BACKING_STORE
+
+2015-01-07  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Make WebKit2 build with public iOS SDK and more build fixes for DRT
+        https://bugs.webkit.org/show_bug.cgi?id=137371
+
+        Reviewed by David Kilzer.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/spi/GraphicsServicesSPI.h: Added.
+        * platform/spi/cocoa/QuartzCoreSPI.h: Add CALayer SPI property hitTestsAsOpaque.
+        * platform/spi/cocoa/ServersSPI.h: Added.
+2015-01-07  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178068.
+        https://bugs.webkit.org/show_bug.cgi?id=140235
+
+        Breaks the iOS build (Requested by enrica on #webkit).
+
+        Reverted changeset:
+
+        "[iOS] Make WebKit2 build with public iOS SDK and more build
+        fixes for DRT"
+        https://bugs.webkit.org/show_bug.cgi?id=137371
+        http://trac.webkit.org/changeset/178068
+
+2015-01-07  Enrica Casucci  <enrica@apple.com>
+
+        Can't copy URL for images and paste it into plain text fields.
+        https://bugs.webkit.org/show_bug.cgi?id=140230
+        rdar://problem/18736680
+
+        Reviewed by Dan Bernstein.
+
+        The incorrect objective C type was being written to the pasteboard.
+
+        * platform/ios/PlatformPasteboardIOS.mm:
+        (WebCore::PlatformPasteboard::write):
+
+2015-01-07  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+
+        * Modules/webdatabase/SQLStatementBackend.cpp:
+
+2015-01-07  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Make WebKit2 build with public iOS SDK and more build fixes for DRT
+        https://bugs.webkit.org/show_bug.cgi?id=137371
+
+        Reviewed by David Kilzer.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/spi/GraphicsServicesSPI.h: Added.
+        * platform/spi/cocoa/QuartzCoreSPI.h: Add CALayer SPI property hitTestsAsOpaque.
+        * platform/spi/cocoa/ServersSPI.h: Added.
+2015-01-07  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        ASSERTION FAILED: !lengthOrPercentageValue.isUndefined() in WebCore::ApplyPropertyTextIndent::applyValue
+        https://bugs.webkit.org/show_bug.cgi?id=130341
+
+        Reviewed by Chris Dumez.
+
+        Replace ASSERT() with 'if' statement because 'ex' unit length in <title> is not defined.
+
+        Test: fast/css3-text/css3-text-indent/text-indent-crash-in-title.html
+
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyValueTextIndent): Change ASSERT() to 'if' statement.
+
+2015-01-07  Anders Carlsson  <andersca@apple.com>
+
+        Remove AbstractSQLStatement
+        https://bugs.webkit.org/show_bug.cgi?id=140223
+
+        Reviewed by Sam Weinig.
+
+        * Modules/webdatabase/AbstractSQLStatement.h: Removed.
+        * Modules/webdatabase/AbstractSQLTransactionBackend.h:
+        * Modules/webdatabase/SQLStatement.h:
+        * Modules/webdatabase/SQLStatementBackend.cpp:
+        (WebCore::SQLStatementBackend::create):
+        (WebCore::SQLStatementBackend::SQLStatementBackend):
+        (WebCore::SQLStatementBackend::frontend):
+        * Modules/webdatabase/SQLStatementBackend.h:
+        * Modules/webdatabase/SQLTransaction.cpp:
+        (WebCore::SQLTransaction::deliverStatementCallback):
+        * Modules/webdatabase/SQLTransactionBackend.cpp:
+        (WebCore::SQLTransactionBackend::currentStatement):
+        (WebCore::SQLTransactionBackend::executeSQL):
+        * Modules/webdatabase/SQLTransactionBackend.h:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+
+2015-01-07  Timothy Horton  <timothy_horton@apple.com>
+
+        Manually-animated TextIndicator fades out blue selection if you click inside it
+        https://bugs.webkit.org/show_bug.cgi?id=140224
+        <rdar://problem/19317526>
+
+        Reviewed by Beth Dakin.
+
+        * page/mac/TextIndicatorWindow.mm:
+        (-[WebTextIndicatorView hasCompletedAnimation]):
+        (WebCore::TextIndicatorWindow::~TextIndicatorWindow):
+        Avoid fading out the TextIndicator if the animation hadn't completed.
+        Also, use wantsManualAnimation instead of duplicating the switch here.
+
+2015-01-07  Anders Carlsson  <andersca@apple.com>
+
+        Remove AbstractSQLStatementBackend
+        https://bugs.webkit.org/show_bug.cgi?id=140222
+
+        Reviewed by Sam Weinig.
+
+        We're unlikely to fully take advantage of the SQL implementation being abstract anyway, so let's just simplify the code instead.
+
+        * Modules/webdatabase/AbstractSQLStatement.h:
+        * Modules/webdatabase/AbstractSQLStatementBackend.h: Removed.
+        * Modules/webdatabase/SQLStatement.cpp:
+        (WebCore::SQLStatement::setBackend):
+        * Modules/webdatabase/SQLStatement.h:
+        * Modules/webdatabase/SQLStatementBackend.cpp:
+        (WebCore::SQLStatementBackend::~SQLStatementBackend):
+        * Modules/webdatabase/SQLStatementBackend.h:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+
+2015-01-07  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: purge PassRefPtr from Inspector code and use Ref for typed and untyped protocol objects
+        https://bugs.webkit.org/show_bug.cgi?id=140053
+
+        Reviewed by Andreas Kling.
+
+        This patch replaces uses of PassRefPtr with uses of RefPtr&& and WTF::move() in code
+        related to Web Inspector. It also converts many uses of RefPtr to Ref where
+        references are always non-null. These two refactorings have been combined since
+        they tend to require similar changes to the code.
+
+        No new tests, no behavior changed.
+
+        * Modules/webdatabase/DatabaseManager.cpp:
+        (WebCore::DatabaseManager::openDatabase):
+        * dom/Document.cpp:
+        (WebCore::Document::logExceptionToConsole):
+        (WebCore::Document::addMessage):
+        * dom/Document.h:
+        * dom/ScriptExecutionContext.cpp:
+        (WebCore::ScriptExecutionContext::reportException):
+        * dom/ScriptExecutionContext.h:
+        * html/parser/XSSAuditorDelegate.cpp:
+        (WebCore::XSSAuditorDelegate::generateViolationReport):
+        * inspector/CommandLineAPIHost.cpp:
+        (WebCore::CommandLineAPIHost::inspectImpl):
+        * inspector/CommandLineAPIHost.h:
+        * inspector/InspectorApplicationCacheAgent.cpp:
+        (WebCore::InspectorApplicationCacheAgent::getFramesWithManifests):
+        (WebCore::InspectorApplicationCacheAgent::buildObjectForApplicationCache):
+        (WebCore::InspectorApplicationCacheAgent::buildArrayForApplicationCacheResources):
+        (WebCore::InspectorApplicationCacheAgent::buildObjectForApplicationCacheResource):
+        * inspector/InspectorApplicationCacheAgent.h:
+        * inspector/InspectorCSSAgent.cpp:
+        (WebCore::InspectorCSSAgent::getMatchedStylesForNode):
+        (WebCore::InspectorCSSAgent::getComputedStyleForNode):
+        (WebCore::InspectorCSSAgent::setStyleText):
+        (WebCore::InspectorCSSAgent::setPropertyText):
+        (WebCore::InspectorCSSAgent::toggleProperty):
+        (WebCore::InspectorCSSAgent::setRuleSelector):
+        (WebCore::InspectorCSSAgent::getSupportedCSSProperties):
+        (WebCore::InspectorCSSAgent::forcePseudoState):
+        (WebCore::InspectorCSSAgent::getNamedFlowCollection):
+        (WebCore::InspectorCSSAgent::detectOrigin):
+        (WebCore::InspectorCSSAgent::buildObjectForRule):
+        (WebCore::InspectorCSSAgent::buildArrayForMatchedRuleList):
+        (WebCore::InspectorCSSAgent::buildObjectForAttributesStyle):
+        (WebCore::InspectorCSSAgent::buildArrayForRegions):
+        (WebCore::InspectorCSSAgent::buildObjectForNamedFlow):
+        * inspector/InspectorCSSAgent.h:
+        * inspector/InspectorConsoleInstrumentation.h:
+        (WebCore::InspectorInstrumentation::addMessageToConsole):
+        (WebCore::InspectorInstrumentation::consoleCount):
+        (WebCore::InspectorInstrumentation::stopConsoleTiming):
+        (WebCore::InspectorInstrumentation::consoleTimeStamp):
+        (WebCore::InspectorInstrumentation::stopProfiling):
+        * inspector/InspectorController.cpp:
+        (WebCore::InspectorController::buildObjectForHighlightedNode):
+        (WebCore::InspectorController::executionStopwatch):
+        * inspector/InspectorController.h:
+        * inspector/InspectorDOMAgent.cpp:
+        (WebCore::parseColor):
+        (WebCore::parseConfigColor):
+        (WebCore::InspectorDOMAgent::pushNodePathToFrontend):
+        (WebCore::InspectorDOMAgent::performSearch):
+        (WebCore::InspectorDOMAgent::setInspectModeEnabled):
+        (WebCore::InspectorDOMAgent::highlightRect):
+        (WebCore::InspectorDOMAgent::highlightQuad):
+        (WebCore::InspectorDOMAgent::innerHighlightQuad):
+        (WebCore::InspectorDOMAgent::highlightNode):
+        (WebCore::InspectorDOMAgent::highlightFrame):
+        (WebCore::InspectorDOMAgent::buildObjectForNode):
+        (WebCore::InspectorDOMAgent::buildArrayForElementAttributes):
+        (WebCore::InspectorDOMAgent::buildArrayForContainerChildren):
+        (WebCore::InspectorDOMAgent::buildObjectForEventListener):
+        (WebCore::InspectorDOMAgent::processAccessibilityChildren):
+        (WebCore::InspectorDOMAgent::buildObjectForAccessibilityProperties):
+        (WebCore::InspectorDOMAgent::didCommitLoad):
+        (WebCore::InspectorDOMAgent::didInsertDOMNode):
+        (WebCore::InspectorDOMAgent::styleAttributeInvalidated):
+        (WebCore::InspectorDOMAgent::resolveNode):
+        * inspector/InspectorDOMAgent.h:
+        * inspector/InspectorDOMDebuggerAgent.cpp:
+        (WebCore::InspectorDOMDebuggerAgent::didInvalidateStyleAttr):
+        (WebCore::InspectorDOMDebuggerAgent::willInsertDOMNode):
+        (WebCore::InspectorDOMDebuggerAgent::willRemoveDOMNode):
+        (WebCore::InspectorDOMDebuggerAgent::willModifyDOMAttr):
+        (WebCore::InspectorDOMDebuggerAgent::descriptionForDOMEvent):
+        (WebCore::InspectorDOMDebuggerAgent::pauseOnNativeEventIfNeeded):
+        (WebCore::InspectorDOMDebuggerAgent::willSendXMLHttpRequest):
+        * inspector/InspectorDOMDebuggerAgent.h:
+        * inspector/InspectorDOMStorageAgent.cpp:
+        (WebCore::InspectorDOMStorageAgent::getDOMStorageItems):
+        (WebCore::InspectorDOMStorageAgent::setDOMStorageItem):
+        (WebCore::InspectorDOMStorageAgent::removeDOMStorageItem):
+        (WebCore::InspectorDOMStorageAgent::storageId):
+        (WebCore::InspectorDOMStorageAgent::findStorageArea):
+        * inspector/InspectorDOMStorageAgent.h:
+        * inspector/InspectorDatabaseAgent.cpp: Use Ref for all callbacks since they are
+        not nullable.
+        (WebCore::InspectorDatabaseAgent::executeSQL):
+        * inspector/InspectorDatabaseAgent.h:
+        * inspector/InspectorDatabaseInstrumentation.h:
+        (WebCore::InspectorInstrumentation::didOpenDatabase):
+        * inspector/InspectorDatabaseResource.cpp:
+        (WebCore::InspectorDatabaseResource::create):
+        (WebCore::InspectorDatabaseResource::InspectorDatabaseResource):
+        (WebCore::InspectorDatabaseResource::bind):
+        * inspector/InspectorDatabaseResource.h:
+        (WebCore::InspectorDatabaseResource::setDatabase):
+        * inspector/InspectorFrontendHost.h:
+        (WebCore::InspectorFrontendHost::create):
+        * inspector/InspectorIndexedDBAgent.cpp: Use Ref for all callbacks since they are
+        not nullable.
+        (WebCore::InspectorIndexedDBAgent::requestDatabaseNames):
+        (WebCore::InspectorIndexedDBAgent::requestDatabase):
+        (WebCore::InspectorIndexedDBAgent::requestData):
+        (WebCore::ClearObjectStoreListener::create):
+        (WebCore::ClearObjectStoreListener::ClearObjectStoreListener):
+        (WebCore::ClearObjectStore::create):
+        (WebCore::ClearObjectStore::ClearObjectStore):
+        (WebCore::InspectorIndexedDBAgent::clearObjectStore):
+        * inspector/InspectorIndexedDBAgent.h:
+        * inspector/InspectorInstrumentation.cpp:
+        (WebCore::InspectorInstrumentation::willLoadXHRImpl):
+        (WebCore::InspectorInstrumentation::addMessageToConsoleImpl):
+        (WebCore::InspectorInstrumentation::consoleCountImpl):
+        (WebCore::InspectorInstrumentation::stopConsoleTimingImpl):
+        (WebCore::InspectorInstrumentation::consoleTimeStampImpl):
+        (WebCore::InspectorInstrumentation::stopProfilingImpl):
+        (WebCore::InspectorInstrumentation::didOpenDatabaseImpl):
+        (WebCore::InspectorInstrumentation::sessionCreatedImpl):
+        (WebCore::InspectorInstrumentation::sessionLoadedImpl):
+        (WebCore::InspectorInstrumentation::sessionModifiedImpl):
+        (WebCore::InspectorInstrumentation::segmentCreatedImpl):
+        (WebCore::InspectorInstrumentation::segmentCompletedImpl):
+        (WebCore::InspectorInstrumentation::segmentLoadedImpl):
+        (WebCore::InspectorInstrumentation::willLoadXHRSynchronouslyImpl): Deleted.
+        (WebCore::InspectorInstrumentation::didLoadXHRSynchronouslyImpl): Deleted.
+        (WebCore::InspectorInstrumentation::startProfilingImpl): Deleted.
+        (WebCore::InspectorInstrumentation::didDispatchDOMStorageEventImpl): Deleted.
+        (WebCore::InspectorInstrumentation::willEvaluateWorkerScript): Deleted.
+        (WebCore::InspectorInstrumentation::captureStoppedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackStartedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackPausedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackHitPositionImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackFinishedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::networkStateChangedImpl): Deleted.
+        * inspector/InspectorInstrumentation.h:
+        (WebCore::InspectorInstrumentation::willLoadXHR):
+        (WebCore::InspectorInstrumentation::sessionCreated):
+        (WebCore::InspectorInstrumentation::sessionLoaded):
+        (WebCore::InspectorInstrumentation::sessionModified):
+        (WebCore::InspectorInstrumentation::segmentCreated):
+        (WebCore::InspectorInstrumentation::segmentCompleted):
+        (WebCore::InspectorInstrumentation::segmentLoaded):
+        (WebCore::InspectorInstrumentation::documentThreadableLoaderStartedLoadingForClient): Deleted.
+        (WebCore::InspectorInstrumentation::didSendWebSocketFrame): Deleted.
+        * inspector/InspectorLayerTreeAgent.cpp:
+        (WebCore::InspectorLayerTreeAgent::buildObjectForLayer):
+        (WebCore::InspectorLayerTreeAgent::buildObjectForIntRect):
+        (WebCore::InspectorLayerTreeAgent::reasonsForCompositingLayer):
+        * inspector/InspectorLayerTreeAgent.h:
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::buildObjectForPoint):
+        (WebCore::buildObjectForRect):
+        (WebCore::buildArrayForQuad):
+        (WebCore::buildObjectForHighlight):
+        (WebCore::buildObjectForRegionHighlight):
+        (WebCore::buildObjectForCSSRegionsHighlight):
+        (WebCore::buildObjectForSize):
+        (WebCore::buildObjectForCSSRegionContentClip):
+        (WebCore::InspectorOverlay::drawPaintRects):
+        (WebCore::buildObjectForRendererFragments):
+        (WebCore::buildObjectForShapeOutside):
+        (WebCore::buildObjectForElementInfo):
+        (WebCore::InspectorOverlay::buildObjectForHighlightedNode):
+        (WebCore::InspectorOverlay::reset):
+        (WebCore::InspectorOverlay::evaluateInOverlay):
+        * inspector/InspectorOverlay.h:
+        * inspector/InspectorPageAgent.cpp:
+        (WebCore::createXHRTextDecoder):
+        (WebCore::buildObjectForCookie):
+        (WebCore::buildArrayForCookies):
+        (WebCore::buildObjectForSearchResult):
+        (WebCore::InspectorPageAgent::buildObjectForFrame):
+        (WebCore::InspectorPageAgent::buildObjectForFrameTree):
+        * inspector/InspectorPageAgent.h:
+        * inspector/InspectorReplayAgent.cpp:
+        (WebCore::buildInspectorObjectForPosition):
+        (WebCore::buildInspectorObjectForInput):
+        (WebCore::buildInspectorObjectForSession):
+        (WebCore::buildInspectorObjectForSegment):
+        (WebCore::InspectorReplayAgent::replayToPosition):
+        (WebCore::InspectorReplayAgent::getSessionData):
+        (WebCore::InspectorReplayAgent::getSegmentData):
+        * inspector/InspectorReplayAgent.h:
+        * inspector/InspectorResourceAgent.cpp:
+        (WebCore::buildObjectForHeaders):
+        (WebCore::buildObjectForTiming):
+        (WebCore::buildObjectForResourceRequest):
+        (WebCore::buildObjectForResourceResponse):
+        (WebCore::buildObjectForCachedResource):
+        (WebCore::InspectorResourceAgent::willLoadXHR):
+        (WebCore::InspectorResourceAgent::buildInitiatorObject):
+        (WebCore::InspectorResourceAgent::willSendWebSocketHandshakeRequest):
+        (WebCore::InspectorResourceAgent::didReceiveWebSocketHandshakeResponse):
+        (WebCore::InspectorResourceAgent::didReceiveWebSocketFrame):
+        (WebCore::InspectorResourceAgent::didSendWebSocketFrame):
+        (WebCore::InspectorResourceAgent::setExtraHTTPHeaders):
+        (WebCore::InspectorResourceAgent::loadResource):
+        (WebCore::InspectorResourceAgent::documentThreadableLoaderStartedLoadingForClient): Deleted.
+        (WebCore::InspectorResourceAgent::didScheduleStyleRecalculation): Deleted.
+        (WebCore::InspectorResourceAgent::disable): Deleted.
+        (WebCore::InspectorResourceAgent::setCacheDisabled): Deleted.
+        * inspector/InspectorResourceAgent.h:
+        * inspector/InspectorStyleSheet.cpp:
+        (ParsedStyleSheet::ruleSourceDataAt):
+        (WebCore::buildSourceRangeObject):
+        (WebCore::buildMediaObject):
+        (WebCore::asCSSRuleList):
+        (WebCore::fillMediaListChain):
+        (WebCore::InspectorStyle::create):
+        (WebCore::InspectorStyle::InspectorStyle):
+        (WebCore::InspectorStyle::buildObjectForStyle):
+        (WebCore::InspectorStyle::buildArrayForComputedStyle):
+        (WebCore::InspectorStyle::styleWithProperties):
+        (WebCore::InspectorStyle::extractSourceData):
+        (WebCore::InspectorStyleSheet::create):
+        (WebCore::InspectorStyleSheet::InspectorStyleSheet):
+        (WebCore::InspectorStyleSheet::buildObjectForStyleSheet):
+        (WebCore::InspectorStyleSheet::buildObjectForStyleSheetInfo):
+        (WebCore::buildObjectForSelectorHelper):
+        (WebCore::selectorsFromSource):
+        (WebCore::InspectorStyleSheet::buildObjectForSelector):
+        (WebCore::InspectorStyleSheet::buildObjectForSelectorList):
+        (WebCore::InspectorStyleSheet::buildObjectForRule):
+        (WebCore::InspectorStyleSheet::buildObjectForStyle):
+        (WebCore::InspectorStyleSheet::toggleProperty):
+        (WebCore::InspectorStyleSheet::inspectorStyleForId):
+        (WebCore::InspectorStyleSheet::rememberInspectorStyle):
+        (WebCore::InspectorStyleSheet::buildArrayForRuleList):
+        (WebCore::InspectorStyleSheet::collectFlatRules):
+        (WebCore::InspectorStyleSheetForInlineStyle::create):
+        (WebCore::InspectorStyleSheetForInlineStyle::InspectorStyleSheetForInlineStyle):
+        (WebCore::InspectorStyleSheetForInlineStyle::inspectorStyleForId):
+        * inspector/InspectorStyleSheet.h:
+        (WebCore::InspectorCSSId::InspectorCSSId):
+        (WebCore::InspectorCSSId::asProtocolValue):
+        * inspector/InspectorTimelineAgent.cpp:
+        (WebCore::InspectorTimelineAgent::startFromConsole):
+        (WebCore::InspectorTimelineAgent::stopFromConsole):
+        (WebCore::InspectorTimelineAgent::addRecordToTimeline):
+        (WebCore::InspectorTimelineAgent::didCompleteRecordEntry):
+        (WebCore::InspectorTimelineAgent::appendRecord):
+        (WebCore::InspectorTimelineAgent::sendEvent):
+        (WebCore::InspectorTimelineAgent::createRecordEntry):
+        (WebCore::InspectorTimelineAgent::pushCurrentRecord):
+        * inspector/InspectorTimelineAgent.h:
+        * inspector/InspectorWorkerAgent.cpp:
+        (WebCore::InspectorWorkerAgent::sendMessageToWorker):
+        * inspector/InspectorWorkerAgent.h:
+        * inspector/NetworkResourcesData.cpp:
+        (WebCore::XHRReplayData::create):
+        (WebCore::XHRReplayData::XHRReplayData):
+        * inspector/NetworkResourcesData.h:
+        (WebCore::NetworkResourcesData::ResourceData::decoder):
+        (WebCore::NetworkResourcesData::ResourceData::setDecoder):
+        (WebCore::NetworkResourcesData::ResourceData::buffer):
+        (WebCore::NetworkResourcesData::ResourceData::setBuffer):
+        * inspector/TimelineRecordFactory.cpp:
+        (WebCore::TimelineRecordFactory::createGenericRecord):
+        (WebCore::TimelineRecordFactory::createBackgroundRecord):
+        (WebCore::TimelineRecordFactory::createGCEventData):
+        (WebCore::TimelineRecordFactory::createFunctionCallData):
+        (WebCore::TimelineRecordFactory::createConsoleProfileData):
+        (WebCore::TimelineRecordFactory::createProbeSampleData):
+        (WebCore::TimelineRecordFactory::createEventDispatchData):
+        (WebCore::TimelineRecordFactory::createGenericTimerData):
+        (WebCore::TimelineRecordFactory::createTimerInstallData):
+        (WebCore::TimelineRecordFactory::createXHRReadyStateChangeData):
+        (WebCore::TimelineRecordFactory::createXHRLoadData):
+        (WebCore::TimelineRecordFactory::createEvaluateScriptData):
+        (WebCore::TimelineRecordFactory::createTimeStampData):
+        (WebCore::TimelineRecordFactory::createScheduleResourceRequestData):
+        (WebCore::TimelineRecordFactory::createResourceSendRequestData):
+        (WebCore::TimelineRecordFactory::createResourceReceiveResponseData):
+        (WebCore::TimelineRecordFactory::createResourceFinishData):
+        (WebCore::TimelineRecordFactory::createReceiveResourceData):
+        (WebCore::TimelineRecordFactory::createLayoutData):
+        (WebCore::TimelineRecordFactory::createDecodeImageData):
+        (WebCore::TimelineRecordFactory::createResizeImageData):
+        (WebCore::TimelineRecordFactory::createMarkData):
+        (WebCore::TimelineRecordFactory::createParseHTMLData):
+        (WebCore::TimelineRecordFactory::createAnimationFrameData):
+        (WebCore::createQuad):
+        (WebCore::TimelineRecordFactory::createPaintData):
+        (WebCore::buildInspectorObject):
+        (WebCore::buildProfileInspectorObject):
+        (WebCore::TimelineRecordFactory::appendProfile):
+        * inspector/TimelineRecordFactory.h:
+        (WebCore::TimelineRecordFactory::createWebSocketCreateData):
+        (WebCore::TimelineRecordFactory::createGenericWebSocketData):
+        * inspector/WorkerInspectorController.cpp:
+        (WebCore::WorkerInspectorController::executionStopwatch):
+        * inspector/WorkerInspectorController.h:
+        * page/PageConsoleClient.cpp:
+        (WebCore::PageConsoleClient::addMessage):
+        (WebCore::PageConsoleClient::messageWithTypeAndLevel):
+        (WebCore::PageConsoleClient::count):
+        (WebCore::PageConsoleClient::profileEnd):
+        (WebCore::PageConsoleClient::timeEnd):
+        (WebCore::PageConsoleClient::timeStamp):
+        * page/PageConsoleClient.h:
+        * replay/ReplayController.cpp:
+        (WebCore::ReplayController::switchSession):
+        (WebCore::ReplayController::createSegment):
+        (WebCore::ReplayController::completeSegment):
+        (WebCore::ReplayController::loadSegmentAtIndex):
+        * replay/ReplayInputCreationMethods.cpp:
+        (WebCore::InitialNavigation::createFromPage):
+        * workers/SharedWorkerGlobalScope.cpp:
+        (WebCore::SharedWorkerGlobalScope::logExceptionToConsole):
+        * workers/SharedWorkerGlobalScope.h:
+        * workers/WorkerGlobalScope.cpp:
+        (WebCore::WorkerGlobalScope::logExceptionToConsole):
+        (WebCore::WorkerGlobalScope::addMessage):
+        (WebCore::WorkerGlobalScope::addMessageToWorkerConsole):
+        * workers/WorkerGlobalScope.h:
+
+2015-01-07  Anders Carlsson  <andersca@apple.com>
+
+        Annotate properties that start with "new" so they'll work under ARC
+        https://bugs.webkit.org/show_bug.cgi?id=140215
+        rdar://problem/19399153
+
+        Reviewed by Geoffrey Garen.
+
+        When encountering attributes that start with "new", also generate an additional getter method declaration that
+        has an NS_RETURNS_NOT_RETAINED annotation so ARC will know not to overrelease the property value.
+
+        * bindings/scripts/CodeGeneratorObjC.pm:
+        (GenerateHeader):
+
+2015-01-07  Beth Dakin  <bdakin@apple.com>
+
+        Adopt delegate callbacks so that standardQuickLookMenuItem does not obscure the 
+        link
+        https://bugs.webkit.org/show_bug.cgi?id=140206
+        -and corresponding-
+        rdar://problem/19300492
+
+        Reviewed by Tim Horton.
+
+        More delegate methods.
+        * platform/spi/mac/QuickLookMacSPI.h:
+
+2015-01-07  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] Negative raster shape height leads to crash
+        https://bugs.webkit.org/show_bug.cgi?id=136087
+
+        Reviewed by Zoltan Horvath.
+
+        This patch clamps the size of the margin box rect used to compute the
+        raster shape on a float so the width and height cannot be negative.
+        This makes it safe to use that rect to determine the size of the shape
+        intervals data structure.
+
+        Test: fast/shapes/shape-outside-floats/shape-outside-negative-height-crash.html
+
+        * rendering/shapes/Shape.cpp:
+        (WebCore::Shape::createRasterShape): Add an assert to be explict about
+            the precondition.
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::getShapeImageMarginRect): Clamp the marginRect's size.
+
+2015-01-06  Sam Weinig  <sam@webkit.org>
+
+        Modernize the SVGElement and MathMLElement factories
+        https://bugs.webkit.org/show_bug.cgi?id=140163
+
+        Reviewed by Dan Bernstein.
+
+        * dom/Element.cpp:
+        (WebCore::Element::create):
+        * dom/Element.h:
+        Change to return a Ref rather than a RefPtr.
+
+        * dom/make_names.pl:
+        (printConstructorSignature):
+        (printFactoryCppFile):
+        (printFactoryHeaderFile):
+        Change to unconditionally use Ref as the return type for element factories
+        now that HTML is not special cased.
+
+        * SVG and MathML element files elided *
+        Changed all SVG and MathML element's create functions to return a Ref.
+
+2015-01-07  David Kilzer  <ddkilzer@apple.com>
+
+        REGRESSION (r178028): iOS build broken due to unused parameters in GlyphPage::mayUseMixedFontDataWhenFilling()
+
+        Fixes the following build errors:
+
+            WebCore/platform/graphics/mac/GlyphPageMac.cpp:58:61: error: unused parameter 'buffer' [-Werror,-Wunused-parameter]
+            bool GlyphPage::mayUseMixedFontDataWhenFilling(const UChar* buffer, unsigned bufferLength, const SimpleFontData* fontData)
+                                                                        ^
+            WebCore/platform/graphics/mac/GlyphPageMac.cpp:58:78: error: unused parameter 'bufferLength' [-Werror,-Wunused-parameter]
+            bool GlyphPage::mayUseMixedFontDataWhenFilling(const UChar* buffer, unsigned bufferLength, const SimpleFontData* fontData)
+                                                                                         ^
+            WebCore/platform/graphics/mac/GlyphPageMac.cpp:58:114: error: unused parameter 'fontData' [-Werror,-Wunused-parameter]
+            bool GlyphPage::mayUseMixedFontDataWhenFilling(const UChar* buffer, unsigned bufferLength, const SimpleFontData* fontData)
+                                                                                                                             ^
+            3 errors generated.
+
+        * platform/graphics/mac/GlyphPageMac.cpp:
+        (WebCore::GlyphPage::mayUseMixedFontDataWhenFilling): Add
+        UNUSED_PARAM() as needed.
+
+2015-01-07  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] Content does not wrap with overflow: hidden and reference box different from margin-box
+        https://bugs.webkit.org/show_bug.cgi?id=138139
+
+        Reviewed by David Hyatt.
+
+        To determine how much an box needs to shink to avoid a float, the code
+        was only taking into account the first line of the box. This doesn't
+        work when the float has a shape, as it can make it seem like there is
+        more space on the line than there actually is. This patch changes the
+        calculations to take into account the entire height of the box that
+        needs to be shrunk, and thus computes the correct amount of space
+        available.
+
+        Test: fast/shapes/shape-outside-floats/shape-overflow-hidden-left-margin.html
+              fast/shapes/shape-outside-floats/shape-overflow-hidden-right-margin.html
+              fast/shapes/shape-outside-floats/shape-overflow-hidden.html
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::shrinkLogicalWidthToAvoidFloats):
+
+2015-01-07  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178039.
+        https://bugs.webkit.org/show_bug.cgi?id=140187
+
+        Breaks ObjC Inspector Protocol (Requested by JoePeck on
+        #webkit).
+
+        Reverted changeset:
+
+        "Web Inspector: purge PassRefPtr from Inspector code and use
+        Ref for typed and untyped protocol objects"
+        https://bugs.webkit.org/show_bug.cgi?id=140053
+        http://trac.webkit.org/changeset/178039
+
+2015-01-06  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: purge PassRefPtr from Inspector code and use Ref for typed and untyped protocol objects
+        https://bugs.webkit.org/show_bug.cgi?id=140053
+
+        Reviewed by Andreas Kling.
+
+        This patch replaces uses of PassRefPtr with uses of RefPtr&& and WTF::move() in code
+        related to Web Inspector. It also converts many uses of RefPtr to Ref where
+        references are always non-null. These two refactorings have been combined since
+        they tend to require similar changes to the code.
+
+        No new tests, no behavior changed.
+
+        * Modules/webdatabase/DatabaseManager.cpp:
+        (WebCore::DatabaseManager::openDatabase):
+        * dom/Document.cpp:
+        (WebCore::Document::logExceptionToConsole):
+        (WebCore::Document::addMessage):
+        * dom/Document.h:
+        * dom/ScriptExecutionContext.cpp:
+        (WebCore::ScriptExecutionContext::reportException):
+        * dom/ScriptExecutionContext.h:
+        * html/parser/XSSAuditorDelegate.cpp:
+        (WebCore::XSSAuditorDelegate::generateViolationReport):
+        * inspector/CommandLineAPIHost.cpp:
+        (WebCore::CommandLineAPIHost::inspectImpl):
+        * inspector/CommandLineAPIHost.h:
+        * inspector/InspectorApplicationCacheAgent.cpp:
+        (WebCore::InspectorApplicationCacheAgent::getFramesWithManifests):
+        (WebCore::InspectorApplicationCacheAgent::buildObjectForApplicationCache):
+        (WebCore::InspectorApplicationCacheAgent::buildArrayForApplicationCacheResources):
+        (WebCore::InspectorApplicationCacheAgent::buildObjectForApplicationCacheResource):
+        * inspector/InspectorApplicationCacheAgent.h:
+        * inspector/InspectorCSSAgent.cpp:
+        (WebCore::InspectorCSSAgent::getMatchedStylesForNode):
+        (WebCore::InspectorCSSAgent::getComputedStyleForNode):
+        (WebCore::InspectorCSSAgent::setStyleText):
+        (WebCore::InspectorCSSAgent::setPropertyText):
+        (WebCore::InspectorCSSAgent::toggleProperty):
+        (WebCore::InspectorCSSAgent::setRuleSelector):
+        (WebCore::InspectorCSSAgent::getSupportedCSSProperties):
+        (WebCore::InspectorCSSAgent::forcePseudoState):
+        (WebCore::InspectorCSSAgent::getNamedFlowCollection):
+        (WebCore::InspectorCSSAgent::detectOrigin):
+        (WebCore::InspectorCSSAgent::buildObjectForRule):
+        (WebCore::InspectorCSSAgent::buildArrayForMatchedRuleList):
+        (WebCore::InspectorCSSAgent::buildObjectForAttributesStyle):
+        (WebCore::InspectorCSSAgent::buildArrayForRegions):
+        (WebCore::InspectorCSSAgent::buildObjectForNamedFlow):
+        * inspector/InspectorCSSAgent.h:
+        * inspector/InspectorConsoleInstrumentation.h:
+        (WebCore::InspectorInstrumentation::addMessageToConsole):
+        (WebCore::InspectorInstrumentation::consoleCount):
+        (WebCore::InspectorInstrumentation::stopConsoleTiming):
+        (WebCore::InspectorInstrumentation::consoleTimeStamp):
+        (WebCore::InspectorInstrumentation::stopProfiling):
+        * inspector/InspectorController.cpp:
+        (WebCore::InspectorController::buildObjectForHighlightedNode):
+        (WebCore::InspectorController::executionStopwatch):
+        * inspector/InspectorController.h:
+        * inspector/InspectorDOMAgent.cpp:
+        (WebCore::parseColor):
+        (WebCore::parseConfigColor):
+        (WebCore::InspectorDOMAgent::pushNodePathToFrontend):
+        (WebCore::InspectorDOMAgent::performSearch):
+        (WebCore::InspectorDOMAgent::setInspectModeEnabled):
+        (WebCore::InspectorDOMAgent::highlightRect):
+        (WebCore::InspectorDOMAgent::highlightQuad):
+        (WebCore::InspectorDOMAgent::innerHighlightQuad):
+        (WebCore::InspectorDOMAgent::highlightNode):
+        (WebCore::InspectorDOMAgent::highlightFrame):
+        (WebCore::InspectorDOMAgent::buildObjectForNode):
+        (WebCore::InspectorDOMAgent::buildArrayForElementAttributes):
+        (WebCore::InspectorDOMAgent::buildArrayForContainerChildren):
+        (WebCore::InspectorDOMAgent::buildObjectForEventListener):
+        (WebCore::InspectorDOMAgent::processAccessibilityChildren):
+        (WebCore::InspectorDOMAgent::buildObjectForAccessibilityProperties):
+        (WebCore::InspectorDOMAgent::didCommitLoad):
+        (WebCore::InspectorDOMAgent::didInsertDOMNode):
+        (WebCore::InspectorDOMAgent::styleAttributeInvalidated):
+        (WebCore::InspectorDOMAgent::resolveNode):
+        * inspector/InspectorDOMAgent.h:
+        * inspector/InspectorDOMDebuggerAgent.cpp:
+        (WebCore::InspectorDOMDebuggerAgent::didInvalidateStyleAttr):
+        (WebCore::InspectorDOMDebuggerAgent::willInsertDOMNode):
+        (WebCore::InspectorDOMDebuggerAgent::willRemoveDOMNode):
+        (WebCore::InspectorDOMDebuggerAgent::willModifyDOMAttr):
+        (WebCore::InspectorDOMDebuggerAgent::descriptionForDOMEvent):
+        (WebCore::InspectorDOMDebuggerAgent::pauseOnNativeEventIfNeeded):
+        (WebCore::InspectorDOMDebuggerAgent::willSendXMLHttpRequest):
+        * inspector/InspectorDOMDebuggerAgent.h:
+        * inspector/InspectorDOMStorageAgent.cpp:
+        (WebCore::InspectorDOMStorageAgent::getDOMStorageItems):
+        (WebCore::InspectorDOMStorageAgent::setDOMStorageItem):
+        (WebCore::InspectorDOMStorageAgent::removeDOMStorageItem):
+        (WebCore::InspectorDOMStorageAgent::storageId):
+        (WebCore::InspectorDOMStorageAgent::findStorageArea):
+        * inspector/InspectorDOMStorageAgent.h:
+        * inspector/InspectorDatabaseAgent.cpp: Use Ref for all callbacks since they are
+        not nullable.
+        (WebCore::InspectorDatabaseAgent::executeSQL):
+        * inspector/InspectorDatabaseAgent.h:
+        * inspector/InspectorDatabaseInstrumentation.h:
+        (WebCore::InspectorInstrumentation::didOpenDatabase):
+        * inspector/InspectorDatabaseResource.cpp:
+        (WebCore::InspectorDatabaseResource::create):
+        (WebCore::InspectorDatabaseResource::InspectorDatabaseResource):
+        (WebCore::InspectorDatabaseResource::bind):
+        * inspector/InspectorDatabaseResource.h:
+        (WebCore::InspectorDatabaseResource::setDatabase):
+        * inspector/InspectorFrontendHost.h:
+        (WebCore::InspectorFrontendHost::create):
+        * inspector/InspectorIndexedDBAgent.cpp: Use Ref for all callbacks since they are
+        not nullable.
+        (WebCore::InspectorIndexedDBAgent::requestDatabaseNames):
+        (WebCore::InspectorIndexedDBAgent::requestDatabase):
+        (WebCore::InspectorIndexedDBAgent::requestData):
+        (WebCore::ClearObjectStoreListener::create):
+        (WebCore::ClearObjectStoreListener::ClearObjectStoreListener):
+        (WebCore::ClearObjectStore::create):
+        (WebCore::ClearObjectStore::ClearObjectStore):
+        (WebCore::InspectorIndexedDBAgent::clearObjectStore):
+        * inspector/InspectorIndexedDBAgent.h:
+        * inspector/InspectorInstrumentation.cpp:
+        (WebCore::InspectorInstrumentation::willLoadXHRImpl):
+        (WebCore::InspectorInstrumentation::addMessageToConsoleImpl):
+        (WebCore::InspectorInstrumentation::consoleCountImpl):
+        (WebCore::InspectorInstrumentation::stopConsoleTimingImpl):
+        (WebCore::InspectorInstrumentation::consoleTimeStampImpl):
+        (WebCore::InspectorInstrumentation::stopProfilingImpl):
+        (WebCore::InspectorInstrumentation::didOpenDatabaseImpl):
+        (WebCore::InspectorInstrumentation::sessionCreatedImpl):
+        (WebCore::InspectorInstrumentation::sessionLoadedImpl):
+        (WebCore::InspectorInstrumentation::sessionModifiedImpl):
+        (WebCore::InspectorInstrumentation::segmentCreatedImpl):
+        (WebCore::InspectorInstrumentation::segmentCompletedImpl):
+        (WebCore::InspectorInstrumentation::segmentLoadedImpl):
+        (WebCore::InspectorInstrumentation::willLoadXHRSynchronouslyImpl): Deleted.
+        (WebCore::InspectorInstrumentation::didLoadXHRSynchronouslyImpl): Deleted.
+        (WebCore::InspectorInstrumentation::startProfilingImpl): Deleted.
+        (WebCore::InspectorInstrumentation::didDispatchDOMStorageEventImpl): Deleted.
+        (WebCore::InspectorInstrumentation::willEvaluateWorkerScript): Deleted.
+        (WebCore::InspectorInstrumentation::captureStoppedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackStartedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackPausedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackHitPositionImpl): Deleted.
+        (WebCore::InspectorInstrumentation::playbackFinishedImpl): Deleted.
+        (WebCore::InspectorInstrumentation::networkStateChangedImpl): Deleted.
+        * inspector/InspectorInstrumentation.h:
+        (WebCore::InspectorInstrumentation::willLoadXHR):
+        (WebCore::InspectorInstrumentation::sessionCreated):
+        (WebCore::InspectorInstrumentation::sessionLoaded):
+        (WebCore::InspectorInstrumentation::sessionModified):
+        (WebCore::InspectorInstrumentation::segmentCreated):
+        (WebCore::InspectorInstrumentation::segmentCompleted):
+        (WebCore::InspectorInstrumentation::segmentLoaded):
+        (WebCore::InspectorInstrumentation::documentThreadableLoaderStartedLoadingForClient): Deleted.
+        (WebCore::InspectorInstrumentation::didSendWebSocketFrame): Deleted.
+        * inspector/InspectorLayerTreeAgent.cpp:
+        (WebCore::InspectorLayerTreeAgent::buildObjectForLayer):
+        (WebCore::InspectorLayerTreeAgent::buildObjectForIntRect):
+        (WebCore::InspectorLayerTreeAgent::reasonsForCompositingLayer):
+        * inspector/InspectorLayerTreeAgent.h:
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::buildObjectForPoint):
+        (WebCore::buildObjectForRect):
+        (WebCore::buildArrayForQuad):
+        (WebCore::buildObjectForHighlight):
+        (WebCore::buildObjectForRegionHighlight):
+        (WebCore::buildObjectForCSSRegionsHighlight):
+        (WebCore::buildObjectForSize):
+        (WebCore::buildObjectForCSSRegionContentClip):
+        (WebCore::InspectorOverlay::drawPaintRects):
+        (WebCore::buildObjectForRendererFragments):
+        (WebCore::buildObjectForShapeOutside):
+        (WebCore::buildObjectForElementInfo):
+        (WebCore::InspectorOverlay::buildObjectForHighlightedNode):
+        (WebCore::InspectorOverlay::reset):
+        (WebCore::InspectorOverlay::evaluateInOverlay):
+        * inspector/InspectorOverlay.h:
+        * inspector/InspectorPageAgent.cpp:
+        (WebCore::createXHRTextDecoder):
+        (WebCore::buildObjectForCookie):
+        (WebCore::buildArrayForCookies):
+        (WebCore::buildObjectForSearchResult):
+        (WebCore::InspectorPageAgent::buildObjectForFrame):
+        (WebCore::InspectorPageAgent::buildObjectForFrameTree):
+        * inspector/InspectorPageAgent.h:
+        * inspector/InspectorReplayAgent.cpp:
+        (WebCore::buildInspectorObjectForPosition):
+        (WebCore::buildInspectorObjectForInput):
+        (WebCore::buildInspectorObjectForSession):
+        (WebCore::buildInspectorObjectForSegment):
+        (WebCore::InspectorReplayAgent::replayToPosition):
+        (WebCore::InspectorReplayAgent::getSessionData):
+        (WebCore::InspectorReplayAgent::getSegmentData):
+        * inspector/InspectorReplayAgent.h:
+        * inspector/InspectorResourceAgent.cpp:
+        (WebCore::buildObjectForHeaders):
+        (WebCore::buildObjectForTiming):
+        (WebCore::buildObjectForResourceRequest):
+        (WebCore::buildObjectForResourceResponse):
+        (WebCore::buildObjectForCachedResource):
+        (WebCore::InspectorResourceAgent::willLoadXHR):
+        (WebCore::InspectorResourceAgent::buildInitiatorObject):
+        (WebCore::InspectorResourceAgent::willSendWebSocketHandshakeRequest):
+        (WebCore::InspectorResourceAgent::didReceiveWebSocketHandshakeResponse):
+        (WebCore::InspectorResourceAgent::didReceiveWebSocketFrame):
+        (WebCore::InspectorResourceAgent::didSendWebSocketFrame):
+        (WebCore::InspectorResourceAgent::setExtraHTTPHeaders):
+        (WebCore::InspectorResourceAgent::loadResource):
+        (WebCore::InspectorResourceAgent::documentThreadableLoaderStartedLoadingForClient): Deleted.
+        (WebCore::InspectorResourceAgent::didScheduleStyleRecalculation): Deleted.
+        (WebCore::InspectorResourceAgent::disable): Deleted.
+        (WebCore::InspectorResourceAgent::setCacheDisabled): Deleted.
+        * inspector/InspectorResourceAgent.h:
+        * inspector/InspectorStyleSheet.cpp:
+        (ParsedStyleSheet::ruleSourceDataAt):
+        (WebCore::buildSourceRangeObject):
+        (WebCore::buildMediaObject):
+        (WebCore::asCSSRuleList):
+        (WebCore::fillMediaListChain):
+        (WebCore::InspectorStyle::create):
+        (WebCore::InspectorStyle::InspectorStyle):
+        (WebCore::InspectorStyle::buildObjectForStyle):
+        (WebCore::InspectorStyle::buildArrayForComputedStyle):
+        (WebCore::InspectorStyle::styleWithProperties):
+        (WebCore::InspectorStyle::extractSourceData):
+        (WebCore::InspectorStyleSheet::create):
+        (WebCore::InspectorStyleSheet::InspectorStyleSheet):
+        (WebCore::InspectorStyleSheet::buildObjectForStyleSheet):
+        (WebCore::InspectorStyleSheet::buildObjectForStyleSheetInfo):
+        (WebCore::buildObjectForSelectorHelper):
+        (WebCore::selectorsFromSource):
+        (WebCore::InspectorStyleSheet::buildObjectForSelector):
+        (WebCore::InspectorStyleSheet::buildObjectForSelectorList):
+        (WebCore::InspectorStyleSheet::buildObjectForRule):
+        (WebCore::InspectorStyleSheet::buildObjectForStyle):
+        (WebCore::InspectorStyleSheet::toggleProperty):
+        (WebCore::InspectorStyleSheet::inspectorStyleForId):
+        (WebCore::InspectorStyleSheet::rememberInspectorStyle):
+        (WebCore::InspectorStyleSheet::buildArrayForRuleList):
+        (WebCore::InspectorStyleSheet::collectFlatRules):
+        (WebCore::InspectorStyleSheetForInlineStyle::create):
+        (WebCore::InspectorStyleSheetForInlineStyle::InspectorStyleSheetForInlineStyle):
+        (WebCore::InspectorStyleSheetForInlineStyle::inspectorStyleForId):
+        * inspector/InspectorStyleSheet.h:
+        (WebCore::InspectorCSSId::InspectorCSSId):
+        (WebCore::InspectorCSSId::asProtocolValue):
+        * inspector/InspectorTimelineAgent.cpp:
+        (WebCore::InspectorTimelineAgent::startFromConsole):
+        (WebCore::InspectorTimelineAgent::stopFromConsole):
+        (WebCore::InspectorTimelineAgent::addRecordToTimeline):
+        (WebCore::InspectorTimelineAgent::didCompleteRecordEntry):
+        (WebCore::InspectorTimelineAgent::appendRecord):
+        (WebCore::InspectorTimelineAgent::sendEvent):
+        (WebCore::InspectorTimelineAgent::createRecordEntry):
+        (WebCore::InspectorTimelineAgent::pushCurrentRecord):
+        * inspector/InspectorTimelineAgent.h:
+        * inspector/InspectorWorkerAgent.cpp:
+        (WebCore::InspectorWorkerAgent::sendMessageToWorker):
+        * inspector/InspectorWorkerAgent.h:
+        * inspector/NetworkResourcesData.cpp:
+        (WebCore::XHRReplayData::create):
+        (WebCore::XHRReplayData::XHRReplayData):
+        * inspector/NetworkResourcesData.h:
+        (WebCore::NetworkResourcesData::ResourceData::decoder):
+        (WebCore::NetworkResourcesData::ResourceData::setDecoder):
+        (WebCore::NetworkResourcesData::ResourceData::buffer):
+        (WebCore::NetworkResourcesData::ResourceData::setBuffer):
+        * inspector/TimelineRecordFactory.cpp:
+        (WebCore::TimelineRecordFactory::createGenericRecord):
+        (WebCore::TimelineRecordFactory::createBackgroundRecord):
+        (WebCore::TimelineRecordFactory::createGCEventData):
+        (WebCore::TimelineRecordFactory::createFunctionCallData):
+        (WebCore::TimelineRecordFactory::createConsoleProfileData):
+        (WebCore::TimelineRecordFactory::createProbeSampleData):
+        (WebCore::TimelineRecordFactory::createEventDispatchData):
+        (WebCore::TimelineRecordFactory::createGenericTimerData):
+        (WebCore::TimelineRecordFactory::createTimerInstallData):
+        (WebCore::TimelineRecordFactory::createXHRReadyStateChangeData):
+        (WebCore::TimelineRecordFactory::createXHRLoadData):
+        (WebCore::TimelineRecordFactory::createEvaluateScriptData):
+        (WebCore::TimelineRecordFactory::createTimeStampData):
+        (WebCore::TimelineRecordFactory::createScheduleResourceRequestData):
+        (WebCore::TimelineRecordFactory::createResourceSendRequestData):
+        (WebCore::TimelineRecordFactory::createResourceReceiveResponseData):
+        (WebCore::TimelineRecordFactory::createResourceFinishData):
+        (WebCore::TimelineRecordFactory::createReceiveResourceData):
+        (WebCore::TimelineRecordFactory::createLayoutData):
+        (WebCore::TimelineRecordFactory::createDecodeImageData):
+        (WebCore::TimelineRecordFactory::createResizeImageData):
+        (WebCore::TimelineRecordFactory::createMarkData):
+        (WebCore::TimelineRecordFactory::createParseHTMLData):
+        (WebCore::TimelineRecordFactory::createAnimationFrameData):
+        (WebCore::createQuad):
+        (WebCore::TimelineRecordFactory::createPaintData):
+        (WebCore::buildInspectorObject):
+        (WebCore::buildProfileInspectorObject):
+        (WebCore::TimelineRecordFactory::appendProfile):
+        * inspector/TimelineRecordFactory.h:
+        (WebCore::TimelineRecordFactory::createWebSocketCreateData):
+        (WebCore::TimelineRecordFactory::createGenericWebSocketData):
+        * inspector/WorkerInspectorController.cpp:
+        (WebCore::WorkerInspectorController::executionStopwatch):
+        * inspector/WorkerInspectorController.h:
+        * page/PageConsoleClient.cpp:
+        (WebCore::PageConsoleClient::addMessage):
+        (WebCore::PageConsoleClient::messageWithTypeAndLevel):
+        (WebCore::PageConsoleClient::count):
+        (WebCore::PageConsoleClient::profileEnd):
+        (WebCore::PageConsoleClient::timeEnd):
+        (WebCore::PageConsoleClient::timeStamp):
+        * page/PageConsoleClient.h:
+        * replay/ReplayController.cpp:
+        (WebCore::ReplayController::switchSession):
+        (WebCore::ReplayController::createSegment):
+        (WebCore::ReplayController::completeSegment):
+        (WebCore::ReplayController::loadSegmentAtIndex):
+        * replay/ReplayInputCreationMethods.cpp:
+        (WebCore::InitialNavigation::createFromPage):
+        * workers/SharedWorkerGlobalScope.cpp:
+        (WebCore::SharedWorkerGlobalScope::logExceptionToConsole):
+        * workers/SharedWorkerGlobalScope.h:
+        * workers/WorkerGlobalScope.cpp:
+        (WebCore::WorkerGlobalScope::logExceptionToConsole):
+        (WebCore::WorkerGlobalScope::addMessage):
+        (WebCore::WorkerGlobalScope::addMessageToWorkerConsole):
+        * workers/WorkerGlobalScope.h:
+
+2015-01-07  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Crash: com.apple.WebKit.WebContent at com.apple.WebCore: WebCore::AXObjectCache::clearTextMarkerNodesInUse + 149
+        https://bugs.webkit.org/show_bug.cgi?id=139929
+
+        Reviewed by Darin Adler.
+
+        When a frame is replaced, there were instances when it was not clearing its associated nodes in the accessibility text marker -> Node cache.
+        This caused dead Nodes to be left in the cache which would eventually be accessed when the cache was cleaned out at a later time.
+
+        To fix this we should be clearing out the cache in Document::prepareForDestruction, instead of Frame::disconnectOwnerElement.
+
+        While working on this, it also exposed a problem where when a frame goes away, it doesn't inform its parent to update its children,
+        which causes an ASSERT to be hit with this test as well.
+
+        Tests: accessibility/frame-disconnect-textmarker-cache-crash.html
+
+        * dom/Document.cpp:
+        (WebCore::Document::prepareForDestruction):
+        * page/Frame.cpp:
+        (WebCore::Frame::disconnectOwnerElement):
+            Remove cache management from here since it is superceded by code in Document::prepareForDestruction
+        * page/FrameView.cpp:
+        (WebCore::FrameView::removeFromAXObjectCache):
+
+2015-01-07  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed fix for the CoordinatedGraphics builds after r178034.
+
+        * platform/graphics/texmap/TextureMapperLayer.cpp:
+        (WebCore::TextureMapperLayer::setChildren): Add back the setChildren()
+        variant that receives a reference to the Vector of TextureMapperLayer
+        objects. This is still used by the CoordinatedGraphics code that still
+        constructs a separate Vector object each time the layer's children change.
+        * platform/graphics/texmap/TextureMapperLayer.h:
+
+2015-01-07  Zan Dobersek  <zdobersek@igalia.com>
+
+        [TexMap] Use std::sort instead of qsort in TextureMapperLayer::sortByZOrder()
+        https://bugs.webkit.org/show_bug.cgi?id=136212
+
+        Reviewed by Darin Adler.
+
+        Use std::sort() instead of qsort() to sort the TextureMapperLayer objects
+        by their z-order. A lambda expression can be used to compare the m_centerZ 
+        member variables of any two TextureMapperLayers.
+
+        * platform/graphics/texmap/TextureMapperLayer.cpp:
+        (WebCore::TextureMapperLayer::sortByZOrder):
+        (WebCore::TextureMapperLayer::compareGraphicsLayersZValue): Deleted.
+        * platform/graphics/texmap/TextureMapperLayer.h:
+
+2015-01-06  Zan Dobersek  <zdobersek@igalia.com>
+
+        [TexMap] Avoid constructing Vector when setting new children of TextureMapperLayer
+        https://bugs.webkit.org/show_bug.cgi?id=137265
+
+        Reviewed by Brent Fulgham.
+
+        Instead of constructing a vector object and populating it with TextureMapperLayers
+        every time the children of a GraphicsLayer change, the children vector is now passed
+        directly to TextureMapperLayer::setChildren(), which properly downcasts GraphicsLayers
+        and adds the new TextureMapperLayer children.
+
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+        (WebCore::GraphicsLayerTextureMapper::commitLayerChanges):
+        (WebCore::toTextureMapperLayerVector): Deleted.
+        * platform/graphics/texmap/TextureMapperLayer.cpp:
+        (WebCore::TextureMapperLayer::setChildren):
+        * platform/graphics/texmap/TextureMapperLayer.h:
+
+2015-01-07  Zan Dobersek  <zdobersek@igalia.com>
+
+        [TexMap] m_layer member in GraphicsLayerTextureMapper is always non-null
+        https://bugs.webkit.org/show_bug.cgi?id=140135
+
+        Reviewed by Darin Adler.
+
+        Since the TextureMapperLayer member in the GraphicsLayerTextureMapper class
+        is always non-null, we don't need to keep it in a std::unique_ptr<>.
+
+        GraphicsLayerTextureMapper::layer() now returns a reference to the m_layer member.
+
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+        (WebCore::GraphicsLayerTextureMapper::GraphicsLayerTextureMapper):
+        (WebCore::GraphicsLayerTextureMapper::flushCompositingStateForThisLayerOnly):
+        (WebCore::toTextureMapperLayerVector):
+        (WebCore::GraphicsLayerTextureMapper::commitLayerChanges):
+        (WebCore::GraphicsLayerTextureMapper::flushCompositingState):
+        (WebCore::GraphicsLayerTextureMapper::updateBackingStoreIfNeeded):
+        (WebCore::GraphicsLayerTextureMapper::setFilters):
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.h:
+
+2015-01-07  Byungseon Shin  <sun.shin@lge.com>
+
+        Fix Border-radius clipping issue on a composited descendants
+        https://bugs.webkit.org/show_bug.cgi?id=138551
+
+        Reviewed by Simon Fraser.
+
+        Fix clipping compositing descendants of an accelerated layer having
+        border radius and clip overflow issue by using layer corner-radius
+        or a CAShapeLayer mask on Mac, and setting up a separate mask layer
+        on the childContainmentLayer on other platforms.
+
+        This patch is extracted from following Blink revisions:
+        <http://src.chromium.org/viewvc/blink?view=revision&revision=162463>
+        <http://src.chromium.org/viewvc/blink?view=revision&revision=158258>
+        by <rosca@adobe.com>
+
+        Clip accelerated descendants of an accelerated layer having border radius and clip overflow.
+        Large canvas does not honor containing div's border radius.
+
+        and <http://src.chromium.org/viewvc/blink?view=revision&revision=160578>
+        by <junov@chromium.org>
+
+        Fix for CSS clip-path with accelerated 2D canvas.
+
+        * WebCore.exp.in:
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::dumpProperties):
+        * platform/graphics/GraphicsLayer.h:
+        (WebCore::GraphicsLayer::applyClippingBorder):
+        (WebCore::GraphicsLayer::clearClippingBorder):
+        (WebCore::GraphicsLayer::needsClippingMaskLayer):
+        * platform/graphics/GraphicsLayerClient.h:
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::applyClippingBorder):
+        (WebCore::GraphicsLayerCA::clearClippingBorder):
+        * platform/graphics/ca/GraphicsLayerCA.h:
+        * rendering/PaintPhase.h:
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::paintObject):
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::paintClippingMask):
+        * rendering/RenderBox.h:
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::paintLayerContents):
+        (WebCore::RenderLayer::paintChildClippingMaskForFragments):
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::~RenderLayerBacking):
+        (WebCore::RenderLayerBacking::destroyGraphicsLayers):
+        (WebCore::RenderLayerBacking::updateConfiguration):
+        (WebCore::RenderLayerBacking::updateGeometry):
+        (WebCore::RenderLayerBacking::updateChildClippingStrategy):
+        (WebCore::RenderLayerBacking::setContentsNeedDisplay):
+        (WebCore::RenderLayerBacking::setContentsNeedDisplayInRect):
+        (WebCore::RenderLayerBacking::paintIntoLayer):
+        (WebCore::RenderLayerBacking::paintContents):
+        (WebCore::RenderLayerBacking::backingStoreMemoryEstimate):
+        * rendering/RenderLayerBacking.h:
+
+2015-01-06  Antti Koivisto  <antti@apple.com>
+
+        Use HashMap instead of CFDictionary for composite font reference map
+        https://bugs.webkit.org/show_bug.cgi?id=140150
+
+        Reviewed by Geoff Garen.
+
+        Use WebKit types. Also use USE(APPKIT) consistently for this feature.
+
+        * platform/graphics/SimpleFontData.cpp:
+        (WebCore::SimpleFontData::DerivedFontData::~DerivedFontData):
+
+            The whole desctructor gets handled implicitly.
+
+        * platform/graphics/SimpleFontData.h:
+        * platform/graphics/mac/GlyphPageMac.cpp:
+        (WebCore::GlyphPage::mayUseMixedFontDataWhenFilling):
+        (WebCore::GlyphPage::fill):
+        * platform/graphics/mac/SimpleFontDataMac.mm:
+        (WebCore::SimpleFontData::compositeFontReferenceFontData):
+        (WebCore::SimpleFontData::getCompositeFontReferenceFontData): Deleted.
+
+2015-01-07  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        ASSERTION FAILED: rareData->m_flowThreadContainingBlock.value() == RenderBox::locateFlowThreadContainingBlock() in WebCore::RenderBlock::locateFlowThreadContainingBlock
+        https://bugs.webkit.org/show_bug.cgi?id=139390
+
+        Reviewed by Andrei Bucur.
+
+        When a block level element is inserted into an inline element, the inline element is split
+        in order to make sure that all the inline element children are properly wrapped inside
+        anonymous block elements. If the inline element is inside a pagination context, we have
+        to invalidate the cached flow thread containing block for the split inline element and its descendants.
+
+        Test: fast/multicol/newmulticol/block-split-inline-in-multicol.html
+
+        * rendering/RenderInline.cpp:
+        (WebCore::RenderInline::splitInlines):
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Move 'content' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140169
+
+        Reviewed by Sam Weinig.
+
+        Move 'content' CSS property to the new StyleBuilder.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyInitialContent):
+        (WebCore::StyleBuilderCustom::applyInheritContent):
+        (WebCore::StyleBuilderCustom::applyValueContent):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Move 'webkit-mask-image' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140168
+
+        Reviewed by Sam Weinig.
+
+        Move 'webkit-mask-image' CSS property to the new StyleBuilder.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertMaskImageOperations):
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyInitialWebkitMaskImage):
+        (WebCore::StyleBuilderCustom::applyInheritWebkitMaskImage):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        (WebCore::StyleResolver::createMaskImageOperations): Deleted.
+        * css/StyleResolver.h:
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Drop ResourceResponseBase::connectionID and connectionReused members
+        https://bugs.webkit.org/show_bug.cgi?id=140158
+
+        Reviewed by Sam Weinig.
+
+        Drop ResourceResponseBase::connectionID and connectionReused members.
+        Those were needed by the Chromium port but are no longer used.
+
+        * inspector/InspectorResourceAgent.cpp:
+        (WebCore::buildObjectForResourceResponse):
+        * page/PerformanceResourceTiming.cpp:
+        (WebCore::PerformanceResourceTiming::PerformanceResourceTiming):
+        (WebCore::PerformanceResourceTiming::connectStart):
+        (WebCore::PerformanceResourceTiming::connectEnd):
+        * page/PerformanceResourceTiming.h:
+        * page/PerformanceTiming.cpp:
+        (WebCore::PerformanceTiming::connectStart):
+        (WebCore::PerformanceTiming::connectEnd):
+        * platform/network/ResourceResponseBase.cpp:
+        (WebCore::ResourceResponseBase::ResourceResponseBase):
+        (WebCore::ResourceResponseBase::connectionReused): Deleted.
+        (WebCore::ResourceResponseBase::setConnectionReused): Deleted.
+        (WebCore::ResourceResponseBase::connectionID): Deleted.
+        (WebCore::ResourceResponseBase::setConnectionID): Deleted.
+        * platform/network/ResourceResponseBase.h:
+        (WebCore::ResourceResponseBase::encode):
+        (WebCore::ResourceResponseBase::decode):
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Move the 'alt' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140129
+
+        Reviewed by Darin Adler.
+
+        Move the 'alt' CSS property to the new StyleBuilder.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyValueAlt):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        * rendering/style/RenderStyle.h:
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Move '-webkit-text-size-adjust' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=140157
+
+        Reviewed by Darin Adler.
+
+        Move '-webkit-text-size-adjust' CSS property to the new StyleBuilder.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderCustom.h:
+        (WebCore::applyValueWebkitTextSizeAdjust):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+
+2015-01-06  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Masking][CSS Shapes] Large corner radii use with inset() clip-path are not properly constrained
+        https://bugs.webkit.org/show_bug.cgi?id=140127
+
+        Reviewed by Darin Adler.
+
+        Constrain large corner radii for inset() clip-path in the same way
+        that border-radii are constrained.
+
+        Test: fast/masking/clip-path-inset-large-radii.html
+
+        * rendering/style/BasicShapes.cpp:
+        (WebCore::BasicShapeInset::path): Add radii constraint. Also reformat
+            code a little to shut the style bot up.
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Only throttle DOM timers if they change CSS properties that cannot cause non-descendant elements to become visible
+        https://bugs.webkit.org/show_bug.cgi?id=140142
+
+        Reviewed by Darin Adler.
+
+        Only throttle DOM timers if they change CSS properties that cannot cause
+        non-descendant elements to become visible. For example, a DOM timer may
+        change the height of an element that is outside the viewport. However,
+        changing its height may causes elements inside the viewport to move. As
+        such, we should NOT throttle such DOM timer.
+
+        With this patch, we only mark a repeating timer as candidate for
+        throttling if it is updating one of the following CSS properties:
+        left, right, top, bottom, webkit-transform, opacity.
+
+        Test: fast/dom/timer-height-change-no-throttling.html
+
+        * bindings/js/JSCSSStyleDeclarationCustom.cpp:
+        (WebCore::propertyChangeMayRepaintNonDescendants):
+        (WebCore::JSCSSStyleDeclaration::putDelegate):
+        * page/DOMTimer.cpp:
+        (WebCore::DOMTimer::scriptDidCauseElementRepaint):
+        * page/DOMTimer.h:
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Add utility method on FrameView that resumes animated images and unthrottles DOM timers
+        https://bugs.webkit.org/show_bug.cgi?id=140151
+
+        Reviewed by Darin Adler.
+
+        Add utility method on FrameView that resumes animated images and
+        unthrottles DOM timers.
+
+        * dom/Document.cpp:
+        (WebCore::Document::recalcStyle):
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setFrameRect):
+        (WebCore::FrameView::viewportContentsChanged):
+        (WebCore::FrameView::scrollPositionChanged):
+        (WebCore::FrameView::performPostLayoutTasks):
+        * page/FrameView.h:
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::scrollTo):
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Do not attempt to revalidate cached main resource on back/forward navigation
+        https://bugs.webkit.org/show_bug.cgi?id=139263
+
+        Reviewed by Darin Adler.
+
+        Do not attempt to revalidate cached main resource on back/forward
+        navigation, as allowed by RFC2616 & newer RFC7234 which distinguish
+        history mechanisms and caches, stating:
+
+           The freshness model (Section 4.2) does not necessarily apply to
+           history mechanisms.  That is, a history mechanism can display a
+           previous representation even if it has expired.
+
+        Previously, we would bypass revalidation on back/forward navigation
+        only for sub-resources. This patch extends this policy to the main
+        resource as well.
+
+        This behavior is also consistent with IE10+ and Chrome. It makes it more
+        likely we return cached content to the user on back/forward navigation
+        and avoids making network requests in this case.
+
+        Test: http/tests/cache/history-navigation-no-resource-revalidation.html
+
+        * loader/cache/CacheValidation.cpp:
+        (WebCore::redirectChainAllowsReuse):
+        * loader/cache/CacheValidation.h:
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::redirectChainAllowsReuse):
+        Add a "ReuseExpiredRedirectionOrNot" flag argument because in the case
+        of an HistoryBuffer navigation, we don't mind reuse an expired
+        redirection. However, we still need to make sure that the redirection
+        is actually cached before reusing it.
+
+        * loader/cache/CachedResource.h:
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::determineRevalidationPolicy):
+        - Do the redirectChainAllowsReuse() check *before* checking if the cache
+          policy is CachePolicyHistoryBuffer. This is needed because
+          redirectChainAllowsReuse() will return false if the redirection is not
+          cached. Loading from the cache in this case will cause us to load the
+          wrong resource (the one before the redirection). This case is covered
+          by http/tests/navigation/redirect-on-reload-updates-history-item.html.
+        - Do not use the cached main resource if it has "cache-control: no-store",
+          even if it is a history navigation (cachePolicy is
+          CachePolicyHistoryBuffer). This maintains the previous behavior, and
+          some layout tests rely on this. We now have to be explicit about it
+          because cachePolicy() can now return CachePolicyHistoryBuffer for the
+          main resource (not just sub-resources). This difference in behavior
+          on history navigation for the main resource and sub-resources is not
+          great. However, I chose to maintain this pre-existing behavior in this
+          patch to do one behavior change at a time. We can harmonize this later.
+
+        Previously, the order was not an issue because the main resource was
+        always revalidated on back/forward navigation.
+
+        (WebCore::CachedResourceLoader::cachePolicy):
+        Return CachePolicyHistoryBuffer for the main resource in case of
+        history navigation, instead of CachePolicyVerify so that we don't
+        attempt to revalidate.
+
+2015-01-06  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177988.
+        https://bugs.webkit.org/show_bug.cgi?id=140159
+
+        mysteriously broke 2 tests (Requested by kling on #webkit).
+
+        Reverted changeset:
+
+        "Pack WebCore::RuleData better."
+        https://bugs.webkit.org/show_bug.cgi?id=140109
+        http://trac.webkit.org/changeset/177988
+
+2015-01-06  Chris Dumez  <cdumez@apple.com>
+
+        Setting '-webkit-filter' to 'brightness(calc(10% * 2))' does not work
+        https://bugs.webkit.org/show_bug.cgi?id=140149
+
+        Reviewed by Darin Adler.
+
+        Setting '-webkit-filter' to 'brightness(calc(10% * 2))' was not working
+        because the CSS parser did not handle calculated values inside
+        brightness(). This patch addresses the issue.
+
+        Test: fast/css/webkit-filter-calc.html
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseBuiltinFilterArguments):
+
+2015-01-06  Zalan Bujtas  <zalan@apple.com>
+
+        Assertion in RenderGeometryMap::mapToContainer with LayoutUnit overflow.
+        https://bugs.webkit.org/show_bug.cgi?id=108619
+        rdar://problem/19391214
+
+        Use only FloatQuad in RenderGeometryMap::mapToContainer.
+
+        Due to the difference in the internal representation of FloatRect and FloatQuad,
+        with certain float values, converting FloatRect to FloatQuad and back
+        to FloatRect could produce a slightly different rect.
+
+        Reviewed by Simon Fraser.
+
+        Test: fast/block/geometry-map-assertion-with-tall-content.html
+
+        * rendering/RenderGeometryMap.cpp:
+        (WebCore::RenderGeometryMap::mapToContainer):
+
+2015-01-06  Sam Weinig  <sam@webkit.org>
+
+        Allow MathML in dashboard compatibility mode
+        https://bugs.webkit.org/show_bug.cgi?id=140153
+
+        Reviewed by Alexey Proskuryakov.
+
+        In what seems like an accident due to the way we used to disable SVG in 
+        dashboard, MathML has been disable in dashboard compatibility mode. There
+        does not seem to be any reason to keep this accidental quirk.
+
+        Test: mathml/mathml-in-dashboard.html
+
+        * dom/make_names.pl:
+        (printFactoryCppFile):
+
+2015-01-06  Simon Fraser  <simon.fraser@apple.com>
+
+        Some composting reflections tests are broken
+        https://bugs.webkit.org/show_bug.cgi?id=139889
+
+        Reviewed by Tim Horton.
+        
+        When creating layer clones for reflections, we'd clobber the layer background
+        color via resetting the custom appearance on the clone. Fix by having
+        PlatformCALayerMac::updateCustomAppearance() only do work when the appearance changes.
+        
+        Some other drive-by nullptr changes, and include layer IDs in debug layer names.
+
+        Covered by existing pixel tests.
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::setName):
+        (WebCore::GraphicsLayerCA::swapFromOrToTiledLayer):
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        (PlatformCALayerMac::updateCustomAppearance):
+        (PlatformCALayerMac::tiledBacking):
+
 2015-01-04  Sam Weinig  <sam@webkit.org>
 
         Modernize the HTMLElement factory

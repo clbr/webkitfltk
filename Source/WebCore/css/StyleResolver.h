@@ -209,8 +209,8 @@ public:
     bool useSVGZoomRules();
     bool useSVGZoomRulesForLength();
 
-    static bool colorFromPrimitiveValueIsDerivedFromElement(CSSPrimitiveValue*);
-    Color colorFromPrimitiveValue(CSSPrimitiveValue*, bool forVisitedLink = false) const;
+    static bool colorFromPrimitiveValueIsDerivedFromElement(CSSPrimitiveValue&);
+    Color colorFromPrimitiveValue(CSSPrimitiveValue&, bool forVisitedLink = false) const;
 
     bool hasSelectorForId(const AtomicString&) const;
     bool hasSelectorForClass(const AtomicString&) const;
@@ -237,7 +237,6 @@ public:
     void clearCachedPropertiesAffectedByViewportUnits();
 
     bool createFilterOperations(CSSValue& inValue, FilterOperations& outOperations);
-    bool createMaskImageOperations(CSSValue* inValue, Vector<RefPtr<MaskImageOperation>>& outOperations);
     void loadPendingSVGDocuments();
 
     void loadPendingResources();
@@ -287,6 +286,8 @@ public:
     };
 
 private:
+    friend class StyleBuilderCustom;
+
     // This function fixes up the default font size if it detects that the current generic font family has changed. -dwh
     void checkForGenericFamilyChange(RenderStyle*, RenderStyle* parentStyle);
     void checkForZoomChange(RenderStyle*, RenderStyle* parentStyle);

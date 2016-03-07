@@ -295,8 +295,11 @@ void FrameView::reset()
 
 void FrameView::removeFromAXObjectCache()
 {
-    if (AXObjectCache* cache = axObjectCache())
+    if (AXObjectCache* cache = axObjectCache()) {
+        if (HTMLFrameOwnerElement* owner = frame().ownerElement())
+            cache->childrenChanged(owner->renderer());
         cache->remove(this);
+    }
 }
 
 void FrameView::resetScrollbars()
@@ -459,8 +462,7 @@ void FrameView::setFrameRect(const IntRect& newRect)
     if (frame().isMainFrame())
         frame().mainFrame().pageOverlayController().didChangeViewSize();
 
-    // The frame view was resized, check if we should resume animated images.
-    resumeVisibleImageAnimationsIncludingSubframes();
+    viewportContentsChanged();
 }
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
@@ -1752,6 +1754,14 @@ void FrameView::delayedScrollEventTimerFired()
     sendScrollEvent();
 }
 
+void FrameView::viewportContentsChanged()
+{
+    // When the viewport contents changes (scroll, resize, style recalc, layout, ...),
+    // check if we should resume animated images or unthrottle DOM timers.
+    resumeVisibleImageAnimationsIncludingSubframes();
+    updateThrottledDOMTimersState();
+}
+
 bool FrameView::fixedElementsLayoutRelativeToFrame() const
 {
     return frame().settings().fixedElementsLayoutRelativeToFrame();
@@ -2115,8 +2125,7 @@ void FrameView::scrollPositionChanged(const IntPoint& oldPosition, const IntPoin
             renderView->compositor().frameViewDidScroll();
     }
 
-    resumeVisibleImageAnimationsIncludingSubframes();
-    updateThrottledDOMTimersState();
+    viewportContentsChanged();
 }
 
 void FrameView::resumeVisibleImageAnimationsIncludingSubframes()
@@ -2938,10 +2947,7 @@ void FrameView::performPostLayoutTasks()
     scrollToAnchor();
 
     sendResizeEventIfNeeded();
-
-    // Check if we should unthrottle DOMTimers after layout as the position
-    // of Elements may have changed.
-    updateThrottledDOMTimersState();
+    viewportContentsChanged();
 }
 
 IntSize FrameView::sizeForResizeEvent() const

@@ -95,7 +95,7 @@
 color [Inherited, VisitedLinkColorSupport, NoDefaultColor]
 direction [Inherited, Custom=Value]
 display [Custom=Inherit|Value]
-font [Inherited, LegacyStyleBuilder]
+font [Inherited, Custom=All]
 font-family [Inherited, Custom=All]
 font-size [Inherited, Custom=All]
 font-style [Inherited, FontProperty, TypeName=FontItalic, NameForMethods=Italic]
@@ -110,7 +110,7 @@ text-rendering [Inherited, FontProperty, TypeName=TextRenderingMode, NameForMeth
 -webkit-text-orientation [Inherited, Custom=Value]
 -epub-text-orientation = -webkit-text-orientation
 #if defined(ENABLE_IOS_TEXT_AUTOSIZING) && ENABLE_IOS_TEXT_AUTOSIZING
--webkit-text-size-adjust [Inherited, LegacyStyleBuilder]
+-webkit-text-size-adjust [Inherited, Custom=Value]
 #endif
 -webkit-writing-mode [Inherited, Custom=Value]
 -epub-writing-mode = -webkit-writing-mode
@@ -197,7 +197,7 @@ caption-side [Inherited]
 clear
 clip [Custom=All]
 -webkit-clip-path [Converter=ClipPath]
-content [LegacyStyleBuilder]
+content [Custom=All]
 counter-increment [Custom=All]
 counter-reset [Custom=All]
 cursor [Inherited, Custom=All]
@@ -306,7 +306,7 @@ word-break [Inherited]
 word-spacing [Inherited, ConditionalConverter=WordSpacing, TypeName=Length]
 word-wrap [Inherited=EOverflowWrap, NameForMethods=OverflowWrap]
 z-index [TypeName=int, AutoFunctions]
-alt [LegacyStyleBuilder]
+alt [NameForMethods=ContentAltText, Custom=Value]
 -webkit-alt = alt
 -webkit-animation [LegacyStyleBuilder]
 -webkit-animation-delay [AnimationProperty, TypeName=double, NameForMethods=Delay]
@@ -482,7 +482,7 @@ justify-content
 -webkit-mask-box-image-width [Custom=All]
 -webkit-mask-clip [FillLayerProperty, TypeName=EFillBox, NameForMethods=Clip]
 -webkit-mask-composite [FillLayerProperty, TypeName=CompositeOperator, NameForMethods=Composite]
--webkit-mask-image [LegacyStyleBuilder]
+-webkit-mask-image [Custom=Initial|Inherit, ConditionalConverter=MaskImageOperations, TypeName=Vector<RefPtr<MaskImageOperation>>]
 -webkit-mask-origin [FillLayerProperty, TypeName=EFillBox, NameForMethods=Origin]
 -webkit-mask-position [LegacyStyleBuilder]
 -webkit-mask-position-x [FillLayerProperty, TypeName=Length, NameForMethods=XPosition]
@@ -579,14 +579,14 @@ orientation [LegacyStyleBuilder]
 user-zoom [LegacyStyleBuilder]
 #endif
 #if defined(ENABLE_TOUCH_EVENTS) && ENABLE_TOUCH_EVENTS
--webkit-tap-highlight-color [Inherited, LegacyStyleBuilder]
+-webkit-tap-highlight-color [Inherited, Converter=TapHighlightColor]
 #endif
 #if defined(ENABLE_DASHBOARD_SUPPORT) && ENABLE_DASHBOARD_SUPPORT
--webkit-dashboard-region [LegacyStyleBuilder]
+-webkit-dashboard-region [NameForMethods=DashboardRegions, Custom=Value]
 #endif
 #if defined(ENABLE_ACCELERATED_OVERFLOW_SCROLLING) && ENABLE_ACCELERATED_OVERFLOW_SCROLLING
--webkit-overflow-scrolling [Inherited, LegacyStyleBuilder]
+-webkit-overflow-scrolling [Inherited, NameForMethods=UseTouchOverflowScrolling, Converter=OverflowScrolling]
 #endif
 #if defined(WTF_PLATFORM_IOS) && WTF_PLATFORM_IOS
--webkit-touch-callout [Inherited, LegacyStyleBuilder]
+-webkit-touch-callout [Inherited, NameForMethods=TouchCalloutEnabled, Converter=TouchCallout]
 #endif

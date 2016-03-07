@@ -29,16 +29,23 @@
 
 #include "CSSAspectRatioValue.h"
 #include "CSSCursorImageValue.h"
+#include "CSSFontValue.h"
+#include "CSSGradientValue.h"
 #include "CSSShadowValue.h"
+#include "Counter.h"
+#include "CounterContent.h"
 #include "CursorList.h"
+#include "DashboardRegion.h"
 #include "ElementAncestorIterator.h"
 #include "Frame.h"
 #include "HTMLElement.h"
 #include "LocaleToScriptMapping.h"
 #include "Rect.h"
+#include "RenderTheme.h"
 #include "SVGElement.h"
 #include "StyleBuilderConverter.h"
 #include "StyleFontSizeFunctions.h"
+#include "StyleGeneratedImage.h"
 #include "StyleResolver.h"
 
 namespace WebCore {
@@ -59,9 +66,11 @@ public:
     DECLARE_PROPERTY_CUSTOM_HANDLERS(BoxShadow);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(Clip);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(ColumnGap);
+    DECLARE_PROPERTY_CUSTOM_HANDLERS(Content);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(CounterIncrement);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(CounterReset);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(Cursor);
+    DECLARE_PROPERTY_CUSTOM_HANDLERS(Font);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(FontFamily);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(FontSize);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(FontWeight);
@@ -90,6 +99,10 @@ public:
     DECLARE_PROPERTY_CUSTOM_HANDLERS(WebkitTextEmphasisStyle);
     DECLARE_PROPERTY_CUSTOM_HANDLERS(Zoom);
 
+    // Custom handling of initial + inherit value setting only.
+    static void applyInitialWebkitMaskImage(StyleResolver&) { }
+    static void applyInheritWebkitMaskImage(StyleResolver&) { }
+
     // Custom handling of inherit + value setting only.
     static void applyInheritDisplay(StyleResolver&);
     static void applyValueDisplay(StyleResolver&, CSSValue&);
@@ -100,10 +113,17 @@ public:
     static void applyValueLineHeight(StyleResolver&, CSSValue&);
 #endif
     static void applyValueVerticalAlign(StyleResolver&, CSSValue&);
+#if ENABLE(DASHBOARD_SUPPORT)
+    static void applyValueWebkitDashboardRegion(StyleResolver&, CSSValue&);
+#endif
     static void applyValueWebkitJustifySelf(StyleResolver&, CSSValue&);
     static void applyValueWebkitLocale(StyleResolver&, CSSValue&);
     static void applyValueWebkitTextOrientation(StyleResolver&, CSSValue&);
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    static void applyValueWebkitTextSizeAdjust(StyleResolver&, CSSValue&);
+#endif
     static void applyValueWebkitWritingMode(StyleResolver&, CSSValue&);
+    static void applyValueAlt(StyleResolver&, CSSValue&);
 
 private:
     static void resetEffectiveZoom(StyleResolver&);
@@ -272,6 +292,51 @@ inline void StyleBuilderCustom::applyValueVerticalAlign(StyleResolver& styleReso
         styleResolver.style()->setVerticalAlignLength(primitiveValue.convertToLength<FixedIntegerConversion | PercentConversion | CalculatedConversion>(styleResolver.state().cssToLengthConversionData()));
 }
 
+#if ENABLE(DASHBOARD_SUPPORT)
+static Length convertToIntLength(const CSSPrimitiveValue* primitiveValue, const CSSToLengthConversionData& conversionData)
+{
+    return primitiveValue ? primitiveValue->convertToLength<FixedIntegerConversion | PercentConversion | CalculatedConversion>(conversionData) : Length(Undefined);
+}
+
+inline void StyleBuilderCustom::applyValueWebkitDashboardRegion(StyleResolver& styleResolver, CSSValue& value)
+{
+    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+    if (primitiveValue.getValueID() == CSSValueNone) {
+        styleResolver.style()->setDashboardRegions(RenderStyle::noneDashboardRegions());
+        return;
+    }
+
+    DashboardRegion* region = primitiveValue.getDashboardRegionValue();
+    if (!region)
+        return;
+
+    DashboardRegion* first = region;
+    while (region) {
+        Length top = convertToIntLength(region->top(), styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
+        Length right = convertToIntLength(region->right(), styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
+        Length bottom = convertToIntLength(region->bottom(), styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
+        Length left = convertToIntLength(region->left(), styleResolver.state().cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
+
+        if (top.isUndefined())
+            top = Length();
+        if (right.isUndefined())
+            right = Length();
+        if (bottom.isUndefined())
+            bottom = Length();
+        if (left.isUndefined())
+            left = Length();
+
+        if (region->m_isCircle)
+            styleResolver.style()->setDashboardRegion(StyleDashboardRegion::Circle, region->m_label, top, right, bottom, left, region == first ? false : true);
+        else if (region->m_isRectangle)
+            styleResolver.style()->setDashboardRegion(StyleDashboardRegion::Rectangle, region->m_label, top, right, bottom, left, region == first ? false : true);
+        region = region->m_next.get();
+    }
+
+    styleResolver.document().setHasAnnotatedRegions(true);
+}
+#endif // ENABLE(DASHBOARD_SUPPORT)
+
 #if ENABLE(CSS_IMAGE_RESOLUTION)
 inline void StyleBuilderCustom::applyInheritImageResolution(StyleResolver& styleResolver)
 {
@@ -420,7 +485,9 @@ inline void StyleBuilderCustom::applyValueTextIndent(StyleResolver& styleResolve
 #endif
     }
 
-    ASSERT(!lengthOrPercentageValue.isUndefined());
+    if (lengthOrPercentageValue.isUndefined())
+        return;
+
     styleResolver.style()->setTextIndent(lengthOrPercentageValue);
 #if ENABLE(CSS3_TEXT)
     styleResolver.style()->setTextIndentLine(textIndentLineValue);
@@ -678,6 +745,21 @@ inline void StyleBuilderCustom::applyValueWebkitTextOrientation(StyleResolver& s
     styleResolver.setTextOrientation(downcast<CSSPrimitiveValue>(value));
 }
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+inline void StyleBuilderCustom::applyValueWebkitTextSizeAdjust(StyleResolver& styleResolver, CSSValue& value)
+{
+    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+    if (primitiveValue.getValueID() == CSSValueAuto)
+        styleResolver.style()->setTextSizeAdjust(TextSizeAdjustment(AutoTextSizeAdjustment));
+    else if (primitiveValue.getValueID() == CSSValueNone)
+        styleResolver.style()->setTextSizeAdjust(TextSizeAdjustment(NoTextSizeAdjustment));
+    else
+        styleResolver.style()->setTextSizeAdjust(TextSizeAdjustment(primitiveValue.getFloatValue()));
+
+    styleResolver.state().setFontDirty(true);
+}
+#endif
+
 inline void StyleBuilderCustom::applyValueWebkitJustifySelf(StyleResolver& styleResolver, CSSValue& value)
 {
     auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
@@ -712,7 +794,7 @@ inline void StyleBuilderCustom::applyTextOrBoxShadowValue(StyleResolver& styleRe
         ShadowStyle shadowStyle = shadowValue.style && shadowValue.style->getValueID() == CSSValueInset ? Inset : Normal;
         Color color;
         if (shadowValue.color)
-            color = styleResolver.colorFromPrimitiveValue(shadowValue.color.get());
+            color = styleResolver.colorFromPrimitiveValue(*shadowValue.color);
         else
             color = styleResolver.style()->color();
         auto shadowData = std::make_unique<ShadowData>(IntPoint(x, y), blur, spread, shadowStyle, id == CSSPropertyWebkitBoxShadow, color.isValid() ? color : Color::transparent);
@@ -1140,6 +1222,155 @@ inline void StyleBuilderCustom::applyValueColumnGap(StyleResolver& styleResolver
         styleResolver.style()->setColumnGap(StyleBuilderConverter::convertComputedLength<float>(styleResolver, value));
 }
 
+inline void StyleBuilderCustom::applyInitialFont(StyleResolver& styleResolver)
+{
+    Settings* settings = styleResolver.documentSettings();
+    ASSERT(settings); // If we're doing style resolution, this document should always be in a frame and thus have settings
+    styleResolver.initializeFontStyle(settings);
+}
+
+inline void StyleBuilderCustom::applyInheritFont(StyleResolver& styleResolver)
+{
+    FontDescription fontDescription = styleResolver.parentStyle()->fontDescription();
+    styleResolver.style()->setLineHeight(styleResolver.parentStyle()->specifiedLineHeight());
+    styleResolver.state().setLineHeightValue(0);
+    styleResolver.setFontDescription(fontDescription);
+}
+
+inline void StyleBuilderCustom::applyValueFont(StyleResolver& styleResolver, CSSValue& value)
+{
+    if (is<CSSPrimitiveValue>(value)) {
+        styleResolver.style()->setLineHeight(RenderStyle::initialLineHeight());
+        styleResolver.state().setLineHeightValue(0);
+
+        FontDescription fontDescription;
+        RenderTheme::defaultTheme()->systemFont(downcast<CSSPrimitiveValue>(value).getValueID(), fontDescription);
+
+        // Double-check and see if the theme did anything. If not, don't bother updating the font.
+        if (fontDescription.isAbsoluteSize()) {
+            // Make sure the rendering mode and printer font settings are updated.
+            Settings* settings = styleResolver.documentSettings();
+            ASSERT(settings); // If we're doing style resolution, this document should always be in a frame and thus have settings
+            fontDescription.setRenderingMode(settings->fontRenderingMode());
+            fontDescription.setUsePrinterFont(styleResolver.document().printing() || !settings->screenFontSubstitutionEnabled());
+
+            // Handle the zoom factor.
+            fontDescription.setComputedSize(Style::computedFontSizeFromSpecifiedSize(fontDescription.specifiedSize(), fontDescription.isAbsoluteSize(), styleResolver.useSVGZoomRules(), styleResolver.style(), styleResolver.document()));
+            styleResolver.setFontDescription(fontDescription);
+        }
+        return;
+    }
+    if (is<CSSFontValue>(value)) {
+        auto& font = downcast<CSSFontValue>(value);
+        if (!font.style || !font.variant || !font.weight || !font.size || !font.lineHeight || !font.family)
+            return;
+        styleResolver.applyProperty(CSSPropertyFontStyle, font.style.get());
+        styleResolver.applyProperty(CSSPropertyFontVariant, font.variant.get());
+        styleResolver.applyProperty(CSSPropertyFontWeight, font.weight.get());
+        // The previous properties can dirty our font but they don't try to read the font's
+        // properties back, which is safe. However if font-size is using the 'ex' unit, it will
+        // need query the dirtied font's x-height to get the computed size. To be safe in this
+        // case, let's just update the font now.
+        styleResolver.updateFont();
+        styleResolver.applyProperty(CSSPropertyFontSize, font.size.get());
+
+        styleResolver.state().setLineHeightValue(font.lineHeight.get());
+
+        styleResolver.applyProperty(CSSPropertyFontFamily, font.family.get());
+    }
+}
+
+inline void StyleBuilderCustom::applyInitialContent(StyleResolver& styleResolver)
+{
+    styleResolver.style()->clearContent();
+}
+
+inline void StyleBuilderCustom::applyInheritContent(StyleResolver&)
+{
+    // FIXME: In CSS3, it will be possible to inherit content. In CSS2 it is not. This
+    // note is a reminder that eventually "inherit" needs to be supported.
+}
+
+inline void StyleBuilderCustom::applyValueContent(StyleResolver& styleResolver, CSSValue& value)
+{
+    bool didSet = false;
+    for (auto& item : downcast<CSSValueList>(value)) {
+        if (is<CSSImageGeneratorValue>(item.get())) {
+            if (is<CSSGradientValue>(item.get()))
+                styleResolver.style()->setContent(StyleGeneratedImage::create(*downcast<CSSGradientValue>(item.get()).gradientWithStylesResolved(&styleResolver)), didSet);
+            else
+                styleResolver.style()->setContent(StyleGeneratedImage::create(downcast<CSSImageGeneratorValue>(item.get())), didSet);
+            didSet = true;
+#if ENABLE(CSS_IMAGE_SET)
+        } else if (is<CSSImageSetValue>(item.get())) {
+            styleResolver.style()->setContent(styleResolver.setOrPendingFromValue(CSSPropertyContent, downcast<CSSImageSetValue>(item.get())), didSet);
+            didSet = true;
+#endif
+        }
+
+        if (is<CSSImageValue>(item.get())) {
+            styleResolver.style()->setContent(styleResolver.cachedOrPendingFromValue(CSSPropertyContent, downcast<CSSImageValue>(item.get())), didSet);
+            didSet = true;
+            continue;
+        }
+
+        if (!is<CSSPrimitiveValue>(item.get()))
+            continue;
+
+        auto& contentValue = downcast<CSSPrimitiveValue>(item.get());
+        if (contentValue.isString()) {
+            styleResolver.style()->setContent(contentValue.getStringValue().impl(), didSet);
+            didSet = true;
+        } else if (contentValue.isAttr()) {
+            // FIXME: Can a namespace be specified for an attr(foo)?
+            if (styleResolver.style()->styleType() == NOPSEUDO)
+                styleResolver.style()->setUnique();
+            else
+                styleResolver.parentStyle()->setUnique();
+            QualifiedName attr(nullAtom, contentValue.getStringValue().impl(), nullAtom);
+            const AtomicString& value = styleResolver.element()->getAttribute(attr);
+            styleResolver.style()->setContent(value.isNull() ? emptyAtom : value.impl(), didSet);
+            didSet = true;
+            // Register the fact that the attribute value affects the style.
+            styleResolver.ruleSets().features().attributeCanonicalLocalNamesInRules.add(attr.localName().impl());
+            styleResolver.ruleSets().features().attributeLocalNamesInRules.add(attr.localName().impl());
+        } else if (contentValue.isCounter()) {
+            Counter* counterValue = contentValue.getCounterValue();
+            EListStyleType listStyleType = NoneListStyle;
+            CSSValueID listStyleIdent = counterValue->listStyleIdent();
+            if (listStyleIdent != CSSValueNone)
+                listStyleType = static_cast<EListStyleType>(listStyleIdent - CSSValueDisc);
+            auto counter = std::make_unique<CounterContent>(counterValue->identifier(), listStyleType, counterValue->separator());
+            styleResolver.style()->setContent(WTF::move(counter), didSet);
+            didSet = true;
+        } else {
+            switch (contentValue.getValueID()) {
+            case CSSValueOpenQuote:
+                styleResolver.style()->setContent(OPEN_QUOTE, didSet);
+                didSet = true;
+                break;
+            case CSSValueCloseQuote:
+                styleResolver.style()->setContent(CLOSE_QUOTE, didSet);
+                didSet = true;
+                break;
+            case CSSValueNoOpenQuote:
+                styleResolver.style()->setContent(NO_OPEN_QUOTE, didSet);
+                didSet = true;
+                break;
+            case CSSValueNoCloseQuote:
+                styleResolver.style()->setContent(NO_CLOSE_QUOTE, didSet);
+                didSet = true;
+                break;
+            default:
+                // normal and none do not have any effect.
+                break;
+            }
+        }
+    }
+    if (!didSet)
+        styleResolver.style()->clearContent();
+}
+
 inline void StyleBuilderCustom::applyInitialWebkitFontVariantLigatures(StyleResolver& styleResolver)
 {
     FontDescription fontDescription = styleResolver.fontDescription();
@@ -1425,6 +1656,29 @@ inline void StyleBuilderCustom::applyValueWebkitGridTemplateRows(StyleResolver& 
     styleResolver.style()->setOrderedNamedGridRowLines(orderedNamedGridLines);
 }
 #endif // ENABLE(CSS_GRID_LAYOUT)
+
+void StyleBuilderCustom::applyValueAlt(StyleResolver& styleResolver, CSSValue& value)
+{
+    auto& primitiveValue = downcast<CSSPrimitiveValue>(value);
+    if (primitiveValue.isString())
+        styleResolver.style()->setContentAltText(primitiveValue.getStringValue());
+    else if (primitiveValue.isAttr()) {
+        // FIXME: Can a namespace be specified for an attr(foo)?
+        if (styleResolver.style()->styleType() == NOPSEUDO)
+            styleResolver.style()->setUnique();
+        else
+            styleResolver.parentStyle()->setUnique();
+
+        QualifiedName attr(nullAtom, primitiveValue.getStringValue(), nullAtom);
+        const AtomicString& value = styleResolver.element()->getAttribute(attr);
+        styleResolver.style()->setContentAltText(value.isNull() ? emptyAtom : value);
+
+        // Register the fact that the attribute value affects the style.
+        styleResolver.ruleSets().features().attributeCanonicalLocalNamesInRules.add(attr.localName().impl());
+        styleResolver.ruleSets().features().attributeLocalNamesInRules.add(attr.localName().impl());
+    } else
+        styleResolver.style()->setContentAltText(emptyAtom);
+}
 
 } // namespace WebCore
 

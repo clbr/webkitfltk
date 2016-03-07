@@ -1527,13 +1527,6 @@ Vector<RefPtr<StyleRule>> StyleResolver::pseudoStyleRulesForElement(Element* ele
 
 // -------------------------------------------------------------------------------------
 
-#if ENABLE(DASHBOARD_SUPPORT)
-static Length convertToIntLength(const CSSPrimitiveValue* primitiveValue, const CSSToLengthConversionData& conversionData)
-{
-    return primitiveValue ? primitiveValue->convertToLength<FixedIntegerConversion | PercentConversion | CalculatedConversion>(conversionData) : Length(Undefined);
-}
-#endif
-
 static Length convertToFloatLength(const CSSPrimitiveValue* primitiveValue, const CSSToLengthConversionData& conversionData)
 {
     return primitiveValue ? primitiveValue->convertToLength<FixedFloatConversion | PercentConversion | CalculatedConversion>(conversionData) : Length(Undefined);
@@ -1981,188 +1974,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     // What follows is a list that maps the CSS properties into their corresponding front-end
     // RenderStyle values.
     switch (id) {
-    // lists
-    case CSSPropertyContent:
-        // list of string, uri, counter, attr, i
-        {
-            // FIXME: In CSS3, it will be possible to inherit content. In CSS2 it is not. This
-            // note is a reminder that eventually "inherit" needs to be supported.
-
-            if (isInitial) {
-                state.style()->clearContent();
-                return;
-            }
-
-            if (!is<CSSValueList>(*value))
-                return;
-
-            bool didSet = false;
-            for (auto& item : downcast<CSSValueList>(*value)) {
-                if (is<CSSImageGeneratorValue>(item.get())) {
-                    if (is<CSSGradientValue>(item.get()))
-                        state.style()->setContent(StyleGeneratedImage::create(*downcast<CSSGradientValue>(item.get()).gradientWithStylesResolved(this)), didSet);
-                    else
-                        state.style()->setContent(StyleGeneratedImage::create(downcast<CSSImageGeneratorValue>(item.get())), didSet);
-                    didSet = true;
-#if ENABLE(CSS_IMAGE_SET)
-                } else if (is<CSSImageSetValue>(item.get())) {
-                    state.style()->setContent(setOrPendingFromValue(CSSPropertyContent, downcast<CSSImageSetValue>(item.get())), didSet);
-                    didSet = true;
-#endif
-                }
-
-                if (is<CSSImageValue>(item.get())) {
-                    state.style()->setContent(cachedOrPendingFromValue(CSSPropertyContent, downcast<CSSImageValue>(item.get())), didSet);
-                    didSet = true;
-                    continue;
-                }
-
-                if (!is<CSSPrimitiveValue>(item.get()))
-                    continue;
-
-                auto& contentValue = downcast<CSSPrimitiveValue>(item.get());
-
-                if (contentValue.isString()) {
-                    state.style()->setContent(contentValue.getStringValue().impl(), didSet);
-                    didSet = true;
-                } else if (contentValue.isAttr()) {
-                    // FIXME: Can a namespace be specified for an attr(foo)?
-                    if (state.style()->styleType() == NOPSEUDO)
-                        state.style()->setUnique();
-                    else
-                        state.parentStyle()->setUnique();
-                    QualifiedName attr(nullAtom, contentValue.getStringValue().impl(), nullAtom);
-                    const AtomicString& value = state.element()->getAttribute(attr);
-                    state.style()->setContent(value.isNull() ? emptyAtom : value.impl(), didSet);
-                    didSet = true;
-                    // Register the fact that the attribute value affects the style.
-                    m_ruleSets.features().attributeCanonicalLocalNamesInRules.add(attr.localName().impl());
-                    m_ruleSets.features().attributeLocalNamesInRules.add(attr.localName().impl());
-                } else if (contentValue.isCounter()) {
-                    Counter* counterValue = contentValue.getCounterValue();
-                    EListStyleType listStyleType = NoneListStyle;
-                    CSSValueID listStyleIdent = counterValue->listStyleIdent();
-                    if (listStyleIdent != CSSValueNone)
-                        listStyleType = static_cast<EListStyleType>(listStyleIdent - CSSValueDisc);
-                    auto counter = std::make_unique<CounterContent>(counterValue->identifier(), listStyleType, counterValue->separator());
-                    state.style()->setContent(WTF::move(counter), didSet);
-                    didSet = true;
-                } else {
-                    switch (contentValue.getValueID()) {
-                    case CSSValueOpenQuote:
-                        state.style()->setContent(OPEN_QUOTE, didSet);
-                        didSet = true;
-                        break;
-                    case CSSValueCloseQuote:
-                        state.style()->setContent(CLOSE_QUOTE, didSet);
-                        didSet = true;
-                        break;
-                    case CSSValueNoOpenQuote:
-                        state.style()->setContent(NO_OPEN_QUOTE, didSet);
-                        didSet = true;
-                        break;
-                    case CSSValueNoCloseQuote:
-                        state.style()->setContent(NO_CLOSE_QUOTE, didSet);
-                        didSet = true;
-                        break;
-                    default:
-                        // normal and none do not have any effect.
-                        { }
-                    }
-                }
-            }
-            if (!didSet)
-                state.style()->clearContent();
-            return;
-        }
-    case CSSPropertyAlt:
-        {
-            if (isInherit) {
-                state.style()->setContentAltText(state.parentStyle()->contentAltText());
-                return;
-            }
-            if (isInitial) {
-                state.style()->setContentAltText(emptyAtom);
-                return;
-            }
-            ASSERT(primitiveValue);
-            bool didSet = false;
-            if (primitiveValue->isString()) {
-                state.style()->setContentAltText(primitiveValue->getStringValue().impl());
-                didSet = true;
-            } else if (primitiveValue->isAttr()) {
-                // FIXME: Can a namespace be specified for an attr(foo)?
-                if (state.style()->styleType() == NOPSEUDO)
-                    state.style()->setUnique();
-                else
-                    state.parentStyle()->setUnique();
-                QualifiedName attr(nullAtom, primitiveValue->getStringValue().impl(), nullAtom);
-                const AtomicString& value = state.element()->getAttribute(attr);
-                state.style()->setContentAltText(value.isNull() ? emptyAtom : value.impl());
-                didSet = true;
-                // Register the fact that the attribute value affects the style.
-                m_ruleSets.features().attributeCanonicalLocalNamesInRules.add(attr.localName().impl());
-                m_ruleSets.features().attributeLocalNamesInRules.add(attr.localName().impl());
-            }
-            if (!didSet)
-                state.style()->setContentAltText(emptyAtom);
-            return;
-        }
     // Shorthand properties.
-    case CSSPropertyFont:
-        if (isInherit) {
-            FontDescription fontDescription = state.parentStyle()->fontDescription();
-            state.style()->setLineHeight(state.parentStyle()->specifiedLineHeight());
-            state.setLineHeightValue(0);
-            setFontDescription(fontDescription);
-        } else if (isInitial) {
-            Settings* settings = documentSettings();
-            ASSERT(settings); // If we're doing style resolution, this document should always be in a frame and thus have settings
-            if (!settings)
-                return;
-            initializeFontStyle(settings);
-        } else if (primitiveValue) {
-            state.style()->setLineHeight(RenderStyle::initialLineHeight());
-            state.setLineHeightValue(0);
-
-            FontDescription fontDescription;
-            RenderTheme::defaultTheme()->systemFont(primitiveValue->getValueID(), fontDescription);
-
-            // Double-check and see if the theme did anything. If not, don't bother updating the font.
-            if (fontDescription.isAbsoluteSize()) {
-                // Make sure the rendering mode and printer font settings are updated.
-                Settings* settings = documentSettings();
-                ASSERT(settings); // If we're doing style resolution, this document should always be in a frame and thus have settings
-                if (!settings)
-                    return;
-                fontDescription.setRenderingMode(settings->fontRenderingMode());
-                fontDescription.setUsePrinterFont(document().printing() || !settings->screenFontSubstitutionEnabled());
-
-                // Handle the zoom factor.
-                fontDescription.setComputedSize(Style::computedFontSizeFromSpecifiedSize(fontDescription.specifiedSize(), fontDescription.isAbsoluteSize(), useSVGZoomRules(), state.style(), document()));
-                setFontDescription(fontDescription);
-            }
-        } else if (is<CSSFontValue>(*value)) {
-            CSSFontValue& font = downcast<CSSFontValue>(*value);
-            if (!font.style || !font.variant || !font.weight
-                || !font.size || !font.lineHeight || !font.family)
-                return;
-            applyProperty(CSSPropertyFontStyle, font.style.get());
-            applyProperty(CSSPropertyFontVariant, font.variant.get());
-            applyProperty(CSSPropertyFontWeight, font.weight.get());
-            // The previous properties can dirty our font but they don't try to read the font's
-            // properties back, which is safe. However if font-size is using the 'ex' unit, it will
-            // need query the dirtied font's x-height to get the computed size. To be safe in this
-            // case, let's just update the font now.
-            updateFont();
-            applyProperty(CSSPropertyFontSize, font.size.get());
-
-            state.setLineHeightValue(font.lineHeight.get());
-
-            applyProperty(CSSPropertyFontFamily, font.family.get());
-        }
-        return;
-
     case CSSPropertyAnimation:
     case CSSPropertyBackground:
     case CSSPropertyBackgroundPosition:
@@ -2219,97 +2031,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         return;
     case CSSPropertyUnicodeRange: // Only used in @font-face rules.
         return;
-#if ENABLE(IOS_TEXT_AUTOSIZING)
-    case CSSPropertyWebkitTextSizeAdjust: {
-        HANDLE_INHERIT_AND_INITIAL(textSizeAdjust, TextSizeAdjust)
-        if (!primitiveValue)
-            return;
-
-        if (primitiveValue->getValueID() == CSSValueAuto)
-            state.style()->setTextSizeAdjust(TextSizeAdjustment(AutoTextSizeAdjustment));
-        else if (primitiveValue->getValueID() == CSSValueNone)
-            state.style()->setTextSizeAdjust(TextSizeAdjustment(NoTextSizeAdjustment));
-        else
-            state.style()->setTextSizeAdjust(TextSizeAdjustment(primitiveValue->getFloatValue()));
-
-        state.setFontDirty(true);
-        return;
-    }
-#endif
-#if ENABLE(DASHBOARD_SUPPORT)
-    case CSSPropertyWebkitDashboardRegion:
-    {
-        HANDLE_INHERIT_AND_INITIAL(dashboardRegions, DashboardRegions)
-        if (!primitiveValue)
-            return;
-
-        if (primitiveValue->getValueID() == CSSValueNone) {
-            state.style()->setDashboardRegions(RenderStyle::noneDashboardRegions());
-            return;
-        }
-
-        DashboardRegion* region = primitiveValue->getDashboardRegionValue();
-        if (!region)
-            return;
-
-        DashboardRegion* first = region;
-        while (region) {
-            Length top = convertToIntLength(region->top(), state.cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
-            Length right = convertToIntLength(region->right(), state.cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
-            Length bottom = convertToIntLength(region->bottom(), state.cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
-            Length left = convertToIntLength(region->left(), state.cssToLengthConversionData().copyWithAdjustedZoom(1.0f));
-
-            if (top.isUndefined())
-                top = Length();
-            if (right.isUndefined())
-                right = Length();
-            if (bottom.isUndefined())
-                bottom = Length();
-            if (left.isUndefined())
-                left = Length();
-
-            if (region->m_isCircle)
-                state.style()->setDashboardRegion(StyleDashboardRegion::Circle, region->m_label, top, right, bottom, left, region == first ? false : true);
-            else if (region->m_isRectangle)
-                state.style()->setDashboardRegion(StyleDashboardRegion::Rectangle, region->m_label, top, right, bottom, left, region == first ? false : true);
-            region = region->m_next.get();
-        }
-
-        state.document().setHasAnnotatedRegions(true);
-
-        return;
-    }
-#endif
-#if PLATFORM(IOS)
-    case CSSPropertyWebkitTouchCallout: {
-        HANDLE_INHERIT_AND_INITIAL(touchCalloutEnabled, TouchCalloutEnabled);
-        if (!primitiveValue)
-            break;
-
-        state.style()->setTouchCalloutEnabled(primitiveValue->getStringValue().lower() != "none");
-        return;
-    }
-#endif
-#if ENABLE(TOUCH_EVENTS)
-    case CSSPropertyWebkitTapHighlightColor: {
-        HANDLE_INHERIT_AND_INITIAL(tapHighlightColor, TapHighlightColor);
-        if (!primitiveValue)
-            break;
-
-        Color col = colorFromPrimitiveValue(primitiveValue);
-        state.style()->setTapHighlightColor(col);
-        return;
-    }
-#endif
-#if ENABLE(ACCELERATED_OVERFLOW_SCROLLING)
-    case CSSPropertyWebkitOverflowScrolling: {
-        HANDLE_INHERIT_AND_INITIAL(useTouchOverflowScrolling, UseTouchOverflowScrolling);
-        if (!primitiveValue)
-            break;
-        state.style()->setUseTouchOverflowScrolling(primitiveValue->getValueID() == CSSValueTouch);
-        return;
-    }
-#endif
     case CSSPropertyInvalid:
         return;
     case CSSPropertyFontStretch:
@@ -2358,16 +2079,9 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         setFontDescription(fontDescription);
         return;
     }
-
-    case CSSPropertyWebkitMaskImage: {
-        Vector<RefPtr<MaskImageOperation>> operations;
-        if (createMaskImageOperations(value, operations))
-            state.style()->setMaskImage(operations);
-
-        return;
-    }
     
     // These properties are aliased and StyleBuilder already applied the property on the prefixed version.
+    case CSSPropertyWebkitMaskImage:
     case CSSPropertyAnimationDelay:
     case CSSPropertyAnimationDirection:
     case CSSPropertyAnimationDuration:
@@ -2421,6 +2135,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyClear:
     case CSSPropertyClip:
     case CSSPropertyColor:
+    case CSSPropertyContent:
     case CSSPropertyCounterIncrement:
     case CSSPropertyCounterReset:
     case CSSPropertyCursor:
@@ -2428,6 +2143,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyDisplay:
     case CSSPropertyEmptyCells:
     case CSSPropertyFloat:
+    case CSSPropertyFont:
     case CSSPropertyFontSize:
     case CSSPropertyFontStyle:
     case CSSPropertyFontVariant:
@@ -2439,6 +2155,12 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyImageRendering:
 #if ENABLE(CSS_IMAGE_RESOLUTION)
     case CSSPropertyImageResolution:
+#endif
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    case CSSPropertyWebkitTextSizeAdjust:
+#endif
+#if ENABLE(DASHBOARD_SUPPORT)
+    case CSSPropertyWebkitDashboardRegion:
 #endif
     case CSSPropertyLeft:
     case CSSPropertyLetterSpacing:
@@ -2542,6 +2264,15 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyColumnWidth:
 #if ENABLE(CURSOR_VISIBILITY)
     case CSSPropertyWebkitCursorVisibility:
+#endif
+#if PLATFORM(IOS)
+    case CSSPropertyWebkitTouchCallout:
+#endif
+#if ENABLE(TOUCH_EVENTS)
+    case CSSPropertyWebkitTapHighlightColor:
+#endif
+#if ENABLE(ACCELERATED_OVERFLOW_SCROLLING)
+    case CSSPropertyWebkitOverflowScrolling:
 #endif
     case CSSPropertyAlignContent:
     case CSSPropertyAlignItems:
@@ -2676,6 +2407,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
 #if ENABLE(FILTERS_LEVEL_2)
     case CSSPropertyWebkitBackdropFilter:
 #endif
+    case CSSPropertyAlt:
         ASSERT_NOT_REACHED();
         return;
     default:
@@ -2864,9 +2596,9 @@ static Color colorForCSSValue(CSSValueID cssValueId)
     return RenderTheme::defaultTheme()->systemColor(cssValueId);
 }
 
-bool StyleResolver::colorFromPrimitiveValueIsDerivedFromElement(CSSPrimitiveValue* value)
+bool StyleResolver::colorFromPrimitiveValueIsDerivedFromElement(CSSPrimitiveValue& value)
 {
-    int ident = value->getValueID();
+    int ident = value.getValueID();
     switch (ident) {
     case CSSValueWebkitText:
     case CSSValueWebkitLink:
@@ -2878,13 +2610,13 @@ bool StyleResolver::colorFromPrimitiveValueIsDerivedFromElement(CSSPrimitiveValu
     }
 }
 
-Color StyleResolver::colorFromPrimitiveValue(CSSPrimitiveValue* value, bool forVisitedLink) const
+Color StyleResolver::colorFromPrimitiveValue(CSSPrimitiveValue& value, bool forVisitedLink) const
 {
-    if (value->isRGBColor())
-        return Color(value->getRGBA32Value());
+    if (value.isRGBColor())
+        return Color(value.getRGBA32Value());
 
     const State& state = m_state;
-    CSSValueID ident = value->getValueID();
+    CSSValueID ident = value.getValueID();
     switch (ident) {
     case 0:
         return Color();
@@ -3103,7 +2835,7 @@ bool StyleResolver::createFilterOperations(CSSValue& inValue, FilterOperations& 
             int blur = item.blur ? item.blur->computeLength<int>(state.cssToLengthConversionData()) : 0;
             Color color;
             if (item.color)
-                color = colorFromPrimitiveValue(item.color.get());
+                color = colorFromPrimitiveValue(*item.color);
 
             operations.operations().append(DropShadowFilterOperation::create(location, blur, color.isValid() ? color : Color::transparent));
             break;
@@ -3116,63 +2848,6 @@ bool StyleResolver::createFilterOperations(CSSValue& inValue, FilterOperations& 
     }
 
     outOperations = operations;
-    return true;
-}
-
-bool StyleResolver::createMaskImageOperations(CSSValue* inValue, Vector<RefPtr<MaskImageOperation>>& outOperations)
-{
-    ASSERT(outOperations.isEmpty());
-    if (!inValue)
-        return false;
-
-    RefPtr<WebKitCSSResourceValue> maskImageValue;
-    RefPtr<CSSValueList> maskImagesList;
-    CSSValueList::iterator listIterator;
-    if (is<WebKitCSSResourceValue>(*inValue))
-        maskImageValue = downcast<WebKitCSSResourceValue>(inValue);
-    else if (is<CSSValueList>(*inValue)) {
-        maskImagesList = downcast<CSSValueList>(inValue);
-        listIterator = maskImagesList->begin();
-        if (listIterator != maskImagesList->end())
-            maskImageValue = &downcast<WebKitCSSResourceValue>(listIterator->get());
-    }
-
-    while (maskImageValue.get()) {
-        RefPtr<CSSValue> maskInnerValue = maskImageValue->innerValue();
-        RefPtr<MaskImageOperation> newMaskImage;
-
-        if (is<CSSPrimitiveValue>(maskInnerValue.get())) {
-            RefPtr<CSSPrimitiveValue> primitiveValue = downcast<CSSPrimitiveValue>(maskInnerValue.get());
-            if (primitiveValue->isValueID() && primitiveValue->getValueID() == CSSValueNone)
-                newMaskImage = MaskImageOperation::create();
-            else {
-                String cssUrl = primitiveValue->getStringValue();
-                URL url = m_state.document().completeURL(cssUrl);
-                
-                bool isExternalDocument = (SVGURIReference::isExternalURIReference(cssUrl, m_state.document()));
-                newMaskImage = MaskImageOperation::create(maskImageValue, cssUrl, url.fragmentIdentifier(), isExternalDocument, m_state.document().cachedResourceLoader());
-                if (isExternalDocument)
-                    m_state.maskImagesWithPendingSVGDocuments().append(newMaskImage);
-            }
-        } else {
-            RefPtr<StyleImage> image = styleImage(CSSPropertyWebkitMaskImage, *maskInnerValue);
-            if (image.get())
-                newMaskImage = MaskImageOperation::create(image);
-        }
-
-        // If we didn't get a valid value, use None so we keep the correct number and order of masks.
-        if (!newMaskImage.get())
-            newMaskImage = MaskImageOperation::create();
-
-        outOperations.append(newMaskImage);
-
-        if (maskImagesList.get()) {
-            listIterator++;
-            maskImageValue = (listIterator != maskImagesList->end() ? &downcast<WebKitCSSResourceValue>(listIterator->get()) : nullptr);
-        } else
-            maskImageValue = nullptr;
-    }
-
     return true;
 }
 
