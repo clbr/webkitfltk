@@ -1,3 +1,650 @@
+2014-12-02  Chris Dumez  <cdumez@apple.com>
+
+        Move 'font-family' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139172
+
+        Reviewed by Antti Koivisto.
+
+        Move 'font-family' CSS property to the new StyleBuilder by using
+        custom code.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyFontFamily::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyFontFamily::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyFontFamily::applyValue): Deleted.
+        (WebCore::ApplyPropertyFontFamily::createHandler): Deleted.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyInitialFontFamily):
+        (WebCore::StyleBuilderCustom::applyInheritFontFamily):
+        (WebCore::StyleBuilderCustom::applyValueFontFamily):
+
+2014-12-02  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
+
+        Fix class was previously declared as a struct warnings
+        https://bugs.webkit.org/show_bug.cgi?id=139131
+
+        Reviewed by Csaba Osztrogonác.
+
+        No new tests needed.
+
+        * platform/graphics/texmap/TextureMapperGL.h:
+
+2014-12-02  Sylvain Galineau  <galineau@adobe.com>
+
+        Missing support for innerHTML on SVGElement
+        https://bugs.webkit.org/show_bug.cgi?id=136903
+
+        Reviewed by Dean Jackson.
+
+        Two parts to this patch:
+        1. Move innerHTML/outerHTML to Element so SVG elements can inherit them, per https://dvcs.w3.org/hg/innerhtml/raw-file/tip/index.html#innerhtml
+        2. Make sure fragment insertion is processed relative to the proper node, per http://www.whatwg.org/specs/web-apps/current-work/#adjusted-current-node
+
+        The latter part was ported over from Blink. 
+
+        Test: svg/in-html/svg-inner-html.html
+
+        * bindings/objc/PublicDOMInterfaces.h: Move innerHTML/outerHTML to Element.
+        * dom/Element.cpp:
+        (WebCore::Element::mergeWithNextTextNode): Helper used by Element::innerHTML/outerHTML as well as HTMLElement::innerText/outerText; moved to Element as protected static.
+        (WebCore::Element::innerHTML): Moved from HTMLElement.
+        (WebCore::Element::outerHTML): Moved from HTMLElement.
+        (WebCore::Element::setOuterHTML): Moved from HTMLElement.
+        (WebCore::Element::setInnerHTML): Moved from HTMLElement.
+        * dom/Element.h: 
+        * dom/Element.idl:
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::innerHTML): Deleted.
+        (WebCore::HTMLElement::outerHTML): Deleted.
+        (WebCore::HTMLElement::setInnerHTML): Deleted.
+        (WebCore::mergeWithNextTextNode): Deleted.
+        (WebCore::HTMLElement::setOuterHTML): Deleted.
+        * html/HTMLElement.h:
+        * html/HTMLElement.idl:
+        * html/parser/HTMLTreeBuilder.cpp:
+        (WebCore::HTMLTreeBuilder::FragmentParsingContext::FragmentParsingContext): no more m_contextElement.
+        (WebCore::HTMLTreeBuilder::constructTree): read namespace from adjusted current node.
+        (WebCore::HTMLTreeBuilder::resetInsertionModeAppropriately): use contextElementStackItem for insertion.
+        (WebCore::HTMLTreeBuilder::adjustedCurrentStackItem): compute adjusted current node.
+        (WebCore::HTMLTreeBuilder::shouldProcessTokenInForeignContent): use adjusted current node for context.
+        (WebCore::HTMLTreeBuilder::processTokenInForeignContent): use adjusted current node to read namespace.
+        * html/parser/HTMLTreeBuilder.h:
+        (WebCore::HTMLTreeBuilder::FragmentParsingContext::contextElement): Deleted. Read from contextElementStackItem.
+        (WebCore::HTMLTreeBuilder::FragmentParsingContext::contextElementStackItem): Added.
+
+2014-11-20  Jeffrey Pfau  <jpfau@apple.com>
+
+        Add cancelable version of willSendRequest
+        https://bugs.webkit.org/show_bug.cgi?id=138987
+
+        Reviewed by Anders Carlsson.
+
+        Covered by existing tests.
+
+        * loader/ResourceLoader.cpp:
+        (WebCore::ResourceLoader::willSendRequest):
+        * loader/ResourceLoader.h:
+
+2014-12-01  Benjamin Poulain  <benjamin@webkit.org>
+
+        Add the dynamic specificity of the selector list argument when matching :nth-child() and :nth-last-child()
+        https://bugs.webkit.org/show_bug.cgi?id=139001
+
+        Reviewed by Andreas Kling.
+
+        When matching :nth-child(An+B of selector list) or :nth-last-child(An+B of selector list),
+        we were previously ignoring the arguments.
+
+        That behavior seems to be confusing for users. We made the proposal to include the selector list
+        like when using :matches():
+            http://lists.w3.org/Archives/Public/www-style/2014Oct/0533.html
+        David Baron also agrees with this behavior:
+            http://lists.w3.org/Archives/Public/www-style/2014Oct/0534.html
+
+        This patch adds the specificity computation.
+
+        Tests: fast/css/nth-child-specificity-1.html
+               fast/css/nth-child-specificity-2.html
+               fast/css/nth-last-child-specificity-1.html
+               fast/css/nth-last-child-specificity-2.html
+
+        * css/CSSSelector.cpp:
+        (WebCore::simpleSelectorFunctionalPseudoClassStaticSpecificity):
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::checkOne):
+        (WebCore::SelectorChecker::matchSelectorList):
+        * css/SelectorChecker.h:
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::addPseudoClassType):
+
+2014-12-01  Chris Dumez  <cdumez@apple.com>
+
+        Move 'text-shadow' / 'box-shadow' / '-webkit-box-shadow' to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138938
+
+        Reviewed by Sam Weinig.
+
+        Move 'text-shadow' / 'box-shadow' / '-webkit-box-shadow' CSS properties
+        from StyleResolver to the new StyleBuilder by using custom code.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyTextOrBoxShadowValue):
+        (WebCore::StyleBuilderCustom::applyInitialTextShadow):
+        (WebCore::StyleBuilderCustom::applyInheritTextShadow):
+        (WebCore::StyleBuilderCustom::applyValueTextShadow):
+        (WebCore::StyleBuilderCustom::applyInitialBoxShadow):
+        (WebCore::StyleBuilderCustom::applyInheritBoxShadow):
+        (WebCore::StyleBuilderCustom::applyValueBoxShadow):
+        (WebCore::StyleBuilderCustom::applyInitialWebkitBoxShadow):
+        (WebCore::StyleBuilderCustom::applyInheritWebkitBoxShadow):
+        (WebCore::StyleBuilderCustom::applyValueWebkitBoxShadow):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+
+2014-12-01  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL] Add a ENABLE_CSS_SCROLL_SNAP macro to CMake build system
+        https://bugs.webkit.org/show_bug.cgi?id=139085
+
+        Reviewed by Andreas Kling.
+
+        * PlatformEfl.cmake: 
+            Include page/scrolling/AxisScrollSnapOffsets.cpp to EFL build files to fix build break.
+
+2014-12-01  Zalan Bujtas  <zalan@apple.com>
+
+        Twitter avatar moves when hovering/unhovering the "follow" button.
+        https://bugs.webkit.org/show_bug.cgi?id=139147
+        rdar://problem/19096508
+
+        Reviewed by Simon Fraser.
+
+        This patch ensures that the out of flow positioned render boxes (RenderReplaced) do not
+        get repositioned when their inline box wrappers move.
+        Ideally, out of flow positioned renderers do not have inline wrappers by the time we start
+        placing inline boxes, but in certain case (optimized code path for descendantsHaveSameLineHeightAndBaseline()),
+        they are still part of the inline box tree.
+        This patch prevents those renderer boxes from getting positioned as part of the inline box placement.
+        They will get removed later at RenderBlockFlow::computeBlockDirectionPositionsForLine().
+
+        Test: fast/inline/out-of-flow-positioned-render-replaced-box-moves.html
+
+        * rendering/InlineBox.cpp:
+        (WebCore::InlineBox::adjustPosition):
+
+2014-12-01  Tim Horton  <timothy_horton@apple.com>
+
+        Null deref under TextIndicator::createWithSelectionInFrame using find-in-page on bugzilla
+        https://bugs.webkit.org/show_bug.cgi?id=139164
+        <rdar://problem/19107247>
+
+        Reviewed by Beth Dakin.
+
+        * page/TextIndicator.cpp:
+        (WebCore::TextIndicator::createWithSelectionInFrame):
+        Null-check the ImageBuffer in addition to the Image.
+
+2014-12-01  Anders Carlsson  <andersca@apple.com>
+
+        Remove IWebCookieManager on Windows
+        https://bugs.webkit.org/show_bug.cgi?id=139144
+
+        Reviewed by Sam Weinig.
+
+        Remove code that handles overriding the cookie storage.
+
+        * platform/network/NetworkStorageSession.h:
+        * platform/network/cf/NetworkStorageSessionCFNet.cpp:
+        (WebCore::cookieStorageOverride): Deleted.
+        (WebCore::overrideCookieStorage): Deleted.
+        (WebCore::overridenCookieStorage): Deleted.
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::ResourceHandle::createCFURLConnection):
+
+2014-12-01  Dean Jackson  <dino@apple.com>
+
+        [iOS Media] Slider knob should not have a border
+        https://bugs.webkit.org/show_bug.cgi?id=139160
+        <rdar://problem/19075185>
+
+        Reviewed by Jer Noble.
+
+        The change in r175715 required adding !important to a bunch
+        of rules for pseudo elements. The border width of slider knobs
+        for media controls should be zero, so add an !important there.
+
+        * Modules/mediacontrols/mediaControlsiOS.css:
+        (audio::-webkit-media-controls-timeline::-webkit-slider-thumb): Change
+        border to border-width and force it to zero.
+
+2014-12-01  Chris Dumez  <cdumez@apple.com>
+
+        Take into consideration canvas drawing for throttling DOM timers
+        https://bugs.webkit.org/show_bug.cgi?id=139140
+        <rdar://problem/19102218>
+
+        Reviewed by Andreas Kling.
+
+        Take into consideration canvas drawing for throttling DOM timers so
+        that:
+        - Timers drawing on a visible canvas can no longer get throttled.
+          This fixes the following sites:
+          - http://hint.fm/wind/
+          - http://radar.weather.gov/Conus/full_loop.php
+        - Timers that are drawing on a canvas that is not user observable
+          now get throttled, thus using less CPU. As an example, on
+          http://hint.fm/wind/, CPU usage is at 110% when the canvas is
+          inside the viewport on my machine. CPU usage would remain at
+          110% when scrolling the canvas outside the viewport before this
+          patch. After this patch, the CPU usage goes down to 5% when
+          the canvas is outside the viewport.
+
+        Tests: fast/canvas/canvas-inside-viewport-timer-throttling.html
+               fast/canvas/canvas-outside-viewport-timer-throttling.html
+
+        * bindings/js/JSCSSStyleDeclarationCustom.cpp:
+        (WebCore::JSCSSStyleDeclaration::putDelegate):
+        * html/HTMLCanvasElement.cpp:
+        (WebCore::HTMLCanvasElement::notifyObserversCanvasChanged):
+        * page/DOMTimer.cpp:
+        (WebCore::DOMTimerFireState::setScriptMadeNonUserObservableChangesToElement):
+        (WebCore::DOMTimer::scriptDidCauseElementRepaint):
+        (WebCore::DOMTimerFireState::setScriptMadeNonUserObservableChangesToElementStyle): Deleted.
+        (WebCore::DOMTimer::scriptDidUpdateStyleOfElement): Deleted.
+        * page/DOMTimer.h:
+
+2014-12-01  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Crash in Font::dashesForIntersectionsWithRect() due to underlining SVG fonts
+        https://bugs.webkit.org/show_bug.cgi?id=139158
+
+        Reviewed by Simon Fraser.
+
+        RenderingContexts are only created if the primary SimpleFontData is an SVG font,
+        but dashesForIntersectionWithRect() uses the first character's SimpleFontData.
+        One might be an SVG font but the other might not be.
+
+        Note that this brittle design will be fixed with the SVG -> OTF translator.
+
+        Test: fast/css3-text/css3-text-decoration/text-decoration-skip/decoration-skip-crash-fallback-svg.html
+
+        * platform/graphics/mac/FontMac.mm:
+        (WebCore::Font::dashesForIntersectionsWithRect):
+
+2014-12-01  Bartlomiej Gajda  <b.gajda@samsung.com>
+
+        [MSE] Fix not always calling mediaPlayer seek.
+        https://bugs.webkit.org/show_bug.cgi?id=139139
+
+        Reviewed by Jer Noble.
+
+        Original comment states that media source shall always be notified of seek if it's not closed.
+
+        No new tests needed.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::seekTimerFired):
+
+2014-12-01  Tim Horton  <timothy_horton@apple.com>
+
+        Implement yellow highlight for WebKit1 data detectors
+        https://bugs.webkit.org/show_bug.cgi?id=138956
+        <rdar://problem/18992185>
+
+        Reviewed by Beth Dakin.
+
+        * page/TextIndicator.cpp:
+        (WebCore::TextIndicator::createWithSelectionInFrame):
+        (WebCore::TextIndicator::TextIndicator):
+        * page/TextIndicator.h:
+        (WebCore::TextIndicator::selectionRectInScreenCoordinates):
+        (WebCore::TextIndicator::textBoundingRectInScreenCoordinates):
+        (WebCore::TextIndicator::selectionRectInWindowCoordinates): Deleted.
+        (WebCore::TextIndicator::textBoundingRectInWindowCoordinates): Deleted.
+        Store TextIndicator rects in screen coordinates, since that's what we
+        want anyway, and this makes it easier to share this code between the WebKits.
+
+        * page/mac/TextIndicatorWindow.mm:
+        (-[WebTextIndicatorView initWithFrame:textIndicator:margin:]):
+        (WebCore::TextIndicatorWindow::setTextIndicator):
+        Avoid some rect conversion because the TextIndicator rects are already in screen coordinates.
+
+2014-12-01  Anders Carlsson  <andersca@apple.com>
+
+        Remove old site specific quirks code that was added in 2009
+        https://bugs.webkit.org/show_bug.cgi?id=139141
+
+        Reviewed by Antti Koivisto.
+
+        * platform/network/NetworkingContext.h:
+        * platform/network/ResourceHandleInternal.h:
+        (WebCore::ResourceHandleInternal::ResourceHandleInternal):
+        * platform/network/mac/ResourceHandleMac.mm:
+        (WebCore::ResourceHandle::start):
+
+2014-12-01  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: DOMExceptions do not show the error message string in Pause Reason section
+        https://bugs.webkit.org/show_bug.cgi?id=138988
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/WebInjectedScriptHost.cpp:
+        (WebCore::WebInjectedScriptHost::type):
+        Give all DOM Exception types the "error" RemoteObject subtype.
+
+2014-12-01  Bartlomiej Gajda  <b.gajda@samsung.com>
+
+        [MSE] Unset timestamps of trackbuffers during Reset Parser State algorithm.
+        https://bugs.webkit.org/show_bug.cgi?id=139075.
+
+        Reviewed by Jer Noble.
+
+        Specification requires from us to unset timestamps for trackBuffers
+        during abort() method.
+
+        Test: media/media-source/media-source-append-nonsync-sample-after-abort.html
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::resetParserState):
+        (WebCore::SourceBuffer::abort):
+        * Modules/mediasource/SourceBuffer.h:
+
+2014-12-01  Chris Dumez  <cdumez@apple.com>
+
+        Transform StyleBuilderCustom into a class and mark it as a friend of RenderStyle
+        https://bugs.webkit.org/show_bug.cgi?id=138999
+
+        Reviewed by Sam Weinig.
+
+        Transform StyleBuilderCustom into a class and mark it as a friend of
+        RenderStyle. This is needed because some of the StyleBuilderCustom
+        functions need to access RenderStyle's private API.
+
+        No new tests, no behavior change.
+
+        * css/StyleBuilderCustom.h:
+          Move functions from StyleBuilderFunctions namespace to
+          StyleBuilderCustom class.
+
+        * css/makeprop.pl:
+          Use StyleBuilderCustom scope instead of StyleBuilderFunctions for
+          custom implementation.
+
+        * rendering/style/RenderStyle.h:
+          Mark StyleBuilderCustom class as a friend, similarly to what was
+          already done for DeprecatedStyleBuilder and StyleResolver.
+
+2014-11-17  Oliver Hunt  <oliver@apple.com>
+
+        Make sure range based iteration of Vector<> still receives bounds checking
+        https://bugs.webkit.org/show_bug.cgi?id=138821
+
+        Reviewed by Mark Lam.
+
+        There are a few uses of begin()/end() that explicitly require pointers,
+        so we use getPtr() to extract the underlying pointer generically.
+
+        * bindings/js/SerializedScriptValue.cpp:
+        (WebCore::CloneDeserializer::deserializeString):
+        * editing/TextIterator.cpp:
+        (WebCore::SearchBuffer::isBadMatch):
+        * page/mac/ServicesOverlayController.mm:
+        (WebCore::ServicesOverlayController::buildSelectionHighlight):
+        * platform/graphics/SegmentedFontData.cpp:
+        (WebCore::SegmentedFontData::fontDataForCharacter):
+        (WebCore::SegmentedFontData::containsCharacter):
+        (WebCore::SegmentedFontData::isLoading):
+        * platform/graphics/WOFFFileFormat.cpp:
+        (WebCore::convertWOFFToSfnt):
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::paintFillLayers):
+        * rendering/style/GridResolvedPosition.cpp:
+        (WebCore::firstNamedGridLineBeforePosition):
+        (WebCore::GridResolvedPosition::resolveRowEndColumnEndNamedGridLinePositionAgainstOppositePosition):
+        * svg/SVGFontElement.cpp:
+        (WebCore::kerningForPairOfStringsAndGlyphs):
+        * svg/SVGPathByteStream.h:
+        (WebCore::SVGPathByteStream::append):
+        * xml/XPathNodeSet.h:
+        (WebCore::XPath::NodeSet::begin):
+        (WebCore::XPath::NodeSet::end):
+
+2014-11-29  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Fix a build warning when CSS_SCROLL_SNAP is enabled
+        https://bugs.webkit.org/show_bug.cgi?id=139084
+
+        Reviewed by Andrei Bucur.
+
+        Fix a build warning. Copy constructor of StyleScrollSnapPoints should initialize its base class.
+
+        * rendering/style/StyleScrollSnapPoints.cpp:
+        (WebCore::StyleScrollSnapPoints::StyleScrollSnapPoints): Call RefCounted().
+
+2014-11-29  Sam Weinig  <sam@webkit.org>
+
+        Move the '-webkit-locale', '-webkit-text-orientation', '-webkit-writing-mode', '-webkit-justify-self' and '-webkit-perspective' CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139104
+
+        Reviewed by Anders Carlsson.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderFunctions::applyValueWebkitLocale):
+        (WebCore::StyleBuilderFunctions::applyValueWebkitWritingMode):
+        (WebCore::StyleBuilderFunctions::applyValueWebkitTextOrientation):
+        (WebCore::StyleBuilderFunctions::applyValueWebkitJustifySelf):
+        (WebCore::StyleBuilderFunctions::applyValueWebkitPerspective):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+
+2014-11-29  Anders Carlsson  <andersca@apple.com>
+
+        Add an EmptyVisitedLinkStore implementation
+        https://bugs.webkit.org/show_bug.cgi?id=139102
+
+        Reviewed by Sam Weinig.
+
+        * loader/EmptyClients.cpp:
+        (WebCore::fillWithEmptyClients):
+        * loader/EmptyClients.h:
+
+2014-11-28  Sam Weinig  <sam@webkit.org>
+
+        Move the '-webkit-initial-letter', '-webkit-line-box-contain' and '-webkit-text-stroke-width' CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139053
+
+        Reviewed by Andreas Kling.
+
+        * css/CSSPropertyNames.in:
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertInitialLetter):
+        (WebCore::StyleBuilderConverter::convertTextStrokeWidth):
+        (WebCore::StyleBuilderConverter::convertLineBoxContain):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+
+2014-11-26  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] HTTP source element lacks SCHEDULING query support
+        https://bugs.webkit.org/show_bug.cgi?id=139064
+
+        Reviewed by Carlos Garcia Campos.
+
+        No new tests, covered by http/tests/media/hls.
+
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+        (webKitWebSrcQueryWithParent): Make the element handle SCHEDULING
+        queries with the BANDWIDTH_LIMITED flag. This helps uridecodebin
+        to configure itself for adaptive streaming playback scenarios.
+
+2014-11-27  Ryuan Choi  <ryuan.choi@navercorp.com>
+
+        [EFL] Remove E_Dbus dependency
+        https://bugs.webkit.org/show_bug.cgi?id=136355
+
+        Reviewed by Gyuyoung Kim.
+
+        E_Dbus is the simple wrapper of Dbus but it has not been maintained since EFL 1.8.
+        Instead, EFL introduced Eldbus, which is almost similar with E_Dbus but provides more dbus like interface.
+        This patch replaces E_Dbus implementation to Eldbus.
+
+        * PlatformEfl.cmake:
+        * platform/efl/BatteryProviderEfl.cpp:
+        (WebCore::BatteryProviderEfl::BatteryProviderEfl):
+        (WebCore::BatteryProviderEfl::~BatteryProviderEfl):
+        (WebCore::BatteryProviderEfl::stopUpdating):
+        (WebCore::batteryProperties):
+        (WebCore::batteryPropertiesChanged):
+        (WebCore::BatteryProviderEfl::deviceTypeCallback):
+        (WebCore::BatteryProviderEfl::enumerateDevices):
+        (WebCore::BatteryProviderEfl::startUpdating):
+        (WebCore::BatteryProviderEfl::setBatteryStatus):
+        (WebCore::BatteryProviderEfl::timerFired): Deleted.
+        (WebCore::BatteryProviderEfl::getBatteryStatus): Deleted.
+        (WebCore::BatteryProviderEfl::setBatteryClient): Deleted.
+        * platform/efl/BatteryProviderEfl.h:
+        (WebCore::BatteryProviderEfl::connection):
+        (WebCore::BatteryProviderEfl::setSignalHandler):
+        (WebCore::BatteryProviderEfl::~BatteryProviderEfl): Deleted.
+
+2014-11-27  Antti Koivisto  <antti@apple.com>
+
+        CrashTracer: com.apple.WebKit.WebContent at com.apple.WebCore: WebCore::HTMLPlugInImageElement::updateSnapshot + 108
+        https://bugs.webkit.org/show_bug.cgi?id=139057
+
+        Reviewed by Anders Carlsson.
+
+        No test, don't know how to repro.
+
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::updateSnapshot): Null check the renderer.
+
+2014-11-27  Joanmarie Diggs  <jdiggs@igalia.com>
+
+        AX: [ATK] Meter and Option elements do not expose their id attribute
+        https://bugs.webkit.org/show_bug.cgi?id=139017
+
+        Reviewed by Mario Sanchez Prada.
+
+        The options in a collapsed select element lack a node, so get the id
+        attribute from the associated action element. In the case of a meter,
+        the meter element itself is not exposed; its RenderMeter is instead.
+        So associate the meter element's id with the exposed RenderMeter.
+
+        No new tests. Instead, updated existing expectations to reflect the fix.
+
+        * accessibility/AccessibilityObject.h:
+        * accessibility/AccessibilityProgressIndicator.cpp:
+        (WebCore::AccessibilityProgressIndicator::element):
+        * accessibility/AccessibilityProgressIndicator.h:
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (webkitAccessibleGetAttributes):
+
+2014-11-27  Anders Carlsson  <andersca@apple.com>
+
+        Add a Page::setVisitedLinkStore member function
+        https://bugs.webkit.org/show_bug.cgi?id=139065
+
+        Reviewed by Antti Koivisto.
+
+        This will be used in a subsequent commit.
+
+        * WebCore.exp.in:
+        * page/Page.cpp:
+        (WebCore::Page::setVisitedLinkStore):
+        * page/Page.h:
+
+2014-11-25  Sukolsak Sakshuwong  <sukolsak@gmail.com>
+
+        Add parsing for :dir()
+        https://bugs.webkit.org/show_bug.cgi?id=138932
+
+        Reviewed by Benjamin Poulain.
+
+        Add support for parsing :dir() pseudo class. The implementation of selector
+        matching will be in a follow-up patch.
+
+        * css/CSSGrammar.y.in:
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::detectFunctionTypeToken):
+        * css/CSSSelector.cpp:
+        (WebCore::appendPseudoClassFunctionTail):
+        (WebCore::CSSSelector::selectorText):
+        * css/CSSSelector.h:
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::checkOne):
+        * css/SelectorPseudoClassAndCompatibilityElementMap.in:
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::addPseudoClassType):
+
+2014-11-25  Anders Carlsson  <andersca@apple.com>
+
+        Remove user content handling from PageGroup
+        https://bugs.webkit.org/show_bug.cgi?id=139051
+
+        Reviewed by Antti Koivisto.
+
+        Remove m_userContentController from PageGroup and the related functions and symbol exports.
+
+        * WebCore.exp.in:
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::PageGroup):
+        (WebCore::PageGroup::~PageGroup):
+        (WebCore::PageGroup::addPage):
+        (WebCore::PageGroup::removePage):
+        (WebCore::PageGroup::addUserScriptToWorld): Deleted.
+        (WebCore::PageGroup::addUserStyleSheetToWorld): Deleted.
+        (WebCore::PageGroup::removeUserScriptFromWorld): Deleted.
+        (WebCore::PageGroup::removeUserStyleSheetFromWorld): Deleted.
+        (WebCore::PageGroup::removeUserScriptsFromWorld): Deleted.
+        (WebCore::PageGroup::removeUserStyleSheetsFromWorld): Deleted.
+        (WebCore::PageGroup::removeAllUserContent): Deleted.
+        * page/PageGroup.h:
+
+2014-11-25  Anders Carlsson  <andersca@apple.com>
+
+        Add a user content controller to WebViewGroup and use it for user content
+        https://bugs.webkit.org/show_bug.cgi?id=139043
+
+        Reviewed by Antti Koivisto.
+
+        * WebCore.exp.in:
+        Export symbols.
+
+        * page/Page.cpp:
+        (WebCore::Page::setUserContentController):
+        Invalidate the injected style cache when setting a new user content controller.
+
+2014-11-25  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] gstmpegts is not initialized
+        https://bugs.webkit.org/show_bug.cgi?id=139039
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/graphics/gstreamer/GStreamerUtilities.cpp:
+        (WebCore::initializeGStreamer): Initialize the gstmpegts library.
+
+2014-11-24  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
+
+        Fix unused variable warning in Biquad.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=139031
+
+        Reviewed by Andreas Kling.
+
+        No new tests needed.
+
+        * platform/audio/Biquad.cpp:
+
 2014-11-24  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
 
         Remove Qt cruft related to tap higlighting

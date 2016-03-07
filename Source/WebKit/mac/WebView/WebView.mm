@@ -106,6 +106,7 @@
 #import "WebUIDelegatePrivate.h"
 #import "WebUserMediaClient.h"
 #import "WebViewGroup.h"
+#import "WebVisitedLinkStore.h"
 #import <CoreFoundation/CFSet.h>
 #import <Foundation/NSURLConnection.h>
 #import <JavaScriptCore/APICast.h>
@@ -176,6 +177,7 @@
 #import <WebCore/TextResourceDecoder.h>
 #import <WebCore/ThreadCheck.h>
 #import <WebCore/UserAgent.h>
+#import <WebCore/UserContentController.h>
 #import <WebCore/WebCoreObjCExtras.h>
 #import <WebCore/WebCoreView.h>
 #import <WebCore/Widget.h>
@@ -211,6 +213,8 @@
 #import "WebNSPrintOperationExtras.h"
 #import "WebPDFView.h"
 #import <WebCore/NSViewSPI.h>
+#import <WebCore/TextIndicator.h>
+#import <WebCore/TextIndicatorWindow.h>
 #import <WebCore/WebVideoFullscreenController.h>
 #else
 #import "MemoryMeasure.h"
@@ -779,8 +783,8 @@ static NSString *leakOutlookQuirksUserScriptContents()
 -(void)_injectOutlookQuirksScript
 {
     static NSString *outlookQuirksScriptContents = leakOutlookQuirksUserScriptContents();
-    core(self)->group().addUserScriptToWorld(*core([WebScriptWorld world]),
-        outlookQuirksScriptContents, URL(), Vector<String>(), Vector<String>(), InjectAtDocumentEnd, InjectInAllFrames);
+    _private->group->userContentController().addUserScript(*core([WebScriptWorld world]), std::make_unique<UserScript>(outlookQuirksScriptContents, URL(), Vector<String>(), Vector<String>(), InjectAtDocumentEnd, InjectInAllFrames));
+
 }
 #endif
 
@@ -869,13 +873,15 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     [self addSubview:frameView];
     [frameView release];
 
-#if !PLATFORM(IOS)
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
     if ([self respondsToSelector:@selector(setActionMenu:)]) {
         RetainPtr<NSMenu> actionMenu = adoptNS([[NSMenu alloc] init]);
         self.actionMenu = actionMenu.get();
         _private->actionMenuController = [[WebActionMenuController alloc] initWithWebView:self];
     }
+#endif
 
+#if !PLATFORM(IOS)
     static bool didOneTimeInitialization = false;
 #endif
     if (!didOneTimeInitialization) {
@@ -919,6 +925,9 @@ static void WebKitInitializeGamepadProviderIfNecessary()
         didOneTimeInitialization = true;
     }
 
+    _private->group = WebViewGroup::getOrCreate(groupName);
+    _private->group->addWebView(self);
+
     PageConfiguration pageConfiguration;
 #if !PLATFORM(IOS)
     pageConfiguration.chromeClient = new WebChromeClient(self);
@@ -935,7 +944,12 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     pageConfiguration.alternativeTextClient = new WebAlternativeTextClient(self);
     pageConfiguration.loaderClientForMainFrame = new WebFrameLoaderClient;
     pageConfiguration.progressTrackerClient = new WebProgressTrackerClient(self);
+    pageConfiguration.userContentController = &_private->group->userContentController();
+    pageConfiguration.visitedLinkStore = &_private->group->visitedLinkStore();
     _private->page = new Page(pageConfiguration);
+
+    _private->page->setGroupName(groupName);
+
 #if ENABLE(GEOLOCATION)
     WebCore::provideGeolocationTo(_private->page, new WebGeolocationClient(self));
 #endif
@@ -992,7 +1006,6 @@ static void WebKitInitializeGamepadProviderIfNecessary()
 #endif
 
     [self _addToAllWebViewsSet];
-    [self setGroupName:groupName];
     
     // If there's already a next key view (e.g., from a nib), wire it up to our
     // contained frame view. In any case, wire our next key view up to the our
@@ -1155,7 +1168,9 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     [self addSubview:frameView];
     [frameView release];
 
-    
+    _private->group = WebViewGroup::getOrCreate(groupName);
+    _private->group->addWebView(self);
+
     PageConfiguration pageConfiguration;
     pageConfiguration.chromeClient = new WebChromeClientIOS(self);
 #if ENABLE(DRAG_SUPPORT)
@@ -1165,6 +1180,8 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     pageConfiguration.inspectorClient = new WebInspectorClient(self);
     pageConfiguration.loaderClientForMainFrame = new WebFrameLoaderClient;
     pageConfiguration.progressTrackerClient = new WebProgressTrackerClient(self);
+    pageConfiguration.userContentController = &_private->group->userContentController();
+
     _private->page = new Page(pageConfiguration);
     
     [self setSmartInsertDeleteEnabled:YES];
@@ -1192,7 +1209,7 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     // FIXME: this is a workaround for <rdar://problem/11820090> Quoted text changes in size when replying to certain email
     _private->page->settings().setMinimumFontSize([_private->preferences minimumFontSize]);
 
-    [self setGroupName:groupName];
+    _private->page->setGroupName(groupName);
 
 #if ENABLE(REMOTE_INSPECTOR)
     _private->page->setRemoteInspectionAllowed(isInternalInstall());
@@ -1711,6 +1728,8 @@ static bool fastDocumentTeardownEnabled()
     [self setUIDelegate:nil];
 
     [_private->inspector webViewClosed];
+#endif
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
     [_private->actionMenuController webViewClosed];
 #endif
 
@@ -3995,17 +4014,16 @@ static Vector<String> toStringVector(NSArray* patterns)
     String group(groupName);
     if (group.isEmpty())
         return;
-    
-    PageGroup* pageGroup = PageGroup::pageGroup(group);
-    if (!pageGroup)
+
+    auto* viewGroup = WebViewGroup::get(group);
+    if (!viewGroup)
         return;
 
     if (!world)
         return;
 
-    pageGroup->addUserScriptToWorld(*core(world), source, url, toStringVector(whitelist), toStringVector(blacklist),
-                                    injectionTime == WebInjectAtDocumentStart ? InjectAtDocumentStart : InjectAtDocumentEnd,
-                                    injectedFrames == WebInjectInAllFrames ? InjectInAllFrames : InjectInTopFrameOnly);
+    auto userScript = std::make_unique<UserScript>(source, url, toStringVector(whitelist), toStringVector(blacklist), injectionTime == WebInjectAtDocumentStart ? InjectAtDocumentStart : InjectAtDocumentEnd, injectedFrames == WebInjectInAllFrames ? InjectInAllFrames : InjectInTopFrameOnly);
+    viewGroup->userContentController().addUserScript(*core(world), WTF::move(userScript));
 }
 
 + (void)_addUserStyleSheetToGroup:(NSString *)groupName world:(WebScriptWorld *)world source:(NSString *)source url:(NSURL *)url
@@ -4021,15 +4039,16 @@ static Vector<String> toStringVector(NSArray* patterns)
     String group(groupName);
     if (group.isEmpty())
         return;
-    
-    PageGroup* pageGroup = PageGroup::pageGroup(group);
-    if (!pageGroup)
+
+    auto* viewGroup = WebViewGroup::get(group);
+    if (!viewGroup)
         return;
 
     if (!world)
         return;
 
-    pageGroup->addUserStyleSheetToWorld(*core(world), source, url, toStringVector(whitelist), toStringVector(blacklist), injectedFrames == WebInjectInAllFrames ? InjectInAllFrames : InjectInTopFrameOnly);
+    auto styleSheet = std::make_unique<UserStyleSheet>(source, url, toStringVector(whitelist), toStringVector(blacklist), injectedFrames == WebInjectInAllFrames ? InjectInAllFrames : InjectInTopFrameOnly, UserStyleUserLevel);
+    viewGroup->userContentController().addUserStyleSheet(*core(world), WTF::move(styleSheet), InjectInExistingDocuments);
 }
 
 + (void)_removeUserScriptFromGroup:(NSString *)groupName world:(WebScriptWorld *)world url:(NSURL *)url
@@ -4037,15 +4056,15 @@ static Vector<String> toStringVector(NSArray* patterns)
     String group(groupName);
     if (group.isEmpty())
         return;
-    
-    PageGroup* pageGroup = PageGroup::pageGroup(group);
-    if (!pageGroup)
+
+    auto* viewGroup = WebViewGroup::get(group);
+    if (!viewGroup)
         return;
 
     if (!world)
         return;
 
-    pageGroup->removeUserScriptFromWorld(*core(world), url);
+    viewGroup->userContentController().removeUserScript(*core(world), url);
 }
 
 + (void)_removeUserStyleSheetFromGroup:(NSString *)groupName world:(WebScriptWorld *)world url:(NSURL *)url
@@ -4053,15 +4072,15 @@ static Vector<String> toStringVector(NSArray* patterns)
     String group(groupName);
     if (group.isEmpty())
         return;
-    
-    PageGroup* pageGroup = PageGroup::pageGroup(group);
-    if (!pageGroup)
+
+    auto* viewGroup = WebViewGroup::get(group);
+    if (!viewGroup)
         return;
 
     if (!world)
         return;
 
-    pageGroup->removeUserStyleSheetFromWorld(*core(world), url);
+    viewGroup->userContentController().removeUserStyleSheet(*core(world), url);
 }
 
 + (void)_removeUserScriptsFromGroup:(NSString *)groupName world:(WebScriptWorld *)world
@@ -4069,15 +4088,15 @@ static Vector<String> toStringVector(NSArray* patterns)
     String group(groupName);
     if (group.isEmpty())
         return;
-    
-    PageGroup* pageGroup = PageGroup::pageGroup(group);
-    if (!pageGroup)
+
+    auto* viewGroup = WebViewGroup::get(group);
+    if (!viewGroup)
         return;
 
     if (!world)
         return;
 
-    pageGroup->removeUserScriptsFromWorld(*core(world));
+    viewGroup->userContentController().removeUserScripts(*core(world));
 }
 
 + (void)_removeUserStyleSheetsFromGroup:(NSString *)groupName world:(WebScriptWorld *)world
@@ -4085,15 +4104,15 @@ static Vector<String> toStringVector(NSArray* patterns)
     String group(groupName);
     if (group.isEmpty())
         return;
-    
-    PageGroup* pageGroup = PageGroup::pageGroup(group);
-    if (!pageGroup)
+
+    auto* viewGroup = WebViewGroup::get(group);
+    if (!viewGroup)
         return;
 
     if (!world)
         return;
 
-    pageGroup->removeUserStyleSheetsFromWorld(*core(world));
+    viewGroup->userContentController().removeUserStyleSheets(*core(world));
 }
 
 + (void)_removeAllUserContentFromGroup:(NSString *)groupName
@@ -4101,12 +4120,12 @@ static Vector<String> toStringVector(NSArray* patterns)
     String group(groupName);
     if (group.isEmpty())
         return;
-    
-    PageGroup* pageGroup = PageGroup::pageGroup(group);
-    if (!pageGroup)
+
+    auto* viewGroup = WebViewGroup::get(group);
+    if (!viewGroup)
         return;
-    
-    pageGroup->removeAllUserContent();
+
+    viewGroup->userContentController().removeAllUserContent();
 }
 
 - (BOOL)allowsNewCSSAnimationsWhileSuspended
@@ -6102,6 +6121,9 @@ static WebFrame *incrementFrame(WebFrame *frame, WebFindOptions options = 0)
 
     if (!_private->page)
         return;
+
+    _private->page->setUserContentController(&_private->group->userContentController());
+    _private->page->setVisitedLinkStore(_private->group->visitedLinkStore());
     _private->page->setGroupName(groupName);
 }
 
@@ -6980,8 +7002,12 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
 
 - (void)addVisitedLinks:(NSArray *)visitedLinks
 {
+    WebVisitedLinkStore& visitedLinkStore = _private->group->visitedLinkStore();
+    for (NSString *urlString in visitedLinks)
+        visitedLinkStore.addVisitedLink(urlString);
+
     PageGroup& group = core(self)->group();
-    
+
     NSEnumerator *enumerator = [visitedLinks objectEnumerator];
     while (NSString *url = [enumerator nextObject]) {
         size_t length = [url length];
@@ -6999,6 +7025,7 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
 #if PLATFORM(IOS)
 - (void)removeVisitedLink:(NSURL *)url
 {
+    _private->group->visitedLinkStore().removeVisitedLink(URL(url).string());
     core(self)->group().removeVisitedLink(url);
 }
 #endif
@@ -8539,7 +8566,7 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
     return NSMakeRect(rect.origin.x, [self bounds].size.height - rect.origin.y - rect.size.height, rect.size.width, rect.size.height);
 }
 
-#if !PLATFORM(IOS)
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 - (void)prepareForMenu:(NSMenu *)menu withEvent:(NSEvent *)event
 {
     if (menu != self.actionMenu)
@@ -8563,7 +8590,30 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
 
     [_private->actionMenuController didCloseMenu:menu withEvent:event];
 }
-#endif
+
+- (void)_setTextIndicator:(TextIndicator *)textIndicator fadeOut:(BOOL)fadeOut animationCompletionHandler:(std::function<void ()>)completionHandler
+{
+    if (!textIndicator) {
+        _private->textIndicatorWindow = nullptr;
+        return;
+    }
+
+    if (!_private->textIndicatorWindow)
+        _private->textIndicatorWindow = std::make_unique<TextIndicatorWindow>(self);
+
+    _private->textIndicatorWindow->setTextIndicator(textIndicator, fadeOut, WTF::move(completionHandler));
+}
+
+- (void)_clearTextIndicator
+{
+    [self _setTextIndicator:nullptr fadeOut:NO animationCompletionHandler:^ { }];
+}
+
+- (WebActionMenuController *)_actionMenuController
+{
+    return _private->actionMenuController;
+}
+#endif // PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 
 @end
 

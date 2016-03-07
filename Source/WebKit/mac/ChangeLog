@@ -1,3 +1,256 @@
+2014-12-01  Timothy Horton  <timothy_horton@apple.com>
+
+        Try to fix the Mac build.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        (-[WebView _close]):
+
+2014-12-01  Timothy Horton  <timothy_horton@apple.com>
+
+        Fix the iOS build.
+
+        * WebView/WebActionMenuController.h:
+        * WebView/WebActionMenuController.mm:
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView scrollWheel:scrollWheel:]):
+        (-[WebHTMLView mouseDown:mouseDown:]):
+        * WebView/WebView.mm:
+        * WebView/WebViewData.h:
+        * WebView/WebViewData.mm:
+        (-[WebViewPrivate dealloc]):
+        * WebView/WebViewInternal.h:
+
+2014-12-01  Tim Horton  <timothy_horton@apple.com>
+
+        Implement yellow highlight for WebKit1 data detectors
+        https://bugs.webkit.org/show_bug.cgi?id=138956
+        <rdar://problem/18992185>
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebActionMenuController.h:
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController webView:willHandleMouseDown:]):
+        (-[WebActionMenuController webView:didHandleScrollWheel:]):
+        (-[WebActionMenuController prepareForMenu:withEvent:]):
+        (-[WebActionMenuController didCloseMenu:withEvent:]):
+        (-[WebActionMenuController _defaultMenuItemsForDataDetectedText]):
+        (-[WebActionMenuController _showTextIndicator]):
+        (-[WebActionMenuController _hideTextIndicator]):
+        (-[WebActionMenuController _dismissActionMenuPopovers]):
+        Copy the WebKit2 WKActionMenuController TextIndicator implementation
+        into WebActionMenuController. The only significant difference is
+        that we build the TextIndicator right at menu construction time
+        instead of in the Web process.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView scrollWheel:]):
+        Let the WebActionMenuController know that we're handling a scroll.
+
+        (-[WebHTMLView mouseDown:]):
+        Let the WebActionMenuController know that we're handling a mouseDown.
+
+        * WebView/WebView.mm:
+        (-[WebView _setTextIndicator:fadeOut:animationCompletionHandler:]):
+        (-[WebView _clearTextIndicator]):
+        (-[WebView _actionMenuController]):
+        (-[WebView _convertRectFromRootView:]): Deleted.
+        * WebView/WebViewData.h:
+        * WebView/WebViewData.mm:
+        * WebView/WebViewInternal.h:
+        Keep a TextIndicatorWindow on WebView, just like WKView does.
+        Expose the WebActionMenuController on WebView (internally).
+
+2014-12-01  Anders Carlsson  <andersca@apple.com>
+
+        Remove old site specific quirks code that was added in 2009
+        https://bugs.webkit.org/show_bug.cgi?id=139141
+
+        Reviewed by Antti Koivisto.
+
+        * WebCoreSupport/WebFrameNetworkingContext.h:
+        * WebCoreSupport/WebFrameNetworkingContext.mm:
+        (WebFrameNetworkingContext::needsSiteSpecificQuirks): Deleted.
+
+2014-11-30  Anders Carlsson  <andersca@apple.com>
+
+        Fix a test failure.
+
+        * History/WebHistory.mm:
+        (+[WebHistory _setVisitedLinkTrackingEnabled:]):
+        Call through to the visited link store.
+
+        (+[WebHistory _removeAllVisitedLinks]):
+        Ditto.
+
+        * WebCoreSupport/WebVisitedLinkStore.mm:
+        (WebVisitedLinkStore::isLinkVisited):
+        Make sure to populate visited links.
+
+2014-11-30  Anders Carlsson  <andersca@apple.com>
+
+        Switch over to the visited link store from the WebViewGroup
+        https://bugs.webkit.org/show_bug.cgi?id=139112
+
+        Reviewed by Sam Weinig.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        (-[WebView setGroupName:]):
+
+2014-11-30  Anders Carlsson  <andersca@apple.com>
+
+        Add WebVisitedLinkStore::removeVisitedLink and use it on iOS
+        https://bugs.webkit.org/show_bug.cgi?id=139111
+
+        Reviewed by Sam Weinig.
+
+        * WebCoreSupport/WebVisitedLinkStore.h:
+        * WebCoreSupport/WebVisitedLinkStore.mm:
+        (WebVisitedLinkStore::removeVisitedLink):
+        * WebView/WebView.mm:
+        (-[WebView removeVisitedLink:]):
+
+2014-11-29  Anders Carlsson  <andersca@apple.com>
+
+        Populate visited links
+        https://bugs.webkit.org/show_bug.cgi?id=139101
+
+        Reviewed by Sam Weinig.
+
+        * History/WebHistory.mm:
+        (-[WebHistoryPrivate addVisitedLinksToVisitedLinkStore:]):
+        Helper function that adds all visited link to the given store.
+
+        (-[WebHistory _addVisitedLinksToVisitedLinkStore:]):
+        Call the private method.
+
+        * History/WebHistoryInternal.h:
+        * WebCoreSupport/WebVisitedLinkStore.h:
+        Add new members.
+
+        * WebCoreSupport/WebVisitedLinkStore.mm:
+        (WebVisitedLinkStore::addVisitedLink):
+        Get the characters from the URL string and hash them, then call addVisitedLinkHash.
+
+        (WebVisitedLinkStore::populateVisitedLinksIfNeeded):
+        Implement this. First try the delegate, then try the shared history.
+
+        (WebVisitedLinkStore::addVisitedLinkHash):
+        Factor code that adds the link to the hash table into a separate function.
+
+        * WebView/WebView.mm:
+        (-[WebView addVisitedLinks:]):
+        Add the visited links to the store.
+
+2014-11-29  Anders Carlsson  <andersca@apple.com>
+
+        More work on the legacy WebKit visited link store
+        https://bugs.webkit.org/show_bug.cgi?id=139100
+
+        Reviewed by Sam Weinig.
+
+        * History/WebHistory.mm:
+        (+[WebHistory setOptionalSharedHistory:]):
+        Call WebVisitedLinkStore::setShouldTrackVisitedLinks and WebVisitedLinkStore::removeAllVisitedLinks.
+
+        * WebCoreSupport/WebVisitedLinkStore.h:
+        * WebCoreSupport/WebVisitedLinkStore.mm:
+        (visitedLinkStores):
+        (WebVisitedLinkStore::WebVisitedLinkStore):
+        (WebVisitedLinkStore::~WebVisitedLinkStore):
+        Keep track of live visited link stores.
+
+        (WebVisitedLinkStore::setShouldTrackVisitedLinks):
+        Update s_shouldTrackVisitedLinks and call removeAllVisitedLinks if necessary.
+
+        (WebVisitedLinkStore::removeAllVisitedLinks):
+        Iterate over all live link stores and remove their links.
+
+        (WebVisitedLinkStore::isLinkVisited):
+        Populate visited links and check if our hash table contains the link.
+
+        (WebVisitedLinkStore::addVisitedLink):
+        Add the link hash to the table.
+
+        (WebVisitedLinkStore::populateVisitedLinksIfNeeded):
+        Add stub.
+
+        (WebVisitedLinkStore::removeVisitedLinkHashes):
+        Clear out the hash table.
+
+2014-11-27  Anders Carlsson  <andersca@apple.com>
+
+        Add a stubbed out WebVisitedLinkStore to WebViewGroup
+        https://bugs.webkit.org/show_bug.cgi?id=139066
+
+        Reviewed by Antti Koivisto.
+
+        * WebCoreSupport/WebViewGroup.h:
+        (WebViewGroup::visitedLinkStore):
+        * WebCoreSupport/WebViewGroup.mm:
+        (WebViewGroup::WebViewGroup):
+        * WebCoreSupport/WebVisitedLinkStore.h: Copied from Source/WebKit/mac/WebCoreSupport/WebViewGroup.h.
+        * WebCoreSupport/WebVisitedLinkStore.mm: Copied from Source/WebKit/mac/WebCoreSupport/WebViewGroup.h.
+        (WebVisitedLinkStore::create):
+        (WebVisitedLinkStore::WebVisitedLinkStore):
+        (WebVisitedLinkStore::~WebVisitedLinkStore):
+        (WebVisitedLinkStore::isLinkVisited):
+        (WebVisitedLinkStore::addVisitedLink):
+
+2014-11-25  Anders Carlsson  <andersca@apple.com>
+
+        Remove user content handling from PageGroup
+        https://bugs.webkit.org/show_bug.cgi?id=139051
+
+        Reviewed by Antti Koivisto.
+
+        Use the user content controller in the web view group.
+
+        * WebView/WebView.mm:
+        (-[WebView _injectOutlookQuirksScript]):
+
+2014-11-25  Anders Carlsson  <andersca@apple.com>
+
+        Add a user content controller to WebViewGroup and use it for user content
+        https://bugs.webkit.org/show_bug.cgi?id=139043
+
+        Reviewed by Antti Koivisto.
+
+        This is another tiny step towards getting rid of user content handling inside PageGroup.
+
+        * WebCoreSupport/WebViewGroup.h:
+        (WebViewGroup::userContentController):
+        Add a UserContentController member and getter.
+
+        * WebCoreSupport/WebViewGroup.mm:
+        (WebViewGroup::get):
+        Helper function that returns a WebViewGroup by its name (or null if it doesn't exist).
+
+        (WebViewGroup::WebViewGroup):
+        Create a user content controller.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        Instead of calling -[WebView setGroupName:], create a WebViewGroup before creating the page, that way we can
+        set its user content controller in the PageConfiguration.
+
+        (-[WebView initSimpleHTMLDocumentWithStyle:frame:preferences:groupName:]):
+        Ditto.
+
+        (+[WebView _addUserScriptToGroup:world:source:url:whitelist:blacklist:injectionTime:injectedFrames:]):
+        (+[WebView _addUserStyleSheetToGroup:world:source:url:whitelist:blacklist:injectedFrames:]):
+        (+[WebView _removeUserScriptFromGroup:world:url:]):
+        (+[WebView _removeUserStyleSheetFromGroup:world:url:]):
+        (+[WebView _removeUserScriptsFromGroup:world:]):
+        (+[WebView _removeUserStyleSheetsFromGroup:world:]):
+        (+[WebView _removeAllUserContentFromGroup:]):
+        Instead of calling into the PageGroup, get the WebViewGroup's user content controller and call into that.
+
+        (-[WebView setGroupName:]):
+        Set the user content controller to the new WebViewGroup's user content controller.
+
 2014-11-21  Jer Noble  <jer.noble@apple.com>
 
         Support multiple signatures of diagnostic logging.

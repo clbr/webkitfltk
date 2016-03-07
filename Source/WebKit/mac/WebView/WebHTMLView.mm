@@ -34,6 +34,7 @@
 #import "DOMDocumentInternal.h"
 #import "DOMNodeInternal.h"
 #import "DOMRangeInternal.h"
+#import "WebActionMenuController.h"
 #import "WebArchive.h"
 #import "WebClipView.h"
 #import "WebDOMOperationsInternal.h"
@@ -3700,9 +3701,14 @@ static void setMenuTargets(NSMenu* menu)
 #if !PLATFORM(IOS)
     if (!frame || !frame->eventHandler().wheelEvent(event))
         [super scrollWheel:event];
+
 #else
     if (frame)
         frame->eventHandler().wheelEvent(event);
+#endif
+
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+    [[[self _webView] _actionMenuController] webView:[self _webView] didHandleScrollWheel:event];
 #endif
 }
 
@@ -3811,6 +3817,10 @@ static void setMenuTargets(NSMenu* menu)
 
     // Record the mouse down position so we can determine drag hysteresis.
     [self _setMouseDownEvent:event];
+
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+    [[[self _webView] _actionMenuController] webView:[self _webView] willHandleMouseDown:event];
+#endif
 
 #if PLATFORM(IOS)
     // TEXTINPUT: if there is marked text and the current input

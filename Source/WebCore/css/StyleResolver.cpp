@@ -2371,63 +2371,10 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         break;
 
     // CSS3 Properties
-    case CSSPropertyTextShadow:
-    case CSSPropertyBoxShadow:
-    case CSSPropertyWebkitBoxShadow: {
-        if (isInherit) {
-            if (id == CSSPropertyTextShadow)
-                return state.style()->setTextShadow(state.parentStyle()->textShadow() ? std::make_unique<ShadowData>(*state.parentStyle()->textShadow()) : nullptr);
-            return state.style()->setBoxShadow(state.parentStyle()->boxShadow() ? std::make_unique<ShadowData>(*state.parentStyle()->boxShadow()) : nullptr);
-        }
-        if (isInitial || primitiveValue) // initial | none
-            return id == CSSPropertyTextShadow ? state.style()->setTextShadow(nullptr) : state.style()->setBoxShadow(nullptr);
-
-        if (!is<CSSValueList>(*value))
-            return;
-
-        bool isFirstEntry = true;
-        for (auto& currentValue : downcast<CSSValueList>(*value)) {
-            if (!is<CSSShadowValue>(currentValue.get()))
-                continue;
-            auto& item = downcast<CSSShadowValue>(currentValue.get());
-            int x = item.x->computeLength<int>(state.cssToLengthConversionData());
-            int y = item.y->computeLength<int>(state.cssToLengthConversionData());
-            int blur = item.blur ? item.blur->computeLength<int>(state.cssToLengthConversionData()) : 0;
-            int spread = item.spread ? item.spread->computeLength<int>(state.cssToLengthConversionData()) : 0;
-            ShadowStyle shadowStyle = item.style && item.style->getValueID() == CSSValueInset ? Inset : Normal;
-            Color color;
-            if (item.color)
-                color = colorFromPrimitiveValue(item.color.get());
-            else if (state.style())
-                color = state.style()->color();
-
-            auto shadowData = std::make_unique<ShadowData>(IntPoint(x, y), blur, spread, shadowStyle, id == CSSPropertyWebkitBoxShadow, color.isValid() ? color : Color::transparent);
-            if (id == CSSPropertyTextShadow)
-                state.style()->setTextShadow(WTF::move(shadowData), !isFirstEntry); // add to the list if this is not the first entry
-            else
-                state.style()->setBoxShadow(WTF::move(shadowData), !isFirstEntry); // add to the list if this is not the first entry
-
-            isFirstEntry = false;
-        }
-        return;
-    }
     case CSSPropertySrc: // Only used in @font-face rules.
         return;
     case CSSPropertyUnicodeRange: // Only used in @font-face rules.
         return;
-    case CSSPropertyWebkitLocale: {
-        HANDLE_INHERIT_AND_INITIAL(locale, Locale);
-        if (!primitiveValue)
-            return;
-        if (primitiveValue->getValueID() == CSSValueAuto)
-            state.style()->setLocale(nullAtom);
-        else
-            state.style()->setLocale(primitiveValue->getStringValue());
-        FontDescription fontDescription = state.style()->fontDescription();
-        fontDescription.setScript(localeToScriptCodeForFontSelection(state.style()->locale()));
-        setFontDescription(fontDescription);
-        return;
-    }
 #if ENABLE(IOS_TEXT_AUTOSIZING)
     case CSSPropertyWebkitTextSizeAdjust: {
         HANDLE_INHERIT_AND_INITIAL(textSizeAdjust, TextSizeAdjust)
@@ -2489,54 +2436,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         return;
     }
 #endif
-    case CSSPropertyWebkitTextStrokeWidth: {
-        HANDLE_INHERIT_AND_INITIAL(textStrokeWidth, TextStrokeWidth)
-        float width = 0;
-        switch (primitiveValue->getValueID()) {
-        case CSSValueThin:
-        case CSSValueMedium:
-        case CSSValueThick: {
-            double result = 1.0 / 48;
-            if (primitiveValue->getValueID() == CSSValueMedium)
-                result *= 3;
-            else if (primitiveValue->getValueID() == CSSValueThick)
-                result *= 5;
-            Ref<CSSPrimitiveValue> value(CSSPrimitiveValue::create(result, CSSPrimitiveValue::CSS_EMS));
-            width = value.get().computeLength<float>(state.cssToLengthConversionData());
-            break;
-        }
-        default:
-            width = primitiveValue->computeLength<float>(state.cssToLengthConversionData());
-            break;
-        }
-        state.style()->setTextStrokeWidth(width);
-        return;
-    }
-    case CSSPropertyWebkitPerspective: {
-        HANDLE_INHERIT_AND_INITIAL(perspective, Perspective)
-
-        if (!primitiveValue)
-            return;
-
-        if (primitiveValue->getValueID() == CSSValueNone) {
-            state.style()->setPerspective(0);
-            return;
-        }
-
-        float perspectiveValue;
-        if (primitiveValue->isLength())
-            perspectiveValue = primitiveValue->computeLength<float>(state.cssToLengthConversionData());
-        else if (primitiveValue->isNumber()) {
-            // For backward compatibility, treat valueless numbers as px.
-            Ref<CSSPrimitiveValue> value(CSSPrimitiveValue::create(primitiveValue->getDoubleValue(), CSSPrimitiveValue::CSS_PX));
-            perspectiveValue = value.get().computeLength<float>(state.cssToLengthConversionData());
-        } else
-            return;
-
-        if (perspectiveValue >= 0.0f)
-            state.style()->setPerspective(perspectiveValue);
-        return;
-    }
 #if PLATFORM(IOS)
     case CSSPropertyWebkitTouchCallout: {
         HANDLE_INHERIT_AND_INITIAL(touchCalloutEnabled, TouchCalloutEnabled);
@@ -2589,42 +2488,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitFontSizeDelta:
     case CSSPropertyWebkitTextDecorationsInEffect:
         return;
-
-    // CSS Text Layout Module Level 3: Vertical writing support
-    case CSSPropertyWebkitWritingMode: {
-        HANDLE_INHERIT_AND_INITIAL(writingMode, WritingMode);
-        
-        if (primitiveValue)
-            setWritingMode(*primitiveValue);
-
-        // FIXME: It is not ok to modify document state while applying style.
-        if (state.element() && state.element() == state.document().documentElement())
-            state.document().setWritingModeSetOnDocumentElement(true);
-        return;
-    }
-
-    case CSSPropertyWebkitTextOrientation: {
-        HANDLE_INHERIT_AND_INITIAL(textOrientation, TextOrientation);
-
-        if (primitiveValue)
-            setTextOrientation(*primitiveValue);
-
-        return;
-    }
-
-    case CSSPropertyWebkitLineBoxContain: {
-        HANDLE_INHERIT_AND_INITIAL(lineBoxContain, LineBoxContain)
-        if (primitiveValue && primitiveValue->getValueID() == CSSValueNone) {
-            state.style()->setLineBoxContain(LineBoxContainNone);
-            return;
-        }
-
-        if (!is<CSSLineBoxContainValue>(*value))
-            return;
-
-        state.style()->setLineBoxContain(downcast<CSSLineBoxContainValue>(*value).value());
-        return;
-    }
 
     // CSS Fonts Module Level 3
     case CSSPropertyWebkitFontFeatureSettings: {
@@ -2846,16 +2709,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         return;
     }
 #endif /* ENABLE(CSS_GRID_LAYOUT) */
-
-    case CSSPropertyWebkitJustifySelf:
-        HANDLE_INHERIT_AND_INITIAL(justifySelf, JustifySelf);
-        if (Pair* pairValue = primitiveValue->getPairValue()) {
-            state.style()->setJustifySelf(*pairValue->first());
-            state.style()->setJustifySelfOverflowAlignment(*pairValue->second());
-        } else
-            state.style()->setJustifySelf(*primitiveValue);
-        return;
-
 #if ENABLE(CSS_SCROLL_SNAP)
     case CSSPropertyWebkitScrollSnapType:
         HANDLE_INHERIT_AND_INITIAL(scrollSnapType, ScrollSnapType);
@@ -2887,24 +2740,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         return;
     }
 #endif
-
-    case CSSPropertyWebkitInitialLetter: {
-        HANDLE_INHERIT_AND_INITIAL(initialLetter, InitialLetter)
-        if (!value->isPrimitiveValue())
-            return;
-        
-        if (primitiveValue->getValueID() == CSSValueNormal) {
-            state.style()->setInitialLetter(IntSize());
-            return;
-        }
-            
-        Pair* pair = primitiveValue->getPairValue();
-        if (!pair || !pair->first() || !pair->second())
-            return;
-
-        state.style()->setInitialLetter(IntSize(pair->first()->getIntValue(), pair->second()->getIntValue()));
-        return;
-    }
     
     // These properties are aliased and DeprecatedStyleBuilder already applied the property on the prefixed version.
     case CSSPropertyAnimationDelay:
@@ -2954,6 +2789,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyBorderTopStyle:
     case CSSPropertyBorderTopWidth:
     case CSSPropertyBottom:
+    case CSSPropertyBoxShadow:
     case CSSPropertyBoxSizing:
     case CSSPropertyCaptionSide:
     case CSSPropertyClear:
@@ -3023,6 +2859,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyTextIndent:
     case CSSPropertyTextOverflow:
     case CSSPropertyTextRendering:
+    case CSSPropertyTextShadow:
     case CSSPropertyTextTransform:
     case CSSPropertyTop:
     case CSSPropertyUnicodeBidi:
@@ -3058,12 +2895,17 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitBoxOrdinalGroup:
     case CSSPropertyWebkitBoxOrient:
     case CSSPropertyWebkitBoxPack:
+    case CSSPropertyWebkitBoxShadow:
     case CSSPropertyWebkitBoxReflect:
     case CSSPropertyWebkitColorCorrection:
     case CSSPropertyWebkitColumnAxis:
     case CSSPropertyWebkitColumnBreakAfter:
     case CSSPropertyWebkitColumnBreakBefore:
     case CSSPropertyWebkitColumnBreakInside:
+    case CSSPropertyWebkitJustifySelf:
+    case CSSPropertyWebkitLocale:
+    case CSSPropertyWebkitTextOrientation:
+    case CSSPropertyWebkitWritingMode:
     case CSSPropertyColumnCount:
     case CSSPropertyColumnGap:
     case CSSPropertyColumnProgression:
@@ -3097,7 +2939,9 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitHyphenateLimitBefore:
     case CSSPropertyWebkitHyphenateLimitLines:
     case CSSPropertyWebkitHyphens:
+    case CSSPropertyWebkitInitialLetter:
     case CSSPropertyWebkitLineAlign:
+    case CSSPropertyWebkitLineBoxContain:
     case CSSPropertyWebkitLineBreak:
     case CSSPropertyWebkitLineClamp:
     case CSSPropertyWebkitLineGrid:
@@ -3124,6 +2968,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitMaskSize:
     case CSSPropertyWebkitMaskSourceType:
     case CSSPropertyWebkitNbspMode:
+    case CSSPropertyWebkitPerspective:
     case CSSPropertyWebkitPerspectiveOrigin:
     case CSSPropertyWebkitPerspectiveOriginX:
     case CSSPropertyWebkitPerspectiveOriginY:
@@ -3152,6 +2997,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitTextFillColor:
     case CSSPropertyWebkitTextSecurity:
     case CSSPropertyWebkitTextStrokeColor:
+    case CSSPropertyWebkitTextStrokeWidth:
     case CSSPropertyWebkitTransformOriginX:
     case CSSPropertyWebkitTransformOriginY:
     case CSSPropertyWebkitTransformOriginZ:

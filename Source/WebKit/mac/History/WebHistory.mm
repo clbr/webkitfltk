@@ -33,6 +33,7 @@
 #import "WebKitLogging.h"
 #import "WebNSURLExtras.h"
 #import "WebTypesInternal.h"
+#import "WebVisitedLinkStore.h"
 #import <WebCore/HistoryItem.h>
 #import <WebCore/NSCalendarDateSPI.h>
 #import <WebCore/PageGroup.h>
@@ -710,6 +711,12 @@ static inline WebHistoryDateKey dateKey(NSTimeInterval date)
     }
 }
 
+- (void)addVisitedLinksToVisitedLinkStore:(WebVisitedLinkStore&)visitedLinkStore
+{
+    for (NSString *urlString in _entriesByURL)
+        visitedLinkStore.addVisitedLink(urlString);
+}
+
 @end
 
 @implementation WebHistory
@@ -727,8 +734,11 @@ static inline WebHistoryDateKey dateKey(NSTimeInterval date)
     // and correct synchronization of history file between applications.
     [_sharedHistory release];
     _sharedHistory = [history retain];
+
     PageGroup::setShouldTrackVisitedLinks(history);
     PageGroup::removeAllVisitedLinks();
+    WebVisitedLinkStore::setShouldTrackVisitedLinks(history);
+    WebVisitedLinkStore::removeAllVisitedLinks();
 }
 
 - (void)timeZoneChanged:(NSNotification *)notification
@@ -911,11 +921,13 @@ static inline WebHistoryDateKey dateKey(NSTimeInterval date)
 + (void)_setVisitedLinkTrackingEnabled:(BOOL)visitedLinkTrackingEnabled
 {
     PageGroup::setShouldTrackVisitedLinks(visitedLinkTrackingEnabled);
+    WebVisitedLinkStore::setShouldTrackVisitedLinks(visitedLinkTrackingEnabled);
 }
 
 + (void)_removeAllVisitedLinks
 {
     PageGroup::removeAllVisitedLinks();
+    WebVisitedLinkStore::removeAllVisitedLinks();
 }
 
 @end
@@ -941,6 +953,10 @@ static inline WebHistoryDateKey dateKey(NSTimeInterval date)
     [_historyPrivate addVisitedLinksToPageGroup:group];
 }
 
+- (void)_addVisitedLinksToVisitedLinkStore:(WebVisitedLinkStore &)visitedLinkStore
+{
+    [_historyPrivate addVisitedLinksToVisitedLinkStore:visitedLinkStore];
+}
 @end
 
 WebHistoryWriter::WebHistoryWriter(DateToEntriesMap* entriesByDate)

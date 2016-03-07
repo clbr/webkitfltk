@@ -23,31 +23,36 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <WebCore/UserContentController.h>
+#ifndef WebVisitedLinkStore_h
+#define WebVisitedLinkStore_h
 
-class WebVisitedLinkStore;
+#import <WebCore/LinkHash.h>
+#import <WebCore/VisitedLinkStore.h>
+#import <wtf/PassRef.h>
 
-@class WebView;
-
-class WebViewGroup : public RefCounted<WebViewGroup> {
+class WebVisitedLinkStore final : public WebCore::VisitedLinkStore {
 public:
-    static PassRefPtr<WebViewGroup> getOrCreate(const String& name);
-    ~WebViewGroup();
+    static PassRef<WebVisitedLinkStore> create();
+    virtual ~WebVisitedLinkStore();
 
-    static WebViewGroup* get(const String& name);
+    static void setShouldTrackVisitedLinks(bool);
+    static void removeAllVisitedLinks();
 
-    void addWebView(WebView *);
-    void removeWebView(WebView *);
-
-    WebCore::UserContentController& userContentController() { return m_userContentController.get(); }
-    WebVisitedLinkStore& visitedLinkStore() { return m_visitedLinkStore.get(); }
+    void addVisitedLink(NSString *urlString);
+    void removeVisitedLink(NSString *urlString);
 
 private:
-    WebViewGroup(const String& name);
+    WebVisitedLinkStore();
 
-    String m_name;
-    HashSet<WebView *> m_webViews;
+    virtual bool isLinkVisited(WebCore::Page&, WebCore::LinkHash, const WebCore::URL& baseURL, const AtomicString& attributeURL) override;
+    virtual void addVisitedLink(WebCore::Page&, WebCore::LinkHash) override;
 
-    Ref<WebCore::UserContentController> m_userContentController;
-    Ref<WebVisitedLinkStore> m_visitedLinkStore;
+    void populateVisitedLinksIfNeeded(WebCore::Page&);
+    void addVisitedLinkHash(WebCore::LinkHash);
+    void removeVisitedLinkHashes();
+
+    HashSet<WebCore::LinkHash, WebCore::LinkHashHash> m_visitedLinkHashes;
+    bool m_visitedLinksPopulated;
 };
+
+#endif // WebVisitedLinkStore_h

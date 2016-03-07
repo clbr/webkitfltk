@@ -131,9 +131,15 @@ static unsigned staticSpecificityInternal(const CSSSelector& firstSimpleSelector
 static unsigned simpleSelectorFunctionalPseudoClassStaticSpecificity(const CSSSelector& simpleSelector, bool& ok)
 {
     if (simpleSelector.match() == CSSSelector::PseudoClass) {
-        if (simpleSelector.pseudoClassType() == CSSSelector::PseudoClassMatches) {
-            const CSSSelectorList& selectorList = *simpleSelector.selectorList();
-            const CSSSelector& firstSubselector = *selectorList.first();
+        CSSSelector::PseudoClassType pseudoClassType = simpleSelector.pseudoClassType();
+        if (pseudoClassType == CSSSelector::PseudoClassMatches || pseudoClassType == CSSSelector::PseudoClassNthChild || pseudoClassType == CSSSelector::PseudoClassNthLastChild) {
+            const CSSSelectorList* selectorList = simpleSelector.selectorList();
+            if (!selectorList) {
+                ASSERT_WITH_MESSAGE(pseudoClassType != CSSSelector::PseudoClassMatches, ":matches() should never be created without a valid selector list.");
+                return 0;
+            }
+
+            const CSSSelector& firstSubselector = *selectorList->first();
 
             unsigned initialSpecificity = staticSpecificityInternal(firstSubselector, ok);
             if (!ok)
@@ -319,6 +325,9 @@ bool CSSSelector::operator==(const CSSSelector& other) const
 static void appendPseudoClassFunctionTail(StringBuilder& str, const CSSSelector* selector)
 {
     switch (selector->pseudoClassType()) {
+#if ENABLE(CSS_SELECTORS_LEVEL4)
+    case CSSSelector::PseudoClassDir:
+#endif
     case CSSSelector::PseudoClassLang:
     case CSSSelector::PseudoClassNthChild:
     case CSSSelector::PseudoClassNthLastChild:
@@ -441,6 +450,12 @@ String CSSSelector::selectorText(const String& rightSide) const
             case CSSSelector::PseudoClassDefault:
                 str.appendLiteral(":default");
                 break;
+#if ENABLE(CSS_SELECTORS_LEVEL4)
+            case CSSSelector::PseudoClassDir:
+                str.appendLiteral(":dir(");
+                appendPseudoClassFunctionTail(str, cs);
+                break;
+#endif
             case CSSSelector::PseudoClassDisabled:
                 str.appendLiteral(":disabled");
                 break;

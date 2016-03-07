@@ -1621,6 +1621,13 @@ void Page::setUserContentController(UserContentController* userContentController
 
     if (m_userContentController)
         m_userContentController->addPage(*this);
+
+    for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
+        if (Document *document = frame->document()) {
+            document->styleSheetCollection().invalidateInjectedStyleSheetCache();
+            document->styleResolverChanged(DeferRecalcStyle);
+        }
+    }
 }
 
 VisitedLinkStore& Page::visitedLinkStore()
@@ -1629,6 +1636,18 @@ VisitedLinkStore& Page::visitedLinkStore()
         return *m_visitedLinkStore;
 
     return group().visitedLinkStore();
+}
+
+void Page::setVisitedLinkStore(PassRef<VisitedLinkStore> visitedLinkStore)
+{
+    if (m_visitedLinkStore)
+        m_visitedLinkStore->removePage(*this);
+
+    m_visitedLinkStore = WTF::move(visitedLinkStore);
+    m_visitedLinkStore->addPage(*this);
+
+    invalidateStylesForAllLinks();
+    pageCache()->markPagesForFullStyleRecalc(this);
 }
 
 SessionID Page::sessionID() const
