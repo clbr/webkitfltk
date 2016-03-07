@@ -145,7 +145,7 @@ public:
     void bufferSubData(GC3Denum target, long long offset, ArrayBufferView* data, ExceptionCode&);
 
     GC3Denum checkFramebufferStatus(GC3Denum target);
-    void clear(GC3Dbitfield mask);
+    virtual void clear(GC3Dbitfield mask) = 0;
     void clearColor(GC3Dfloat red, GC3Dfloat green, GC3Dfloat blue, GC3Dfloat alpha);
     void clearDepth(GC3Dfloat);
     void clearStencil(GC3Dint);
@@ -354,7 +354,7 @@ public:
     
     unsigned getMaxVertexAttribs() const { return m_maxVertexAttribs; }
 
-    // ANGLE_instanced_arrays extension functions.
+    // Instanced Array helper functions.
     void drawArraysInstanced(GC3Denum mode, GC3Dint first, GC3Dsizei count, GC3Dsizei primcount);
     void drawElementsInstanced(GC3Denum mode, GC3Dsizei count, GC3Denum type, long long offset, GC3Dsizei primcount);
     void vertexAttribDivisor(GC3Duint index, GC3Duint divisor);
@@ -373,8 +373,11 @@ protected:
     friend class WebGLCompressedTextureS3TC;
     friend class WebGLRenderingContextErrorMessageCallback;
     friend class WebGLVertexArrayObjectOES;
+    friend class WebGLVertexArrayObject;
+    friend class WebGLVertexArrayObjectBase;
 
     virtual void initializeNewContext();
+    virtual void initializeVertexArrayObjects() = 0;
     void setupFlags();
 
     // ActiveDOMObject
@@ -418,7 +421,7 @@ protected:
     bool validateWebGLObject(const char*, WebGLObject*);
 
     bool validateDrawArrays(const char* functionName, GC3Denum mode, GC3Dint first, GC3Dsizei count, GC3Dsizei primcount);
-    virtual bool validateDrawElements(const char* functionName, GC3Denum mode, GC3Dsizei count, GC3Denum type, long long offset, unsigned& numElements, GC3Dsizei primcount) = 0;
+    bool validateDrawElements(const char* functionName, GC3Denum mode, GC3Dsizei count, GC3Denum type, long long offset, unsigned& numElements, GC3Dsizei primcount);
 
     // Adds a compressed texture format.
     void addCompressedTextureFormat(GC3Denum);
@@ -447,10 +450,10 @@ protected:
 
     // List of bound VBO's. Used to maintain info about sizes for ARRAY_BUFFER and stored values for ELEMENT_ARRAY_BUFFER
     RefPtr<WebGLBuffer> m_boundArrayBuffer;
-    
-    RefPtr<WebGLVertexArrayObjectOES> m_defaultVertexArrayObject;
-    RefPtr<WebGLVertexArrayObjectOES> m_boundVertexArrayObject;
-    void setBoundVertexArrayObject(PassRefPtr<WebGLVertexArrayObjectOES> arrayObject)
+
+    RefPtr<WebGLVertexArrayObjectBase> m_defaultVertexArrayObject;
+    RefPtr<WebGLVertexArrayObjectBase> m_boundVertexArrayObject;
+    void setBoundVertexArrayObject(PassRefPtr<WebGLVertexArrayObjectBase> arrayObject)
     {
         if (arrayObject)
             m_boundVertexArrayObject = arrayObject;
@@ -563,7 +566,7 @@ protected:
     bool m_hasRequestedPolicyResolution;
     bool isContextLostOrPending();
 
-    // Enabled extension objects.
+    // Enabled extension objects. FIXME: Move these to WebGL1RenderingContext, not needed for WebGL2
     std::unique_ptr<EXTFragDepth> m_extFragDepth;
     std::unique_ptr<EXTBlendMinMax> m_extBlendMinMax;
     std::unique_ptr<EXTsRGB> m_extsRGB;
@@ -740,7 +743,7 @@ protected:
 
     // Helper function to validate input parameters for framebuffer functions.
     // Generate GL error if parameters are illegal.
-    bool validateFramebufferFuncParameters(const char* functionName, GC3Denum target, GC3Denum attachment);
+    virtual bool validateFramebufferFuncParameters(const char* functionName, GC3Denum target, GC3Denum attachment) = 0;
 
     // Helper function to validate blend equation mode.
     virtual bool validateBlendEquation(const char* functionName, GC3Denum) = 0;
@@ -821,10 +824,8 @@ protected:
     // Clamp the width and height to GL_MAX_VIEWPORT_DIMS.
     IntSize clampedCanvasSize();
 
-    // First time called, if EXT_draw_buffers is supported, query the value; otherwise return 0.
-    // Later, return the cached value.
-    GC3Dint getMaxDrawBuffers();
-    GC3Dint getMaxColorAttachments();
+    virtual GC3Dint getMaxDrawBuffers() = 0;
+    virtual GC3Dint getMaxColorAttachments() = 0;
 
     void setBackDrawBuffer(GC3Denum);
 

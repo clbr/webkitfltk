@@ -78,7 +78,6 @@ endif ()
 
 WEBKIT_OPTION_BEGIN()
 WEBKIT_OPTION_DEFINE(ENABLE_PLUGIN_PROCESS_GTK2 "Whether to build WebKitPluginProcess2 to load GTK2 based plugins." ON)
-WEBKIT_OPTION_DEFINE(ENABLE_MINIBROWSER "Whether to enable MiniBrowser compilation." OFF)
 
 if ((OPENGL_FOUND OR OPENGLES2_FOUND) AND (GLX_FOUND OR EGL_FOUND))
     WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_WEBGL ON)
@@ -302,6 +301,13 @@ if (ENABLE_GEOLOCATION)
       set(WTF_USE_GEOCLUE2 1)
     else ()
       set(WTF_USE_GEOCLUE2 0)
+    endif ()
+endif ()
+
+if (ENABLE_MEDIA_STREAM)
+    find_package(OpenWebRTC)
+    if (OPENWEBRTC_FOUND)
+        add_definitions(-DWTF_USE_OPENWEBRTC)
     endif ()
 endif ()
 
