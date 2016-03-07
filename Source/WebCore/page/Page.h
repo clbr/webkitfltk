@@ -427,7 +427,7 @@ public:
     WEBCORE_EXPORT void setMuted(bool);
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    void showPlaybackTargetPicker(Document*, const WebCore::IntPoint&, bool);
+    void showPlaybackTargetPicker(const WebCore::IntPoint&, bool);
     bool hasWirelessPlaybackTarget() const { return m_hasWirelessPlaybackTarget; }
     MediaPlaybackTarget& playbackTarget() const { return *m_playbackTarget.get(); }
     void configurePlaybackTargetMonitoring();
@@ -589,9 +589,7 @@ private:
     SessionID m_sessionID;
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    Document* m_documentRequestingPlaybackTargetPicker { nullptr };
     std::unique_ptr<MediaPlaybackTarget> m_playbackTarget;
-    bool m_requiresPlaybackTargetMonitoring { false };
     bool m_hasWirelessPlaybackTarget { false };
 #endif
 

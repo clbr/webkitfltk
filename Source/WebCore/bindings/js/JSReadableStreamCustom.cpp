@@ -33,11 +33,13 @@
 #include "JSReadableStream.h"
 
 #include "ExceptionCode.h"
+#include "JSDOMBinding.h"
 #include "JSDOMPromise.h"
 #include "JSReadableStreamReader.h"
 #include "ReadableStream.h"
 #include "ReadableStreamJSSource.h"
 #include "ReadableStreamReader.h"
+#include <runtime/Error.h>
 #include <wtf/NeverDestroyed.h>
 
 using namespace JSC;
@@ -78,9 +80,8 @@ EncodedJSValue JSC_HOST_CALL constructJSReadableStream(ExecState* exec)
     ASSERT(jsConstructor);
     ScriptExecutionContext* scriptExecutionContext = jsConstructor->scriptExecutionContext();
 
-
     Ref<ReadableStreamJSSource> source = ReadableStreamJSSource::create(exec);
-    RefPtr<ReadableStream> readableStream = ReadableStream::create(*scriptExecutionContext, Ref<ReadableStreamSource>(source.get()));
+    RefPtr<ReadableStream> readableStream = ReadableJSStream::create(*scriptExecutionContext, Ref<ReadableStreamJSSource>(source.get()));
 
     VM& vm = exec->vm();
     JSGlobalObject* globalObject = exec->callee()->globalObject();

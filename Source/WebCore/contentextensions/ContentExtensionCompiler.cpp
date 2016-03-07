@@ -133,7 +133,7 @@ std::error_code compileRuleList(ContentExtensionCompilationClient& client, const
 
     Vector<SerializedActionByte> actions;
     Vector<unsigned> actionLocations = serializeActions(parsedRuleList, actions);
-    Vector<uint64_t> universalActionLocations;
+    HashSet<uint64_t, DefaultHash<uint64_t>::Hash, WTF::UnsignedWithZeroKeyHashTraits<uint64_t>> universalActionLocations;
 
     CombinedURLFilters combinedURLFilters;
     URLFilterParser urlFilterParser(combinedURLFilters);
@@ -148,10 +148,9 @@ std::error_code compileRuleList(ContentExtensionCompilationClient& client, const
         URLFilterParser::ParseStatus status = urlFilterParser.addPattern(trigger.urlFilter, trigger.urlFilterIsCaseSensitive, actionLocationAndFlags);
 
         if (status == URLFilterParser::MatchesEverything) {
-
             if (ignorePreviousRulesSeen)
                 return ContentExtensionError::RegexMatchesEverythingAfterIgnorePreviousRules;
-            universalActionLocations.append(actionLocationAndFlags);
+            universalActionLocations.add(actionLocationAndFlags);
         }
 
         if (status != URLFilterParser::Ok && status != URLFilterParser::MatchesEverything) {
@@ -173,10 +172,12 @@ std::error_code compileRuleList(ContentExtensionCompilationClient& client, const
 #endif
 
     Vector<NFA> nfas = combinedURLFilters.createNFAs();
+    if (!nfas.size() && universalActionLocations.size())
+        nfas.append(NFA());
 
 #if CONTENT_EXTENSIONS_PERFORMANCE_REPORTING
     double nfaBuildTimeEnd = monotonicallyIncreasingTime();
-    dataLogF("    Time spent building the NFA: %f\n", (nfaBuildTimeEnd - nfaBuildTimeStart));
+    dataLogF("    Time spent building the NFAs: %f\n", (nfaBuildTimeEnd - nfaBuildTimeStart));
 #endif
 
 #if CONTENT_EXTENSIONS_STATE_MACHINE_DEBUGGING
@@ -208,6 +209,11 @@ std::error_code compileRuleList(ContentExtensionCompilationClient& client, const
         DFABytecodeCompiler compiler(dfa, bytecode);
         compiler.compile();
     }
+
+#if CONTENT_EXTENSIONS_PERFORMANCE_REPORTING
+    double dfaBuildTimeEnd = monotonicallyIncreasingTime();
+    dataLogF("    Time spent building and compiling the DFAs: %f\n", (dfaBuildTimeEnd - dfaBuildTimeStart));
+#endif
 
     client.writeBytecode(WTF::move(bytecode));
     client.writeActions(WTF::move(actions));

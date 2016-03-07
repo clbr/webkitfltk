@@ -164,10 +164,6 @@ public:
     virtual std::unique_ptr<ColorChooser> createColorChooser(ColorChooserClient*, const Color&) override;
 #endif
 
-#if ENABLE(DATE_AND_TIME_INPUT_TYPES) && !PLATFORM(IOS)
-    virtual PassRefPtr<DateTimeChooser> openDateTimeChooser(DateTimeChooserClient*, const DateTimeChooserParameters&) override;
-#endif
-
     virtual void runOpenPanel(Frame*, PassRefPtr<FileChooser>) override;
     virtual void loadIconForFiles(const Vector<String>&, FileIconLoader*) override { }
 
@@ -227,7 +223,7 @@ public:
     virtual void needTouchEvents(bool) override { }
 #endif
     
-    virtual void numWheelEventHandlersChanged(unsigned) override { }
+    virtual void wheelEventHandlersChanged(bool) override { }
     
     virtual bool isEmptyChromeClient() const override { return true; }
 

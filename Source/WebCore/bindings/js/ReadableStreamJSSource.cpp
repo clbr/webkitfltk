@@ -32,6 +32,7 @@
 #if ENABLE(STREAMS_API)
 #include "ReadableStreamJSSource.h"
 
+#include "DOMWrapperWorld.h"
 #include "JSDOMPromise.h"
 #include "JSReadableStream.h"
 #include "NotImplemented.h"
@@ -78,6 +79,34 @@ ReadableStreamJSSource::ReadableStreamJSSource(JSC::ExecState* exec)
 void ReadableStreamJSSource::start(JSC::ExecState*)
 {
     notImplemented();
+}
+
+Ref<ReadableJSStream> ReadableJSStream::create(ScriptExecutionContext& scriptExecutionContext, Ref<ReadableStreamJSSource>&& source)
+{
+    auto readableStream = adoptRef(*new ReadableJSStream(scriptExecutionContext, WTF::move(source)));
+    return readableStream;
+}
+
+Ref<ReadableStreamReader> ReadableJSStream::createReader()
+{
+    RefPtr<ReadableStreamReader> reader = ReadableJSStreamReader::create(*this);
+    return reader.releaseNonNull();
+}
+
+ReadableJSStream::ReadableJSStream(ScriptExecutionContext& scriptExecutionContext, Ref<ReadableStreamJSSource>&& source)
+    : ReadableStream(scriptExecutionContext, WTF::move(source))
+{
+}
+
+Ref<ReadableJSStreamReader> ReadableJSStreamReader::create(ReadableJSStream& stream)
+{
+    auto readableStreamReader = adoptRef(*new ReadableJSStreamReader(stream));
+    return readableStreamReader;
+}
+
+ReadableJSStreamReader::ReadableJSStreamReader(ReadableJSStream& readableStream)
+    : ReadableStreamReader(readableStream)
+{
 }
 
 } // namespace WebCore

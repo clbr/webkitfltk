@@ -1,3 +1,343 @@
+2015-04-03  Csaba Osztrogonác  <ossy@webkit.org>
+
+        FTL JIT tests should fail if LLVM library isn't available
+        https://bugs.webkit.org/show_bug.cgi?id=143374
+
+        Reviewed by Mark Lam.
+
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * runtime/Options.h:
+
+2015-04-03  Zan Dobersek  <zdobersek@igalia.com>
+
+        Fix the EFL and GTK build after r182243
+        https://bugs.webkit.org/show_bug.cgi?id=143361
+
+        Reviewed by Csaba Osztrogonác.
+
+        * CMakeLists.txt: InspectorBackendCommands.js is generated in the
+        DerivedSources/JavaScriptCore/inspector/ directory.
+
+2015-04-03  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed, fixing Clang builds of the GTK port on Linux.
+
+        * runtime/Options.cpp:
+        Include the <math.h> header for isnan().
+
+2015-04-02  Mark Lam  <mark.lam@apple.com>
+
+        Enhance ability to dump JSC Options.
+        <https://webkit.org/b/143357>
+
+        Reviewed by Benjamin Poulain.
+
+        Some enhancements to how the JSC options work:
+
+        1. Add a JSC_showOptions option which take values: 0 = None, 1 = Overridden only,
+           2 = All, 3 = Verbose.
+
+           The default is 0 (None).  This dumps nothing.
+           With the Overridden setting, at VM initialization time, we will dump all
+           option values that have been changed from their default.
+           With the All setting, at VM initialization time, we will dump all option values.
+           With the Verbose setting, at VM initialization time, we will dump all option
+           values along with their descriptions (if available).
+
+        2. We now store a copy of the default option values.
+
+           We later use this for comparison to tell if an option has been overridden, and
+           print the default value for reference.  As a result, we no longer need the
+           didOverride flag since we can compute whether the option is overridden at any time.
+
+        3. Added description strings to some options to be printed when JSC_showOptions=3 (Verbose).
+
+           This will come in handy later when we want to rename some of the options to more sane
+           names that are easier to remember.  For example, we can change
+           Options::dfgFunctionWhitelistFile() to Options::dfgWhiteList(), and
+           Options::slowPathAllocsBetweenGCs() to Options::forcedGcRate().  With the availability
+           of the description, we can afford to use shorter and less descriptive option names,
+           but they will be easier to remember and use for day to day debugging work.
+
+           In this patch, I did not change the names of any of the options yet.  I only added
+           description strings for options that I know about, and where I think the option name
+           isn't already descriptive enough.
+
+        4. Also deleted some unused code.
+
+        * jsc.cpp:
+        (CommandLine::parseArguments):
+        * runtime/Options.cpp:
+        (JSC::Options::initialize):
+        (JSC::Options::setOption):
+        (JSC::Options::dumpAllOptions):
+        (JSC::Options::dumpOption):
+        (JSC::Options::Option::dump):
+        (JSC::Options::Option::operator==):
+        * runtime/Options.h:
+        (JSC::OptionRange::rangeString):
+        (JSC::Options::Option::Option):
+        (JSC::Options::Option::operator!=):
+
+2015-04-02  Geoffrey Garen  <ggaren@apple.com>
+
+        JavaScriptCore API should support type checking for Array and Date
+        https://bugs.webkit.org/show_bug.cgi?id=143324
+
+        Reviewed by Darin Adler, Sam Weinig, Dan Bernstein.
+
+        * API/JSValue.h:
+        * API/JSValue.mm:
+        (-[JSValue isArray]):
+        (-[JSValue isDate]): Added an ObjC API.
+
+        * API/JSValueRef.cpp:
+        (JSValueIsArray):
+        (JSValueIsDate):
+        * API/JSValueRef.h: Added a C API.
+
+        * API/WebKitAvailability.h: Brought our availability macros up to date
+        and fixed a harmless bug where "10_10" translated to "10.0".
+
+        * API/tests/testapi.c:
+        (main): Added a test and corrected a pre-existing leak.
+
+        * API/tests/testapi.mm:
+        (testObjectiveCAPI): Added a test.
+
+2015-04-02  Mark Lam  <mark.lam@apple.com>
+
+        Add Options::dumpSourceAtDFGTime().
+        <https://webkit.org/b/143349>
+
+        Reviewed by Oliver Hunt, and Michael Saboff.
+
+        Sometimes, we will want to see the JS source code that we're compiling, and it
+        would be nice to be able to do this without having to jump thru a lot of hoops.
+        So, let's add a Options::dumpSourceAtDFGTime() option just like we have a
+        Options::dumpBytecodeAtDFGTime() option.
+
+        Also added versions of CodeBlock::dumpSource() and CodeBlock::dumpBytecode()
+        that explicitly take no arguments (instead of relying on the version that takes
+        the default argument).  These versions are friendlier to use when we want to call
+        them from an interactive debugging session.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpSource):
+        (JSC::CodeBlock::dumpBytecode):
+        * bytecode/CodeBlock.h:
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseCodeBlock):
+        * runtime/Options.h:
+
+2015-04-02  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Clean up EnumerationMode to easily extend
+        https://bugs.webkit.org/show_bug.cgi?id=143276
+
+        Reviewed by Geoffrey Garen.
+
+        To make the followings easily,
+        1. Adding new flag Include/ExcludeSymbols in the Object.getOwnPropertySymbols patch
+        2. Make ExcludeSymbols implicitly default for the existing flags
+        we encapsulate EnumerationMode flags into EnumerationMode class.
+
+        And this class manages 2 flags. Later it will be extended to 3.
+        1. DontEnumPropertiesMode (default is Exclude)
+        2. JSObjectPropertiesMode (default is Include)
+        3. SymbolPropertiesMode (default is Exclude)
+            SymbolPropertiesMode will be added in Object.getOwnPropertySymbols patch.
+
+        This patch replaces places using ExcludeDontEnumProperties
+        to EnumerationMode() value which represents default mode.
+
+        * API/JSCallbackObjectFunctions.h:
+        (JSC::JSCallbackObject<Parent>::getOwnNonIndexPropertyNames):
+        * API/JSObjectRef.cpp:
+        (JSObjectCopyPropertyNames):
+        * bindings/ScriptValue.cpp:
+        (Deprecated::jsToInspectorValue):
+        * bytecode/ObjectAllocationProfile.h:
+        (JSC::ObjectAllocationProfile::possibleDefaultPropertyCount):
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncSort):
+        * runtime/EnumerationMode.h:
+        (JSC::EnumerationMode::EnumerationMode):
+        (JSC::EnumerationMode::includeDontEnumProperties):
+        (JSC::EnumerationMode::includeJSObjectProperties):
+        (JSC::shouldIncludeDontEnumProperties): Deleted.
+        (JSC::shouldExcludeDontEnumProperties): Deleted.
+        (JSC::shouldIncludeJSObjectPropertyNames): Deleted.
+        (JSC::modeThatSkipsJSObject): Deleted.
+        * runtime/GenericArgumentsInlines.h:
+        (JSC::GenericArguments<Type>::getOwnPropertyNames):
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::getOwnNonIndexPropertyNames):
+        * runtime/JSArrayBuffer.cpp:
+        (JSC::JSArrayBuffer::getOwnNonIndexPropertyNames):
+        * runtime/JSArrayBufferView.cpp:
+        (JSC::JSArrayBufferView::getOwnNonIndexPropertyNames):
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::getOwnNonIndexPropertyNames):
+        * runtime/JSFunction.h:
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::JSGenericTypedArrayView<Adaptor>::getOwnNonIndexPropertyNames):
+        * runtime/JSLexicalEnvironment.cpp:
+        (JSC::JSLexicalEnvironment::getOwnNonIndexPropertyNames):
+        * runtime/JSONObject.cpp:
+        (JSC::Stringifier::Holder::appendNextProperty):
+        (JSC::Walker::walk):
+        * runtime/JSObject.cpp:
+        (JSC::getClassPropertyNames):
+        (JSC::JSObject::getOwnPropertyNames):
+        (JSC::JSObject::getOwnNonIndexPropertyNames):
+        (JSC::JSObject::getGenericPropertyNames):
+        * runtime/JSPropertyNameEnumerator.h:
+        (JSC::propertyNameEnumerator):
+        * runtime/JSSymbolTableObject.cpp:
+        (JSC::JSSymbolTableObject::getOwnNonIndexPropertyNames):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::objectConstructorGetOwnPropertyNames):
+        (JSC::objectConstructorKeys):
+        (JSC::defineProperties):
+        (JSC::objectConstructorSeal):
+        (JSC::objectConstructorFreeze):
+        (JSC::objectConstructorIsSealed):
+        (JSC::objectConstructorIsFrozen):
+        * runtime/RegExpObject.cpp:
+        (JSC::RegExpObject::getOwnNonIndexPropertyNames):
+        (JSC::RegExpObject::getPropertyNames):
+        (JSC::RegExpObject::getGenericPropertyNames):
+        * runtime/StringObject.cpp:
+        (JSC::StringObject::getOwnPropertyNames):
+        * runtime/Structure.cpp:
+        (JSC::Structure::getPropertyNamesFromStructure):
+
+2015-04-01  Alex Christensen  <achristensen@webkit.org>
+
+        Progress towards CMake on Windows and Mac.
+        https://bugs.webkit.org/show_bug.cgi?id=143293
+
+        Reviewed by Filip Pizlo.
+
+        * CMakeLists.txt:
+        Enabled using assembly on Windows.
+        Replaced unix commands with CMake commands.
+        * PlatformMac.cmake:
+        Tell open source builders where to find unicode headers.
+
+2015-04-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        IteratorClose should be called when jumping over the target for-of loop
+        https://bugs.webkit.org/show_bug.cgi?id=143140
+
+        Reviewed by Geoffrey Garen.
+
+        This patch fixes labeled break/continue behaviors with for-of and iterators.
+
+        1. Support IteratorClose beyond multiple loop contexts
+        Previously, IteratorClose is only executed in for-of's breakTarget().
+        However, this misses IteratorClose execution when statement roll-ups multiple control flow contexts.
+        For example,
+        outer: for (var e1 of outer) {
+            inner: for (var e2 of inner) {
+                break outer;
+            }
+        }
+        In this case, return method of inner should be called.
+        We leverage the existing system for `finally` to execute inner.return method correctly.
+        Leveraging `finally` system fixes `break`, `continue` and `return` cases.
+        `throw` case is already supported by emitting try-catch handlers in for-of.
+
+        2. Incorrect LabelScope creation is done in ForOfNode
+        ForOfNode creates duplicated LabelScope.
+        It causes infinite loop when executing the following program that contains
+        explicitly labeled for-of loop.
+        For example,
+        inner: for (var elm of array) {
+            continue inner;
+        }
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::pushFinallyContext):
+        (JSC::BytecodeGenerator::pushIteratorCloseContext):
+        (JSC::BytecodeGenerator::popFinallyContext):
+        (JSC::BytecodeGenerator::popIteratorCloseContext):
+        (JSC::BytecodeGenerator::emitComplexPopScopes):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        (JSC::BytecodeGenerator::emitIteratorClose):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForOfNode::emitBytecode):
+        * tests/stress/iterator-return-beyond-multiple-iteration-scopes.js: Added.
+        (createIterator.iterator.return):
+        (createIterator):
+        * tests/stress/raise-error-in-iterator-close.js: Added.
+        (createIterator.iterator.return):
+        (createIterator):
+
+2015-04-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Implement Symbol.unscopables
+        https://bugs.webkit.org/show_bug.cgi?id=142829
+
+        Reviewed by Geoffrey Garen.
+
+        This patch introduces Symbol.unscopables functionality.
+        In ES6, some generic names (like keys, values) are introduced
+        as Array's method name. And this breaks the web since some web sites
+        use like the following code.
+
+        var values = ...;
+        with (array) {
+            values;  // This values is trapped by array's method "values".
+        }
+
+        To fix this, Symbol.unscopables introduces blacklist
+        for with scope's trapping. When resolving scope,
+        if name is found in the target scope and the target scope is with scope,
+        we check Symbol.unscopables object to filter generic names.
+
+        This functionality is only active for with scopes.
+        Global scope does not have unscopables functionality.
+
+        And since
+        1) op_resolve_scope for with scope always return Dynamic resolve type,
+        2) in that case, JSScope::resolve is always used in JIT and LLInt,
+        3) the code which contains op_resolve_scope that returns Dynamic cannot be compiled with DFG and FTL,
+        to implement this functionality, we just change JSScope::resolve and no need to change JIT code.
+        So performance regression is only visible in Dynamic resolving case, and it is already much slow.
+
+        * runtime/ArrayPrototype.cpp:
+        (JSC::ArrayPrototype::finishCreation):
+        * runtime/CommonIdentifiers.h:
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::runtimeFlags):
+        * runtime/JSScope.cpp:
+        (JSC::isUnscopable):
+        (JSC::JSScope::resolve):
+        * runtime/JSScope.h:
+        (JSC::ScopeChainIterator::scope):
+        * tests/stress/global-environment-does-not-trap-unscopables.js: Added.
+        (test):
+        * tests/stress/unscopables.js: Added.
+        (test):
+        (.):
+
+2015-03-31  Ryosuke Niwa  <rniwa@webkit.org>
+
+        ES6 class syntax should allow static setters and getters
+        https://bugs.webkit.org/show_bug.cgi?id=143180
+
+        Reviewed by Filip Pizlo
+
+        Apparently I misread the spec when I initially implemented parseClass.
+        ES6 class syntax allows static getters and setters so just allow that.
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseClass):
+
 2015-03-31  Filip Pizlo  <fpizlo@apple.com>
 
         PutClosureVar CSE def() rule has a wrong base
