@@ -26,6 +26,8 @@
 #ifndef CertificateInfo_h
 #define CertificateInfo_h
 
+#include "NotImplemented.h"
+
 namespace WebCore {
 
 class ResourceResponse;
@@ -35,6 +37,8 @@ public:
     CertificateInfo();
     explicit CertificateInfo(const WebCore::ResourceResponse&);
     ~CertificateInfo();
+
+    bool containsNonRootSHA1SignedCertificate() const { notImplemented(); return false; }
 };
 
 } // namespace WebCore
