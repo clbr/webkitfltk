@@ -27,6 +27,7 @@
 #ifndef ResourceResponseBase_h
 #define ResourceResponseBase_h
 
+#include "CertificateInfo.h"
 #include "HTTPHeaderMap.h"
 #include "URL.h"
 #include "ResourceLoadTiming.h"
@@ -91,6 +92,9 @@ public:
 
     WEBCORE_EXPORT bool isAttachment() const;
     WEBCORE_EXPORT String suggestedFilename() const;
+
+    void includeCertificateInfo() const;
+    CertificateInfo certificateInfo() const;
     
     // These functions return parsed values of the corresponding response headers.
     // NaN means that the header was not present or had invalid value.
@@ -124,6 +128,9 @@ public:
 
     static bool compare(const ResourceResponse&, const ResourceResponse&);
 
+    template<class Encoder> void encode(Encoder&) const;
+    template<class Decoder> static bool decode(Decoder&, ResourceResponseBase&);
+
 protected:
     enum InitLevel {
         Uninitialized,
@@ -136,11 +143,11 @@ protected:
 
     void lazyInit(InitLevel) const;
 
-    // The ResourceResponse subclass may "shadow" this method to lazily initialize platform specific fields
+    // The ResourceResponse subclass should shadow these functions to lazily initialize platform specific fields
     void platformLazyInit(InitLevel) { }
-    String platformSuggestedFileName() { return String(); }
+    CertificateInfo platformCertificateInfo() const { return CertificateInfo(); };
+    String platformSuggestedFileName() const { return String(); }
 
-    // The ResourceResponse subclass may "shadow" this method to compare platform specific fields
     static bool platformCompare(const ResourceResponse&, const ResourceResponse&) { return true; }
 
     URL m_url;
@@ -150,6 +157,9 @@ protected:
     AtomicString m_httpStatusText;
     HTTPHeaderMap m_httpHeaderFields;
     mutable ResourceLoadTiming m_resourceLoadTiming;
+
+    mutable bool m_includesCertificateInfo;
+    mutable CertificateInfo m_certificateInfo;
 
     int m_httpStatusCode;
     unsigned m_connectionID;
@@ -185,6 +195,71 @@ private:
 
 inline bool operator==(const ResourceResponse& a, const ResourceResponse& b) { return ResourceResponseBase::compare(a, b); }
 inline bool operator!=(const ResourceResponse& a, const ResourceResponse& b) { return !(a == b); }
+
+template<class Encoder>
+void ResourceResponseBase::encode(Encoder& encoder) const
+{
+    encoder << m_isNull;
+    if (m_isNull)
+        return;
+    lazyInit(AllFields);
+
+    encoder << m_url.string();
+    encoder << m_mimeType;
+    encoder << static_cast<int64_t>(m_expectedContentLength);
+    encoder << m_textEncodingName;
+    encoder << m_httpStatusText;
+    encoder << m_httpHeaderFields;
+    encoder << m_resourceLoadTiming;
+    encoder << m_httpStatusCode;
+    encoder << m_connectionID;
+    encoder << m_includesCertificateInfo;
+    if (m_includesCertificateInfo)
+        encoder << m_certificateInfo;
+}
+
+template<class Decoder>
+bool ResourceResponseBase::decode(Decoder& decoder, ResourceResponseBase& response)
+{
+    ASSERT(response.m_isNull);
+    bool responseIsNull;
+    if (!decoder.decode(responseIsNull))
+        return false;
+    if (responseIsNull)
+        return true;
+
+    String url;
+    if (!decoder.decode(url))
+        return false;
+    response.m_url = URL(URL(), url);
+    if (!decoder.decode(response.m_mimeType))
+        return false;
+    int64_t expectedContentLength;
+    if (!decoder.decode(expectedContentLength))
+        return false;
+    response.m_expectedContentLength = expectedContentLength;
+    if (!decoder.decode(response.m_textEncodingName))
+        return false;
+    if (!decoder.decode(response.m_httpStatusText))
+        return false;
+    if (!decoder.decode(response.m_httpHeaderFields))
+        return false;
+    if (!decoder.decode(response.m_resourceLoadTiming))
+        return false;
+    if (!decoder.decode(response.m_httpStatusCode))
+        return false;
+    if (!decoder.decode(response.m_connectionID))
+        return false;
+    if (!decoder.decode(response.m_includesCertificateInfo))
+        return false;
+    if (response.m_includesCertificateInfo) {
+        if (!decoder.decode(response.m_certificateInfo))
+            return false;
+    }
+    response.m_isNull = false;
+
+    return true;
+}
 
 struct CrossThreadResourceResponseDataBase {
     WTF_MAKE_NONCOPYABLE(CrossThreadResourceResponseDataBase); WTF_MAKE_FAST_ALLOCATED;

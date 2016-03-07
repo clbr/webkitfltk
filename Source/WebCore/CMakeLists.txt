@@ -1302,7 +1302,6 @@ set(WebCore_SOURCES
     css/SVGCSSParser.cpp
     css/SVGCSSStyleSelector.cpp
     css/SelectorChecker.cpp
-    css/SelectorCheckerFastPath.cpp
     css/SelectorFilter.cpp
     css/SourceSizeList.cpp
     css/StyleInvalidationAnalysis.cpp
@@ -3484,9 +3483,6 @@ endif ()
 
 # SVG extra defines need to map to a numerical value for correct preprocessing of svgtags.in.
 set(SVG_EXTRA_DEFINES "")
-if (ENABLE_FILTERS)
-    list(APPEND SVG_EXTRA_DEFINES "ENABLE_FILTERS=1")
-endif ()
 if (ENABLE_SVG_FONTS)
     list(APPEND SVG_EXTRA_DEFINES "ENABLE_SVG_FONTS=1")
 endif ()

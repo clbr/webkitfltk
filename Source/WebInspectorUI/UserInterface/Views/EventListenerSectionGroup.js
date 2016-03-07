@@ -34,7 +34,7 @@ WebInspector.EventListenerSectionGroup = function(eventListener, nodeId)
     rows.push(new WebInspector.DetailsSectionSimpleRow(WebInspector.UIString("Type"), this._type()));
 
     WebInspector.DetailsSectionGroup.call(this, rows);
-}
+};
 
 WebInspector.EventListenerSectionGroup.prototype = {
     constructor: WebInspector.EventListenerSectionGroup,
@@ -70,7 +70,7 @@ WebInspector.EventListenerSectionGroup.prototype = {
             var functionName = match[1];
         } else {
             var anonymous = true;
-            var functionName = WebInspector.UIString("(anonymous function)");        
+            var functionName = WebInspector.UIString("(anonymous function)");
         }
 
         if (!this._eventListener.location)
@@ -96,6 +96,6 @@ WebInspector.EventListenerSectionGroup.prototype = {
         fragment.appendChild(document.createTextNode(functionName));
         return fragment;
     }
-}
+};
 
 WebInspector.EventListenerSectionGroup.prototype.__proto__ = WebInspector.DetailsSectionGroup.prototype;

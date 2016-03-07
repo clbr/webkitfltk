@@ -70,7 +70,7 @@ WebInspector.CSSCompletions = function(properties, acceptEmptyPrefix)
     this._values.sort();
 
     this._acceptEmptyPrefix = acceptEmptyPrefix;
-}
+};
 
 WebInspector.CSSCompletions.cssNameCompletions = null;
 
@@ -82,6 +82,11 @@ WebInspector.CSSCompletions.requestCSSNameCompletions = function()
             return;
 
         WebInspector.CSSCompletions.cssNameCompletions = new WebInspector.CSSCompletions(names, false);
+
+        // CodeMirror is not included by tests so we shouldn't assume it always exists.
+        // If it isn't available we skip MIME type associations.
+        if (!window.CodeMirror)
+            return;
 
         var propertyNamesForCodeMirror = {};
         var valueKeywordsForCodeMirror = {"inherit": true, "initial": true};
@@ -148,7 +153,7 @@ WebInspector.CSSCompletions.requestCSSNameCompletions = function()
 
     if (window.CSSAgent)
         CSSAgent.getSupportedCSSProperties(propertyNamesCallback);
-}
+};
 
 WebInspector.CSSCompletions.prototype = {
     get values()
@@ -262,4 +267,4 @@ WebInspector.CSSCompletions.prototype = {
     {
         return this._shorthands[longhand] || [];
     }
-}
+};

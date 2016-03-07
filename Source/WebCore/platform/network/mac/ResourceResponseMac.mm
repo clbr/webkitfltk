@@ -55,9 +55,12 @@ void ResourceResponse::initNSURLResponse() const
         else
             expectedContentLength = static_cast<NSInteger>(m_expectedContentLength);
 
-        m_nsResponse = adoptNS([[NSURLResponse alloc] initWithURL:m_url MIMEType:m_mimeType expectedContentLength:expectedContentLength textEncodingName:m_textEncodingName]);
+        NSString* encodingNSString = nsStringNilIfEmpty(m_textEncodingName);
+        m_nsResponse = adoptNS([[NSURLResponse alloc] initWithURL:m_url MIMEType:m_mimeType expectedContentLength:expectedContentLength textEncodingName:encodingNSString]);
         return;
     }
+
+    // FIXME: We lose the status text and the HTTP version here.
     NSMutableDictionary* headerDictionary = [NSMutableDictionary dictionary];
     for (auto& header : m_httpHeaderFields)
         [headerDictionary setObject:(NSString *)header.value forKey:(NSString *)header.key];
@@ -169,6 +172,12 @@ void ResourceResponse::platformLazyInit(InitLevel initLevel)
     m_initLevel = initLevel;
 }
 
+CertificateInfo ResourceResponse::platformCertificateInfo() const
+{
+    ASSERT(m_nsResponse);
+    return CertificateInfo(adoptCF(wkCopyNSURLResponseCertificateChain(m_nsResponse.get())));
+}
+
 String ResourceResponse::platformSuggestedFilename() const
 {
     return [nsURLResponse() suggestedFilename];
@@ -180,24 +189,6 @@ bool ResourceResponse::platformCompare(const ResourceResponse& a, const Resource
 }
 
 #endif // USE(CFNETWORK)
-
-#if PLATFORM(COCOA) || USE(CFNETWORK)
-
-void ResourceResponse::setCertificateChain(CFArrayRef certificateChain)
-{
-    ASSERT(!wkCopyNSURLResponseCertificateChain(nsURLResponse()));
-    m_externalCertificateChain = certificateChain;
-}
-
-RetainPtr<CFArrayRef> ResourceResponse::certificateChain() const
-{
-    if (m_externalCertificateChain)
-        return m_externalCertificateChain;
-
-    return adoptCF(wkCopyNSURLResponseCertificateChain(nsURLResponse()));
-}
-
-#endif // PLATFORM(COCOA) || USE(CFNETWORK)
 
 } // namespace WebCore
 
