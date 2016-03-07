@@ -207,6 +207,11 @@ void MediaSession::updateClientDataBuffering()
     m_client.setShouldBufferData(shouldBuffer);
 }
 
+void MediaSession::wirelessRoutesAvailableDidChange() const
+{
+    m_client.wirelessRoutesAvailableDidChange();
+}
+
 String MediaSessionClient::mediaSessionTitle() const
 {
     return String();

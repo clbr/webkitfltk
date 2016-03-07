@@ -179,7 +179,7 @@ void RenderBlockFlow::willBeDestroyed()
                 }
             }
         } else if (parent())
-            parent()->dirtyLinesFromChangedChild(this);
+            parent()->dirtyLinesFromChangedChild(*this);
     }
 
     m_lineBoxes.deleteLineBoxes();
@@ -3270,11 +3270,11 @@ Position RenderBlockFlow::positionForBox(InlineBox *box, bool start) const
     if (!box->renderer().nonPseudoNode())
         return createLegacyEditingPosition(nonPseudoElement(), start ? caretMinOffset() : caretMaxOffset());
 
-    if (!box->isInlineTextBox())
+    if (!is<InlineTextBox>(*box))
         return createLegacyEditingPosition(box->renderer().nonPseudoNode(), start ? box->renderer().caretMinOffset() : box->renderer().caretMaxOffset());
 
-    InlineTextBox* textBox = toInlineTextBox(box);
-    return createLegacyEditingPosition(box->renderer().nonPseudoNode(), start ? textBox->start() : textBox->start() + textBox->len());
+    auto& textBox = downcast<InlineTextBox>(*box);
+    return createLegacyEditingPosition(textBox.renderer().nonPseudoNode(), start ? textBox.start() : textBox.start() + textBox.len());
 }
 
 VisiblePosition RenderBlockFlow::positionForPointWithInlineChildren(const LayoutPoint& pointInLogicalContents, const RenderRegion* region)
@@ -4032,10 +4032,10 @@ void RenderBlockFlow::computeInlinePreferredLogicalWidths(LayoutUnit& minLogical
                     continue;
                 }
                 // Case (1) and (2). Inline replaced and inline flow elements.
-                if (child->isRenderInline()) {
+                if (is<RenderInline>(*child)) {
                     // Add in padding/border/margin from the appropriate side of
                     // the element.
-                    float bpm = getBorderPaddingMargin(*toRenderInline(child), childIterator.endOfInline);
+                    float bpm = getBorderPaddingMargin(downcast<RenderInline>(*child), childIterator.endOfInline);
                     childMin += bpm;
                     childMax += bpm;
 
@@ -4057,7 +4057,7 @@ void RenderBlockFlow::computeInlinePreferredLogicalWidths(LayoutUnit& minLogical
                 }
             }
 
-            if (!child->isRenderInline() && !child->isText()) {
+            if (!is<RenderInline>(*child) && !is<RenderText>(*child)) {
                 // Case (2). Inline replaced elements and floats.
                 // Go ahead and terminate the current line as far as
                 // minwidth is concerned.

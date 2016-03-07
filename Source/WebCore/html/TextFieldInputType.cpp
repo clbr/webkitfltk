@@ -180,11 +180,11 @@ void TextFieldInputType::forwardEvent(Event* event)
         element().document().updateStyleIfNeededForNode(element());
 
         if (element().renderer()) {
-            RenderTextControlSingleLine* renderTextControl = toRenderTextControlSingleLine(element().renderer());
+            RenderTextControlSingleLine& renderTextControl = downcast<RenderTextControlSingleLine>(*element().renderer());
             if (event->type() == eventNames().blurEvent) {
                 if (RenderTextControlInnerBlock* innerTextRenderer = innerTextElement()->renderer()) {
                     if (RenderLayer* innerLayer = innerTextRenderer->layer()) {
-                        IntSize scrollOffset(!renderTextControl->style().isLeftToRightDirection() ? innerLayer->scrollWidth() : 0, 0);
+                        IntSize scrollOffset(!renderTextControl.style().isLeftToRightDirection() ? innerLayer->scrollWidth() : 0, 0);
                         innerLayer->scrollToOffset(scrollOffset, RenderLayer::ScrollOffsetClamped);
                     }
                 }
