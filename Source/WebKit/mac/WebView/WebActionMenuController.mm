@@ -36,6 +36,7 @@
 #import "WebUIDelegatePrivate.h"
 #import "WebViewInternal.h"
 #import <WebCore/DictionaryLookup.h>
+#import <WebCore/Editor.h>
 #import <WebCore/Element.h>
 #import <WebCore/EventHandler.h>
 #import <WebCore/Frame.h>
@@ -47,6 +48,7 @@
 #import <WebCore/RenderElement.h>
 #import <WebCore/RenderObject.h>
 #import <WebCore/SoftLinking.h>
+#import <WebCore/TextCheckerClient.h>
 #import <WebKitSystemInterface.h>
 #import <objc/objc-class.h>
 #import <objc/objc.h>
@@ -115,7 +117,7 @@ struct DictionaryPopupInfo {
 
     [actionMenu removeAllItems];
 
-    WebElementDictionary *hitTestResult = [self performHitTestAtPoint:[_webView convertPoint:event.locationInWindow fromView:nil]];
+    WebElementDictionary *hitTestResult = [self performHitTestAtPoint:event.locationInWindow];
     NSArray *menuItems = [self _defaultMenuItemsForHitTestResult:hitTestResult];
 
     // Allow clients to customize the menu items.
@@ -128,7 +130,7 @@ struct DictionaryPopupInfo {
 
 - (BOOL)isMenuForTextContent
 {
-    return _type == WebActionMenuReadOnlyText || _type == WebActionMenuEditableText;
+    return _type == WebActionMenuReadOnlyText || _type == WebActionMenuEditableText || _type == WebActionMenuEditableTextWithSuggestions || _type == WebActionMenuWhitespaceInEditableArea;
 }
 
 - (void)willOpenMenu:(NSMenu *)menu withEvent:(NSEvent *)event
@@ -273,6 +275,49 @@ struct DictionaryPopupInfo {
     return @[ copyTextItem.get(), lookupTextItem.get(), pasteItem.get() ];
 }
 
+- (NSArray *)_defaultMenuItemsForEditableTextWithSuggestions:(WebElementDictionary *)hitTestResult
+{
+    Frame* frame = core([_webView _selectedOrMainFrame]);
+    if (!frame)
+        return @[ ];
+
+    NSDictionary *options = nil;
+    RefPtr<Range> lookupRange = rangeForDictionaryLookupAtHitTestResult(_hitTestResult, &options);
+    if (!lookupRange)
+        return @[ ];
+
+    String lookupText = lookupRange->text();
+    TextCheckerClient* textChecker = frame->editor().textChecker();
+    if (!textChecker)
+        return @[ ];
+
+    Vector<TextCheckingResult> results = textChecker->checkTextOfParagraph(lookupText, NSTextCheckingTypeSpelling);
+    if (results.isEmpty())
+        return @[ ];
+
+    Vector<String> guesses;
+    frame->editor().textChecker()->getGuessesForWord(lookupText, String(), guesses);
+    if (guesses.isEmpty())
+        return @[ ];
+
+    RetainPtr<NSMenu> spellingSubMenu = adoptNS([[NSMenu alloc] init]);
+    for (const auto& guess : guesses) {
+        RetainPtr<NSMenuItem> item = adoptNS([[NSMenuItem alloc] initWithTitle:guess action:@selector(_changeSelectionToSuggestion:) keyEquivalent:@""]);
+        [item setRepresentedObject:guess];
+        [item setTarget:self];
+        [spellingSubMenu addItem:item.get()];
+    }
+
+    RetainPtr<NSMenuItem> copyTextItem = [self _createActionMenuItemForTag:WebActionMenuItemTagCopyText withHitTestResult:hitTestResult];
+    RetainPtr<NSMenuItem> lookupTextItem = [self _createActionMenuItemForTag:WebActionMenuItemTagLookupText withHitTestResult:hitTestResult];
+    RetainPtr<NSMenuItem> pasteItem = [self _createActionMenuItemForTag:WebActionMenuItemTagPaste withHitTestResult:hitTestResult];
+    RetainPtr<NSMenuItem> textSuggestionsItem = [self _createActionMenuItemForTag:WebActionMenuItemTagTextSuggestions withHitTestResult:hitTestResult];
+
+    [textSuggestionsItem setSubmenu:spellingSubMenu.get()];
+
+    return @[ copyTextItem.get(), lookupTextItem.get(), pasteItem.get(), textSuggestionsItem.get() ];
+}
+
 - (void)_copySelection:(id)sender
 {
     [_webView _executeCoreCommandByName:@"copy" value:nil];
@@ -291,7 +336,6 @@ struct DictionaryPopupInfo {
     NSPoint textBaselineOrigin = popupInfo.origin;
 
     // Convert to screen coordinates.
-    textBaselineOrigin = [_webView convertPoint:textBaselineOrigin toView:nil];
     textBaselineOrigin = [_webView.window convertRectToScreen:NSMakeRect(textBaselineOrigin.x, textBaselineOrigin.y, 0, 0)].origin;
 
     WKShowWordDefinitionWindow(popupInfo.attributedString.get(), textBaselineOrigin, popupInfo.options.get());
@@ -315,6 +359,18 @@ struct DictionaryPopupInfo {
 
     frame->selection().setSelectedRange(lookupRange.get(), DOWNSTREAM, true);
     return;
+}
+
+- (void)_changeSelectionToSuggestion:(id)sender
+{
+    NSString *selectedCorrection = [sender representedObject];
+    if (!selectedCorrection)
+        return;
+
+    ASSERT([selectedCorrection isKindOfClass:[NSString class]]);
+
+    WebHTMLView *documentView = [[[_webView _selectedOrMainFrame] frameView] documentView];
+    [documentView _changeSpellingToWord:selectedCorrection];
 }
 
 static DictionaryPopupInfo performDictionaryLookupForSelection(Frame* frame, const VisibleSelection& selection)
@@ -366,6 +422,15 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
     return popupInfo;
 }
 
+#pragma mark Whitespace actions
+
+- (NSArray *)_defaultMenuItemsForWhitespaceInEditableArea:(WebElementDictionary *)hitTestResult
+{
+    RetainPtr<NSMenuItem> pasteItem = [self _createActionMenuItemForTag:WebActionMenuItemTagPaste withHitTestResult:hitTestResult];
+
+    return @[ [NSMenuItem separatorItem], [NSMenuItem separatorItem], pasteItem.get() ];
+}
+
 #pragma mark Menu Items
 
 - (RetainPtr<NSMenuItem>)_createActionMenuItemForTag:(uint32_t)tag withHitTestResult:(WebElementDictionary *)hitTestResult
@@ -375,45 +440,49 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
     NSImage *image = nil;
     id representedObject = nil;
 
-    // FIXME: We should localize these strings.
     switch (tag) {
     case WebActionMenuItemTagOpenLinkInDefaultBrowser:
         selector = @selector(_openURLFromActionMenu:);
-        title = @"Open";
+        title = WEB_UI_STRING_KEY("Open", "Open (action menu item)", "action menu item");
         image = webKitBundleImageNamed(@"OpenInNewWindowTemplate");
         representedObject = [hitTestResult objectForKey:WebElementLinkURLKey];
         break;
 
     case WebActionMenuItemTagPreviewLink:
         selector = @selector(_quickLookURLFromActionMenu:);
-        title = @"Preview";
+        title = WEB_UI_STRING_KEY("Preview", "Preview (action menu item)", "action menu item");
         image = [NSImage imageNamed:@"NSActionMenuQuickLook"];
         representedObject = hitTestResult;
         break;
 
     case WebActionMenuItemTagAddLinkToSafariReadingList:
         selector = @selector(_addToReadingListFromActionMenu:);
-        title = @"Add to Safari Reading List";
+        title = WEB_UI_STRING_KEY("Add to Reading List", "Add to Reading List (action menu item)", "action menu item");
         image = [NSImage imageNamed:NSImageNameBookmarksTemplate];
         representedObject = [hitTestResult objectForKey:WebElementLinkURLKey];
         break;
 
     case WebActionMenuItemTagCopyText:
         selector = @selector(_copySelection:);
-        title = @"Copy";
+        title = WEB_UI_STRING_KEY("Copy", "Copy (text action menu item)", "text action menu item");
         image = [NSImage imageNamed:@"NSActionMenuCopy"];
         break;
 
     case WebActionMenuItemTagLookupText:
         selector = @selector(_lookupText:);
-        title = @"Look Up";
+        title = WEB_UI_STRING_KEY("Look Up", "Look Up (action menu item)", "action menu item");
         image = [NSImage imageNamed:@"NSActionMenuLookup"];
         break;
 
     case WebActionMenuItemTagPaste:
         selector = @selector(_paste:);
-        title = @"Paste";
+        title = WEB_UI_STRING_KEY("Paste", "Paste (action menu item)", "action menu item");
         image = [NSImage imageNamed:@"NSActionMenuPaste"];
+        break;
+
+    case WebActionMenuItemTagTextSuggestions:
+        title = WEB_UI_STRING_KEY("Suggestions", "Suggestions (action menu item)", "action menu item");
+        image = [NSImage imageNamed:@"NSActionMenuSpelling"];
         break;
 
     default:
@@ -445,12 +514,23 @@ static NSImage *webKitBundleImageNamed(NSString *name)
     Node* node = _hitTestResult.innerNode();
     if (node && node->isTextNode()) {
         if (_hitTestResult.isContentEditable()) {
+            NSArray *editableTextWithSuggestions = [self _defaultMenuItemsForEditableTextWithSuggestions:hitTestResult];
+            if (editableTextWithSuggestions.count) {
+                _type = WebActionMenuEditableTextWithSuggestions;
+                return editableTextWithSuggestions;
+            }
+
             _type = WebActionMenuEditableText;
             return [self _defaultMenuItemsForEditableText:hitTestResult];
         }
 
         _type = WebActionMenuReadOnlyText;
         return [self _defaultMenuItemsForText:hitTestResult];
+    }
+
+    if (_hitTestResult.isContentEditable()) {
+        _type = WebActionMenuWhitespaceInEditableArea;
+        return [self _defaultMenuItemsForWhitespaceInEditableArea:hitTestResult];
     }
 
     _type = WebActionMenuNone;

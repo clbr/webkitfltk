@@ -1,3 +1,113 @@
+2014-11-11  Beth Dakin  <bdakin@apple.com>
+
+        Action menu hit testing is not working properly with all WK1 apps
+        https://bugs.webkit.org/show_bug.cgi?id=138643
+        -and corresponding-
+        rdar://problem/18949376
+
+        Reviewed by Tim Horton.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController prepareForMenu:withEvent:]):
+        (-[WebActionMenuController _lookupText:]):
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Finish moving CTFontGetVerticalGlyphsForCharacters and CTLineCreateWithUniCharProvider out from WKSI
+        https://bugs.webkit.org/show_bug.cgi?id=138623
+
+        Reviewed by Geoff Garen.
+
+        * WebCoreSupport/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+        * WebKit.order:
+
+2014-11-11  Tim Horton  <timothy_horton@apple.com>
+
+        Localize strings for action menus
+        https://bugs.webkit.org/show_bug.cgi?id=138591
+        <rdar://problem/18815343>
+
+        Reviewed by Dan Bates.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController _createActionMenuItemForTag:withHitTestResult:]):
+        Make use of the new strings.
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Cleanup from r175379
+        https://bugs.webkit.org/show_bug.cgi?id=138616
+
+        Reviewed by Simon Fraser.
+
+        * WebCoreSupport/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+        * WebKit.order:
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Move CTFontTransformGlyphs out from WKSI
+        https://bugs.webkit.org/show_bug.cgi?id=138599
+
+        Reviewed by Simon Fraser.
+
+        * WebCoreSupport/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+        * WebKit.order:
+
+2014-11-11  Dan Bernstein  <mitz@apple.com>
+
+        More iOS build fix.
+
+        * WebView/WebHTMLViewInternal.h:
+
+2014-11-11  Dan Bernstein  <mitz@apple.com>
+
+        iOS build fix.
+
+        * WebView/WebHTMLView.mm:
+
+2014-11-10  Beth Dakin  <bdakin@apple.com>
+
+        WK1: Support default actions for editable text with misspelled word
+        https://bugs.webkit.org/show_bug.cgi?id=138590
+        -and corresponding-
+        rdar://problem/18877506
+
+        Reviewed by Tim Horton.
+
+        If there are misspelled word suggestions for editable text, create a new type of 
+        menu with a spelling suggestion sub-menu.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController isMenuForTextContent]):
+        (-[WebActionMenuController _defaultMenuItemsForEditableTextWithSuggestions:]):
+        (-[WebActionMenuController _changeSelectionToSuggestion:]):
+        (-[WebActionMenuController _createActionMenuItemForTag:withHitTestResult:]):
+        (-[WebActionMenuController _defaultMenuItemsForHitTestResult:]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _changeSpellingToWord:]):
+        * WebView/WebHTMLViewInternal.h:
+        * WebView/WebUIDelegatePrivate.h:
+
+2014-11-10  Beth Dakin  <bdakin@apple.com>
+
+        WK1: Support default actions for editable whitespace
+        https://bugs.webkit.org/show_bug.cgi?id=138586
+        -and corresponding-
+        rdar://problem/18932048
+
+        Reviewed by Tim Horton.
+
+        New menu type. Just wants paste.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController isMenuForTextContent]):
+        (-[WebActionMenuController _defaultMenuItemsForWhitespaceInEditableArea:]):
+        (-[WebActionMenuController _defaultMenuItemsForHitTestResult:]):
+        * WebView/WebUIDelegatePrivate.h:
+
 2014-11-10  Beth Dakin  <bdakin@apple.com>
 
         WK1: Support default actions for editable text

@@ -1,3 +1,65 @@
+2014-11-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Handle activating extra agents properly after inspector has connected
+        https://bugs.webkit.org/show_bug.cgi?id=138639
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Base/Main.js:
+        (WebInspector.activateExtraDomains):
+
+2014-11-11  Jonathan Wells  <jonowells@apple.com>
+
+        Web Inspector: Main.js missing many trailing semicolons
+        https://bugs.webkit.org/show_bug.cgi?id=138624
+
+        Add semicolons to function variable assignments.
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Base/Main.js: Added semicolons.
+
+2014-11-10  Jonathan Wells  <jonowells@apple.com>
+
+        Web Inspector: Update Esprima, remove WebInspector.Esprima global.
+        https://bugs.webkit.org/show_bug.cgi?id=138579
+
+        Reviewed by Timothy Hatcher.
+
+        Update esprima.js file to be unchanged by removing WebInspector.Esprima global object. Move esprima.js include
+        so that all external libraries load before the WebInspector namespace is declared in the combined Main.js.
+
+        * UserInterface/External/Esprima/esprima.js: File updated, no changes made.
+        * UserInterface/Main.html: esprima.js script tag moved up with other externals.
+        * UserInterface/Models/ScriptSyntaxTree.js: WebInspector.Esprima changed to esprima
+        (WebInspector.ScriptSyntaxTree):
+
+2014-11-10  Jonathan Wells  <jonowells@apple.com>
+
+        Web Inspector: Add infrastructure for eslint based static analyzer
+        https://bugs.webkit.org/show_bug.cgi?id=137890
+
+        Reviewed by Timothy Hatcher.
+
+        Fix to previous patch to add AnalyzerManager and AnalyzerMessage classes. Changed Main.html to include ESLint.js
+        before Main.js in the combined resources.
+
+        * UserInterface/Base/Main.js:
+        * UserInterface/Controllers/AnalyzerManager.js: Added.
+        (WebInspector.AnalyzerManager):
+        (set WebInspector.AnalyzerManager.prototype.getAnalyzerMessagesForSourceCode.):
+        (set WebInspector.AnalyzerManager.prototype.getAnalyzerMessagesForSourceCode):
+        (set WebInspector.AnalyzerManager.prototype.set get sourceCodeCanBeAnalyzed):
+        (set WebInspector.AnalyzerManager.prototype._handleSourceCodeContentDidChange):
+        * UserInterface/Main.html:
+        * UserInterface/Models/AnalyzerMessage.js: Added.
+        (WebInspector.AnalyzerMessage):
+        (WebInspector.AnalyzerMessage.prototype.get sourceCodeLocation):
+        (WebInspector.AnalyzerMessage.prototype.get sourceCode):
+        (WebInspector.AnalyzerMessage.prototype.get text):
+        (WebInspector.AnalyzerMessage.prototype.get ruleIdentifier):
+        * UserInterface/Models/SourceCode.js:
+
 2014-11-08  Matt Baker  <mattbaker@apple.com>
 
         Web Inspector: decouple child element folderization logic from FrameTreeElement

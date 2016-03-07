@@ -1,3 +1,281 @@
+2014-11-12  Andreas Kling  <akling@apple.com>
+
+        Generate get_by_id for bracket access with constant string subscript.
+        <https://webkit.org/b/138663>
+
+        Reviewed by Michael Saboff.
+
+        Transform o["f"] into o.f when generating bytecode. This allows our JIT
+        to inline-cache those accesses instead of always dropping out to C++.
+
+        This is surprisingly common in real-web content, less so in benchmarks.
+        Interestingly, Speedometer does hit the optimization quite a bit.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::BracketAccessorNode::emitBytecode):
+
+2014-11-12  Mark Lam  <mark.lam@apple.com>
+
+        Rename USE(MASM_PROBE) to ENABLE(MASM_PROBE).
+        <https://webkit.org/b/138661>
+
+        Reviewed by Michael Saboff.
+
+        Also move the switch for enabling the use of MASM_PROBE from JavaScriptCore's
+        config.h to WTF's Platform.h.  This ensures that the setting is consistently
+        applied even when building WebCore parts as well.
+
+        * assembler/ARMAssembler.h:
+        * assembler/ARMv7Assembler.h:
+        * assembler/MacroAssemblerARM.cpp:
+        * assembler/MacroAssemblerARM.h:
+        * assembler/MacroAssemblerARMv7.cpp:
+        * assembler/MacroAssemblerARMv7.h:
+        * assembler/MacroAssemblerX86.h:
+        * assembler/MacroAssemblerX86Common.cpp:
+        * assembler/MacroAssemblerX86Common.h:
+        * assembler/MacroAssemblerX86_64.h:
+        * assembler/X86Assembler.h:
+        * config.h:
+        * jit/JITStubs.h:
+        * jit/JITStubsARM.h:
+        * jit/JITStubsARMv7.h:
+        * jit/JITStubsX86.h:
+        * jit/JITStubsX86Common.h:
+        * jit/JITStubsX86_64.h:
+
+2014-11-12  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Incorrect names for test executables in debug mode.
+        https://bugs.webkit.org/show_bug.cgi?id=138659
+
+        Reviewed by Alex Christensen.
+
+        In debug mode, jsc.exe, and testapi.exe are not created, causing JSC test failures.
+
+        * JavaScriptCore.vcxproj/jsc/jscLauncher.vcxproj:
+        * JavaScriptCore.vcxproj/testapi/testapiLauncher.vcxproj:
+
+2014-11-11  Michael Saboff  <msaboff@apple.com>
+
+        Change DFG to use scope operand for op_resolve_scope
+        https://bugs.webkit.org/show_bug.cgi?id=138651
+
+        Reviewed by Geoffrey Garen.
+
+        Changed to use the provided scope VirtualRegister.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::getScope): Changed to use an argument scope register.
+        (JSC::DFG::ByteCodeParser::parseBlock): Created VirtualRegister from scope operand.
+
+2014-11-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Remove IncrementalSweeper::create()
+        https://bugs.webkit.org/show_bug.cgi?id=138243
+
+        Reviewed by Filip Pizlo.
+
+        As a step to use std::unique_ptr<> and std::make_unique<>, this patch removes
+        IncrementalSweeper::create(), then set constructor of IncrementalSweeper to public.
+        Now we begins to use std::make_unique<> to create IncrementalSweeper instance.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::setIncrementalSweeper):
+        * heap/Heap.h:
+        * heap/IncrementalSweeper.cpp:
+        (JSC::IncrementalSweeper::create): Deleted.
+        * heap/IncrementalSweeper.h:
+
+2014-11-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Handle activating extra agents properly after inspector has connected
+        https://bugs.webkit.org/show_bug.cgi?id=138639
+
+        Reviewed by Timothy Hatcher.
+
+        Instead of having the protocol configuration directly add the extra agent
+        to the inspector registry, isntead go through the augmentable controller.
+        The controller will initialize as required if we are already connected or not,
+        and will add to the registry.
+
+        The functional change here is that the frontend can be notified to activate
+        extra agents multiple times as agents eventually become available.
+
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::appendExtraAgent):
+        * inspector/JSGlobalObjectInspectorController.h:
+        * inspector/agents/InspectorAgent.cpp:
+        (Inspector::InspectorAgent::activateExtraDomain):
+        * inspector/agents/InspectorAgent.h:
+        * inspector/augmentable/AugmentableInspectorController.h:
+        * inspector/scripts/codegen/generator_templates.py:
+        * inspector/scripts/tests/expected/commands-with-async-attribute.json-result:
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+        * inspector/scripts/tests/expected/domains-with-varying-command-sizes.json-result:
+        * inspector/scripts/tests/expected/enum-values.json-result:
+        * inspector/scripts/tests/expected/generate-domains-with-feature-guards.json-result:
+        Rebased results.
+
+2014-11-11  Michael Saboff  <msaboff@apple.com>
+
+        Use scope register when processing op_resolve_scope in LLInt and Baseline JIT
+        https://bugs.webkit.org/show_bug.cgi?id=138637
+
+        Reviewed by Mark Lam.
+
+        Filled out op_resolve_scope processing to use the scope operand to access the current
+        scope chain.
+
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        Added scope virtual register parameter to emitResolveClosure().  Added new callOperation() to
+        support the additional argument.
+
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::emitResolveClosure):
+        (JSC::JIT::emit_op_resolve_scope):
+        (JSC::JIT::emitSlow_op_resolve_scope):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::emitResolveClosure):
+        (JSC::JIT::emit_op_resolve_scope):
+        (JSC::JIT::emitSlow_op_resolve_scope):
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        Added "scope" parameter to emitResolveClosure().  Passed scope register index to slow path.
+        Used scope virtual register instead of JSStack::ScopeChain.
+
+2014-11-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Don't require a debugger be attached for inspector auto attach
+        https://bugs.webkit.org/show_bug.cgi?id=138638
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::updateDebuggableAutomaticInspectCandidate):
+
+2014-11-11  Akos Kiss  <akiss@inf.u-szeged.hu>
+
+        Handle cases in StackVisitor::Frame::existingArguments() when lexicalEnvironment and/or unmodifiedArgumentsRegister is not set up yet
+        https://bugs.webkit.org/show_bug.cgi?id=138543
+
+        Reviewed by Geoffrey Garen.
+
+        Exception fuzzing may may raise exceptions in places where they would be
+        otherwise impossible. Therefore, a callFrame may lack activation even if
+        the codeBlock signals need of activation. Also, even if codeBlock
+        signals the use of arguments, the unmodifiedArgumentsRegister may not be
+        initialized yet (neither locally nor in lexicalEnvironment).
+
+        If codeBlock()->needsActivation() is false, unmodifiedArgumentsRegister
+        is already checked for Undefined. This patch applies the same check when
+        the condition is true (and also checks whether
+        callFrame()->hasActivation()).
+
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::hasActivation):
+        Moved to interpreter/CallFrameInlines.h.
+        * interpreter/CallFrameInlines.h:
+        (JSC::CallFrame::hasActivation):
+        Fixed to verify that the JSValue returned by uncheckedActivation() is a
+        cell.
+        * interpreter/StackVisitor.cpp:
+        (JSC::StackVisitor::Frame::existingArguments):
+
+2014-11-11  Andreas Kling  <akling@apple.com>
+
+        Another assertion fix for debug builds after r175846.
+
+        generateByIdStub() can now be called with an empty prototype chain
+        if kind == GetUndefined, so tweak the assertion to cover that.
+
+        * jit/Repatch.cpp:
+        (JSC::generateByIdStub):
+
+2014-11-10  Andreas Kling  <akling@apple.com>
+
+        Assertion fix for debug builds after r175846.
+
+        PropertySlot::slotBase() will assert if the slot is unset, so reorder
+        the tests to check for isCacheableValue() first.
+
+        * jit/Repatch.cpp:
+        (JSC::tryCacheGetByID):
+
+2014-11-10  Andreas Kling  <akling@apple.com>
+
+        The JIT should cache property lookup misses.
+        <https://webkit.org/b/135578>
+
+        Add support for inline caching of missed property lookups.
+        Previously this would banish us to C++ slow path.
+
+        It's implemented as a simple GetById cache that returns jsUndefined()
+        as long as the Structure chain check passes. There's no DFG exploitation
+        of this knowledge in this patch.
+
+        Test: js/regress/undefined-property-access.js (~5.5x speedup)
+
+        Reviewed by Filip Pizlo.
+
+        * bytecode/PolymorphicGetByIdList.h:
+        * bytecode/GetByIdStatus.cpp:
+        (JSC::GetByIdStatus::computeForStubInfo):
+
+            Add GetByIdAccess::SimpleMiss so we can communicate to the DFG that
+            the access has been cached.
+
+        * jit/Repatch.cpp:
+        (JSC::toString):
+        (JSC::kindFor):
+        (JSC::generateByIdStub):
+        (JSC::tryCacheGetByID):
+        (JSC::tryBuildGetByIDList):
+
+            Added a GetUndefined stub kind, just a simple "store jsUndefined()" snippet.
+            Use this to cache missed lookups, piggybacking mostly on the GetValue kind.
+
+        * runtime/PropertySlot.h:
+        (JSC::PropertySlot::isUnset):
+
+            Exposed the unset state so PropertySlot can communicate that lookup failed.
+
+2014-11-10  Michael Saboff  <msaboff@apple.com>
+
+        Add scope operand to op_create_lexical_environment
+        https://bugs.webkit.org/show_bug.cgi?id=138588
+
+        Reviewed by Geoffrey Garen.
+
+        Added a second operand to op_create_lexical_environment that contains the scope register
+        to update.  Note that the DFG relies on operationCreateActivation() to update the
+        scope register since we can't issue a set() with a non-local, non-argument register.
+        This is temporary until the scope register is allocated as a local.
+
+        * bytecode/BytecodeList.json:
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        Added the scope register operand.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        Filled in the scope register operand.
+
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_create_lexical_environment):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_create_lexical_environment):
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        Set the scope register with the result of the appropriate create activation slow call.
+
 2014-11-09  Akos Kiss  <akiss@inf.u-szeged.hu>
 
         Fix 'noreturn' function does return warning in LLVMOverrides.cpp

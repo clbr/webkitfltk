@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,33 +23,39 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DiagnosticLoggingKeys_h
-#define DiagnosticLoggingKeys_h
+WebInspector.AnalyzerMessage = function(sourceCodeLocation, text, ruleIdentifier)
+{
+    WebInspector.Object.call(this);
 
-#include <wtf/text/WTFString.h>
+    console.assert(sourceCodeLocation instanceof WebInspector.SourceCodeLocation);
+    console.assert(typeof text === "string");
 
-namespace WebCore {
-
-class DiagnosticLoggingKeys {
-public:
-    // Message keys.
-    static String mediaLoadedKey();
-    static String mediaLoadingFailedKey();
-    static String pluginLoadedKey();
-    static String pluginLoadingFailedKey();
-    static String pageContainsPluginKey();
-    static String pageContainsAtLeastOnePluginKey();
-    static String pageContainsMediaEngineKey();
-    static String pageContainsAtLeastOneMediaEngineKey();
-    static String pageLoadedKey();
-    static String engineFailedToLoadKey();
-
-    // Success keys.
-    static String passKey();
-    static String failKey();
-    static String noopKey();
+    this._sourceCodeLocation = sourceCodeLocation;
+    this._text = text;
+    this._ruleIdentifier = ruleIdentifier;
 };
 
-}
+WebInspector.AnalyzerMessage.prototype = {
+    constructor: WebInspector.AnalyzerMessage,
+    __proto__: WebInspector.Object.prototype,
 
-#endif // DiagnosticLoggingKeys_h
+    get sourceCodeLocation()
+    {
+        return this._sourceCodeLocation;
+    },
+
+    get sourceCode()
+    {
+        return this._sourceCodeLocation.sourceCode;
+    },
+
+    get text()
+    {
+        return this._text;
+    },
+
+    get ruleIdentifier()
+    {
+        return this._ruleIdentifier;
+    }
+};

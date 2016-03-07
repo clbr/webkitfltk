@@ -5179,24 +5179,6 @@ static NSString *fontNameForDescription(NSString *familyName, BOOL italic, BOOL 
     [spellingPanel orderFront:sender];
 }
 
-- (void)_changeSpellingToWord:(NSString *)newWord
-{
-    if (![self _canEdit])
-        return;
-
-    // Don't correct to empty string.  (AppKit checked this, we might as well too.)
-    if (![NSSpellChecker sharedSpellChecker]) {
-        LOG_ERROR("No NSSpellChecker");
-        return;
-    }
-    
-    if ([newWord isEqualToString:@""])
-        return;
-
-    if ([self _shouldReplaceSelectionWithText:newWord givenAction:WebViewInsertActionPasted])
-        [[self _frame] _replaceSelectionWithText:newWord selectReplacement:YES smartReplace:NO];
-}
-
 - (void)changeSpelling:(id)sender
 {
     COMMAND_PROLOGUE
@@ -5979,6 +5961,26 @@ static BOOL writingDirectionKeyBindingsEnabled()
     return _private->drawingIntoLayer;
 #endif
 }
+
+#if PLATFORM(MAC)
+- (void)_changeSpellingToWord:(NSString *)newWord
+{
+    if (![self _canEdit])
+        return;
+
+    if (![NSSpellChecker sharedSpellChecker]) {
+        LOG_ERROR("No NSSpellChecker");
+        return;
+    }
+
+    // Don't correct to empty string.  (AppKit checked this, we might as well too.)    
+    if ([newWord isEqualToString:@""])
+        return;
+
+    if ([self _shouldReplaceSelectionWithText:newWord givenAction:WebViewInsertActionPasted])
+        [[self _frame] _replaceSelectionWithText:newWord selectReplacement:YES smartReplace:NO];
+}
+#endif
 
 @end
 

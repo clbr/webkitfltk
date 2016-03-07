@@ -1,3 +1,1159 @@
+2014-11-12  Chris Dumez  <cdumez@apple.com>
+
+        Minor improvements to RenderListItem
+        https://bugs.webkit.org/show_bug.cgi?id=138601
+
+        Reviewed by Darin Adler.
+
+        Make several minor improvements to RenderListItem and clean up the
+        code a bit.
+
+        No new tests, no behavior change.
+
+        * rendering/RenderListItem.cpp:
+        (WebCore::isHTMLListElement):
+        - Rename isList to isHTMLListElement() for clarity as it checks
+          for HTMLOListElement and HTMLUListElement types
+        - Inline the function as it is short.
+        - Use is<HTML*Element>() for type checking
+        - Update the argument to take a Node& instead of an Element*. This
+          is because the argument is expected to the non-null. Also using
+          looser typing here allows us to use this utility function is one
+          more place, without impacting performance as
+          hasTagName(HTMLQualifiedName) is defined on Node.
+
+        (WebCore::enclosingList):
+        - Pass the argument as a reference instead of a pointer as it is
+          expected to be non-null.
+        - Initialize firstNode before the loop to avoid the if (!firstNode)
+          check for every iteration.
+
+        (WebCore::nextListItem):
+        - Take an Element as second argument instead of a RenderListItem*
+          and provide convenience overloads so that we don't need to do
+          null checks just because some calls sites call this function
+          with 2 arguments and others with 1 argument. This way, we avoid
+          unnecessary null checks as most call sites already do such
+          checks (or have references).
+        - Transform the while loop into a for loop for clarity.
+        - Don't traverse an Element's subtree if the Element does not have
+          a renderer as it is impossible of any of its descendant to have
+          a renderer (and we are looking for a specific type of renderer).
+
+        (WebCore::previousListItem):
+        - Pass the item argument as a reference instead of a pointer as it
+          is expected to be non-null.
+        - Reduce the scope of the |current| so that it is now declared
+          inside the loop.
+
+        (WebCore::RenderListItem::updateItemValuesForOrderedList):
+        (WebCore::RenderListItem::itemCountForOrderedList):
+        - Pass argument as a reference instead of a pointer as it was expected
+          to be non-null (There was an assertion in place to make sure of it).
+
+        (WebCore::RenderListItem::calcValue):
+        - Use is<HTMLOListElement>() instead of hasTagName().
+
+        (WebCore::getParentOfFirstLineBox):
+        - Rename variables to stop using abbreviations.
+        - Pass arguments as references instead of pointers as they are expected
+          to be non-null.
+        - Remove the firstChild null check before the loop as it does not
+          change behavior. The loop will abort early if firstChild is null
+          and we will end up returning nullptr as well.
+        - Use is<>() more for type checking.
+        - Reuse the isHTMLListElement() utility function instead of duplicating
+          its code inside this function.
+
+        (WebCore::firstNonMarkerChild):
+        - Pass argument as a reference as it is expected to be non-null.
+        - Rename variable from result to child for clarity, as we are traversing
+          the children.
+
+        (WebCore::RenderListItem::markerTextWithSuffix):
+        - Use String appending instead of StringBuilder as it simplifies the
+          code a lot and should not impact performance in this case.
+
+        (WebCore::RenderListItem::explicitValueChanged):
+        - Restructure the code a bit to do the |listNode| null check before the
+          loop, now that nextListItem() takes a reference in argument. This is
+          the only call site where we didn't already know that listNode is
+          non-null.
+
+        (WebCore::previousOrNextItem):
+        - Mark this function as inline as it is short and called repeatedly.
+
+2014-11-12  Chris Dumez  <cdumez@apple.com>
+
+        Speed up HTMLTextFormControlElement::setInnerTextValue() a bit
+        https://bugs.webkit.org/show_bug.cgi?id=138619
+
+        Reviewed by Darin Adler.
+
+        Speed up HTMLTextFormControlElement::setInnerTextValue() a bit by:
+        - Not doing a virtual isTextFormControl() call. Relying on innerTextElement()
+          not returning null is sufficient.
+        - Caching the result of innerTextElement() instead of repeatedly calling that
+          virtual function.
+        - De-virtualizing setFormControlValueMatchesRenderer() /
+          formControlValueMatchesRenderer() as these are never overridden.
+        - Moving the code constructing the innerTextValue from a
+          TextControlInnerTextElement from innerTextValue() to a new
+          innerTextValueFrom(TextControlInnerTextElement&) function and call this new
+          function from setInnerTextValue() to avoid calling innerTextElement() again
+          and making sure it is non-null
+        - Do the tree traversal from innerTextElement's firstChild instead of from
+          innerTextElement. The innerTextElement is a TextControlInnerTextElement.
+          Therefore, it cannot be an HTMLBRElement or a Text node.
+
+        No new tests, no behavior change.
+
+        * html/HTMLFormControlElement.h:
+        (WebCore::HTMLFormControlElement::formControlValueMatchesRenderer):
+        (WebCore::HTMLFormControlElement::setFormControlValueMatchesRenderer):
+        * html/HTMLTextFormControlElement.cpp:
+        (WebCore::stripTrailingNewline):
+        (WebCore::innerTextValueFrom):
+        (WebCore::HTMLTextFormControlElement::setInnerTextValue):
+        (WebCore::HTMLTextFormControlElement::innerTextValue):
+        (WebCore::HTMLTextFormControlElement::valueWithHardLineBreaks):
+        (WebCore::finishText): Deleted.
+
+2014-11-12  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] media/track/audio-track.html is flakey
+        https://bugs.webkit.org/show_bug.cgi?id=138394
+
+        Reviewed by Alexey Proskuryakov.
+
+        The above test fails if the HTMLMediaElement's "canplaythrough" event fires before the AudioTrackList's
+        "addtrack" event fires. This can happen because each object keeps its own GenericEventQueue, which
+        empties when that individual queue's timer fires. So events can be enqueued in the following order:
+        1, A, 2, B, 3, C; but fired in a different order: 1, 2, 3, A, B, C.
+
+        Make events enqueued in GenericEventQueues globally ordered, so that events are fired in the order
+        which they are enqueued, regardless of which object owns the queue. Use a static queue of
+        GenericEventQueues to manage which GenericEventQueue fires and in what order.
+
+        GenericEventQueues will use a WeakPtrFactory to cancel pending events. Revoking a GenericEventQueue's
+        weak pointers means those queue's entries will be skipped the next time the meta-queue is processed.
+
+        * dom/GenericEventQueue.cpp:
+        (WebCore::GenericEventQueue::GenericEventQueue): Create a WeakPtrFactory instead of a Timer.
+        (WebCore::GenericEventQueue::enqueueEvent): Enqueue this queue with the MetaQueue.
+        (WebCore::GenericEventQueue::sharedTimer): Lazily-initializing accessor.
+        (WebCore::GenericEventQueue::sharedTimerFired):  Ask each queue to dispatch one event.
+        (WebCore::GenericEventQueue::pendingQueues): Lazily-initializing accessor.
+        (WebCore::GenericEventQueue::dispatchOneEvent): Renamed from timerFired.
+        (WebCore::GenericEventQueue::close): Revoke all WeakPtrs.
+        (WebCore::GenericEventQueue::cancelAllEvents): Ditto.
+        (WebCore::GenericEventQueue::hasPendingEvents): Use !isEmpty().
+        (WebCore::GenericEventQueue::timerFired): Deleted.
+        * dom/GenericEventQueue.h:
+
+2014-11-12  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Expose user script messages to GObject DOM bindings
+        https://bugs.webkit.org/show_bug.cgi?id=138411
+
+        Reviewed by Philippe Normand.
+
+        * PlatformGTK.cmake: Add WebKitDOMCustomUnstable.h to the list of
+        installed headers and make a symlink for it in the DerivedSources dir.
+        * bindings/gobject/WebKitDOMCustomUnstable.h: Added.
+        * bindings/gobject/WebKitDOMCustom.cpp:
+        (webkit_dom_dom_window_get_webkit_namespace):
+        (webkit_dom_user_message_handlers_namespace_get_handler):
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (HasUnstableCustomAPI): Helper function to check if the given
+        class has custom unstable API.
+        (WriteData): Include WebKitDOMCustomUnstable.h header if the class
+        has API defined there.
+
+2014-11-12  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Fix how SerializedScriptValue is exposed to GObject DOM bindings
+        https://bugs.webkit.org/show_bug.cgi?id=138409
+
+        Reviewed by Philippe Normand.
+
+        It's currently exposed as a WebKitDOMSerializedScriptValue class
+        that doesn't really exist. It should be handled as a string, that
+        is used to create a SerializedScriptValue when coming from the
+        API, and converted to a string again when returned to the API.
+
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GetGlibTypeName): Return gchar* as glib type of SerializedScriptValue.
+        (IsGDOMClassType): Don't consider SerializedScriptValue as a GDOM class.
+        (GenerateFunction): Handle SerializedScriptValue parameters and
+        return values specially.
+        * bindings/scripts/test/GObject/WebKitDOMTestCallback.cpp:
+        (webkit_dom_test_callback_callback_with_serialized_script_value_param):
+        * bindings/scripts/test/GObject/WebKitDOMTestCallback.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.cpp:
+        (webkit_dom_test_obj_serialized_value):
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestSerializedScriptValueInterface.cpp:
+        (webkit_dom_test_serialized_script_value_interface_class_init):
+        (webkit_dom_test_serialized_script_value_interface_get_value):
+        (webkit_dom_test_serialized_script_value_interface_set_value):
+        (webkit_dom_test_serialized_script_value_interface_get_readonly_value):
+        (webkit_dom_test_serialized_script_value_interface_get_cached_value):
+        (webkit_dom_test_serialized_script_value_interface_set_cached_value):
+        (webkit_dom_test_serialized_script_value_interface_get_cached_readonly_value):
+        * bindings/scripts/test/GObject/WebKitDOMTestSerializedScriptValueInterface.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.cpp:
+        (webkit_dom_test_typedefs_class_init):
+        (webkit_dom_test_typedefs_get_immutable_serialized_script_value):
+        (webkit_dom_test_typedefs_set_immutable_serialized_script_value):
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.h:
+
+2014-11-12  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Move RedirectedXCompositeWindow from platform to WebKit2 layer
+        https://bugs.webkit.org/show_bug.cgi?id=138093
+
+        Reviewed by Martin Robinson.
+
+        Remove RedirectedXCompositeWindow.
+
+        * PlatformGTK.cmake:
+
+2014-09-01  Philippe Normand  <pnormand@igalia.com>
+
+        [WK2] UserMediaClient support
+        https://bugs.webkit.org/show_bug.cgi?id=123158
+
+        Reviewed by Benjamin Poulain.
+
+        Added document and frame accessors, needed by the
+        UserMediaRequestManager of the WebProcess. Also added two methods
+        used by the permission request manager to know if access to audio
+        or video devices is requested.
+
+        Tests: fast/mediastream/error.html
+               fast/mediastream/success.html
+               fast/mediastream/delayed-permission-allowed.html
+               fast/mediastream/delayed-permission-denied.html
+               http/tests/media/media-stream/disconnected-frame-already.html
+               http/tests/media/media-stream/disconnected-frame-permission-denied.html
+               http/tests/media/media-stream/disconnected-frame.html
+
+        * Modules/mediastream/UserMediaRequest.cpp:
+        (WebCore::UserMediaRequest::document):
+        (WebCore::UserMediaRequest::frame):
+        * Modules/mediastream/UserMediaRequest.h:
+        (WebCore::UserMediaRequest::requiresAudio):
+        (WebCore::UserMediaRequest::requiresVideo):
+
+2014-11-12  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL] Clean up OwnPtr in RenderThemeEfl
+        https://bugs.webkit.org/show_bug.cgi?id=138642
+
+        Reviewed by Zoltan Herczeg.
+
+        No new tests, no behavior change.
+
+        * platform/efl/RenderThemeEfl.cpp:
+        (WebCore::RenderThemeEfl::applyEdjeRTLState): Clean up all remaining OwnPtr. 
+
+2014-11-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Move Modules/websockets to std::unique_ptr
+        https://bugs.webkit.org/show_bug.cgi?id=138649
+
+        Reviewed by Chris Dumez.
+
+        Remove create() factory function and use std::make_unique<>, std::unique_ptr<>
+        instead of OwnPtr, PassOwnPtr.
+        However didReceiveBinaryData() is still using PassOwnPtr. It should be replaced
+        with std::unique_ptr<>
+
+        No new tests, no behavior.
+
+        * Modules/websockets/ThreadableWebSocketChannelClientWrapper.h:
+        * Modules/websockets/WebSocket.cpp:
+        * Modules/websockets/WebSocketChannel.cpp:
+        (WebCore::WebSocketChannel::connect):
+        (WebCore::WebSocketChannel::didFail):
+        (WebCore::WebSocketChannel::processFrame):
+        (WebCore::WebSocketChannel::enqueueTextFrame):
+        (WebCore::WebSocketChannel::enqueueRawFrame):
+        (WebCore::WebSocketChannel::enqueueBlobFrame):
+        (WebCore::WebSocketChannel::processOutgoingFrameQueue):
+        (WebCore::WebSocketChannel::sendFrame):
+        * Modules/websockets/WebSocketChannel.h:
+        * Modules/websockets/WebSocketDeflateFramer.cpp:
+        (WebCore::WebSocketDeflateFramer::createExtensionProcessor):
+        (WebCore::WebSocketDeflateFramer::enableDeflate):
+        (WebCore::WebSocketDeflateFramer::deflate):
+        (WebCore::WebSocketDeflateFramer::inflate):
+        (WebCore::WebSocketExtensionDeflateFrame::create): Deleted.
+        * Modules/websockets/WebSocketDeflateFramer.h:
+        (WebCore::DeflateResultHolder::create): Deleted.
+        (WebCore::InflateResultHolder::create): Deleted.
+        * Modules/websockets/WebSocketDeflater.cpp:
+        (WebCore::WebSocketDeflater::WebSocketDeflater):
+        (WebCore::WebSocketInflater::WebSocketInflater):
+        (WebCore::WebSocketDeflater::create): Deleted.
+        (WebCore::WebSocketInflater::create): Deleted.
+        * Modules/websockets/WebSocketDeflater.h:
+        * Modules/websockets/WebSocketExtensionDispatcher.cpp:
+        (WebCore::WebSocketExtensionDispatcher::addProcessor):
+        * Modules/websockets/WebSocketExtensionDispatcher.h:
+        * Modules/websockets/WebSocketHandshake.cpp:
+        (WebCore::WebSocketHandshake::addExtensionProcessor):
+        * Modules/websockets/WebSocketHandshake.h:
+
+2014-11-11  Chris Dumez  <cdumez@apple.com>
+
+        Unreviewed iOS build fix after r176001.
+
+        Export an additional symbol.
+
+        * WebCore.exp.in:
+
+2014-11-11  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Add diagnostic logging for per-media-engine load failures
+        https://bugs.webkit.org/show_bug.cgi?id=138647
+
+        Reviewed by Eric Carlson.
+
+        Add diagnostic logging fired whenever a media engine fails to load media,
+        even if another engine subsequentially succeeds. Add a mechanism for retrieving
+        the platform-specific error code from a given engine.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::parseAttribute):
+        * html/HTMLMediaElement.h:
+        * page/DiagnosticLoggingKeys.cpp:
+        (WebCore::DiagnosticLoggingKeys::engineFailedToLoadKey):
+        * page/DiagnosticLoggingKeys.h:
+        * platform/graphics/MediaPlayer.cpp:
+        (WebCore::MediaPlayer::networkStateChanged):
+        (WebCore::MediaPlayer::platformErrorCode):
+        * platform/graphics/MediaPlayer.h:
+        (WebCore::MediaPlayerClient::mediaPlayerEngineFailedToLoad):
+        * platform/graphics/MediaPlayerPrivate.h:
+        (WebCore::MediaPlayerPrivateInterface::platformErrorCode):
+        * platform/graphics/avfoundation/MediaPlayerPrivateAVFoundation.h:
+        (WebCore::MediaPlayerPrivateAVFoundation::platformErrorCode):
+        * platform/graphics/avfoundation/cf/MediaPlayerPrivateAVFoundationCF.cpp:
+        (WebCore::MediaPlayerPrivateAVFoundationCF::assetErrorCode):
+        * platform/graphics/avfoundation/cf/MediaPlayerPrivateAVFoundationCF.h:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::assetErrorCode):
+        * platform/graphics/mac/MediaPlayerPrivateQTKit.h:
+        * platform/graphics/mac/MediaPlayerPrivateQTKit.mm:
+        (WebCore::MediaPlayerPrivateQTKit::platformErrorCode):
+
+2014-11-11  Chris Dumez  <cdumez@apple.com>
+
+        Mark more virtual functions in HTMLInputElement as final
+        https://bugs.webkit.org/show_bug.cgi?id=138644
+
+        Reviewed by Andreas Kling.
+
+        Mark more virtual functions in HTMLInputElement as final to help the
+        compiler optimize better.
+
+        No new tests, no behavior change.
+
+        * html/HTMLInputElement.h:
+
+2014-11-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Remove IncrementalSweeper::create()
+        https://bugs.webkit.org/show_bug.cgi?id=138243
+
+        Reviewed by Filip Pizlo.
+
+        As a step to use std::unique_ptr<> and std::make_unique<>, this patch removes
+        IncrementalSweeper::create(), then set constructor of IncrementalSweeper to public.
+        Now we begins to use std::make_unique<> to create IncrementalSweeper instance.
+
+        No new tests, no behavior changes.
+
+        * bindings/js/JSDOMWindowBase.cpp:
+        (WebCore::JSDOMWindowBase::commonVM):
+        * platform/ios/WebSafeIncrementalSweeperIOS.h:
+
+2014-11-11  Chris Dumez  <cdumez@apple.com>
+
+        Move 'border-image-*' / '-webkit-mask-box-image-*' CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138594
+
+        Reviewed by Antti Koivisto.
+
+        Move 'border-image-*' / '-webkit-mask-box-image-*' CSS properties from
+        DeprecatedStyleBuilder to the new StyleBuilder using custom code.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyBorderImageModifier::getValue): Deleted.
+        (WebCore::ApplyPropertyBorderImageModifier::setValue): Deleted.
+        (WebCore::ApplyPropertyBorderImageModifier::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyBorderImageModifier::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyBorderImageModifier::applyValue): Deleted.
+        (WebCore::ApplyPropertyBorderImageModifier::createHandler): Deleted.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderFunctions::ApplyPropertyBorderImageModifier::applyInheritValue):
+        (WebCore::StyleBuilderFunctions::ApplyPropertyBorderImageModifier::applyInitialValue):
+        (WebCore::StyleBuilderFunctions::ApplyPropertyBorderImageModifier::applyValue):
+        (WebCore::StyleBuilderFunctions::ApplyPropertyBorderImageModifier::getValue):
+        (WebCore::StyleBuilderFunctions::ApplyPropertyBorderImageModifier::setValue):
+
+2014-11-11  David Kilzer  <ddkilzer@apple.com>
+
+        Modernize $buildingForIPhone in CodeGeneratorObjC.pm
+        <http://webkit.org/b/138640>
+
+        Reviewed by Daniel Bates.
+
+        Mac OS X is the only platform that supports NSColor, so rename
+        $buildingForIPhone to $shouldUseCGColor (which is actually what
+        the variable represents) and define it in terms of the "macosx"
+        platform name.
+
+        * bindings/scripts/CodeGeneratorObjC.pm:
+        ($buildingForIPhone): Rename to $shouldUseCGColor.
+        ($shouldUseCGColor): False if PLATFORM_NAME is not defined,
+        which is the case on older Xcodes when building for Mac OS X, or
+        if PLATFORM_NAME is equal to "macosx".  True otherwise.
+        (GetClassName): Switch to use new variable name.
+        (AddIncludesForType): Ditto.
+        (GenerateHeader): Remove dead code.  The
+        $buildingForTigerOrEarlier variable was accidentally
+        re-introduced in r161638, but was originally removed in r127032!
+        (GenerateImplementation): Switch to use new variable name.
+
+2014-11-11  Tim Horton  <timothy_horton@apple.com>
+
+        Add support for mailto: link action menus
+        https://bugs.webkit.org/show_bug.cgi?id=138641
+        <rdar://problem/18741567>
+
+        Reviewed by Beth Dakin.
+
+        * WebCore.exp.in:
+        Add an export.
+
+        * platform/spi/mac/DataDetectorsSPI.h:
+        Add some DataDetectors SPI.
+
+2014-11-11  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] video is sometimes allowed to play from the background
+        https://bugs.webkit.org/show_bug.cgi?id=138522
+
+        Rubber-stamped by Jer Noble.
+
+        * platform/audio/MediaSession.cpp:
+        (WebCore::MediaSession::updateClientDataBuffering): Call MediaSessionManager::sessionCanLoadMedia.
+
+2014-11-11  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] a page with video in optimized fullscreen is visible
+        https://bugs.webkit.org/show_bug.cgi?id=138632
+
+        Reviewed by Anders Carlsson.
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h:
+        (WebCore::WebVideoFullscreenInterfaceAVKit::mode): Expose fullscreen mode.
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Mountain Lion build fix
+        https://bugs.webkit.org/show_bug.cgi?id=138631
+
+        Reviewed by Simon Fraser.
+
+        * platform/spi/cocoa/CoreTextSPI.h:
+
+2014-11-11  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] cleanup wireless route monitoring
+        https://bugs.webkit.org/show_bug.cgi?id=138614
+
+        Reviewed by Jer Noble.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::clearMediaPlayer): Add logging.
+        (WebCore::HTMLMediaElement::removeEventListener): Ditto.
+        (WebCore::HTMLMediaElement::createMediaPlayer): Ditto.
+
+        * platform/audio/ios/MediaSessionManagerIOS.mm:
+        (WebCore::MediaSessionManageriOS::resetRestrictions): Add logging.
+        (WebCore::MediaSessionManageriOS::configureWireLessTargetMonitoring): Ditto.
+        (WebCore::MediaSessionManageriOS::updateNowPlayingInfo): Ditto.
+        (-[WebMediaSessionHelper initWithCallback:]): Ditto.
+        (-[WebMediaSessionHelper dealloc]): Always deallocate volume view and routing controller
+            on the main thread.
+        (-[WebMediaSessionHelper clearCallback]): Add logging.
+        (-[WebMediaSessionHelper hasWirelessTargetsAvailable]): Ditto.
+        (-[WebMediaSessionHelper startMonitoringAirPlayRoutes]): Always call routing controller on
+            the main thread.
+        (-[WebMediaSessionHelper stopMonitoringAirPlayRoutes]): Ditto.
+        (-[WebMediaSessionHelper interruption:]): Add logging.
+        (-[WebMediaSessionHelper applicationWillEnterForeground:]): Ditto.
+        (-[WebMediaSessionHelper applicationDidBecomeActive:]): Ditto.
+        (-[WebMediaSessionHelper applicationWillResignActive:]): Ditto.
+        (-[WebMediaSessionHelper wirelessRoutesAvailableDidChange:]): Ditto.
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Unreviewd iOS build fix
+
+        * platform/spi/cocoa/CoreTextSPI.h:
+
+2014-11-11  David Kilzer  <ddkilzer@apple.com>
+
+        Protect Document in ProcessingInstruction::setXSLStyleSheet()
+        <http://webkit.org/b/138621>
+
+        Reviewed by Andreas Kling.
+
+        The patch is inspired by the following Blink revision by
+        <tasak@google.com>:
+        <https://src.chromium.org/viewvc/blink?view=rev&revision=182309>
+
+        * dom/ProcessingInstruction.cpp:
+        (WebCore::ProcessingInstruction::setXSLStyleSheet):
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Finish moving CTFontGetVerticalGlyphsForCharacters and CTLineCreateWithUniCharProvider out from WKSI
+        https://bugs.webkit.org/show_bug.cgi?id=138623
+
+        Reviewed by Geoff Garen.
+
+        No new tests because there is no behavior change.
+
+        * WebCore.exp.in:
+        * WebCore.order:
+        * platform/graphics/mac/GlyphPageTreeNodeMac.cpp:
+        (WebCore::GlyphPage::fill):
+        * platform/graphics/mac/SimpleFontDataMac.mm:
+        (WebCore::SimpleFontData::canRenderCombiningCharacterSequence):
+        * platform/ios/WebCoreSystemInterfaceIOS.mm:
+        * platform/mac/WebCoreSystemInterface.h:
+        * platform/mac/WebCoreSystemInterface.mm:
+        * platform/spi/cocoa/CoreTextSPI.h:
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Unreviewed Mountain Lion build fix
+
+        * platform/spi/cocoa/CoreTextSPI.h:
+
+2014-11-11  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r175852.
+        https://bugs.webkit.org/show_bug.cgi?id=138626
+
+        Broke PLT by introducing a crash. (Requested by rniwa on
+        #webkit).
+
+        Reverted changeset:
+
+        "Lazily create HTMLInputElement's inputType and shadow
+        subtree"
+        https://bugs.webkit.org/show_bug.cgi?id=138524
+        http://trac.webkit.org/changeset/175852
+
+2014-11-11  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r175947): Caused assertions in debug builds
+        https://bugs.webkit.org/show_bug.cgi?id=138620
+
+        Reviewed by Benjamin Poulain.
+
+        In HTMLCollection::traverseForward(), traversedCount was incremented 1
+        time too many when hitting the end of the collection (i.e. element
+        becomes null). Doing a partial revert.
+
+        No new tests, already covered by existing tests.
+
+        * html/HTMLCollection.cpp:
+        (WebCore::HTMLCollection::traverseForward):
+
+2014-11-11  Tim Horton  <timothy_horton@apple.com>
+
+        DataDetectors' menu items aren't presented in the telephone number menu
+        https://bugs.webkit.org/show_bug.cgi?id=138602
+        <rdar://problem/18866308>
+
+        Reviewed by Beth Dakin.
+
+        * English.lproj/Localizable.strings:
+        Remove a now-unused localized string.
+
+2014-11-11  Daniel Bates  <dabates@apple.com>
+
+        [Frame Flattening] ASSERT(transaction->view == &view()) fails in RenderBlock::removeFromUpdateScrollInfoAfterLayoutTransaction()
+        https://bugs.webkit.org/show_bug.cgi?id=138615
+        <rdar://problem/18928487>
+
+        Reviewed by David Hyatt.
+
+        Fixes an issue where we always expected that the RenderView associated with the RenderBlock called in
+        RenderBlock::removeFromUpdateScrollInfoAfterLayoutTransaction() is the same as the RenderView associated with
+        the top transaction in the UpdateScrollInfoAfterLayoutTransaction stack regardless of frame flattening. This
+        expectation is only true when frame flattening is disabled.
+
+        Test: fast/frames/flattening/iframe-flattening-inside-flexbox-with-delayed-scroll-update.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::removeFromUpdateScrollInfoAfterLayoutTransaction):
+
+2014-11-11  Tim Horton  <timothy_horton@apple.com>
+
+        Adopt DDActionContext menu type SPI
+        https://bugs.webkit.org/show_bug.cgi?id=138603
+        <rdar://problem/18867627>
+
+        Reviewed by Anders Carlsson.
+
+        * platform/spi/mac/DataDetectorsSPI.h:
+        Add the new SPI.
+
+2014-11-11  Tim Horton  <timothy_horton@apple.com>
+
+        Data Detectors popovers should be dismissed upon scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=138600
+        <rdar://problem/18932770>
+
+        Reviewed by Beth Dakin.
+
+        * platform/spi/mac/DataDetectorsSPI.h:
+        Adjust the SPI header.
+
+2014-11-11  Tim Horton  <timothy_horton@apple.com>
+
+        Localize strings for action menus
+        https://bugs.webkit.org/show_bug.cgi?id=138591
+        <rdar://problem/18815343>
+
+        Reviewed by Dan Bates.
+
+        * English.lproj/Localizable.strings:
+        Add a bunch of localizable strings.
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Cleanup from r175379
+        https://bugs.webkit.org/show_bug.cgi?id=138616
+
+        Reviewed by Simon Fraser.
+
+        No new tests because there is no behavior change.
+
+        * WebCore.exp.in:
+        * platform/ios/WebCoreSystemInterfaceIOS.mm:
+        * platform/mac/WebCoreSystemInterface.h:
+        * platform/mac/WebCoreSystemInterface.mm:
+
+2014-11-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Move CTFontTransformGlyphs out from WKSI
+        https://bugs.webkit.org/show_bug.cgi?id=138599
+
+        Reviewed by Simon Fraser.
+
+        No new tests because there is no behavior change.
+
+        * WebCore.exp.in:
+        * WebCore.order:
+        * platform/graphics/SimpleFontData.cpp:
+        (WebCore::SimpleFontData::applyTransforms):
+        * platform/graphics/SimpleFontData.h:
+        * platform/ios/WebCoreSystemInterfaceIOS.mm:
+        * platform/mac/WebCoreSystemInterface.h:
+        * platform/mac/WebCoreSystemInterface.mm:
+        * platform/spi/cocoa/CoreTextSPI.h:
+
+2014-11-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Use std::unique_ptr<>|std::make_unique_ptr in RenderThemeEfl::ThemePartCacheEntry::create()
+        https://bugs.webkit.org/show_bug.cgi?id=138558
+
+        Reviewed by Anders Carlsson.
+
+        This patch removes PassOwnPtr and OwnPtr in RenderThemeEfl::ThemePartCacheEntry::create().
+        It would be good if we also remove create() factory function though, in this case, it is
+        a little hard to remove it since the create() factory function does many works to create
+        a ThemePartCacheEntry instance. Thus this patch just replaces PassOwnPtr|OwnPtr with
+        std::unique_ptr<> and std::make_unique<> in RenderThemeEfl::ThemePartCacheEntry::create().
+
+        Besides the theme entries have been maintained by Eina_List*. Unfortunately it doesn't support
+        std::unique_ptr<> yet. Thus the Eina_List* should be replaced with Vector<std::unique_ptr<>>
+        so that m_partCache has ownship of all EFL theme entries. This patch tries to keep original
+        cache algorithm based on Vector class.
+
+        No new tests, no behavior changes.
+
+        * platform/efl/RenderThemeEfl.cpp:
+        (WebCore::RenderThemeEfl::ThemePartCacheEntry::create):
+        (WebCore::RenderThemeEfl::getThemePartFromCache):
+        * platform/efl/RenderThemeEfl.h:
+
+2014-11-09  Darin Adler  <darin@apple.com>
+
+        Minor tweaks to HTMLCollection
+        https://bugs.webkit.org/show_bug.cgi?id=138556
+
+        Reviewed by Chris Dumez.
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::addRadioButtonGroupMembers):
+        Update for namedElements function that now returns a Vector; also use
+        a new style for loop to iterate it.
+
+        * bindings/js/JSHTMLAllCollectionCustom.cpp: Removed some unneeded includes.
+        (WebCore::namedItems): Updated name to match WebKit coding style, and also
+        updated to use the return value from namedItems, which now returns a Vector.
+        (WebCore::callHTMLAllCollection): Updated for namedItems name change.
+        Also removed explicit Node* type from result of namedItemWithIndex, since that
+        function now returns a more specific type.
+        (WebCore::JSHTMLAllCollection::nameGetter): Update for namedItems name change.
+        (WebCore::JSHTMLAllCollection::item): Ditto.
+        (WebCore::JSHTMLAllCollection::namedItem): Ditto.
+
+        * bindings/js/JSHTMLFormControlsCollectionCustom.cpp: Removed some unneeded includes.
+        (WebCore::namedItems): Updated name to match WebKit coding style, and also
+        updated to use the return value from namedItems, which now returns a Vector.
+        (WebCore::JSHTMLFormControlsCollection::nameGetter): Update for namedItems name change.
+        (WebCore::JSHTMLFormControlsCollection::namedItem): Ditto.
+
+        * bindings/js/JSHTMLFormElementCustom.cpp:
+        (WebCore::JSHTMLFormElement::nameGetter): Updated to use the return value from
+        namedItems, which now returns a Vector.
+
+        * html/HTMLAllCollection.cpp:
+        (WebCore::HTMLAllCollection::HTMLAllCollection): Marked the constructor inline,
+        since it's only used in one place, the create function.
+        (WebCore::HTMLAllCollection::~HTMLAllCollection): Deleted. No need to have an
+        explicit destructor since there's nothing special to implement, and includers of
+        the header file have everything they ened to compile the compiler-generated one.
+        (WebCore::HTMLAllCollection::namedItemWithIndex): Changed return type to Element.
+
+        * html/HTMLAllCollection.h: Removed unneeded explicit declaration of destructor.
+        Chagned return type of namedItemWithIndex to Element.
+
+        * html/HTMLCollection.cpp:
+        (WebCore::HTMLCollection::rootTypeFromCollectionType): Marked this inline. Also
+        changed this to be a static member function so it can use the RootType enum, which
+        is now private to the class.
+        (WebCore::isMatchingHTMLElement): Marked this function static so it will get
+        internal linkage.
+        (WebCore::isMatchingElement): Ditto.
+        (WebCore::previousElement): Marked this function inline since it's called in only
+        one place. Changed argument type to a reference since it can never be null.
+        (WebCore::HTMLCollection::iterateForPreviousElement): Changed argument name and
+        also updated for above changes.
+        (WebCore::firstMatchingElement): Marked this function static so it will get
+        internal linkage.
+        (WebCore::nextMatchingElement): Ditto. Changed argument type to a reference
+        since it can never be null.
+        (WebCore::HTMLCollection::item): Changed return type to Element.
+        (WebCore::nameShouldBeVisibleInDocumentAll): Added an overload that takes an
+        Element. This streamlines the code below that calls it so it fits on one line.
+        (WebCore::firstMatchingChildElement): Marked this function static so it will get
+        internal linkage.
+        (WebCore::nextMatchingSiblingElement): Ditto. Changed argument type to a reference
+        since it can never be null.
+        (WebCore::HTMLCollection::usesCustomForwardOnlyTraversal): Moved here from the
+        header since, although it's marked inline, it's only used inside this file.
+        (WebCore::HTMLCollection::traverseForward): Restructured the code a little bit
+        to make the function smaller and possibly easier to read. This does add one
+        redundant null check, but it seems OK to do that.
+        (WebCore::HTMLCollection::collectionTraverseBackward): Tweaked foramtting a bit.
+        (WebCore::HTMLCollection::namedItem): Changed return type to Element. Tightened
+        the code that calls nameShouldBeVisibleInDocumentAll so it fits better on one line.
+        Changed code that handles m_shouldOnlyIncludeDirectChildren to use a nested if
+        instead of an && since it makes the code a little easier to read.
+        (WebCore::HTMLCollection::updateNamedElementCache): Tweaked code a little bit,
+        using shorter variable names, and using references instead of pointers. Also removed
+        the call to didPopulate, since setNamedItemCache now takes care of that.
+        (WebCore::HTMLCollection::namedItems): Changed to return a Vector instead of
+        appending to an existing one. Also use reserveInitialCapacity and uncheckedAppend
+        for better performance. Added a FIXME, because there seems to be something wrong
+        here about this being non-virtual. Made other small tweaks to streamline the code.
+        (WebCore::HTMLCollection::customElementAfter): Moved this here from the header.
+        There is no reason to need to inline this.
+
+        * html/HTMLCollection.h: Removed unneeded includes. Moved function bodies out
+        of the class definitions so the class definitions are easier to read. Made some
+        functions that were formerly public or protected be private instead. Added a call
+        to didPopulate to setNamedItemCache so the callers don't have to do it.
+
+        * html/HTMLFormControlsCollection.cpp:
+        (WebCore::HTMLFormControlsCollection::namedItem): Changed return value to Element.
+        Tweaked coding style a little bit.
+        (WebCore::HTMLFormControlsCollection::updateNamedElementCache): Rearranged to
+        simplify a bit. Don't build the foundInputElements set when the owner is not a
+        form element, since we don't use the set in that case. Use shorter variable names,
+        and modern for loops. Also removed the call to didPopulate, since setNamedItemCache
+        now takes care of that.
+
+        * html/HTMLFormControlsCollection.h: Removed some uneeded forward declarations.
+        Updated return type for namedItem, and also made the override private.
+
+        * html/HTMLFormElement.cpp:
+        (WebCore::HTMLFormElement::namedElements): Changed to return a Vector and updated
+        function name accordingly.
+        * html/HTMLFormElement.h: Ditto.
+
+        * html/HTMLNameCollection.h: Removed a stray blank line.
+
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::namedItem): Changed return value to Element.
+        (WebCore::HTMLSelectElement::item): Ditto.
+        * html/HTMLSelectElement.h: Ditto.
+
+        * page/scrolling/AxisScrollSnapOffsets.cpp:
+        (WebCore::appendChildSnapOffsets): Rewrote loop as a for loop rather than a while
+        loop. Removed unwanted use of children()->collectionBegin() to get the first element
+        child of an HTMLElement. This function uses a mix of DOM and rendering functions that
+        is probably incorrect, but I did not tackle fixing that at this time.
+
+2014-11-11  Dan Bernstein  <mitz@apple.com>
+
+        [Mac] WebCore includes unused cursor image resources
+        https://bugs.webkit.org/show_bug.cgi?id=138605
+
+        Reviewed by Anders Carlsson.
+
+        * Resources/aliasCursor.png: Removed.
+        * Resources/cellCursor.png: Removed.
+        * Resources/contextMenuCursor.png: Removed.
+        * Resources/copyCursor.png: Removed.
+        * Resources/eastResizeCursor.png: Removed.
+        * Resources/eastWestResizeCursor.png: Removed.
+        * Resources/helpCursor.png: Removed.
+        * Resources/linkCursor.png: Removed.
+        * Resources/moveCursor.png: Removed.
+        * Resources/noDropCursor.png: Removed.
+        * Resources/noneCursor.png: Removed.
+        * Resources/northEastResizeCursor.png: Removed.
+        * Resources/northEastSouthWestResizeCursor.png: Removed.
+        * Resources/northResizeCursor.png: Removed.
+        * Resources/northSouthResizeCursor.png: Removed.
+        * Resources/northWestResizeCursor.png: Removed.
+        * Resources/northWestSouthEastResizeCursor.png: Removed.
+        * Resources/progressCursor.png: Removed.
+        * Resources/southEastResizeCursor.png: Removed.
+        * Resources/southResizeCursor.png: Removed.
+        * Resources/southWestResizeCursor.png: Removed.
+        * Resources/verticalTextCursor.png: Removed.
+        * Resources/waitCursor.png: Removed.
+        * Resources/westResizeCursor.png: Removed.
+        * Resources/zoomInCursor.png: Removed.
+        * Resources/zoomOutCursor.png: Removed.
+
+        * WebCore.xcodeproj/project.pbxproj: Removed references to the above files.
+
+        * platform/mac/CursorMac.mm:
+        (WebCore::Cursor::ensurePlatformCursor): For Help, Cell, ZoomIn and ZoomOut, don’t check
+        for a nil return value from wkCursor(), which can’t occur in any supported configuration.
+        For None, create a cursor with an empty NSImage instead of loading a transparent image from
+        the file system.
+        (WebCore::createNamedCursor): Deleted.
+
+2014-11-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, rolling out r175844.
+
+        Win debug build has broken since r175844.
+
+        Reverted changeset:
+
+        "Use std::unique_ptr<> and std::make_unique<> in WebCore"
+        https://bugs.webkit.org/show_bug.cgi?id=138560
+        http://trac.webkit.org/changeset/175844
+
+2014-11-11  Philippe Normand  <pnormand@igalia.com>
+
+        Qt/Chromium remnants in MediaPlayer
+        https://bugs.webkit.org/show_bug.cgi?id=138611
+
+        Reviewed by Jer Noble.
+
+        * platform/graphics/MediaPlayer.h: Remove unused Qt/Chromium stuff.
+
+2014-11-11  Chris Dumez  <cdumez@apple.com>
+
+        Move '-webkit-marquee-speed' CSS property to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138595
+
+        Reviewed by Antti Koivisto.
+
+        Move '-webkit-marquee-speed' CSS property from DeprecatedStyleBuilder
+        to the new StyleBuilder by adding a new MarqueeSpeed Converter.
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyMarqueeSpeed::applyValue): Deleted.
+        (WebCore::ApplyPropertyMarqueeSpeed::createHandler): Deleted.
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertMarqueeSpeed):
+
+2014-10-07  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Limit the size of explicit/implicit grid
+        https://bugs.webkit.org/show_bug.cgi?id=136217
+
+        Reviewed by Andreas Kling.
+
+        A recent change in the specs allow us to set a limit (maximum
+        size) for both the explicit and implicit grids so we can protect
+        ourselves from absurdly huge grid specifications. It was decided
+        to use the recommended limit which is 1 million.
+
+        This means that we can remove the old limitation for the number of
+        repetitions in repeat(). Instead we now clamp the number of
+        repetitions to the maximum value that allow us to have the maximum
+        number of whole repetitions without exceeding the track number
+        limit.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseGridTrackRepeatFunction): Replaced the
+        old limit by the new one.
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::placeItemsOnGrid): Use the amount of tracks
+        provided by GridResolvedPosition.
+        (WebCore::RenderGrid::populateExplicitGridAndOrderIterator): Ditto.
+        * rendering/style/GridCoordinate.h:
+        (WebCore::GridSpan::GridSpan):
+        * rendering/style/GridResolvedPosition.cpp:
+        (WebCore::GridResolvedPosition::explicitGridColumnCount): Bring
+        the static function back to life.
+        (WebCore::GridResolvedPosition::explicitGridRowCount): Ditto.
+        (WebCore::explicitGridSizeForSide):
+        * rendering/style/GridResolvedPosition.h:
+
+2014-11-11  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        CSS4 Selectors: Add multiple pseudo elements support to :matches
+        https://bugs.webkit.org/show_bug.cgi?id=138214
+
+        Reviewed by Benjamin Poulain.
+
+        In this patch, we implement (multiple) pseudo elements support to :matches.
+        Currently, we implemented it in css/SelectorChecker and there's no CSS JIT implementation.
+
+        And we change the semantics of pseudo element selector behavior.
+        Previously when pseudo element selector appeared in the non-rightmost
+        fragment, it was ignored. This patch changes it to unmatched.
+
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::CheckingContextWithStatus::CheckingContextWithStatus):
+        (WebCore::SelectorChecker::match):
+        (WebCore::hasScrollbarPseudoElement):
+        (WebCore::SelectorChecker::matchRecursively):
+        (WebCore::SelectorChecker::checkOne):
+        (WebCore::SelectorChecker::matchSelectorList):
+        * css/SelectorChecker.h:
+        (WebCore::SelectorChecker::MatchResult::matches):
+        (WebCore::SelectorChecker::MatchResult::updateWithMatchType):
+        (WebCore::SelectorChecker::MatchResult::fails):
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::addPseudoClassType):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::SelectorCodeGenerator):
+        (WebCore::SelectorCompiler::constructFragments):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateElementHasPseudoElement):
+        * rendering/style/RenderStyle.h:
+        (WebCore::RenderStyle::setHasPseudoStyles):
+        * rendering/style/RenderStyleConstants.h:
+        (WebCore::PseudoIdSet::PseudoIdSet):
+        (WebCore::PseudoIdSet::fromMask):
+        (WebCore::PseudoIdSet::has):
+        (WebCore::PseudoIdSet::add):
+        (WebCore::PseudoIdSet::merge):
+        (WebCore::PseudoIdSet::operator &):
+        (WebCore::PseudoIdSet::operator |):
+        (WebCore::PseudoIdSet::operator bool):
+        (WebCore::PseudoIdSet::data):
+
+2014-11-10  Chris Dumez  <cdumez@apple.com>
+
+        Lazily create HTMLInputElement's inputType and shadow subtree
+        https://bugs.webkit.org/show_bug.cgi?id=138524
+
+        Reviewed by Ryosuke Niwa.
+
+        When an HTMLInputElement was created by the parser, we would first call
+        HTMLInputElement::create(), then call Element::parserSetAttributes() on
+        the constructed input. With the previous implementation, this was a bit
+        inefficient because HTMLInputElement::create() would construct a
+        TextInputType inputType (as this is the default) as well as its
+        corresponding shadow subtree. Then, parserSetAttributes() would often
+        set the |type| attribute and would need to destroy this input type as
+        well as its subtree if the new |type| is not 'text', to create a new
+        inputType / shadow subtree of the right type. The profiler showed that
+        this was fairly expensive.
+
+        To improve this, this patch delays the inputType / shadow subtree
+        creation when the HTMLInputElement is constructed by the parser, until
+        the attributes are actually set by the parser. This way, we directly
+        create an inputType / shadow subtree of the right type.
+
+        I see a 1.4% speed up on speedometer (73.95 -> 75.0).
+
+        No new tests, no behavior change.
+
+        * dom/Element.cpp:
+        (WebCore::Element::parserSetAttributes):
+        (WebCore::Element::parserDidFinishParsingAttributes):
+        * dom/Element.h:
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::HTMLInputElement):
+        (WebCore::HTMLInputElement::create):
+        (WebCore::HTMLInputElement::updateType):
+        (WebCore::HTMLInputElement::runPostTypeUpdateTasks):
+        (WebCore::HTMLInputElement::ensureInputType):
+        (WebCore::HTMLInputElement::parseAttribute):
+        (WebCore::HTMLInputElement::parserDidFinishParsingAttributes):
+        * html/HTMLInputElement.h:
+
+2014-11-10  Benjamin Poulain  <bpoulain@apple.com>
+
+        Add parsing support for the extended :nth-last-child(An+B of selector-list) defined
+        https://bugs.webkit.org/show_bug.cgi?id=138520
+
+        Reviewed by Andreas Kling.
+
+        Add parsing for :nth-last-child(An+B of selector-list). The selector is defined
+        in CSS Selectors Level 4: http://dev.w3.org/csswg/selectors4/#the-nth-last-child-pseudo
+
+        Tests: fast/css/parsing-css-nth-last-child-of-1.html
+               fast/css/parsing-css-nth-last-child-of-2.html
+               fast/css/parsing-css-nth-last-child-of-3.html
+               fast/css/parsing-css-nth-last-child-of-4.html
+
+        * css/CSSGrammar.y.in:
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::detectFunctionTypeToken):
+        * css/CSSSelector.cpp:
+        (WebCore::CSSSelector::selectorText):
+
+2014-11-10  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        SVG foreign objects do not inherit the container coordinates system if they are repainted.
+        https://bugs.webkit.org/show_bug.cgi?id=138481.
+
+        Reviewed by Simon Fraser.
+
+        If a foreign object is included in an SVG, it should inherit the coordinates system
+        of the container if it is repainted. The foreign object is actually redrawn in the
+        CSS coordinates system regardless of the transformation that may be applied to the
+        container.
+
+        The bug is RenderSVG* classes use computeFloatRectForRepaint(), but the rest of the
+        render classes use computeRectForRepaint(). RenderSVGForeignObject::computeRectForRepaint()
+        was not defined, so we end up hitting RenderObject::computeRectForRepaint() for 
+        a RenderSVGTransformableContainer and completely miss the transform.
+
+        Tests: svg/transforms/svg-transform-foreign-object-repaint.html
+
+        Implement RenderSVGForeignObject::computeRectForRepaint() so we can apply the
+        container transformation on the SVG foreign object repaint rectangle.
+        * rendering/svg/RenderSVGForeignObject.cpp:
+        (WebCore::RenderSVGForeignObject::computeRectForRepaint):
+        * rendering/svg/RenderSVGForeignObject.h:
+
+2014-11-10  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Use std::unique_ptr<> and std::make_unique<> in WebCore
+        https://bugs.webkit.org/show_bug.cgi?id=138560
+
+        Reviewed by Chris Dumez.
+
+        Clean up unused OwnPtr.h and PassOwnPtr.h and use std::unique_ptr.
+
+        No new tests, no behavior changes.
+
+        * Modules/encryptedmedia/CDMPrivateMediaPlayer.h:
+        * dom/ContainerNode.h:
+        * dom/ElementIteratorAssertions.h:
+        (WebCore::ElementIteratorAssertions::ElementIteratorAssertions):
+        * dom/ElementRareData.h:
+        * page/DragController.h:
+        * rendering/RenderView.h:
+
+2014-11-10  Beth Dakin  <bdakin@apple.com>
+
+        WK1: Support default actions for editable text with misspelled word
+        https://bugs.webkit.org/show_bug.cgi?id=138590
+        -and corresponding-
+        rdar://problem/18877506
+
+        Reviewed by Tim Horton.
+
+        * WebCore.exp.in:
+
+2014-11-10  Chris Dumez  <cdumez@apple.com>
+
+        Remove unnecessary null check in FrameSelection::nodeWillBeRemoved()
+        https://bugs.webkit.org/show_bug.cgi?id=138578
+
+        Reviewed by Andreas Kling.
+
+        Remove unnecessary null check in FrameSelection::nodeWillBeRemoved()
+        and turn the argument into a reference to make it clear it cannot be
+        null.
+
+        No new tests, no behavior change.
+
+        * dom/ContainerNode.cpp:
+        (WebCore::ContainerNode::willRemoveChild):
+        * dom/Document.cpp:
+        (WebCore::Document::nodeChildrenWillBeRemoved):
+        (WebCore::Document::nodeWillBeRemoved):
+        * dom/Document.h:
+        * dom/NodeIterator.cpp:
+        (WebCore::NodeIterator::nodeWillBeRemoved):
+        (WebCore::NodeIterator::updateForNodeRemoval):
+        * dom/NodeIterator.h:
+        * dom/Range.cpp:
+        (WebCore::Range::insertNode):
+        (WebCore::boundaryNodeWillBeRemoved):
+        (WebCore::Range::nodeWillBeRemoved):
+        * dom/Range.h:
+        * dom/RangeBoundaryPoint.h:
+        (WebCore::RangeBoundaryPoint::setToBeforeChild):
+        * editing/CompositeEditCommand.cpp:
+        (WebCore::CompositeEditCommand::updatePositionForNodeRemovalPreservingChildren):
+        * editing/CompositeEditCommand.h:
+        * editing/DeleteSelectionCommand.cpp:
+        (WebCore::DeleteSelectionCommand::removeNode):
+        (WebCore::DeleteSelectionCommand::handleGeneralDelete):
+        (WebCore::DeleteSelectionCommand::removeRedundantBlocks):
+        * editing/FrameSelection.cpp:
+        (WebCore::removingNodeRemovesPosition):
+        (WebCore::DragCaretController::nodeWillBeRemoved):
+        (WebCore::FrameSelection::nodeWillBeRemoved):
+        (WebCore::FrameSelection::respondToNodeModification):
+        * editing/FrameSelection.h:
+        * editing/ReplaceSelectionCommand.cpp:
+        (WebCore::ReplaceSelectionCommand::mergeTextNodesAroundPosition):
+        * editing/htmlediting.cpp:
+        (WebCore::updatePositionForNodeRemoval):
+        * editing/htmlediting.h:
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::nodeWillBeRemoved):
+        * page/EventHandler.h:
+
 2014-11-10  Benjamin Poulain  <bpoulain@apple.com>
 
         Fix the build when CSS Selectors Level 4 is disabled
