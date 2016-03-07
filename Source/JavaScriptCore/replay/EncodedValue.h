@@ -112,7 +112,7 @@ struct EncodingTraits<Vector<T, inlineCapacity, OverflowHandler>> {
     {
         EncodedValue encodedVector = EncodedValue::createArray();
         for (const typename EncodingTraits<T>::DecodedType& value : vectorOfValues)
-            encodedVector.append<typename EncodingTraits<T>::DecodedType>(value);
+            encodedVector.append<T>(value);
 
         return WTF::move(encodedVector);
     }
@@ -134,6 +134,13 @@ template<> struct EncodingTraits<EncodedValue> {
     typedef EncodedValue DecodedType;
     // We should never attempt to decode or encode an encoded value,
     // so encodeValue and decodeValue are intentionally omitted here.
+};
+
+// Specialize byte vectors to use base64 encoding.
+template<> struct EncodingTraits<Vector<char>> {
+    typedef Vector<char> DecodedType;
+    static EncodedValue encodeValue(const DecodedType&);
+    static bool decodeValue(EncodedValue&, DecodedType&);
 };
 
 template<typename T>

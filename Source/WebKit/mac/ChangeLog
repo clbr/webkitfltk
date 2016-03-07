@@ -1,3 +1,69 @@
+2014-07-30  Andy Estes  <aestes@apple.com>
+
+        USE(CONTENT_FILTERING) should be ENABLE(CONTENT_FILTERING)
+        https://bugs.webkit.org/show_bug.cgi?id=135439
+
+        Reviewed by Tim Horton.
+
+        We now support two different platform content filters, and will soon support a mock content filter (as part of
+        webkit.org/b/128858). This makes content filtering a feature of WebKit, not just an adoption of a third-party
+        library. ENABLE() is the correct macro to use for such a feature.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-07-30  Andreas Kling  <akling@apple.com>
+
+        Static hash tables no longer need to be coupled with a VM.
+        <https://webkit.org/b/135421>
+
+        Reviewed by Geoffrey Garen.
+
+        * Plugins/Hosted/ProxyInstance.mm:
+        * Plugins/Hosted/ProxyRuntimeObject.mm:
+
+2014-07-30  Dan Bernstein  <mitz@apple.com>
+
+        Updated for changes to the WebCore::Credential API.
+        Work towards fixing https://bugs.webkit.org/show_bug.cgi?id=135327
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Misc/WebDownload.mm:
+        (-[WebDownloadInternal download:didReceiveAuthenticationChallenge:]): Use new nsCredential
+        getter.
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (WebKit::getAuthenticationInfo): Ditto.
+
+2014-07-27  Pratik Solanki  <psolanki@apple.com>
+
+        Remove unused preference keys
+        https://bugs.webkit.org/show_bug.cgi?id=135280
+
+        Reviewed by Darin Adler.
+
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.mm:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences _setPageCacheSize:]): Deleted.
+        (-[WebPreferences _pageCacheSize]): Deleted.
+        (-[WebPreferences _setObjectCacheSize:]): Deleted.
+        (-[WebPreferences _objectCacheSize]): Deleted.
+        * WebView/WebPreferencesPrivate.h:
+
+2014-07-27  Filip Pizlo  <fpizlo@apple.com>
+
+        Merge r170090, r170092, r170129, r170141, r170161, r170215, r170275, r170375, r170376, r170382, r170383, r170399, r170436, r170489, r170490, r170556 from ftlopt.
+
+    2014-07-25  Mark Lam  <mark.lam@apple.com>
+    
+            [ftlopt] Renamed DebuggerActivation to DebuggerScope.
+            <https://webkit.org/b/134273>
+    
+            Reviewed by Michael Saboff.
+    
+            * WebView/WebScriptDebugDelegate.mm:
+            - Removed unneeded #include.
+    
 2014-07-26  Filip Pizlo  <fpizlo@apple.com>
 
         Unreviewed, roll out r171641-r171644. It broke some tests; will investigate and

@@ -35,21 +35,25 @@ namespace JSC {
 
 namespace DFG {
 class StructureAbstractValue;
+struct AbstractValue;
 }
 
 class StructureSet {
 public:
     StructureSet()
+        : m_pointer(0)
     {
         setEmpty();
     }
     
     StructureSet(Structure* structure)
+        : m_pointer(0)
     {
         set(structure);
     }
     
     ALWAYS_INLINE StructureSet(const StructureSet& other)
+        : m_pointer(0)
     {
         copyFrom(other);
     }
@@ -72,12 +76,12 @@ public:
     
     Structure* onlyStructure() const
     {
-        if (isThin()) {
-            ASSERT(singleStructure());
+        if (isThin())
             return singleStructure();
-        }
-        ASSERT(structureList()->m_length == 1);
-        return structureList()->list()[0];
+        OutOfLineList* list = structureList();
+        if (list->m_length != 1)
+            return nullptr;
+        return list->list()[0];
     }
     
     bool isEmpty() const
@@ -95,6 +99,13 @@ public:
     bool merge(const StructureSet&);
     void filter(const StructureSet&);
     void exclude(const StructureSet&);
+    
+#if ENABLE(DFG_JIT)
+    void filter(const DFG::StructureAbstractValue&);
+    void filter(SpeculatedType);
+    void filterArrayModes(ArrayModes);
+    void filter(const DFG::AbstractValue&);
+#endif // ENABLE(DFG_JIT)
     
     template<typename Functor>
     void genericFilter(Functor& functor)

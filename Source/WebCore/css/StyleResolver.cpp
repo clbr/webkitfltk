@@ -389,7 +389,7 @@ inline void StyleResolver::State::initElement(Element* e)
 {
     m_element = e;
     m_styledElement = e && e->isStyledElement() ? toStyledElement(e) : nullptr;
-    m_elementLinkState = e ? e->document().visitedLinkState().determineLinkState(e) : NotInsideLink;
+    m_elementLinkState = e ? e->document().visitedLinkState().determineLinkState(*e) : NotInsideLink;
     updateConversionData();
 }
 
@@ -825,6 +825,7 @@ PassRef<RenderStyle> StyleResolver::styleForKeyframe(const RenderStyle* elementS
 
     // Create the style
     state.setStyle(RenderStyle::clone(elementStyle));
+    state.setParentStyle(RenderStyle::clone(elementStyle));
     state.setLineHeightValue(0);
 
     TextDirection direction;

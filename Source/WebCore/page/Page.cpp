@@ -202,6 +202,7 @@ Page::Page(PageClients& pageClients)
     , m_userContentController(WTF::move(pageClients.userContentController))
     , m_visitedLinkStore(WTF::move(pageClients.visitedLinkStore))
     , m_sessionID(SessionID::defaultSessionID())
+    , m_isClosing(false)
 {
     ASSERT(m_editorClient);
     

@@ -1024,7 +1024,6 @@ set(WebCore_SOURCES
 
     bindings/js/ArrayValue.cpp
     bindings/js/CallbackFunction.cpp
-    bindings/js/DOMObjectHashTableMap.cpp
     bindings/js/DOMWrapperWorld.cpp
     bindings/js/Dictionary.cpp
     bindings/js/GCController.cpp
@@ -2208,7 +2207,7 @@ set(WebCore_SOURCES
     platform/network/BlobRegistry.cpp
     platform/network/BlobRegistryImpl.cpp
     platform/network/BlobResourceHandle.cpp
-    platform/network/Credential.cpp
+    platform/network/CredentialBase.cpp
     platform/network/CredentialStorage.cpp
     platform/network/DNSResolveQueue.cpp
     platform/network/DataURL.cpp
@@ -2352,6 +2351,7 @@ set(WebCore_SOURCES
     rendering/RenderScrollbarPart.cpp
     rendering/RenderScrollbarTheme.cpp
     rendering/RenderSearchField.cpp
+    rendering/RenderSelectionInfo.cpp
     rendering/RenderSlider.cpp
     rendering/RenderSnapshottedPlugIn.cpp
     rendering/RenderTable.cpp
