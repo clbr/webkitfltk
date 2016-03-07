@@ -60,6 +60,7 @@
 #include "PageConsoleClient.h"
 #include "PageDebuggable.h"
 #include "PageGroup.h"
+#include "PageOverlayController.h"
 #include "PageThrottler.h"
 #include "PlugInClient.h"
 #include "PluginData.h"
@@ -789,6 +790,8 @@ void Page::setPageScaleFactor(float scale, const IntPoint& origin, bool inStable
         for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext())
             frame->document()->pageScaleFactorChangedAndStable();
     }
+#else
+    UNUSED_PARAM(inStableState);
 #endif
 }
 
@@ -812,6 +815,8 @@ void Page::setDeviceScaleFactor(float scaleFactor)
 
     pageCache()->markPagesForFullStyleRecalc(this);
     GraphicsContext::updateDocumentMarkerResources();
+
+    mainFrame().pageOverlayController().didChangeDeviceScaleFactor();
 }
 
 void Page::setTopContentInset(float contentInset)
@@ -1619,7 +1624,6 @@ void Page::setSessionID(SessionID sessionID)
 
     for (auto& view : pluginViews())
         view->privateBrowsingStateChanged(sessionID.isEphemeral());
-
 }
 
 Page::PageClients::PageClients()

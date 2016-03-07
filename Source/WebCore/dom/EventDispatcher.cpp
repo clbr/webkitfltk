@@ -60,7 +60,7 @@ private:
 WindowEventContext::WindowEventContext(PassRefPtr<Node> node, const EventContext* topEventContext)
 {
     Node* topLevelContainer = topEventContext ? topEventContext->node() : node.get();
-    if (!is<Document>(topLevelContainer))
+    if (!is<Document>(*topLevelContainer))
         return;
 
     m_window = downcast<Document>(*topLevelContainer).domWindow();
@@ -356,7 +356,7 @@ bool EventDispatcher::dispatchEvent(Node* origin, PassRefPtr<Event> prpEvent)
     WindowEventContext windowEventContext(node.get(), eventPath.lastContextIfExists());
 
     InputElementClickState clickHandlingState;
-    if (is<HTMLInputElement>(node.get()))
+    if (is<HTMLInputElement>(*node))
         downcast<HTMLInputElement>(*node).willDispatchEvent(*event, clickHandlingState);
 
     // Middle-clicking on links does not toggle JS.
@@ -423,7 +423,7 @@ static inline bool shouldEventCrossShadowBoundary(Event& event, ShadowRoot& shad
 
 static Node* nodeOrHostIfPseudoElement(Node* node)
 {
-    return is<PseudoElement>(node) ? downcast<PseudoElement>(*node).hostElement() : node;
+    return is<PseudoElement>(*node) ? downcast<PseudoElement>(*node).hostElement() : node;
 }
 
 EventPath::EventPath(Node& targetNode, Event& event)
@@ -452,7 +452,7 @@ EventPath::EventPath(Node& targetNode, Event& event)
                 m_path.append(std::make_unique<EventContext>(node, &currentTarget, target));
             if (!inDocument)
                 return;
-            if (is<ShadowRoot>(node))
+            if (is<ShadowRoot>(*node))
                 break;
         }
         if (!node || !shouldEventCrossShadowBoundary(event, downcast<ShadowRoot>(*node), *target))
