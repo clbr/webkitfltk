@@ -58,12 +58,17 @@ ReadableStream::~ReadableStream()
 #endif
 }
 
+void ReadableStream::start()
+{
+    notImplemented();
+}
+
 const char* ReadableStream::activeDOMObjectName() const
 {
     return "ReadableStream";
 }
 
-bool ReadableStream::canSuspend() const
+bool ReadableStream::canSuspendForPageCache() const
 {
     // FIXME: We should try and do better here.
     return false;
