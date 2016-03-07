@@ -282,10 +282,10 @@ static const int* checkboxMargins(NSControlSize controlSize)
 {
     static const int margins[3][4] =
     {
-        // top left right bottom
-        { 3, 4, 4, 2 },
-        { 4, 3, 3, 3 },
-        { 4, 3, 3, 3 },
+        // top right bottom left
+        { 2, 2, 2, 2 },
+        { 2, 1, 2, 1 },
+        { 0, 0, 1, 0 },
     };
     return margins[controlSize];
 }
@@ -300,21 +300,11 @@ static LengthSize checkboxSize(const Font& font, const LengthSize& zoomedSize, f
     return sizeFromFont(font, zoomedSize, zoomFactor, checkboxSizes());
 }
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
-static const std::array<FloatSize, 3>& checkboxOffsets()
-{
-    // This provides the positioning tweak we need to place controls
-    // at the right location during animation.
-    static const std::array<FloatSize, 3> sizes = { { FloatSize(0, 2), FloatSize(2, 1.5), FloatSize(3, 3) } };
-    return sizes;
-}
-#endif
-
 // Radio Buttons
 
 static const std::array<IntSize, 3>& radioSizes()
 {
-    static const std::array<IntSize, 3> sizes = { { IntSize(14, 15), IntSize(12, 13), IntSize(10, 10) } };
+    static const std::array<IntSize, 3> sizes = { { IntSize(16, 16), IntSize(12, 12), IntSize(10, 10) } };
     return sizes;
 }
 
@@ -322,23 +312,13 @@ static const int* radioMargins(NSControlSize controlSize)
 {
     static const int margins[3][4] =
     {
-        // top left right bottom
-        { 2, 2, 4, 2 },
-        { 3, 2, 3, 2 },
-        { 1, 0, 2, 0 },
+        // top right bottom left
+        { 1, 0, 1, 2 },
+        { 1, 1, 2, 1 },
+        { 0, 0, 1, 1 },
     };
     return margins[controlSize];
 }
-
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
-static const std::array<FloatSize, 3>& radioOffsets()
-{
-    // This provides the positioning tweak we need to place controls
-    // at the right location during animation.
-    static const std::array<FloatSize, 3> sizes = { { FloatSize(0, 2), FloatSize(1, 2), FloatSize(0, 1) } };
-    return sizes;
-}
-#endif
 
 static LengthSize radioSize(const Font& font, const LengthSize& zoomedSize, float zoomFactor)
 {
@@ -446,6 +426,9 @@ static void paintToggleButton(ControlPart buttonType, ControlStates* controlStat
     LocalCurrentGraphicsContext localContext(context);
     NSView *view = ThemeMac::ensuredView(scrollView, controlStates);
 
+    bool isAnimating = false;
+    bool needsRepaint = false;
+
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
     if ([toggleButtonCell _stateAnimationRunning]) {
         // AppKit's drawWithFrame appears to render the cell centered in the
@@ -454,23 +437,19 @@ static void paintToggleButton(ControlPart buttonType, ControlStates* controlStat
         context->translate(inflatedRect.x(), inflatedRect.y());
         context->scale(FloatSize(1, -1));
         context->translate(0, -inflatedRect.height());
-        FloatSize controlOffsets = buttonType == CheckboxPart ? checkboxOffsets()[controlSize] : radioOffsets()[controlSize];
-        context->translate(controlOffsets);
         [toggleButtonCell _renderCurrentAnimationFrameInContext:context->platformContext() atLocation:NSMakePoint(0, 0)];
+        isAnimating = [toggleButtonCell _stateAnimationRunning];
     } else
         [toggleButtonCell drawWithFrame:NSRect(inflatedRect) inView:view];
 #else
     [toggleButtonCell drawWithFrame:NSRect(inflatedRect) inView:view];
 #endif
 
-    bool needsRepaint = false;
-    if (controlStates->states() & ControlStates::FocusState)
+    if (!isAnimating && (controlStates->states() & ControlStates::FocusState))
         needsRepaint = drawCellFocusRing(toggleButtonCell, inflatedRect, view);
     [toggleButtonCell setControlView:nil];
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
-    needsRepaint |= [toggleButtonCell _stateAnimationRunning];
-#endif
+    needsRepaint |= isAnimating;
     controlStates->setNeedsRepaint(needsRepaint);
     if (needsRepaint)
         controlStates->setPlatformControl(toggleButtonCell);

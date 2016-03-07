@@ -1,3 +1,1259 @@
+2014-06-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Update GObject DOM bindings test results after r170351.
+
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.h:
+
+2014-06-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix GTK+ build after r170309.
+
+        Skip functions returning arrays in GObject DOM bindings.
+
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (SkipFunction):
+
+2014-06-23  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Replace RefPtr<Evas_Object> with UniquePtrEfl
+        https://bugs.webkit.org/show_bug.cgi?id=134236
+
+        Reviewed by Gyuyoung Kim.
+
+        * platform/efl/RenderThemeEfl.cpp:
+        (WebCore::RenderThemeEfl::ThemePartCacheEntry::create):
+        (WebCore::RenderThemeEfl::loadTheme):
+        (WebCore::RenderThemeEfl::applyPartDescriptionsFrom):
+        * platform/efl/RenderThemeEfl.h:
+        * platform/graphics/efl/CairoUtilitiesEfl.cpp:
+        (WebCore::evasObjectFromCairoImageSurface):
+        * platform/graphics/efl/CairoUtilitiesEfl.h:
+        * platform/graphics/efl/ImageEfl.cpp:
+        (WebCore::BitmapImage::getEvasObject):
+
+2014-06-23  Jeremy Jones  <jeremyj@apple.com>
+
+        Chapter forward/backward should seek to beginning/end.
+        https://bugs.webkit.org/show_bug.cgi?id=134225
+
+        Reviewed by Eric Carlson.
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (-[WebAVPlayerController seekChapterBackward:]): forwards to -seekToBeginning
+        (-[WebAVPlayerController seekChapterForward:]): forwards to -seekToEnd
+
+2014-06-23  Dean Jackson  <dino@apple.com>
+
+        [Mac] Don't draw focus rings if we are animating controls
+        https://bugs.webkit.org/show_bug.cgi?id=134232
+        <rdar://problem/17381121>
+
+        Reviewed by Tim Horton.
+
+        Controls in native apps do not draw their focus rings as they
+        animate (in Yosemite). Turn this off for WebKit too. It turns
+        out that when we were drawing them, they were in the wrong
+        place anyway.
+
+        Since we don't animate controls when testing, we can't really test this.
+
+        * platform/mac/ThemeMac.mm:
+        (WebCore::paintToggleButton): Only draw the focus ring if the
+        NSButtonCell is not animating.
+
+2014-06-23  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Remove some unnecessary code from WebKitAccessibleWrapperAtk
+        https://bugs.webkit.org/show_bug.cgi?id=134193
+
+        Reviewed by Gyuyoung Kim.
+
+        It was used along with DRT. Since we have stopped support WK1/DRT, it won't be needed.
+
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (webkitAccessibleGetFocusedElement): Deleted.
+        * accessibility/atk/WebKitAccessibleWrapperAtk.h:
+
+2014-06-20  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Use unsigneds instead of ints for indexes into a string in text layout code
+        https://bugs.webkit.org/show_bug.cgi?id=133592
+
+        Reviewed by Zalan Bujtas.
+
+        Migrate much of the text-handling code to use unsigneds for indexes into a string.
+
+        No new tests because there is no behavior change.
+
+        * WebCore.exp.in:
+        * platform/graphics/Font.cpp:
+        (WebCore::Font::drawText):
+        (WebCore::Font::drawEmphasisMarks):
+        (WebCore::Font::adjustSelectionRectForText):
+        (WebCore::computeUnderlineType):
+        * platform/graphics/Font.h:
+        * platform/graphics/FontFastPath.cpp:
+        (WebCore::Font::getGlyphsAndAdvancesForSimpleText):
+        (WebCore::Font::drawSimpleText):
+        (WebCore::Font::drawEmphasisMarksForSimpleText):
+        (WebCore::Font::drawGlyphBuffer):
+        (WebCore::Font::drawEmphasisMarks):
+        (WebCore::Font::adjustSelectionRectForSimpleText):
+        * platform/graphics/GlyphBuffer.h:
+        (WebCore::GlyphBuffer::size):
+        (WebCore::GlyphBuffer::glyphs):
+        (WebCore::GlyphBuffer::advances):
+        (WebCore::GlyphBuffer::fontDataAt):
+        (WebCore::GlyphBuffer::advanceAt):
+        (WebCore::GlyphBuffer::offsetAt):
+        (WebCore::GlyphBuffer::reverse):
+        (WebCore::GlyphBuffer::offsetInString):
+        (WebCore::GlyphBuffer::swap):
+        * platform/graphics/GraphicsContext.cpp:
+        (WebCore::TextRunIterator::atEnd):
+        * platform/graphics/Latin1TextIterator.h:
+        (WebCore::Latin1TextIterator::Latin1TextIterator):
+        (WebCore::Latin1TextIterator::currentCharacter):
+        * platform/graphics/SimpleFontData.h:
+        * platform/graphics/SurrogatePairAwareTextIterator.cpp:
+        (WebCore::SurrogatePairAwareTextIterator::SurrogatePairAwareTextIterator):
+        * platform/graphics/SurrogatePairAwareTextIterator.h:
+        (WebCore::SurrogatePairAwareTextIterator::currentCharacter):
+        * platform/graphics/TextRun.h:
+        (WebCore::TextRun::length):
+        (WebCore::TextRun::charactersLength):
+        * platform/graphics/WidthIterator.cpp:
+        (WebCore::WidthIterator::glyphDataForCharacter):
+        (WebCore::applyFontTransforms):
+        (WebCore::WidthIterator::advanceInternal):
+        (WebCore::WidthIterator::advance):
+        (WebCore::WidthIterator::advanceOneCharacter):
+        * platform/graphics/WidthIterator.h:
+        * platform/graphics/cairo/FontCairo.cpp:
+        (WebCore::Font::drawGlyphs):
+        * platform/graphics/cairo/FontCairoHarfbuzzNG.cpp:
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        (WebCore::Font::adjustSelectionRectForComplexText):
+        * platform/graphics/harfbuzz/HarfBuzzShaper.cpp:
+        (WebCore::HarfBuzzShaper::setNormalizedBuffer):
+        * platform/graphics/mac/FontComplexTextMac.cpp:
+        (WebCore::Font::adjustSelectionRectForComplexText):
+        (WebCore::Font::getGlyphsAndAdvancesForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        * platform/graphics/mac/FontMac.mm:
+        (WebCore::Font::drawGlyphs):
+        * platform/graphics/win/FontCGWin.cpp:
+        (WebCore::Font::drawGlyphs):
+        * platform/graphics/win/FontWin.cpp:
+        (WebCore::Font::adjustSelectionRectForComplexText):
+        (WebCore::Font::getGlyphsAndAdvancesForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        * platform/graphics/wince/FontWinCE.cpp:
+        (WebCore::Font::drawGlyphs):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        (WebCore::Font::selectionRectForComplexText):
+        * rendering/InlineTextBox.cpp:
+        (WebCore::InlineTextBox::isSelected):
+        (WebCore::InlineTextBox::selectionState):
+        (WebCore::adjustCharactersAndLengthForHyphen):
+        (WebCore::InlineTextBox::localSelectionRect):
+        (WebCore::InlineTextBox::paint):
+        (WebCore::InlineTextBox::selectionStartEnd):
+        (WebCore::InlineTextBox::paintSelection):
+        (WebCore::InlineTextBox::paintCompositionBackground):
+        (WebCore::InlineTextBox::paintDocumentMarker):
+        (WebCore::InlineTextBox::paintTextMatchMarker):
+        (WebCore::InlineTextBox::computeRectForReplacementMarker):
+        (WebCore::InlineTextBox::paintCompositionUnderline):
+        (WebCore::InlineTextBox::positionForOffset):
+        (WebCore::InlineTextBox::constructTextRun):
+        * rendering/InlineTextBox.h:
+        * rendering/RenderCombineText.cpp:
+        (WebCore::RenderCombineText::getStringToRender):
+        * rendering/RenderCombineText.h:
+        * rendering/svg/SVGInlineFlowBox.cpp:
+        (WebCore::SVGInlineFlowBox::computeTextMatchMarkerRectForRenderer):
+        * rendering/svg/SVGInlineTextBox.cpp:
+        (WebCore::SVGInlineTextBox::positionForOffset):
+        (WebCore::SVGInlineTextBox::localSelectionRect):
+        (WebCore::SVGInlineTextBox::paintSelectionBackground):
+        (WebCore::SVGInlineTextBox::mapStartEndPositionsIntoFragmentCoordinates):
+        (WebCore::SVGInlineTextBox::paintText):
+        * rendering/svg/SVGInlineTextBox.h:
+        * rendering/svg/SVGTextMetricsBuilder.cpp:
+        (WebCore::SVGTextMetricsBuilder::currentCharacterStartsSurrogatePair):
+        (WebCore::SVGTextMetricsBuilder::advance):
+        * rendering/svg/SVGTextQuery.cpp:
+        (WebCore::SVGTextQuery::mapStartEndPositionsIntoFragmentCoordinates):
+        (WebCore::SVGTextQuery::modifyStartEndPositionsRespectingLigatures):
+        (WebCore::SVGTextQuery::subStringLengthCallback):
+        (WebCore::SVGTextQuery::startPositionOfCharacterCallback):
+        (WebCore::SVGTextQuery::endPositionOfCharacterCallback):
+        (WebCore::SVGTextQuery::rotationOfCharacterCallback):
+        (WebCore::SVGTextQuery::extentOfCharacterCallback):
+        (WebCore::SVGTextQuery::characterNumberAtPositionCallback):
+        * rendering/svg/SVGTextQuery.h:
+        * rendering/svg/SVGTextRunRenderingContext.cpp:
+        (WebCore::SVGGlyphToPathTranslator::SVGGlyphToPathTranslator):
+        (WebCore::SVGTextRunRenderingContext::glyphDataForCharacter):
+        * rendering/svg/SVGTextRunRenderingContext.h:
+        * svg/SVGFontData.cpp:
+        (WebCore::SVGFontData::applySVGGlyphSelection):
+        * svg/SVGFontData.h:
+
+2014-06-20  Jer Noble  <jer.noble@apple.com>
+
+        HTMLMediaElement seek algorithm should allow cancelling previous seeks.
+        https://bugs.webkit.org/show_bug.cgi?id=134116
+
+        Reviewed by Eric Carlson.
+
+        Test: media/video-seek-double.html
+
+        Fulfill the requirement of the §4.7.14.9 seeking algorithm to do steps 5+ asynchronously and cancel
+        previous instances of the algorithm.
+
+        For the html/ parts of the algorithm, implement this by adding a seek timer, which when fired will
+        issue steps 5-12. MediaPlayerPrivateAVFoundation will already coalesce multiple seek operations, so nothing
+        additional needs be done there.  However, MediaPlayerPrivateMediaSourceAVFObjC needs to implement the same
+        pending seek logic in case additional seeks were issued after the html/ algorithm reached step 12.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::HTMLMediaElement): Initialize the new m_seekTimer.
+        (WebCore::HTMLMediaElement::parseAttribute): Clear the seek timer.
+        (WebCore::HTMLMediaElement::seekInternal): Differentiate between DOM seeks and internal seeks.
+        (WebCore::HTMLMediaElement::seekWithTolerance:) Split into the seekTimerFired() method.
+        (WebCore::HTMLMediaElement::seekTimerFired:) Added, split from seekWithTolerance().
+        * html/HTMLMediaElement.h:
+        * html/MediaController.cpp:
+        (MediaController::bringElementUpToSpeed): Call seekInternal().
+        (WebCore::HTMLMediaElement::PendingSeek::PendingSeek): Added convenience struct for storing seek requests.
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateMediaSourceAVFObjC.h:
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::PendingSeek::PendingSeek): Ditto.
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateMediaSourceAVFObjC.mm:
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::MediaPlayerPrivateMediaSourceAVFObjC): Modify the time jumped
+            handler to not clear the m_seeking flag if another seek request is pending.
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::seekWithTolerance):
+        (WebCore::MediaPlayerPrivateMediaSourceAVFObjC::seekInternal):
+
+2014-06-23  Timothy Horton  <timothy_horton@apple.com>
+
+        [WK2] Use the page background color instead of white when swipe snapshots were purged (134218)
+        https://bugs.webkit.org/show_bug.cgi?id=134218
+        <rdar://problem/17426454>
+
+        Reviewed by Benjamin Poulain.
+
+        * WebCore.exp.in:
+
+2014-06-23  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] remove InbandTextTrackPrivateAVFIOS
+        https://bugs.webkit.org/show_bug.cgi?id=134220
+
+        Reviewed by Benjamin Poulain.
+
+        * WebCore.xcodeproj/project.pbxproj: Remove references to InbandTextTrackPrivateAVFIOS.
+
+        * platform/graphics/ios/InbandTextTrackPrivateAVFIOS.h: Removed.
+        * platform/graphics/ios/InbandTextTrackPrivateAVFIOS.mm: Removed.
+
+2014-06-23  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r170323.
+        https://bugs.webkit.org/show_bug.cgi?id=134224
+
+        lots of build breakage (Requested by bradeeoh on #webkit).
+
+        Reverted changeset:
+
+        "[Mac] process raw VTT in-band captions"
+        https://bugs.webkit.org/show_bug.cgi?id=134178
+        http://trac.webkit.org/changeset/170323
+
+2014-06-23  Jeffrey Pfau  <jpfau@apple.com>
+
+        Fix release build
+
+        * Modules/indexeddb/IDBTransactionCoordinator.cpp:
+        (WebCore::IDBTransactionCoordinator::canRunTransaction):
+
+2014-06-19  Jeffrey Pfau  <jpfau@apple.com>
+
+        Database process crashes when multiple transactions attempt to run at once
+        https://bugs.webkit.org/show_bug.cgi?id=134139
+
+        Reviewed by David Kilzer.
+
+        Ensure that only one transaction can be running at a time.
+
+        Test: storage/indexeddb/transaction-overlapping.html
+
+        * Modules/indexeddb/IDBTransactionCoordinator.cpp:
+        (WebCore::IDBTransactionCoordinator::canRunTransaction):
+
+2014-06-23  Benjamin Poulain  <bpoulain@apple.com>
+
+        [iOS][WK2] Make the state restore from HistoryItem more precise and reliable
+        https://bugs.webkit.org/show_bug.cgi?id=134150
+
+        Reviewed by Tim Horton.
+
+        The two biggest changes for WebCore are:
+        -Store everything we need to handle changes of ViewportConfiguration on HistoryItem.
+        -Store the exposedRect with floating point coordinates.
+
+        * WebCore.exp.in:
+        * history/CachedPage.cpp:
+        (WebCore::CachedPage::restore):
+        We cannot determine a good scroll position from the WebProcess because the obscured insets can change
+        arbitrarily in the UIProcess. When we scroll here from the WebProcess, we would force an invalid position
+        to the UIProcess with the next layer tree update.
+
+        To avoid any problem, we prohibit scrolling when restoring the focus appearance.
+
+        * history/HistoryItem.cpp:
+        (WebCore::encodeRect):
+        (WebCore::encodeSize):
+        (WebCore::HistoryItem::encodeBackForwardTreeNode):
+        (WebCore::decodeRect):
+        (WebCore::decodeSize):
+        (WebCore::HistoryItem::decodeBackForwardTree):
+        * history/HistoryItem.h:
+        (WebCore::HistoryItem::exposedContentRect):
+        (WebCore::HistoryItem::setExposedContentRect):
+        (WebCore::HistoryItem::unobscuredContentRect):
+        (WebCore::HistoryItem::setUnobscuredContentRect):
+        (WebCore::HistoryItem::minimumLayoutSizeInScrollViewCoordinates):
+        (WebCore::HistoryItem::setMinimumLayoutSizeInScrollViewCoordinates):
+        (WebCore::HistoryItem::contentSize):
+        (WebCore::HistoryItem::setContentSize):
+        (WebCore::HistoryItem::exposedContentPosition): Deleted.
+        (WebCore::HistoryItem::setExposedContentPosition): Deleted.
+        * loader/HistoryController.cpp:
+        (WebCore::HistoryController::saveScrollPositionAndViewStateToItem):
+        * page/FrameView.h:
+        * platform/ScrollView.h:
+        * platform/ios/ScrollViewIOS.mm:
+        (WebCore::ScrollView::exposedContentRect):
+        (WebCore::ScrollView::setExposedContentRect):
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::didChangeVisibleRect):
+
+2014-06-23  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] process raw VTT in-band captions
+        https://bugs.webkit.org/show_bug.cgi?id=134178
+
+        Reviewed by Jer Noble.
+
+        * CMakeLists.txt: Add ISOVTTCue.cpp|h.
+        * WebCore.vcxproj/WebCore.vcxproj: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+
+        * html/track/BufferedLineReader.h:
+        (WebCore::BufferedLineReader::reset): New, empty the input buffer.
+
+        Make it possible to process WebVTT captions. 
+        * html/track/InbandGenericTextTrack.cpp:
+        (WebCore::InbandGenericTextTrack::parser): Allocate, if necessary, and return a WebVTT parser.
+        (WebCore::InbandGenericTextTrack::parseWebVTTCueData): Pass a cue to the parser.
+        (WebCore::InbandGenericTextTrack::parseWebVTTFileHeader): Pass a VTT file header to the parser.
+        (WebCore::InbandGenericTextTrack::newCuesParsed): Parser callback.
+        (WebCore::InbandGenericTextTrack::newRegionsParsed): Ditto.
+        (WebCore::InbandGenericTextTrack::fileFailedToParse): Ditto.
+        * html/track/InbandGenericTextTrack.h:
+
+        * html/track/InbandTextTrack.h:
+
+        * html/track/InbandWebVTTTextTrack.cpp:
+        (WebCore::InbandWebVTTTextTrack::parser): New, parser accessor.
+        (WebCore::InbandWebVTTTextTrack::parseWebVTTCueData): New, parse VTT data in an ISOWebVTTCue
+            object.
+        (WebCore::InbandWebVTTTextTrack::newCuesParsed): Cleanup.
+        (WebCore::InbandWebVTTTextTrack::newRegionsParsed): Implement.
+        (WebCore::InbandWebVTTTextTrack::fileFailedToParse): Change the error message.
+        * html/track/InbandWebVTTTextTrack.h:
+
+        * html/track/TextTrackCueGeneric.cpp:
+        (WebCore::TextTrackCueGenericBoxElement::TextTrackCueGenericBoxElement): Change cue parameter
+            from a pointer to a reference.
+        (WebCore::TextTrackCueGeneric::createDisplayTree): Ditto.
+
+        * html/track/VTTCue.cpp:
+        (WebCore::VTTCueBox::create): Change cue parameter from a pointer to a reference.
+        (WebCore::VTTCueBox::VTTCueBox): Ditto.
+        (WebCore::VTTCueBox::getCue): Return a reference.
+        (WebCore::VTTCueBox::applyCSSProperties): m_cue is a reference, not a pointer.
+        (WebCore::VTTCue::create): New, create a VTTCue from WebVTTCueData.
+        (WebCore::VTTCue::VTTCue): New, internal constructor that takes a WebVTTCueData.
+        (WebCore::VTTCue::initialize): New, shared constructor initialization.
+        (WebCore::VTTCue::createDisplayTree): m_cue is a reference, not a pointer.
+        (WebCore::VTTCue::markFutureAndPastNodes): Ditto.
+        (WebCore::VTTCue::setCueSettings): Ditto.
+        * html/track/VTTCue.h:
+        (WebCore::VTTCueBox::create): Deleted.
+        (WebCore::VTTCue::create): Deleted.
+
+        * html/track/WebVTTParser.cpp:
+        (WebCore::WebVTTParser::parseFileHeader): New. Reset the line reader buffer and parser state, 
+            call the parser.
+        (WebCore::WebVTTParser::parseCueData): Create a cue from ISOWebVTTCue.
+        (WebCore::WebVTTParser::collectTimingsAndSettings): Return immediately if the string is empty.
+        (WebCore::WebVTTParser::collectTimeStamp): Ditto.
+        * html/track/WebVTTParser.h:
+        (WebCore::WebVTTCueData::originalStartTime): New.
+        (WebCore::WebVTTCueData::setOriginalStartTime): New.
+        (WebCore::WebVTTCueData::WebVTTCueData):
+
+        * loader/TextTrackLoader.cpp:
+        (WebCore::TextTrackLoader::getNewCues): Cleanup, use the new VTTCue::create.
+
+        * platform/graphics/InbandTextTrackPrivateClient.h:
+        (WebCore::InbandTextTrackPrivateClient::parseWebVTTFileHeader): New.
+
+        Parse ISO WebVTT cue boxes.
+        * platform/graphics/ISOVTTCue.cpp: Added.
+        (WebCore::ISOBox::ISOBox):
+        (WebCore::ISOBox::peekType):
+        (WebCore::ISOBox::peekLength):
+        (WebCore::ISOBox::peekString):
+        (WebCore::vttCueBoxType):
+        (WebCore::vttIdBoxType):
+        (WebCore::vttSettingsBoxType):
+        (WebCore::vttPayloadBoxType):
+        (WebCore::vttCurrentTimeBoxType):
+        (WebCore::vttCueSourceIDBoxType):
+        (WebCore::ISOWebVTTCue::boxType):
+        (WebCore::ISOWebVTTCue::ISOWebVTTCue):
+        * platform/graphics/ISOVTTCue.h: Added.
+        (WebCore::ISOBox::boxHeaderSize):
+        (WebCore::ISOBox::length):
+        (WebCore::ISOBox::type):
+        (WebCore::ISOWebVTTCue::presentationTime):
+        (WebCore::ISOWebVTTCue::duration):
+        (WebCore::ISOWebVTTCue::sourceID):
+        (WebCore::ISOWebVTTCue::id):
+        (WebCore::ISOWebVTTCue::originalStartTime):
+        (WebCore::ISOWebVTTCue::settings):
+        (WebCore::ISOWebVTTCue::cueText):
+
+        * platform/graphics/avfoundation/InbandTextTrackPrivateAVF.cpp:
+        (WebCore::InbandTextTrackPrivateAVF::InbandTextTrackPrivateAVF): Add a cue format parameter.
+        (WebCore::InbandTextTrackPrivateAVF::processCue): Call processNativeSamples.
+        (WebCore::InbandTextTrackPrivateAVF::processAttributedStrings): Add logging. Minor cleanup.
+        (WebCore::InbandTextTrackPrivateAVF::processNativeSamples): New, process an array of 
+            CMSampleBuffers, create ISOWebVTTCue from the sample data.
+        * platform/graphics/avfoundation/InbandTextTrackPrivateAVF.h:
+
+        * platform/graphics/avfoundation/objc/InbandTextTrackPrivateAVFObjC.h:
+        (WebCore::InbandTextTrackPrivateAVFObjC::create): Add a cue format parameter.
+        * platform/graphics/avfoundation/objc/InbandTextTrackPrivateAVFObjC.mm:
+        (WebCore::InbandTextTrackPrivateAVFObjC::InbandTextTrackPrivateAVFObjC): Ditto.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVAssetForURL): Improve logging.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayerItem): Don't leak an NSDictionary.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::tracksChanged): Don't process media selection
+            options until we have tracks.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::processMediaSelectionOptions): 
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::processCue): Pass native samples as well as 
+            attributed strings to track.
+        (-[WebCoreAVFMovieObserver legibleOutput:didOutputAttributedStrings:nativeSampleBuffers:forItemTime:]):
+        * platform/graphics/avfoundation/objc/OutOfBandTextTrackPrivateAVF.h:
+        (WebCore::OutOfBandTextTrackPrivateAVF::OutOfBandTextTrackPrivateAVF):
+
+        * platform/graphics/avfoundation/InbandTextTrackPrivateLegacyAVFObjC.cpp:
+        (WebCore::InbandTextTrackPrivateLegacyAVFObjC::InbandTextTrackPrivateLegacyAVFObjC): Pass cue
+            format to base class.
+
+        * platform/graphics/avfoundation/cf/InbandTextTrackPrivateAVCF.cpp:
+        (WebCore::InbandTextTrackPrivateAVCF::InbandTextTrackPrivateAVCF): Ditto.
+        * platform/graphics/avfoundation/cf/InbandTextTrackPrivateAVCF.h:
+
+2014-06-23  Jer Noble  <jer.noble@apple.com>
+
+        [MSE][Mac] Crash in SourceBuffer::sourceBufferPrivateDidReceiveRenderingError()
+        https://bugs.webkit.org/show_bug.cgi?id=134211
+
+        Reviewed by Eric Carlson.
+
+        Null-check m_source before dereferencing, as the SourceBuffer may have been removed
+        from its MediaSource before this error was received.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::sourceBufferPrivateDidReceiveRenderingError):
+
+2014-06-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Reduce synchronous layout triggered by JavaScript-based media controls
+        https://bugs.webkit.org/show_bug.cgi?id=134208
+
+        Reviewed by Eric Carlson.
+
+        Avoid always querying the offsetWidth and offsetHeight of the timeline
+        by only calculating these values when the timeline may change size.
+        Also avoid doing work in a few cases where properties did not
+        actually change.
+
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller):
+
+        (Controller.prototype.setNeedsTimelineMetricsUpdate):
+        (Controller.prototype.updateTimelineMetricsIfNeeded):
+        Only update the timeline metrics when they may have changed.
+
+        (Controller.prototype.updateControls):
+        (Controller.prototype.handleTimelineMouseMove):
+        (Controller.prototype.progressFillStyle):
+        (Controller.prototype.showControls):
+        (Controller.prototype.addControls):
+        Mark timeline metrics need update based on various UI changes.
+
+        (Controller.prototype.setStatusHidden):
+        Only do work if the hidden status changed.
+        Mark timeline metrics need update if the timeline is changed.
+
+        (Controller.prototype.updateProgress):
+        Use cached timeline metrics instead of always querying offsetWidth/offsetHeight.
+
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS):
+        (ControllerIOS.prototype.updateControls):
+
+        (ControllerIOS.prototype.updateProgress):
+        Use cached timeline metrics instead of always querying offsetWidth/offsetHeight.
+
+        (ControllerIOS.prototype.handleWirelessPlaybackChange):
+        Mark timeline metrics need update as button may have changed.
+
+        (ControllerIOS.prototype.handleWirelessTargetAvailableChange):
+        Only do work if the availability changed.
+        Mark timeline metrics need update as a new button may have appeared.
+
+        (ControllerIOS.prototype.set pageScaleFactor):
+        Only do work if the page scale factor changed.
+
+2014-06-23  Brady Eidson  <beidson@apple.com>
+
+        Add skeleton code for updated Gamepad API
+        https://bugs.webkit.org/show_bug.cgi?id=134165
+
+        Unreviewed - Forgotten review feedback from http://trac.webkit.org/changeset/170309
+
+        * Modules/gamepad/GamepadButton.idl: Forgot to commit the removal of NoInterfaceObject here.
+
+2014-06-23  Brady Eidson  <beidson@apple.com>
+
+        Add skeleton code for updated Gamepad API
+        https://bugs.webkit.org/show_bug.cgi?id=134165
+
+        Reviewed by Dean Jackson.
+
+        No new tests (No change in behavior for any tested configuration)
+
+        Interface and dummy implementation for the Gamepad object:
+        * Modules/gamepad/Gamepad.cpp: Added.
+        (WebCore::Gamepad::Gamepad):
+        (WebCore::Gamepad::~Gamepad):
+        (WebCore::Gamepad::axes):
+        (WebCore::Gamepad::buttons):
+        * Modules/gamepad/Gamepad.h: Added.
+        * Modules/gamepad/Gamepad.idl: Added.
+
+        Interface and dummy implementation for the GamepadButton object:
+        * Modules/gamepad/GamepadButton.cpp: Added.
+        (WebCore::GamepadButton::GamepadButton):
+        (WebCore::GamepadButton::pressed):
+        * Modules/gamepad/GamepadButton.h: Added.
+        (WebCore::GamepadButton::create):
+        (WebCore::GamepadButton::value):
+        (WebCore::GamepadButton::setValue):
+        * Modules/gamepad/GamepadButton.idl: Added.
+
+        Interface and dummy implementation for the GamepadEvent object:
+        * Modules/gamepad/GamepadEvent.cpp: Added.
+        (WebCore::GamepadEvent::GamepadEvent):
+        * Modules/gamepad/GamepadEvent.h: Added.
+        (WebCore::GamepadEventInit::GamepadEventInit):
+        (WebCore::GamepadEvent::~GamepadEvent):
+        (WebCore::GamepadEvent::create):
+        (WebCore::GamepadEvent::gamepad):
+        * Modules/gamepad/GamepadEvent.idl: Added.
+        * dom/EventNames.in:
+
+        Interface and dummy implementation for additions to the Navigator object:
+        * Modules/gamepad/NavigatorGamepad.cpp: Added.
+        (WebCore::NavigatorGamepad::NavigatorGamepad):
+        (WebCore::NavigatorGamepad::supplementName):
+        (WebCore::NavigatorGamepad::from):
+        (WebCore::NavigatorGamepad::getGamepads):
+        (WebCore::NavigatorGamepad::gamepads):
+        * Modules/gamepad/NavigatorGamepad.h: Added.
+        * Modules/gamepad/NavigatorGamepad.idl: Added.
+
+        Bindings additions necessary for these new interfaces:
+        * bindings/js/JSDOMBinding.h:
+        (WebCore::JSValueTraits<double>::arrayJSValue):
+        * bindings/js/JSDictionary.cpp:
+        (WebCore::JSDictionary::convertValue):
+        * bindings/js/JSDictionary.h:
+
+        Project file stuff:
+        * CMakeLists.txt:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCoreCommon.props:
+        * WebCore.vcxproj/copyForwardingHeaders.cmd:
+        * WebCore.xcodeproj/project.pbxproj:
+        * DerivedSources.make:
+
+2014-06-23  Simon Fraser  <simon.fraser@apple.com>
+
+        Catch Obj-C exceptions thrown by _linenPatternImage
+        https://bugs.webkit.org/show_bug.cgi?id=134202
+
+        Reviewed by Geoffrey Garen.
+
+        Catch Objective-C exceptions thrown by _linenPatternImage and
+        -[NSImage CGImageForProposedRect:context:hints:].
+
+        * platform/mac/ScrollbarThemeMac.mm:
+        (WebCore::linenBackgroundColor):
+
+2014-06-23  Simon Fraser  <simon.fraser@apple.com>
+
+        CSS clip property should make layers non-opaque
+        https://bugs.webkit.org/show_bug.cgi?id=134147
+        <rdar://problem/17324579>
+
+        Reviewed by Tim Horton.
+        
+        https://www.fairphone.com has position:fixed elements with clip: rect(...)
+        but we were making those layers opaque, resulting in garbage pixels
+        in areas outside the clip rect.
+        
+        Fix by checking for the clip property in RenderBox::backgroundIsKnownToBeOpaqueInRect().
+
+        Test: compositing/contents-opaque/opaque-with-clip.html
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::backgroundIsKnownToBeOpaqueInRect):
+
+2014-06-23  Simon Fraser  <simon.fraser@apple.com>
+
+        Adding a mask on a simple color compositing layer removes the content
+        https://bugs.webkit.org/show_bug.cgi?id=134127
+
+        Reviewed by Dean Jackson.
+        
+        In r169053 I moved some updateDrawsContent() into updateAfterDescendents(),
+        but this isn't called when a composited layer gains or loses a mask (which
+        doesn't cause a layout). This caused us to fail to allocate backing store
+        when gaining a mask, resulting in missing content.
+        
+        Fix by calling updateAfterDescendents() from RenderLayer::styleChange()
+        when the layer config isn't changing.
+        
+        Also remove a condition in isSimpleContainerCompositingLayer() that caused us
+        to fall off the simple layer path for masked layers, since this works just
+        fine.
+
+        Test: compositing/masks/solid-color-masked.html
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::calculateClipRects):
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::isSimpleContainerCompositingLayer):
+
+2014-06-23  David Hyatt  <hyatt@apple.com>
+
+        [New Multicolumn] Writing mode changes on the <html> and RenderView need to
+        be propagated to column sets and flow thread children of those renderers.
+        https://bugs.webkit.org/show_bug.cgi?id=134121
+        <rdar://problem/16884527>
+
+        Reviewed by Dean Jackson.
+
+        Added fast/multicol/pagination/RightToLeft-rl-dynamic.html
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::styleDidChange):
+        Refactor the propagation code for column sets and flow thread styles into a helper
+        function that is called here.
+
+        (WebCore::RenderBlockFlow::updateStylesForColumnChildren):
+        * rendering/RenderBlockFlow.h:
+        Add a new helper function for recalculating the styles of the column sets and
+        flow thread in response to changes.
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::styleDidChange):
+        When the style is changed for a root element or the RenderView in response to
+        writing mode and direction changes, make sure that style gets propagated to
+        the column children by calling the new helper function.
+
+2014-06-23  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Uncaught exception crash when destroying MediaPlayerPrivateAVFoundationObjC
+        https://bugs.webkit.org/show_bug.cgi?id=134198
+
+        Reviewed by Eric Carlson.
+
+        Now that we always create an AVPlayerLayer when creating an AVPlayer, but we don't
+        return that layer from platformLayer() unless we've been asked to, we no longer are
+        asked to destroy our video layer from MediaPlayerPrivateAVFoundation::tearDownVideoRendering().
+
+        Instead, explicitly destroy our video layer (and remove the KVO-observer which is
+        causing this exception) in the MediaPlayerPrivateAVFoundationObjC destructor.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::~MediaPlayerPrivateAVFoundationObjC):
+
+2014-06-23  Andreas Kling  <akling@apple.com>
+
+        Remove unused FrameView::setUseCustomFixedPositionLayoutRect().
+        <https://webkit.org/b/134194>
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.exp.in:
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setUseCustomFixedPositionLayoutRect): Deleted.
+        * page/FrameView.h:
+
+2014-06-23  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION (r160908): Unable to unset bold while entering text
+        https://bugs.webkit.org/show_bug.cgi?id=134196
+        <rdar://problem/17051653>
+
+        Reviewed by Andreas Kling.
+        
+        No test, this code path is used by some WK1 API clients only.
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::styleForSelectionStart):
+        
+            This needs to update the style before requesting the renderer.
+
+        * editing/Editor.h:
+        * editing/ios/EditorIOS.mm:
+        (WebCore::styleForSelectionStart): Deleted.
+        * editing/mac/EditorMac.mm:
+        (WebCore::styleForSelectionStart): Deleted.
+        
+            Removed the duplicated functions, moved to Editor.cpp.
+
+2014-06-23  Alex Christensen  <achristensen@webkit.org>
+
+        [iOS] Fix video in WebGL.
+        https://bugs.webkit.org/show_bug.cgi?id=133511
+
+        Reviewed by Jer Noble.
+
+        * WebCore.exp.in:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::hasSingleSecurityOrigin):
+        (WebCore::wkAVAssetResolvedURL): Deleted.
+        * platform/mac/WebCoreSystemInterface.h:
+        * platform/mac/WebCoreSystemInterface.mm:
+        Declare and use resolvedURL on AVURLAsset instead of using wkAVAssetResolvedURL through WebKitSystemInterface.
+
+2014-06-23  Radu Stavila  <stavila@adobe.com>
+
+        REGRESSION (r168046): Incorrect handling of object information in WebCore::RenderFlowThread::removeLineRegionInfo
+        https://bugs.webkit.org/show_bug.cgi?id=133587
+
+        Reviewed by Antti Koivisto.
+
+        When an object flowed in multicol is moved from in-flow positioning to out-of-flow positioning,
+        its information must be removed from the flowthread prior to the change being made. 
+        Otherwise, the flow thread will no longer be its containing block and a reference to it
+        will not be possible to obtain.
+
+        No new tests can be added because the code still hits in an unrelated assertion followed by a null dereference.
+        The issue was discussed with Antti Koivisto and we decided its better to fix this problem first and
+        handle the following issue in a separate bug.
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::styleWillChange):
+        * rendering/RenderObject.h:
+        (WebCore::RenderObject::flowThreadContainingBlock):
+
+2014-06-23  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] Platform support for WebSpeech feature.
+        https://bugs.webkit.org/show_bug.cgi?id=116438
+
+        Reviewed by Csaba Osztrogonác.
+
+        It's a first step of adding support for Speech Synthesis in EFL port.
+        Just stub out required API and support for compilation.
+
+        * CMakeLists.txt:
+        * PlatformEfl.cmake:
+        * PlatformGTK.cmake: Added some idls to not break GTK build.
+        * platform/PlatformSpeechSynthesizer.h:
+        * platform/efl/PlatformSpeechSynthesisProviderEfl.cpp: Added.
+        (WebCore::PlatformSpeechSynthesisProviderEfl::PlatformSpeechSynthesisProviderEfl):
+        (WebCore::PlatformSpeechSynthesisProviderEfl::~PlatformSpeechSynthesisProviderEfl):
+        (WebCore::PlatformSpeechSynthesisProviderEfl::initializeVoiceList):
+        (WebCore::PlatformSpeechSynthesisProviderEfl::pause):
+        (WebCore::PlatformSpeechSynthesisProviderEfl::resume):
+        (WebCore::PlatformSpeechSynthesisProviderEfl::speak):
+        (WebCore::PlatformSpeechSynthesisProviderEfl::cancel):
+        * platform/efl/PlatformSpeechSynthesisProviderEfl.h: Added.
+        * platform/efl/PlatformSpeechSynthesizerEfl.cpp: Added.
+        (WebCore::PlatformSpeechSynthesizer::PlatformSpeechSynthesizer):
+        (WebCore::PlatformSpeechSynthesizer::~PlatformSpeechSynthesizer):
+        (WebCore::PlatformSpeechSynthesizer::initializeVoiceList):
+        (WebCore::PlatformSpeechSynthesizer::pause):
+        (WebCore::PlatformSpeechSynthesizer::resume):
+        (WebCore::PlatformSpeechSynthesizer::speak):
+        (WebCore::PlatformSpeechSynthesizer::cancel):
+
+2014-06-23  Jeongeun Kim  <je_julie.kim@samsung.com>
+
+        Make it clear to get m_svgExtensions using svgExtensions().
+        https://bugs.webkit.org/show_bug.cgi?id=134186.
+
+        Reviewed by Dirk Schulze.
+
+        This patch makes sure that the purpose of code is to get m_svgExtensions 
+        as changing accessSVGExtensions() to svgExtensions(). 
+        svgExtensions() is a getter API and accessSVGExtensions() checks 
+        the presence of m_svgExtensions and create m_svgExtensions if it does not exist. 
+
+        No new tests, no behavior change.
+
+        * dom/ContainerNode.cpp:
+        (WebCore::ContainerNode::removeChild):
+        (WebCore::ContainerNode::removeChildren):
+        * dom/Document.cpp:
+        (WebCore::Document::commonTeardown):
+        (WebCore::Document::implicitClose):
+        * history/CachedFrame.cpp:
+        (WebCore::CachedFrameBase::restore):
+        * svg/SVGDocumentExtensions.cpp:
+        (WebCore::SVGDocumentExtensions::startAnimations):
+        (WebCore::SVGDocumentExtensions::pauseAnimations):
+        (WebCore::SVGDocumentExtensions::unpauseAnimations):
+        (WebCore::SVGDocumentExtensions::dispatchSVGLoadEventToOutermostSVGElements):
+        (WebCore::SVGDocumentExtensions::rebuildElements):
+        * svg/SVGDocumentExtensions.h:
+
+2014-06-23  Dean Jackson  <dino@apple.com>
+
+        [iOS] Use WebGLLayer rather than PlatformLayer in GraphicsContext3D
+        https://bugs.webkit.org/show_bug.cgi?id=134183
+
+        Follow-up review from Sam Weinig.
+
+        * platform/graphics/GraphicsContext3D.h: Merge another bit of MAC and IOS
+        code.
+        * ChangeLog: Actually read his review comments this time.
+
+2014-06-23  Dean Jackson  <dino@apple.com>
+
+        [iOS] Use WebGLLayer rather than PlatformLayer in GraphicsContext3D
+        https://bugs.webkit.org/show_bug.cgi?id=134183
+
+        Reviewed by Sam Weinig.
+
+        GraphicsContext3D has a reference to a WebGLLayer that was
+        hidden behind a PlatformLayer. This meant we had to cast it
+        to use a WebGLLayer method.
+
+        * platform/graphics/GraphicsContext3D.h: Replace RetainPtr<PlatformLayer>
+        with RetainPtr<WebGLLayer>.
+        * platform/graphics/mac/GraphicsContext3DMac.mm:
+        (WebCore::GraphicsContext3D::~GraphicsContext3D): No need to cast.
+
+2014-06-22  Zalan Bujtas  <zalan@apple.com>
+
+        Make offset from ancestor computation explicit by moving it to the callers.
+        https://bugs.webkit.org/show_bug.cgi?id=134168.
+
+        Reviewed by Simon Fraser.
+        
+        Explicit offset computation helps code reading and less error-prone than passing
+        the offset pointer and compute it locally when it is null.
+
+        No change in functionality.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::transparencyClipBox):
+        (WebCore::performOverlapTests):
+        (WebCore::RenderLayer::setupClipPath):
+        (WebCore::RenderLayer::setupFilters):
+        (WebCore::RenderLayer::paintLayerContents):
+        (WebCore::RenderLayer::collectFragments):
+        (WebCore::RenderLayer::updatePaintingInfoForFragments):
+        (WebCore::RenderLayer::paintTransformedLayerIntoFragments):
+        (WebCore::RenderLayer::hitTestLayer):
+        (WebCore::RenderLayer::hitTestTransformedLayerInFragments):
+        (WebCore::RenderLayer::calculateClipRects):
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::calculateCompositedBounds):
+        (WebCore::RenderLayerCompositor::requiresCompositingForPosition):
+        * rendering/RenderTreeAsText.cpp:
+        (WebCore::writeLayers):
+
+2014-06-22  Zalan Bujtas  <zalan@apple.com>
+
+        Transition layer offsets from LayoutPoint to LayoutSize.
+        https://bugs.webkit.org/show_bug.cgi?id=134156
+
+        Reviewed by Simon Fraser.
+
+        Use better representation for offset values.
+
+        No change in functionality.
+
+        * platform/graphics/LayoutSize.h:
+        (WebCore::roundedForPainting):
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::fragmentsBoundingBox):
+        * rendering/RenderLayer.cpp:
+        (WebCore::expandClipRectForDescendantsAndReflection):
+        (WebCore::RenderLayer::convertToLayerCoords):
+        (WebCore::computeReferenceBox):
+        (WebCore::RenderLayer::setupClipPath):
+        (WebCore::RenderLayer::setupFilters):
+        (WebCore::RenderLayer::paintLayerContents):
+        (WebCore::RenderLayer::paintLayerByApplyingTransform):
+        (WebCore::RenderLayer::collectFragments):
+        (WebCore::RenderLayer::updatePaintingInfoForFragments):
+        (WebCore::RenderLayer::paintTransformedLayerIntoFragments):
+        (WebCore::RenderLayer::createLocalTransformState):
+        (WebCore::RenderLayer::hitTestTransformedLayerInFragments):
+        (WebCore::RenderLayer::hitTestLayerByApplyingTransform):
+        (WebCore::RenderLayer::calculateClipRects):
+        * rendering/RenderLayer.h:
+        * rendering/RenderMultiColumnSet.cpp:
+        (WebCore::RenderMultiColumnSet::collectLayerFragments):
+
+2014-06-22  Dean Jackson  <dino@apple.com>
+
+        Attempted iOS build fix.
+
+        * platform/graphics/mac/GraphicsContext3DMac.mm:
+        (WebCore::GraphicsContext3D::~GraphicsContext3D): Cast to WebGLLayer.
+
+2014-06-22  Dean Jackson  <dino@apple.com>
+
+        [Apple] WebGL layer may use GC3D after free with remote layer hosting
+        https://bugs.webkit.org/show_bug.cgi?id=134179
+        <rdar://problem/17412931>
+
+        Reviewed by Tim Horton.
+
+        With remote layer hosting, a WebGLLayer may attempt to draw after
+        the GraphicsContext3D has been destroyed. We need to make sure
+        the GC3D tells the WebGLLayer that it is no longer valid.
+
+        While here, I changed some return 0 to return nullptr, the
+        name of the ObjC property member from m_context to _context,
+        and removed some unnecessary .get() calls.
+
+        This is tested by run-webkit-tests with the --remote-layer-tree
+        option.
+
+        * platform/graphics/mac/GraphicsContext3DMac.mm:
+        (WebCore::GraphicsContext3D::GraphicsContext3D): No need for .get().
+        (WebCore::GraphicsContext3D::~GraphicsContext3D): Set the context reference on WebGLLayer
+        to be null.
+        (WebCore::GraphicsContext3D::setRenderbufferStorageFromDrawable): No need for .get().
+        * platform/graphics/mac/WebGLLayer.h: Set the context reference on WebGLLayer
+        to be null.
+        * platform/graphics/mac/WebGLLayer.mm:
+        (-[WebGLLayer initWithGraphicsContext3D:]): Rename m_context to _context.
+        (-[WebGLLayer copyCGLPixelFormatForDisplayMask:]): Check for null.
+        (-[WebGLLayer copyCGLContextForPixelFormat:]): Rename to _context.
+        (-[WebGLLayer drawInCGLContext:pixelFormat:forLayerTime:displayTime:]): Check for null.
+        (-[WebGLLayer copyImageSnapshotWithColorSpace:]): Ditto.
+        (-[WebGLLayer display]): Ditto.
+
+2014-06-20  Simon Fraser  <simon.fraser@apple.com>
+
+        [WK2] Frameset frames are not scrollable after loading (and should be)
+        https://bugs.webkit.org/show_bug.cgi?id=134151
+        <rdar://problem/17403365>
+
+        Reviewed by Dan Bates.
+        
+        When loading a <frameset>, we could end up with an empty non-fast-scrollable
+        region for the main frame, because after the initial frameset document layout,
+        nothing updated the non-fast scrollable region as the subframes added their
+        scrollable areas to the the main frame's scrollable area set.
+        
+        Fix by having addScrollableArea() and removeScrollableArea() trigger an update
+        of the non-fast scrollable region.
+
+        Test: platform/mac-wk2/tiled-drawing/scrolling/frames/frameset-frame-scrollability.html
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::addScrollableArea):
+        (WebCore::FrameView::removeScrollableArea):
+        (WebCore::FrameView::scrollableAreaSetChanged):
+        * page/FrameView.h:
+
+2014-06-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r170265.
+        https://bugs.webkit.org/show_bug.cgi?id=134174
+
+        Broke editing tests (Requested by litherum on #webkit).
+
+        Reverted changeset:
+
+        "Use unsigneds instead of ints for indexes into a string in
+        text layout code"
+        https://bugs.webkit.org/show_bug.cgi?id=133592
+        http://trac.webkit.org/changeset/170265
+
+2014-06-20  Simon Fraser  <simon.fraser@apple.com>
+
+        Have scrollingTreeAsText() dump the non-fast-scrollable region
+        https://bugs.webkit.org/show_bug.cgi?id=134149
+
+        Reviewed by Sam Weinig.
+
+        Dump the non-fast-scrollable region (as an array of rects).
+
+        * WebCore.exp.in:
+        * page/scrolling/ScrollingStateFrameScrollingNode.cpp:
+        (WebCore::ScrollingStateFrameScrollingNode::dumpProperties):
+
+2014-06-20  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Use unsigneds instead of ints for indexes into a string in text layout code
+        https://bugs.webkit.org/show_bug.cgi?id=133592
+
+        Reviewed by Zalan Bujtas.
+
+        Migrate much of the text-handling code to use unsigneds for indexes into a string.
+
+        No new tests because there is no behavior change.
+
+        * WebCore.exp.in:
+        * platform/graphics/Font.cpp:
+        (WebCore::Font::drawText):
+        (WebCore::Font::drawEmphasisMarks):
+        (WebCore::Font::adjustSelectionRectForText):
+        (WebCore::computeUnderlineType):
+        * platform/graphics/Font.h:
+        * platform/graphics/FontFastPath.cpp:
+        (WebCore::Font::getGlyphsAndAdvancesForSimpleText):
+        (WebCore::Font::drawSimpleText):
+        (WebCore::Font::drawEmphasisMarksForSimpleText):
+        (WebCore::Font::drawGlyphBuffer):
+        (WebCore::Font::drawEmphasisMarks):
+        (WebCore::Font::adjustSelectionRectForSimpleText):
+        * platform/graphics/GlyphBuffer.h:
+        (WebCore::GlyphBuffer::size):
+        (WebCore::GlyphBuffer::glyphs):
+        (WebCore::GlyphBuffer::advances):
+        (WebCore::GlyphBuffer::fontDataAt):
+        (WebCore::GlyphBuffer::advanceAt):
+        (WebCore::GlyphBuffer::offsetAt):
+        (WebCore::GlyphBuffer::reverse):
+        (WebCore::GlyphBuffer::offsetInString):
+        (WebCore::GlyphBuffer::swap):
+        * platform/graphics/GraphicsContext.cpp:
+        (WebCore::TextRunIterator::atEnd):
+        * platform/graphics/Latin1TextIterator.h:
+        (WebCore::Latin1TextIterator::Latin1TextIterator):
+        (WebCore::Latin1TextIterator::currentCharacter):
+        * platform/graphics/SimpleFontData.h:
+        * platform/graphics/SurrogatePairAwareTextIterator.cpp:
+        (WebCore::SurrogatePairAwareTextIterator::SurrogatePairAwareTextIterator):
+        * platform/graphics/SurrogatePairAwareTextIterator.h:
+        (WebCore::SurrogatePairAwareTextIterator::currentCharacter):
+        * platform/graphics/TextRun.h:
+        (WebCore::TextRun::length):
+        (WebCore::TextRun::charactersLength):
+        * platform/graphics/WidthIterator.cpp:
+        (WebCore::WidthIterator::glyphDataForCharacter):
+        (WebCore::applyFontTransforms):
+        (WebCore::WidthIterator::advanceInternal):
+        (WebCore::WidthIterator::advance):
+        (WebCore::WidthIterator::advanceOneCharacter):
+        * platform/graphics/WidthIterator.h:
+        * platform/graphics/cairo/FontCairo.cpp:
+        (WebCore::Font::drawGlyphs):
+        * platform/graphics/cairo/FontCairoHarfbuzzNG.cpp:
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        (WebCore::Font::adjustSelectionRectForComplexText):
+        * platform/graphics/harfbuzz/HarfBuzzShaper.cpp:
+        (WebCore::HarfBuzzShaper::setNormalizedBuffer):
+        * platform/graphics/mac/FontComplexTextMac.cpp:
+        (WebCore::Font::adjustSelectionRectForComplexText):
+        (WebCore::Font::getGlyphsAndAdvancesForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        * platform/graphics/mac/FontMac.mm:
+        (WebCore::Font::drawGlyphs):
+        * platform/graphics/win/FontCGWin.cpp:
+        (WebCore::Font::drawGlyphs):
+        * platform/graphics/win/FontWin.cpp:
+        (WebCore::Font::adjustSelectionRectForComplexText):
+        (WebCore::Font::getGlyphsAndAdvancesForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        * platform/graphics/wince/FontWinCE.cpp:
+        (WebCore::Font::drawGlyphs):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        (WebCore::Font::selectionRectForComplexText):
+        * rendering/InlineTextBox.cpp:
+        (WebCore::InlineTextBox::isSelected):
+        (WebCore::InlineTextBox::selectionState):
+        (WebCore::adjustCharactersAndLengthForHyphen):
+        (WebCore::InlineTextBox::localSelectionRect):
+        (WebCore::InlineTextBox::paint):
+        (WebCore::InlineTextBox::selectionStartEnd):
+        (WebCore::InlineTextBox::paintSelection):
+        (WebCore::InlineTextBox::paintCompositionBackground):
+        (WebCore::InlineTextBox::paintDocumentMarker):
+        (WebCore::InlineTextBox::paintTextMatchMarker):
+        (WebCore::InlineTextBox::computeRectForReplacementMarker):
+        (WebCore::InlineTextBox::paintCompositionUnderline):
+        (WebCore::InlineTextBox::positionForOffset):
+        (WebCore::InlineTextBox::constructTextRun):
+        * rendering/InlineTextBox.h:
+        * rendering/RenderCombineText.cpp:
+        (WebCore::RenderCombineText::getStringToRender):
+        * rendering/RenderCombineText.h:
+        * rendering/svg/SVGInlineFlowBox.cpp:
+        (WebCore::SVGInlineFlowBox::computeTextMatchMarkerRectForRenderer):
+        * rendering/svg/SVGInlineTextBox.cpp:
+        (WebCore::SVGInlineTextBox::positionForOffset):
+        (WebCore::SVGInlineTextBox::localSelectionRect):
+        (WebCore::SVGInlineTextBox::paintSelectionBackground):
+        (WebCore::SVGInlineTextBox::mapStartEndPositionsIntoFragmentCoordinates):
+        (WebCore::SVGInlineTextBox::paintText):
+        * rendering/svg/SVGInlineTextBox.h:
+        * rendering/svg/SVGTextMetricsBuilder.cpp:
+        (WebCore::SVGTextMetricsBuilder::currentCharacterStartsSurrogatePair):
+        (WebCore::SVGTextMetricsBuilder::advance):
+        * rendering/svg/SVGTextQuery.cpp:
+        (WebCore::SVGTextQuery::mapStartEndPositionsIntoFragmentCoordinates):
+        (WebCore::SVGTextQuery::modifyStartEndPositionsRespectingLigatures):
+        (WebCore::SVGTextQuery::subStringLengthCallback):
+        (WebCore::SVGTextQuery::startPositionOfCharacterCallback):
+        (WebCore::SVGTextQuery::endPositionOfCharacterCallback):
+        (WebCore::SVGTextQuery::rotationOfCharacterCallback):
+        (WebCore::SVGTextQuery::extentOfCharacterCallback):
+        (WebCore::SVGTextQuery::characterNumberAtPositionCallback):
+        * rendering/svg/SVGTextQuery.h:
+        * rendering/svg/SVGTextRunRenderingContext.cpp:
+        (WebCore::SVGGlyphToPathTranslator::SVGGlyphToPathTranslator):
+        (WebCore::SVGTextRunRenderingContext::glyphDataForCharacter):
+        * rendering/svg/SVGTextRunRenderingContext.h:
+        * svg/SVGFontData.cpp:
+        (WebCore::SVGFontData::applySVGGlyphSelection):
+        * svg/SVGFontData.h:
+
+2014-06-21  Zan Dobersek  <zdobersek@igalia.com>
+
+        createCairoGLSurface should take in a FloatSize reference as its first parameter
+        https://bugs.webkit.org/show_bug.cgi?id=134159
+
+        Reviewed by Martin Robinson.
+
+        The ImageBuffer constructor operates with a FloatSize reference, which is also
+        passed to createCairoGLSurface when accelerated 2D canvas support is enabled.
+        That function should take in a reference to the same type.
+
+        * platform/graphics/cairo/ImageBufferCairo.cpp:
+        (WebCore::createCairoGLSurface):
+
+2014-06-21  Dean Jackson  <dino@apple.com>
+
+        [Mac] Margins for new form controls need tweaking
+        https://bugs.webkit.org/show_bug.cgi?id=134135
+        <rdar://problem/17262164>
+
+        Reviewed by Sam Weinig.
+
+        Take 2 of this patch. Only the mac-mountainlion LayoutTest
+        results are different from the first attempt.
+
+        With the newer animated controls in OS X Yosemite, we need
+        to tweak the fudge-factor margins for positioning. In a recent
+        patch I added another fudge, which I'm removing with this. I'm
+        not sure where the older values came from, but I've checked with
+        the latest AppKit sources and am using the sizes they implement
+        for the controls.
+
+        This will rebaseline a lot of tests, since I've made small tweaks
+        to the form layout.
+
+        * platform/mac/ThemeMac.mm:
+        (WebCore::checkboxMargins): New margin amounts.
+        (WebCore::radioSizes): New sizes.
+        (WebCore::radioMargins): New margin amounts.
+        (WebCore::paintToggleButton): No need to call the positioning fudge any more.
+        (WebCore::checkboxOffsets): Deleted.
+        (WebCore::radioOffsets): Deleted.
+
+2014-06-20  Sam Weinig  <sam@webkit.org>
+
+        Remove static tables for bindings that use eager reification
+        https://bugs.webkit.org/show_bug.cgi?id=134126
+
+        Reviewed by Oliver Hunt.
+
+        This shaves about 1MB off of WebCore's .o files.
+
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateHeader):
+        (GenerateImplementation):
+        (GenerateConstructorHelperMethods):
+        * bindings/scripts/test/JS/JSTestActiveDOMObject.cpp:
+        * bindings/scripts/test/JS/JSTestActiveDOMObject.h:
+        * bindings/scripts/test/JS/JSTestCustomNamedGetter.cpp:
+        * bindings/scripts/test/JS/JSTestCustomNamedGetter.h:
+        * bindings/scripts/test/JS/JSTestEventConstructor.cpp:
+        * bindings/scripts/test/JS/JSTestEventConstructor.h:
+        * bindings/scripts/test/JS/JSTestEventTarget.cpp:
+        * bindings/scripts/test/JS/JSTestEventTarget.h:
+        * bindings/scripts/test/JS/JSTestException.cpp:
+        * bindings/scripts/test/JS/JSTestException.h:
+        * bindings/scripts/test/JS/JSTestGenerateIsReachable.cpp:
+        * bindings/scripts/test/JS/JSTestGenerateIsReachable.h:
+        * bindings/scripts/test/JS/JSTestInterface.cpp:
+        * bindings/scripts/test/JS/JSTestInterface.h:
+        * bindings/scripts/test/JS/JSTestMediaQueryListListener.cpp:
+        * bindings/scripts/test/JS/JSTestMediaQueryListListener.h:
+        * bindings/scripts/test/JS/JSTestNamedConstructor.cpp:
+        * bindings/scripts/test/JS/JSTestNamedConstructor.h:
+        * bindings/scripts/test/JS/JSTestNode.cpp:
+        * bindings/scripts/test/JS/JSTestNode.h:
+        * bindings/scripts/test/JS/JSTestNondeterministic.cpp:
+        * bindings/scripts/test/JS/JSTestNondeterministic.h:
+        * bindings/scripts/test/JS/JSTestObj.cpp:
+        * bindings/scripts/test/JS/JSTestObj.h:
+        * bindings/scripts/test/JS/JSTestOverloadedConstructors.cpp:
+        * bindings/scripts/test/JS/JSTestOverloadedConstructors.h:
+        * bindings/scripts/test/JS/JSTestSerializedScriptValueInterface.cpp:
+        * bindings/scripts/test/JS/JSTestSerializedScriptValueInterface.h:
+        * bindings/scripts/test/JS/JSTestTypedefs.cpp:
+        * bindings/scripts/test/JS/JSTestTypedefs.h:
+        * bindings/scripts/test/JS/JSattribute.cpp:
+        * bindings/scripts/test/JS/JSattribute.h:
+        * bindings/scripts/test/JS/JSreadonly.cpp:
+        * bindings/scripts/test/JS/JSreadonly.h:
+
 2014-06-21  Brady Eidson  <beidson@apple.com>
 
         Gamepad API - Deprecate the existing implementation

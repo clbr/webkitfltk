@@ -125,11 +125,11 @@ public:
 
 #if PLATFORM(IOS)
     bool useCustomFixedPositionLayoutRect() const { return m_useCustomFixedPositionLayoutRect; }
-    void setUseCustomFixedPositionLayoutRect(bool);
     IntRect customFixedPositionLayoutRect() const { return m_customFixedPositionLayoutRect; }
     void setCustomFixedPositionLayoutRect(const IntRect&);
     bool updateFixedPositionLayoutRect();
 
+    IntSize customSizeForResizeEvent() const { return m_customSizeForResizeEvent; }
     void setCustomSizeForResizeEvent(IntSize);
 
     void setScrollVelocity(double horizontalVelocity, double verticalVelocity, double scaleChangeRate, double timestamp);
@@ -593,6 +593,7 @@ private:
     void updateEmbeddedObject(RenderEmbeddedObject&);
     void scrollToAnchor();
     void scrollPositionChanged(const IntPoint& oldPosition, const IntPoint& newPosition);
+    void scrollableAreaSetChanged();
 
     bool hasCustomScrollbars() const;
 
