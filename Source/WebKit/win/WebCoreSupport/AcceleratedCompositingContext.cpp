@@ -103,7 +103,6 @@ void AcceleratedCompositingContext::initialize()
     m_context->makeContextCurrent();
 
     m_textureMapper = TextureMapperGL::create(TextureMapper::OpenGLMode);
-    static_cast<TextureMapperGL*>(m_textureMapper.get())->setEnableEdgeDistanceAntialiasing(true);
     toTextureMapperLayer(m_rootLayer.get())->setTextureMapper(m_textureMapper.get());
 
     scheduleLayerFlush();
@@ -216,18 +215,6 @@ void AcceleratedCompositingContext::setNonCompositedContentsNeedDisplay(const In
     scheduleLayerFlush();
 }
 
-void AcceleratedCompositingContext::setNeedsDisplayInRect(const IntRect& rect)
-{
-    if (!m_rootLayer)
-        return;
-    if (rect.isEmpty()) {
-        m_rootLayer->setNeedsDisplay();
-        return;
-    }
-    m_rootLayer->setNeedsDisplayInRect(rect);
-    scheduleLayerFlush();
-}
-
 void AcceleratedCompositingContext::resizeRootLayer(const IntSize& newSize)
 {
     if (!enabled())
@@ -302,8 +289,7 @@ void AcceleratedCompositingContext::flushAndRenderLayers()
     if (m_context && !m_context->makeContextCurrent())
         return;
 
-    if (!flushPendingLayerChanges())
-        return;
+    flushPendingLayerChanges();
 
     compositeLayersToContext();
 }

@@ -48,10 +48,12 @@
 #include "PluginViewBase.h"
 #include "ProgressTracker.h"
 #include "RenderFlowThread.h"
+#include "RenderHTMLCanvas.h"
 #include "RenderIFrame.h"
 #include "RenderImage.h"
 #include "RenderLayerCompositor.h"
 #include "RenderEmbeddedObject.h"
+#include "RenderMedia.h"
 #include "RenderNamedFlowFragment.h"
 #include "RenderRegion.h"
 #include "RenderVideo.h"
@@ -469,9 +471,9 @@ void RenderLayerBacking::updateCompositedBounds()
 
 void RenderLayerBacking::updateAfterWidgetResize()
 {
-    if (!renderer().isWidget())
+    if (!is<RenderWidget>(renderer()))
         return;
-    if (RenderLayerCompositor* innerCompositor = RenderLayerCompositor::frameContentsCompositor(toRenderWidget(&renderer()))) {
+    if (RenderLayerCompositor* innerCompositor = RenderLayerCompositor::frameContentsCompositor(&downcast<RenderWidget>(renderer()))) {
         innerCompositor->frameViewDidChangeSize();
         innerCompositor->frameViewDidChangeLocation(flooredIntPoint(contentsBox().location()));
     }
@@ -598,8 +600,8 @@ bool RenderLayerBacking::updateConfiguration()
         layerConfigChanged = true;
     }
 #endif
-    if (renderer().isWidget())
-        layerConfigChanged = RenderLayerCompositor::parentFrameContentLayers(toRenderWidget(&renderer()));
+    if (is<RenderWidget>(renderer()))
+        layerConfigChanged = RenderLayerCompositor::parentFrameContentLayers(&downcast<RenderWidget>(renderer()));
 
     return layerConfigChanged;
 }
@@ -1675,21 +1677,21 @@ bool RenderLayerBacking::paintsChildren() const
     return false;
 }
 
-static bool isRestartedPlugin(RenderObject* renderer)
+static bool isRestartedPlugin(RenderObject& renderer)
 {
-    if (!renderer->isEmbeddedObject())
+    if (!is<RenderEmbeddedObject>(renderer))
         return false;
 
-    Element* element = downcast<Element>(renderer->node());
+    HTMLFrameOwnerElement& element = downcast<RenderEmbeddedObject>(renderer).frameOwnerElement();
     if (!is<HTMLPlugInElement>(element))
         return false;
 
-    return downcast<HTMLPlugInElement>(*element).isRestartedPlugin();
+    return downcast<HTMLPlugInElement>(element).isRestartedPlugin();
 }
 
-static bool isCompositedPlugin(RenderObject* renderer)
+static bool isCompositedPlugin(RenderObject& renderer)
 {
-    return renderer->isEmbeddedObject() && toRenderEmbeddedObject(renderer)->allowsAcceleratedCompositing();
+    return is<RenderEmbeddedObject>(renderer) && downcast<RenderEmbeddedObject>(renderer).allowsAcceleratedCompositing();
 }
 
 // A "simple container layer" is a RenderLayer which has no visible content to render.
@@ -1697,7 +1699,7 @@ static bool isCompositedPlugin(RenderObject* renderer)
 // This is a useful optimization, because it allows us to avoid allocating backing store.
 bool RenderLayerBacking::isSimpleContainerCompositingLayer() const
 {
-    if (renderer().isRenderReplaced() && (!isCompositedPlugin(&renderer()) || isRestartedPlugin(&renderer())))
+    if (renderer().isRenderReplaced() && (!isCompositedPlugin(renderer()) || isRestartedPlugin(renderer())))
         return false;
 
     if (paintsBoxDecorations() || paintsChildren())
@@ -1803,12 +1805,12 @@ bool RenderLayerBacking::containsPaintedContent(bool isSimpleContainer) const
     // FIXME: we could optimize cases where the image, video or canvas is known to fill the border box entirely,
     // and set background color on the layer in that case, instead of allocating backing store and painting.
 #if ENABLE(VIDEO)
-    if (renderer().isVideo() && toRenderVideo(renderer()).shouldDisplayVideo())
+    if (is<RenderVideo>(renderer()) && downcast<RenderVideo>(renderer()).shouldDisplayVideo())
         return m_owningLayer.hasBoxDecorationsOrBackground();
 #endif
 
 #if ENABLE(WEBGL) || ENABLE(ACCELERATED_2D_CANVAS)
-    if (renderer().isCanvas() && canvasCompositingStrategy(renderer()) == CanvasAsLayerContents)
+    if (is<RenderHTMLCanvas>(renderer()) && canvasCompositingStrategy(renderer()) == CanvasAsLayerContents)
         return m_owningLayer.hasBoxDecorationsOrBackground();
 #endif
 
@@ -1819,8 +1821,13 @@ bool RenderLayerBacking::containsPaintedContent(bool isSimpleContainer) const
 // that require painting. Direct compositing saves backing store.
 bool RenderLayerBacking::isDirectlyCompositedImage() const
 {
-    if (!is<RenderImage>(renderer()) || is<RenderMedia>(renderer()) || m_owningLayer.hasBoxDecorationsOrBackground() || renderer().hasClip())
+    if (!is<RenderImage>(renderer()) || m_owningLayer.hasBoxDecorationsOrBackground() || renderer().hasClip())
         return false;
+
+#if ENABLE(VIDEO)
+    if (is<RenderMedia>(renderer()))
+        return false;
+#endif
 
     auto& imageRenderer = downcast<RenderImage>(renderer());
     if (CachedImage* cachedImage = imageRenderer.cachedImage()) {
