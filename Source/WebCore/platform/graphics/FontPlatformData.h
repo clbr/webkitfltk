@@ -22,7 +22,7 @@
  *
  */
 
-// FIXME: This is temporary until all ports switch to using this file. <<<<<<< HEAD
+// FIXME: This is temporary until all ports switch to using this file.
 #if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(FLTK)
 #include "freetype/FontPlatformData.h"
 #else
