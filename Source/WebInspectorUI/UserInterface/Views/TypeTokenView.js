@@ -138,11 +138,11 @@ WebInspector.TypeTokenView.prototype = {
         return false;
     },
 
-    _displayTypeName: function() 
+    _displayTypeName: function()
     {
         var typeSet = WebInspector.TypeSet.fromPayload(this._types);
 
-        if (this._types.leastCommonAncestor) {
+        if (this._types.leastCommonAncestor && !(this._types.primitiveTypeNames && this._types.primitiveTypeNames.length)) {
             if (typeSet.isContainedIn(WebInspector.TypeSet.TypeBit.Object))
                 return this._types.leastCommonAncestor;
             if (typeSet.isContainedIn(WebInspector.TypeSet.TypeBit.Object | WebInspector.TypeSet.NullOrUndefinedTypeBits))
@@ -188,6 +188,6 @@ WebInspector.TypeTokenView.prototype = {
         if (typeSet.isContainedIn(WebInspector.TypeSet.TypeBit.Object | WebInspector.TypeSet.TypeBit.Function | WebInspector.TypeSet.TypeBit.String | WebInspector.TypeSet.NullOrUndefinedTypeBits))
             return "Object?";
 
-        return "(" + WebInspector.UIString("many") + ")";
+        return WebInspector.UIString("(many)");
     }
 };

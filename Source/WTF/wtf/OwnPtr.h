@@ -21,13 +21,15 @@
 #ifndef WTF_OwnPtr_h
 #define WTF_OwnPtr_h
 
-#include <wtf/Assertions.h>
-#include <wtf/Atomics.h>
-#include <wtf/Noncopyable.h>
-#include <wtf/OwnPtrCommon.h>
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <wtf/Assertions.h>
+#include <wtf/Atomics.h>
+#include <wtf/GetPtr.h>
+#include <wtf/HashTraits.h>
+#include <wtf/Noncopyable.h>
+#include <wtf/OwnPtrCommon.h>
 
 namespace WTF {
 
@@ -72,6 +74,10 @@ namespace WTF {
         OwnPtr& operator=(OwnPtr&&);
         template<typename U> OwnPtr& operator=(OwnPtr<U>&&);
 
+        // Hash table deleted values, which are only constructed and never copied or destroyed.
+        OwnPtr(HashTableDeletedValueType) : m_ptr(hashTableDeletedValue()) { }
+        bool isHashTableDeletedValue() const { return m_ptr == hashTableDeletedValue(); }
+
         void swap(OwnPtr& o) { std::swap(m_ptr, o.m_ptr); }
         
         // Construct an object to store into this OwnPtr, but only so long as this OwnPtr
@@ -87,6 +93,8 @@ namespace WTF {
 
     private:
         explicit OwnPtr(PtrType ptr) : m_ptr(ptr) { }
+
+        static PtrType hashTableDeletedValue() { return reinterpret_cast<PtrType>(-1); }
 
         // We should never have two OwnPtrs for the same underlying object (otherwise we'll get
         // double-destruction), so these equality operators should never be needed.
@@ -193,11 +201,6 @@ namespace WTF {
         return a != b.get(); 
     }
 
-    template<typename T> inline typename OwnPtr<T>::PtrType getPtr(const OwnPtr<T>& p)
-    {
-        return p.get();
-    }
-
     template<typename T> template<typename... Args> inline void OwnPtr<T>::createTransactionally(Args... args)
     {
         if (m_ptr) {
@@ -219,6 +222,14 @@ namespace WTF {
         m_ptr = newObject;
 #endif
     }
+
+    template <typename T> struct IsSmartPtr<OwnPtr<T>> {
+        static const bool value = true;
+    };
+
+    template<typename P> struct DefaultHash<OwnPtr<P>> {
+        typedef PtrHash<OwnPtr<P>> Hash;
+    };
 
 } // namespace WTF
 

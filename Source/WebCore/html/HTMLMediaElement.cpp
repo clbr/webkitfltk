@@ -1812,11 +1812,6 @@ void HTMLMediaElement::cancelPendingEventsAndCallbacks()
         source.cancelPendingErrorEvent();
 }
 
-Document* HTMLMediaElement::mediaPlayerOwningDocument()
-{
-    return &document();
-}
-
 void HTMLMediaElement::mediaPlayerNetworkStateChanged(MediaPlayer*)
 {
     beginProcessingMediaPlayerCallback();
@@ -4530,8 +4525,8 @@ void HTMLMediaElement::updatePlayState()
 
         if (hasMediaControls())
             mediaControls()->playbackStarted();
-        if (document().page() && document().page()->pageThrottler())
-            m_activityToken = document().page()->pageThrottler()->mediaActivityToken();
+        if (document().page())
+            m_activityToken = document().page()->pageThrottler().mediaActivityToken();
 
         startPlaybackProgressTimer();
         m_playing = true;
@@ -5675,19 +5670,9 @@ bool HTMLMediaElement::mediaPlayerIsLooping() const
     return loop();
 }
 
-HostWindow* HTMLMediaElement::mediaPlayerHostWindow()
-{
-    return mediaPlayerOwningDocument()->view()->hostWindow();
-}
-
-IntRect HTMLMediaElement::mediaPlayerWindowClipRect()
-{
-    return mediaPlayerOwningDocument()->view()->windowClipRect();
-}
-
 CachedResourceLoader* HTMLMediaElement::mediaPlayerCachedResourceLoader()
 {
-    return mediaPlayerOwningDocument()->cachedResourceLoader();
+    return document().cachedResourceLoader();
 }
 
 bool HTMLMediaElement::mediaPlayerShouldWaitForResponseToAuthenticationChallenge(const AuthenticationChallenge& challenge)

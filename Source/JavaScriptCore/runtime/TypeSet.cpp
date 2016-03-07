@@ -231,6 +231,12 @@ String TypeSet::displayName() const
     return ASCIILiteral("(many)");
 }
 
+String TypeSet::leastCommonAncestor() const
+{
+    return StructureShape::leastCommonAncestor(m_structureHistory);
+}
+
+#if ENABLE(INSPECTOR)
 PassRefPtr<Inspector::Protocol::Array<String>> TypeSet::allPrimitiveTypeNames() const
 {
     RefPtr<Inspector::Protocol::Array<String>> seen = Inspector::Protocol::Array<String>::create();
@@ -260,24 +266,20 @@ PassRefPtr<Inspector::Protocol::Array<Inspector::Protocol::Runtime::StructureDes
     return description.release();
 }
 
-String TypeSet::leastCommonAncestor() const
-{
-    return StructureShape::leastCommonAncestor(m_structureHistory);
-}
-
 PassRefPtr<Inspector::Protocol::Runtime::TypeSet> TypeSet::inspectorTypeSet() const
 {
     return Inspector::Protocol::Runtime::TypeSet::create()
-        .setIsFunction(doesTypeConformTo(TypeFunction))
-        .setIsUndefined(doesTypeConformTo(TypeUndefined))
-        .setIsNull(doesTypeConformTo(TypeNull))
-        .setIsBoolean(doesTypeConformTo(TypeBoolean))
-        .setIsInteger(doesTypeConformTo(TypeMachineInt))
-        .setIsNumber(doesTypeConformTo(TypeNumber))
-        .setIsString(doesTypeConformTo(TypeString))
-        .setIsObject(doesTypeConformTo(TypeObject))
+        .setIsFunction((m_seenTypes & TypeFunction) != TypeNothing)
+        .setIsUndefined((m_seenTypes & TypeUndefined) != TypeNothing)
+        .setIsNull((m_seenTypes & TypeNull) != TypeNothing)
+        .setIsBoolean((m_seenTypes & TypeBoolean) != TypeNothing)
+        .setIsInteger((m_seenTypes & TypeMachineInt) != TypeNothing)
+        .setIsNumber((m_seenTypes & TypeNumber) != TypeNothing)
+        .setIsString((m_seenTypes & TypeString) != TypeNothing)
+        .setIsObject((m_seenTypes & TypeObject) != TypeNothing)
         .release();
 }
+#endif
 
 String TypeSet::toJSONString() const
 {
@@ -532,6 +534,7 @@ String StructureShape::toJSONString() const
     return json.toString();
 }
 
+#if ENABLE(INSPECTOR)
 PassRefPtr<Inspector::Protocol::Runtime::StructureDescription> StructureShape::inspectorRepresentation()
 {
     RefPtr<Inspector::Protocol::Runtime::StructureDescription> base = Inspector::Protocol::Runtime::StructureDescription::create();
@@ -562,6 +565,7 @@ PassRefPtr<Inspector::Protocol::Runtime::StructureDescription> StructureShape::i
 
     return base.release();
 }
+#endif
 
 bool StructureShape::hasSamePrototypeChain(PassRefPtr<StructureShape> prpOther)
 {
