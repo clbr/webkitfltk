@@ -1782,7 +1782,7 @@ bool FrameView::scrollContentsFastPath(const IntSize& scrollDelta, const IntRect
 
         // Fixed items should always have layers.
         ASSERT(renderer->hasLayer());
-        RenderLayer* layer = toRenderBoxModelObject(renderer)->layer();
+        RenderLayer* layer = downcast<RenderBoxModelObject>(*renderer).layer();
 
         if (layer->viewportConstrainedNotCompositedReason() == RenderLayer::NotCompositedForBoundsOutOfView
             || layer->viewportConstrainedNotCompositedReason() == RenderLayer::NotCompositedForNoVisibleContent) {
@@ -2234,25 +2234,24 @@ void FrameView::repaintContentRectangle(const IntRect& r)
     ScrollView::repaintContentRectangle(r);
 }
 
-static unsigned countRenderedCharactersInRenderObjectWithThreshold(const RenderObject& renderer, unsigned countSoFar, unsigned threshold)
+static unsigned countRenderedCharactersInRenderObjectWithThreshold(const RenderElement& renderer, unsigned threshold)
 {
-    // FIXME: Consider writing this using RenderObject::nextInPreOrder() instead of using recursion.
-    if (is<RenderText>(renderer))
-        countSoFar += downcast<RenderText>(renderer).text()->length();
-
-    for (RenderObject* child = renderer.firstChildSlow(); child; child = child->nextSibling()) {
-        if (countSoFar >= threshold)
-            break;
-        countSoFar = countRenderedCharactersInRenderObjectWithThreshold(*child, countSoFar, threshold);
+    unsigned count = 0;
+    for (const RenderObject* descendant = &renderer; descendant; descendant = descendant->nextInPreOrder()) {
+        if (is<RenderText>(*descendant)) {
+            count += downcast<RenderText>(*descendant).text()->length();
+            if (count >= threshold)
+                break;
+        }
     }
-    return countSoFar;
+    return count;
 }
 
 bool FrameView::renderedCharactersExceed(unsigned threshold)
 {
     if (!m_frame->contentRenderer())
         return false;
-    return countRenderedCharactersInRenderObjectWithThreshold(*m_frame->contentRenderer(), 0, threshold) >= threshold;
+    return countRenderedCharactersInRenderObjectWithThreshold(*m_frame->contentRenderer(), threshold) >= threshold;
 }
 
 void FrameView::contentsResized()
@@ -3598,16 +3597,16 @@ bool FrameView::isInChildFrameWithFrameFlattening() const
 
     // Frame flattening applies when the owner element is either in a frameset or
     // an iframe with flattening parameters.
-    if (frame().ownerElement()->hasTagName(iframeTag)) {
-        RenderIFrame* iframeRenderer = toRenderIFrame(frame().ownerElement()->renderWidget());
-        if (iframeRenderer->flattenFrame())
+    if (is<HTMLIFrameElement>(*frame().ownerElement())) {
+        RenderIFrame& iframeRenderer = downcast<RenderIFrame>(*frame().ownerElement()->renderWidget());
+        if (iframeRenderer.flattenFrame())
             return true;
     }
 
     if (!frameFlatteningEnabled())
         return false;
 
-    if (frame().ownerElement()->hasTagName(frameTag))
+    if (is<HTMLFrameElement>(*frame().ownerElement()))
         return true;
 
     return false;

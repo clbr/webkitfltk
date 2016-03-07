@@ -468,24 +468,24 @@ void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
 {
     bool needsTable = false;
 
-    if (newChild->isRenderTableCol()) {
-        RenderTableCol* newTableColumn = toRenderTableCol(newChild);
-        bool isColumnInColumnGroup = newTableColumn->isTableColumn() && isRenderTableCol();
-        needsTable = !isTable() && !isColumnInColumnGroup;
-    } else if (newChild->isTableCaption())
-        needsTable = !isTable();
-    else if (newChild->isTableSection())
-        needsTable = !isTable();
-    else if (newChild->isTableRow())
-        needsTable = !isTableSection();
-    else if (newChild->isTableCell())
-        needsTable = !isTableRow();
+    if (is<RenderTableCol>(*newChild)) {
+        RenderTableCol& newTableColumn = downcast<RenderTableCol>(*newChild);
+        bool isColumnInColumnGroup = newTableColumn.isTableColumn() && is<RenderTableCol>(*this);
+        needsTable = !is<RenderTable>(*this) && !isColumnInColumnGroup;
+    } else if (is<RenderTableCaption>(*newChild))
+        needsTable = !is<RenderTable>(*this);
+    else if (is<RenderTableSection>(*newChild))
+        needsTable = !is<RenderTable>(*this);
+    else if (is<RenderTableRow>(*newChild))
+        needsTable = !is<RenderTableSection>(*this);
+    else if (is<RenderTableCell>(*newChild))
+        needsTable = !is<RenderTableRow>(*this);
 
     if (needsTable) {
         RenderTable* table;
         RenderObject* afterChild = beforeChild ? beforeChild->previousSibling() : m_lastChild;
-        if (afterChild && afterChild->isAnonymous() && afterChild->isTable() && !afterChild->isBeforeContent())
-            table = toRenderTable(afterChild);
+        if (afterChild && afterChild->isAnonymous() && is<RenderTable>(*afterChild) && !afterChild->isBeforeContent())
+            table = downcast<RenderTable>(afterChild);
         else {
             table = RenderTable::createAnonymousWithParentRenderer(this);
             addChild(table, beforeChild);
@@ -494,7 +494,7 @@ void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
     } else
         insertChildInternal(newChild, beforeChild, NotifyChildren);
 
-    if (is<RenderText>(newChild))
+    if (is<RenderText>(*newChild))
         downcast<RenderText>(*newChild).styleDidChange(StyleDifferenceEqual, nullptr);
 
     // SVG creates renderers for <g display="none">, as SVG requires children of hidden
@@ -506,7 +506,7 @@ void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
     // To avoid the problem alltogether, detect early if we're inside a hidden SVG subtree
     // and stop creating layers at all for these cases - they're not used anyways.
     if (newChild->hasLayer() && !layerCreationAllowedForSubtree())
-        toRenderLayerModelObject(newChild)->layer()->removeOnlyThisLayer();
+        downcast<RenderLayerModelObject>(*newChild).layer()->removeOnlyThisLayer();
 
     SVGRenderSupport::childAdded(*this, *newChild);
 }
@@ -569,8 +569,8 @@ void RenderElement::insertChildInternal(RenderObject* newChild, RenderObject* be
     if (!documentBeingDestroyed()) {
         if (notifyChildren == NotifyChildren)
             newChild->insertedIntoTree();
-        if (newChild->isRenderElement())
-            RenderCounter::rendererSubtreeAttached(toRenderElement(*newChild));
+        if (is<RenderElement>(*newChild))
+            RenderCounter::rendererSubtreeAttached(downcast<RenderElement>(*newChild));
     }
 
     newChild->setNeedsLayoutAndPrefWidthsRecalc();
@@ -638,8 +638,8 @@ RenderObject* RenderElement::removeChildInternal(RenderObject& oldChild, NotifyC
 
     // rendererRemovedFromTree walks the whole subtree. We can improve performance
     // by skipping this step when destroying the entire tree.
-    if (!documentBeingDestroyed() && oldChild.isRenderElement())
-        RenderCounter::rendererRemovedFromTree(toRenderElement(oldChild));
+    if (!documentBeingDestroyed() && is<RenderElement>(oldChild))
+        RenderCounter::rendererRemovedFromTree(downcast<RenderElement>(oldChild));
 
     if (AXObjectCache* cache = document().existingAXObjectCache())
         cache->childrenChanged(this);
@@ -714,7 +714,7 @@ RenderLayer* RenderElement::findNextLayer(RenderLayer* parentLayer, RenderObject
         return nullptr;
 
     // Step 1: If our layer is a child of the desired parent, then return our layer.
-    RenderLayer* ourLayer = hasLayer() ? toRenderLayerModelObject(this)->layer() : nullptr;
+    RenderLayer* ourLayer = hasLayer() ? downcast<RenderLayerModelObject>(*this).layer() : nullptr;
     if (ourLayer && ourLayer->parent() == parentLayer)
         return ourLayer;
 
@@ -722,9 +722,9 @@ RenderLayer* RenderElement::findNextLayer(RenderLayer* parentLayer, RenderObject
     // into our siblings trying to find the next layer whose parent is the desired parent.
     if (!ourLayer || ourLayer == parentLayer) {
         for (RenderObject* child = startPoint ? startPoint->nextSibling() : firstChild(); child; child = child->nextSibling()) {
-            if (!child->isRenderElement())
+            if (!is<RenderElement>(*child))
                 continue;
-            RenderLayer* nextLayer = toRenderElement(child)->findNextLayer(parentLayer, nullptr, false);
+            RenderLayer* nextLayer = downcast<RenderElement>(*child).findNextLayer(parentLayer, nullptr, false);
             if (nextLayer)
                 return nextLayer;
         }
@@ -1109,7 +1109,7 @@ void RenderElement::layout()
     RenderObject* child = firstChild();
     while (child) {
         if (child->needsLayout())
-            toRenderElement(child)->layout();
+            downcast<RenderElement>(*child).layout();
         ASSERT(!child->needsLayout());
         child = child->nextSibling();
     }

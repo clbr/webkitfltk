@@ -1139,7 +1139,6 @@
 		2E3BC108117D479800B9409A /* DOMFileError.h in Headers */ = {isa = PBXBuildFile; fileRef = 2E3BC106117D479800B9409A /* DOMFileError.h */; };
 		2E3BC109117D479800B9409A /* DOMFileError.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2E3BC107117D479800B9409A /* DOMFileError.mm */; };
 		2E3BC10B117D47C800B9409A /* DOMFileErrorInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2E3BC10A117D47C800B9409A /* DOMFileErrorInternal.h */; };
-		2E3FAA0911A36BF100576624 /* CrossThreadTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 2E3FAA0811A36BF100576624 /* CrossThreadTask.h */; };
 		2E4346450F546A8200B0F1BA /* Worker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2E4346330F546A8200B0F1BA /* Worker.cpp */; };
 		2E4346460F546A8200B0F1BA /* Worker.h in Headers */ = {isa = PBXBuildFile; fileRef = 2E4346340F546A8200B0F1BA /* Worker.h */; };
 		2E4346480F546A8200B0F1BA /* WorkerGlobalScope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2E4346360F546A8200B0F1BA /* WorkerGlobalScope.cpp */; };
@@ -5963,7 +5962,6 @@
 		E182568F0EF2B02D00933242 /* JSWorkerGlobalScope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E182568D0EF2B02D00933242 /* JSWorkerGlobalScope.cpp */; };
 		E18256900EF2B02D00933242 /* JSWorkerGlobalScope.h in Headers */ = {isa = PBXBuildFile; fileRef = E182568E0EF2B02D00933242 /* JSWorkerGlobalScope.h */; };
 		E18258AC0EF3CD7000933242 /* JSWorkerGlobalScopeCustom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E18258AB0EF3CD7000933242 /* JSWorkerGlobalScopeCustom.cpp */; };
-		E187056316E54A0D00585E97 /* MainThreadTask.h in Headers */ = {isa = PBXBuildFile; fileRef = E187056216E54A0D00585E97 /* MainThreadTask.h */; };
 		E18772F1126E2629003DD586 /* Language.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E18772F0126E2629003DD586 /* Language.cpp */; };
 		E18DF33518AAF12C00773E59 /* SerializedCryptoKeyWrap.h in Headers */ = {isa = PBXBuildFile; fileRef = E18DF33418AAF12C00773E59 /* SerializedCryptoKeyWrap.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E18DF33818AAF14D00773E59 /* SerializedCryptoKeyWrapMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = E18DF33618AAF14D00773E59 /* SerializedCryptoKeyWrapMac.mm */; };
@@ -8140,7 +8138,6 @@
 		2E3BC106117D479800B9409A /* DOMFileError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOMFileError.h; sourceTree = "<group>"; };
 		2E3BC107117D479800B9409A /* DOMFileError.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DOMFileError.mm; sourceTree = "<group>"; };
 		2E3BC10A117D47C800B9409A /* DOMFileErrorInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOMFileErrorInternal.h; sourceTree = "<group>"; };
-		2E3FAA0811A36BF100576624 /* CrossThreadTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CrossThreadTask.h; sourceTree = "<group>"; };
 		2E4346330F546A8200B0F1BA /* Worker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Worker.cpp; path = workers/Worker.cpp; sourceTree = "<group>"; };
 		2E4346340F546A8200B0F1BA /* Worker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Worker.h; path = workers/Worker.h; sourceTree = "<group>"; };
 		2E4346350F546A8200B0F1BA /* Worker.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Worker.idl; path = workers/Worker.idl; sourceTree = "<group>"; };
@@ -13458,7 +13455,6 @@
 		E182568D0EF2B02D00933242 /* JSWorkerGlobalScope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSWorkerGlobalScope.cpp; sourceTree = "<group>"; };
 		E182568E0EF2B02D00933242 /* JSWorkerGlobalScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSWorkerGlobalScope.h; sourceTree = "<group>"; };
 		E18258AB0EF3CD7000933242 /* JSWorkerGlobalScopeCustom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSWorkerGlobalScopeCustom.cpp; sourceTree = "<group>"; };
-		E187056216E54A0D00585E97 /* MainThreadTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainThreadTask.h; sourceTree = "<group>"; };
 		E18772F0126E2629003DD586 /* Language.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Language.cpp; sourceTree = "<group>"; };
 		E18DF33418AAF12C00773E59 /* SerializedCryptoKeyWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SerializedCryptoKeyWrap.h; sourceTree = "<group>"; };
 		E18DF33618AAF14D00773E59 /* SerializedCryptoKeyWrapMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SerializedCryptoKeyWrapMac.mm; path = mac/SerializedCryptoKeyWrapMac.mm; sourceTree = "<group>"; };
@@ -21361,7 +21357,6 @@
 				935207BD09BD410A00F2038D /* LocalizedStrings.h */,
 				A8239DFE09B3CF8A00B60641 /* Logging.cpp */,
 				A8239DFF09B3CF8A00B60641 /* Logging.h */,
-				E187056216E54A0D00585E97 /* MainThreadTask.h */,
 				CDF2B003181F059C00F2B424 /* MediaDescription.h */,
 				CD641EC7181ED60100EE4C41 /* MediaSample.h */,
 				657EDA061385CB97004E0645 /* MemoryPressureHandler.cpp */,
@@ -22532,7 +22527,6 @@
 				E1A1470711102B1500EEC0F3 /* ContainerNodeAlgorithms.h */,
 				97627B8B14FB3CEE002CDCA1 /* ContextDestructionObserver.cpp */,
 				97627B8C14FB3CEE002CDCA1 /* ContextDestructionObserver.h */,
-				2E3FAA0811A36BF100576624 /* CrossThreadTask.h */,
 				62CD32561157E57C0063B0A7 /* CustomEvent.cpp */,
 				62CD32571157E57C0063B0A7 /* CustomEvent.h */,
 				62CD32581157E57C0063B0A7 /* CustomEvent.idl */,
@@ -23574,7 +23568,6 @@
 				E1C416120F6562FD0092D2FB /* CrossOriginAccessControl.h in Headers */,
 				E1C415DA0F655D6F0092D2FB /* CrossOriginPreflightResultCache.h in Headers */,
 				2E4346590F546A9900B0F1BA /* CrossThreadCopier.h in Headers */,
-				2E3FAA0911A36BF100576624 /* CrossThreadTask.h in Headers */,
 				E169803D1133542D00894115 /* CRuntimeObject.h in Headers */,
 				975CA28B130365F800E99AD9 /* Crypto.h in Headers */,
 				E172AF6E180F24C600FBADB9 /* CryptoAlgorithm.h in Headers */,
@@ -25275,7 +25268,6 @@
 				A8239E0109B3CF8A00B60641 /* Logging.h in Headers */,
 				9BA273F4172206BB0097CE47 /* LogicalSelectionOffsetCaches.h in Headers */,
 				932AD70617EFA2C40038F8FF /* MainFrame.h in Headers */,
-				E187056316E54A0D00585E97 /* MainThreadTask.h in Headers */,
 				1A8F6BC60DB55CDC001DB794 /* ManifestParser.h in Headers */,
 				7C73FB12191EF6F4007DE061 /* JSUserMessageHandler.h in Headers */,
 				93309DF8099E64920056E581 /* markup.h in Headers */,

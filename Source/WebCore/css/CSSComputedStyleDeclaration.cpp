@@ -721,6 +721,14 @@ static PassRef<CSSPrimitiveValue> percentageOrZoomAdjustedValue(Length length, c
     return zoomAdjustedPixelValue(valueForLength(length, 0), style);
 }
 
+static PassRef<CSSPrimitiveValue> autoOrZoomAdjustedValue(Length length, const RenderStyle* style)
+{
+    if (length.isAuto())
+        return cssValuePool().createIdentifierValue(CSSValueAuto);
+
+    return zoomAdjustedPixelValue(valueForLength(length, 0), style);
+}
+
 static PassRef<CSSValueList> getBorderRadiusCornerValues(const LengthSize& radius, const RenderStyle* style)
 {
     auto list = CSSValueList::createSpaceSeparated();
@@ -885,73 +893,73 @@ PassRef<CSSValue> ComputedStyleExtractor::valueForFilter(const RenderStyle* styl
 
     Vector<RefPtr<FilterOperation>>::const_iterator end = filterOperations.operations().end();
     for (Vector<RefPtr<FilterOperation>>::const_iterator it = filterOperations.operations().begin(); it != end; ++it) {
-        FilterOperation* filterOperation = (*it).get();
-        switch (filterOperation->type()) {
+        FilterOperation& filterOperation = **it;
+        switch (filterOperation.type()) {
         case FilterOperation::REFERENCE: {
-            ReferenceFilterOperation* referenceOperation = toReferenceFilterOperation(filterOperation);
+            ReferenceFilterOperation& referenceOperation = downcast<ReferenceFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::ReferenceFilterOperation);
-            filterValue->append(cssValuePool().createValue(referenceOperation->url(), CSSPrimitiveValue::CSS_URI));
+            filterValue->append(cssValuePool().createValue(referenceOperation.url(), CSSPrimitiveValue::CSS_URI));
             break;
         }
         case FilterOperation::GRAYSCALE: {
-            BasicColorMatrixFilterOperation* colorMatrixOperation = toBasicColorMatrixFilterOperation(filterOperation);
+            BasicColorMatrixFilterOperation& colorMatrixOperation = downcast<BasicColorMatrixFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::GrayscaleFilterOperation);
-            filterValue->append(cssValuePool().createValue(colorMatrixOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(cssValuePool().createValue(colorMatrixOperation.amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::SEPIA: {
-            BasicColorMatrixFilterOperation* colorMatrixOperation = toBasicColorMatrixFilterOperation(filterOperation);
+            BasicColorMatrixFilterOperation& colorMatrixOperation = downcast<BasicColorMatrixFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::SepiaFilterOperation);
-            filterValue->append(cssValuePool().createValue(colorMatrixOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(cssValuePool().createValue(colorMatrixOperation.amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::SATURATE: {
-            BasicColorMatrixFilterOperation* colorMatrixOperation = toBasicColorMatrixFilterOperation(filterOperation);
+            BasicColorMatrixFilterOperation& colorMatrixOperation = downcast<BasicColorMatrixFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::SaturateFilterOperation);
-            filterValue->append(cssValuePool().createValue(colorMatrixOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(cssValuePool().createValue(colorMatrixOperation.amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::HUE_ROTATE: {
-            BasicColorMatrixFilterOperation* colorMatrixOperation = toBasicColorMatrixFilterOperation(filterOperation);
+            BasicColorMatrixFilterOperation& colorMatrixOperation = downcast<BasicColorMatrixFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::HueRotateFilterOperation);
-            filterValue->append(cssValuePool().createValue(colorMatrixOperation->amount(), CSSPrimitiveValue::CSS_DEG));
+            filterValue->append(cssValuePool().createValue(colorMatrixOperation.amount(), CSSPrimitiveValue::CSS_DEG));
             break;
         }
         case FilterOperation::INVERT: {
-            BasicComponentTransferFilterOperation* componentTransferOperation = toBasicComponentTransferFilterOperation(filterOperation);
+            BasicComponentTransferFilterOperation& componentTransferOperation = downcast<BasicComponentTransferFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::InvertFilterOperation);
-            filterValue->append(cssValuePool().createValue(componentTransferOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(cssValuePool().createValue(componentTransferOperation.amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::OPACITY: {
-            BasicComponentTransferFilterOperation* componentTransferOperation = toBasicComponentTransferFilterOperation(filterOperation);
+            BasicComponentTransferFilterOperation& componentTransferOperation = downcast<BasicComponentTransferFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::OpacityFilterOperation);
-            filterValue->append(cssValuePool().createValue(componentTransferOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(cssValuePool().createValue(componentTransferOperation.amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::BRIGHTNESS: {
-            BasicComponentTransferFilterOperation* brightnessOperation = toBasicComponentTransferFilterOperation(filterOperation);
+            BasicComponentTransferFilterOperation& brightnessOperation = downcast<BasicComponentTransferFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::BrightnessFilterOperation);
-            filterValue->append(cssValuePool().createValue(brightnessOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(cssValuePool().createValue(brightnessOperation.amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::CONTRAST: {
-            BasicComponentTransferFilterOperation* contrastOperation = toBasicComponentTransferFilterOperation(filterOperation);
+            BasicComponentTransferFilterOperation& contrastOperation = downcast<BasicComponentTransferFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::ContrastFilterOperation);
-            filterValue->append(cssValuePool().createValue(contrastOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(cssValuePool().createValue(contrastOperation.amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::BLUR: {
-            BlurFilterOperation* blurOperation = toBlurFilterOperation(filterOperation);
+            BlurFilterOperation& blurOperation = downcast<BlurFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::BlurFilterOperation);
-            filterValue->append(adjustLengthForZoom(blurOperation->stdDeviation(), style, adjust));
+            filterValue->append(adjustLengthForZoom(blurOperation.stdDeviation(), style, adjust));
             break;
         }
         case FilterOperation::DROP_SHADOW: {
-            DropShadowFilterOperation* dropShadowOperation = toDropShadowFilterOperation(filterOperation);
+            DropShadowFilterOperation& dropShadowOperation = downcast<DropShadowFilterOperation>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::DropShadowFilterOperation);
             // We want our computed style to look like that of a text shadow (has neither spread nor inset style).
-            ShadowData shadowData = ShadowData(dropShadowOperation->location(), dropShadowOperation->stdDeviation(), 0, Normal, false, dropShadowOperation->color());
+            ShadowData shadowData = ShadowData(dropShadowOperation.location(), dropShadowOperation.stdDeviation(), 0, Normal, false, dropShadowOperation.color());
             filterValue->append(valueForShadow(&shadowData, CSSPropertyTextShadow, style, adjust));
             break;
         }
@@ -1656,7 +1664,7 @@ static inline PassRefPtr<RenderStyle> computeRenderStyleForProperty(Node* styled
 
     if (renderer && renderer->isComposited() && AnimationController::supportsAcceleratedAnimationOfProperty(propertyID)) {
         AnimationUpdateBlock animationUpdateBlock(&renderer->animation());
-        RefPtr<RenderStyle> style = renderer->animation().getAnimatedStyleForRenderer(toRenderElement(renderer));
+        RefPtr<RenderStyle> style = renderer->animation().getAnimatedStyleForRenderer(downcast<RenderElement>(renderer));
         if (pseudoElementSpecifier && !styledNode->isPseudoElement()) {
             // FIXME: This cached pseudo style will only exist if the animation has been run at least once.
             return style->getCachedPseudoStyle(pseudoElementSpecifier);
@@ -2744,10 +2752,10 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
             if (!style->hasClip())
                 return cssValuePool().createIdentifierValue(CSSValueAuto);
             RefPtr<Rect> rect = Rect::create();
-            rect->setTop(zoomAdjustedPixelValue(style->clip().top().value(), style.get()));
-            rect->setRight(zoomAdjustedPixelValue(style->clip().right().value(), style.get()));
-            rect->setBottom(zoomAdjustedPixelValue(style->clip().bottom().value(), style.get()));
-            rect->setLeft(zoomAdjustedPixelValue(style->clip().left().value(), style.get()));
+            rect->setTop(autoOrZoomAdjustedValue(style->clip().top(), style.get()));
+            rect->setRight(autoOrZoomAdjustedValue(style->clip().right(), style.get()));
+            rect->setBottom(autoOrZoomAdjustedValue(style->clip().bottom(), style.get()));
+            rect->setLeft(autoOrZoomAdjustedValue(style->clip().left(), style.get()));
             return cssValuePool().createValue(rect.release());
         }
         case CSSPropertySpeak:

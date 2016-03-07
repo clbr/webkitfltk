@@ -1251,7 +1251,7 @@ bool RenderLayer::updateLayerPosition()
     
     bool positionOrOffsetChanged = false;
     if (renderer().isInFlowPositioned()) {
-        LayoutSize newOffset = toRenderBoxModelObject(renderer()).offsetForInFlowPosition();
+        LayoutSize newOffset = downcast<RenderBoxModelObject>(renderer()).offsetForInFlowPosition();
         positionOrOffsetChanged = newOffset != m_offsetForInFlowPosition;
         m_offsetForInFlowPosition = newOffset;
         localPoint.move(m_offsetForInFlowPosition);
@@ -5404,10 +5404,10 @@ void RenderLayer::calculateRects(const ClipRectsContext& clipRectsContext, const
     foregroundRect = backgroundRect;
     outlineRect = backgroundRect;
 
-    RenderFlowThread* flowThread = namedFlowFragment ? namedFlowFragment->flowThread() : 0;
+    RenderFlowThread* flowThread = namedFlowFragment ? namedFlowFragment->flowThread() : nullptr;
     if (isSelfPaintingLayer() && flowThread && !renderer().isInFlowRenderFlowThread()) {
         ASSERT(namedFlowFragment->isValid());
-        const RenderBoxModelObject& boxModelObject = toRenderBoxModelObject(renderer());
+        const RenderBoxModelObject& boxModelObject = downcast<RenderBoxModelObject>(renderer());
         LayoutRect layerBoundsWithVisualOverflow = namedFlowFragment->visualOverflowRectForBox(&boxModelObject);
 
         // Layers are in physical coordinates so the origin must be moved to the physical top-left of the flowthread.
@@ -5593,7 +5593,7 @@ bool RenderLayer::intersectsDamageRect(const LayoutRect& layerBounds, const Layo
     // to the flow thread, not the last region (in which it will end up because of bottom:0px)
     if (namedFlowFragment && renderer().flowThreadContainingBlock()) {
         LayoutRect b = layerBounds;
-        b.moveBy(namedFlowFragment->visualOverflowRectForBox(toRenderBoxModelObject(&renderer())).location());
+        b.moveBy(namedFlowFragment->visualOverflowRectForBox(downcast<RenderBoxModelObject>(&renderer())).location());
         b.inflate(renderer().view().maximalOutlineSize());
         if (b.intersects(damageRect))
             return true;
@@ -5622,8 +5622,8 @@ LayoutRect RenderLayer::localBoundingBox(CalculateLayerBoundsFlags flags) const
     LayoutRect result;
     if (renderer().isInline() && renderer().isRenderInline())
         result = toRenderInline(renderer()).linesVisualOverflowBoundingBox();
-    else if (renderer().isTableRow()) {
-        RenderTableRow& tableRow = toRenderTableRow(renderer());
+    else if (is<RenderTableRow>(renderer())) {
+        RenderTableRow& tableRow = downcast<RenderTableRow>(renderer());
         // Our bounding box is just the union of all of our cells' border/overflow rects.
         for (RenderTableCell* cell = tableRow.firstCell(); cell; cell = cell->nextCell()) {
             LayoutRect bbox = cell->borderBoxRect();
@@ -6297,13 +6297,13 @@ static bool hasPaintingNonLayerDescendants(const RenderElement& renderer, int de
         
         const RenderElement& renderElementChild = downcast<RenderElement>(child);
 
-        if (renderElementChild.isRenderLayerModelObject() && toRenderLayerModelObject(renderElementChild).hasSelfPaintingLayer())
+        if (is<RenderLayerModelObject>(renderElementChild) && downcast<RenderLayerModelObject>(renderElementChild).hasSelfPaintingLayer())
             continue;
 
         if (hasBoxDecorationsOrBackground(renderElementChild))
             return true;
         
-        if (renderElementChild.isRenderReplaced())
+        if (is<RenderReplaced>(renderElementChild))
             return true;
 
         if (hasPaintingNonLayerDescendants(renderElementChild, depth + 1))
