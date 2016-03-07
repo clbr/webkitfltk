@@ -1785,7 +1785,7 @@ __ZNK7WebCore19AnimationController33allowsNewAnimationsWhileSuspendedEv
 __ZNK7WebCore19HTMLOptGroupElement14groupLabelTextEv
 __ZNK7WebCore19HTMLTextAreaElement5valueEv
 __ZNK7WebCore19IDBDatabaseMetadata12isolatedCopyEv
-__ZNK7WebCore19InspectorController12getHighlightEPNS_9HighlightE
+__ZNK7WebCore19InspectorController12getHighlightEPNS_9HighlightENS_16InspectorOverlay16CoordinateSystemE
 __ZNK7WebCore19InspectorController29buildObjectForHighlightedNodeEv
 __ZNK7WebCore19MediaSessionManager30applicationWillEnterBackgroundEv
 __ZNK7WebCore19MediaSessionManager30applicationWillEnterForegroundEv
@@ -2425,6 +2425,11 @@ _wkNSReboundDeltaForElasticDelta
 
 #if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
 _wkCreateMemoryStatusPressureCriticalDispatchOnMainQueue
+#endif
+
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
+__ZN7WebCore32shouldRegisterInsertionUndoGroupEP18NSAttributedString
+__ZN7WebCore44registerInsertionUndoGroupingWithUndoManagerEP13NSUndoManager
 #endif
 
 #if PLATFORM(MAC) || PLATFORM(IOS_SIMULATOR)
@@ -3152,7 +3157,7 @@ __ZNK7WebCore9DOMWindow8documentEv
 
 #if ENABLE(INSPECTOR) && PLATFORM(IOS)
 __ZN7WebCore16findIntersectionERKNS_10FloatPointES2_S2_S2_RS0_
-__ZNK7WebCore19InspectorController12getHighlightEPNS_9HighlightE
+__ZN7WebCore4Node7inspectEv
 __ZNK7WebCore9FloatQuad12containsQuadERKS0_
 __ZNK7WebCore9FloatQuad13containsPointERKNS_10FloatPointE
 #endif
@@ -3433,4 +3438,8 @@ __ZN7WebCore4Page11setViewModeENS0_8ViewModeE
 
 #if ENABLE(WEB_TIMING)
 __ZNK7WebCore20ResourceResponseBase18resourceLoadTimingEv
+#endif
+
+#if ENABLE(GAMEPAD)
+__ZN7WebCore18HIDGamepadListener6sharedEv
 #endif

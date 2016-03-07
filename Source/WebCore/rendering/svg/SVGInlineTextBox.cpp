@@ -141,7 +141,10 @@ LayoutRect SVGInlineTextBox::localSelectionRect(unsigned startPosition, unsigned
 {
     unsigned boxStart = start();
     startPosition = startPosition > boxStart ? startPosition - boxStart : 0;
-    ASSERT(endPosition >= boxStart);
+
+    if (endPosition < boxStart)
+        return LayoutRect();
+
     endPosition = std::min(endPosition - boxStart, len());
     if (startPosition >= endPosition)
         return LayoutRect();

@@ -28,16 +28,16 @@
 
 #if ENABLE(GAMEPAD)
 
-#include <wtf/PassRefPtr.h>
+#include <wtf/PassRef.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
 
 class GamepadButton : public RefCounted<GamepadButton> {
 public:
-    static PassRefPtr<GamepadButton> create()
+    static PassRef<GamepadButton> create()
     {
-        return adoptRef(new GamepadButton);
+        return adoptRef(*new GamepadButton);
     }
 
     bool pressed() const;
