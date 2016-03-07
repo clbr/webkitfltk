@@ -38,15 +38,19 @@
 #import "WebViewInternal.h"
 #import <ImageIO/ImageIO.h>
 #import <ImageKit/ImageKit.h>
+#import <WebCore/ArchiveResource.h>
 #import <WebCore/DataDetection.h>
 #import <WebCore/DataDetectorsSPI.h>
 #import <WebCore/DictionaryLookup.h>
+#import <WebCore/DocumentLoader.h>
 #import <WebCore/Editor.h>
 #import <WebCore/Element.h>
 #import <WebCore/EventHandler.h>
+#import <WebCore/FocusController.h>
 #import <WebCore/Frame.h>
 #import <WebCore/FrameView.h>
 #import <WebCore/HTMLConverter.h>
+#import <WebCore/LookupSPI.h>
 #import <WebCore/NSSharingServicePickerSPI.h>
 #import <WebCore/NSSharingServiceSPI.h>
 #import <WebCore/NSViewSPI.h>
@@ -54,6 +58,7 @@
 #import <WebCore/Range.h>
 #import <WebCore/RenderElement.h>
 #import <WebCore/RenderObject.h>
+#import <WebCore/SharedBuffer.h>
 #import <WebCore/SoftLinking.h>
 #import <WebCore/TextCheckerClient.h>
 #import <WebKitSystemInterface.h>
@@ -149,7 +154,27 @@ struct DictionaryPopupInfo {
 
 - (BOOL)isMenuForTextContent
 {
-    return _type == WebActionMenuReadOnlyText || _type == WebActionMenuEditableText || _type == WebActionMenuEditableTextWithSuggestions || _type == WebActionMenuWhitespaceInEditableArea;
+    return _type == WebActionMenuReadOnlyText || _type == WebActionMenuEditableText || _type == WebActionMenuEditableTextWithSuggestions;
+}
+
+- (void)focusAndSelectHitTestResult
+{
+    if (!_hitTestResult.isContentEditable())
+        return;
+
+    Element* element = _hitTestResult.innerElement();
+    if (!element)
+        return;
+
+    auto renderer = element->renderer();
+    if (!renderer)
+        return;
+
+    Frame& frame = renderer->frame();
+
+    frame.page()->focusController().setFocusedElement(element, element->document().frame());
+    VisiblePosition position = renderer->positionForPoint(_hitTestResult.localPoint(), nullptr);
+    frame.selection().setSelection(position);
 }
 
 - (void)willOpenMenu:(NSMenu *)menu withEvent:(NSEvent *)event
@@ -167,6 +192,11 @@ struct DictionaryPopupInfo {
             [[_webView _selectedOrMainFrame] _clearSelection];
         else
             [self _selectDataDetectedText];
+        return;
+    }
+
+    if (_type == WebActionMenuWhitespaceInEditableArea) {
+        [self focusAndSelectHitTestResult];
         return;
     }
 
@@ -301,11 +331,15 @@ static IntRect elementBoundingBoxInWindowCoordinatesFromNode(Node* node)
 
     RetainPtr<NSMenuItem> shareItem = [self _createActionMenuItemForTag:WebActionMenuItemTagShareImage];
     if (Image* image = _hitTestResult.image()) {
-        RetainPtr<CGImageRef> cgImage = image->getCGImageRef();
-        RetainPtr<NSImage> nsImage = adoptNS([[NSImage alloc] initWithCGImage:cgImage.get() size:NSZeroSize]);
-        _sharingServicePicker = adoptNS([[NSSharingServicePicker alloc] initWithItems:@[ nsImage.get() ]]);
-        [_sharingServicePicker setDelegate:self];
-        [shareItem setSubmenu:[_sharingServicePicker menu]];
+        RefPtr<SharedBuffer> buffer = image->data();
+        if (buffer) {
+            RetainPtr<NSData> nsData = [NSData dataWithBytes:buffer->data() length:buffer->size()];
+            RetainPtr<NSImage> nsImage = adoptNS([[NSImage alloc] initWithData:nsData.get()]);
+            _sharingServicePicker = adoptNS([[NSSharingServicePicker alloc] initWithItems:@[ nsImage.get() ]]);
+            [_sharingServicePicker setDelegate:self];
+            [shareItem setSubmenu:[_sharingServicePicker menu]];
+        } else
+            [shareItem setEnabled:NO];
     }
 
     return @[ copyImageItem.get(), addToPhotosItem.get(), saveToDownloadsItem.get(), shareItem.get() ];
@@ -377,19 +411,23 @@ static NSString *pathToPhotoOnDisk(NSString *suggestedFilename)
     if (!image)
         return;
 
-    RetainPtr<CGImageRef> cgImage = image->getCGImageRef();
+    String imageExtension = image->filenameExtension();
+    if (imageExtension.isEmpty())
+        return;
+
+    RefPtr<SharedBuffer> buffer = image->data();
+    if (!buffer)
+        return;
+    RetainPtr<NSData> nsData = [NSData dataWithBytes:buffer->data() length:buffer->size()];
+    RetainPtr<NSString> suggestedFilename = [[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:imageExtension];
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSString * const suggestedFilename = @"image.jpg";
-
-        NSString *filePath = pathToPhotoOnDisk(suggestedFilename);
+        NSString *filePath = pathToPhotoOnDisk(suggestedFilename.get());
         if (!filePath)
             return;
 
         NSURL *fileURL = [NSURL fileURLWithPath:filePath];
-        auto dest = adoptCF(CGImageDestinationCreateWithURL((CFURLRef)fileURL, kUTTypeJPEG, 1, nullptr));
-        CGImageDestinationAddImage(dest.get(), cgImage.get(), nullptr);
-        CGImageDestinationFinalize(dest.get());
+        [nsData writeToURL:fileURL atomically:NO];
 
         dispatch_async(dispatch_get_main_queue(), ^{
             // This API provides no way to report failure, but if 18420778 is fixed so that it does, we should handle this.
@@ -563,7 +601,7 @@ static NSString *pathToPhotoOnDisk(NSString *suggestedFilename)
     // Convert to screen coordinates.
     textBaselineOrigin = [_webView.window convertRectToScreen:NSMakeRect(textBaselineOrigin.x, textBaselineOrigin.y, 0, 0)].origin;
 
-    WKShowWordDefinitionWindow(popupInfo.attributedString.get(), textBaselineOrigin, popupInfo.options.get());
+    [getLULookupDefinitionModuleClass() showDefinitionForTerm:popupInfo.attributedString.get() atLocation:textBaselineOrigin options:popupInfo.options.get()];
 }
 
 - (void)_paste:(id)sender
@@ -689,6 +727,7 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
     SEL selector = nullptr;
     NSString *title = nil;
     NSImage *image = nil;
+    bool enabled = true;
 
     switch (tag) {
     case WebActionMenuItemTagOpenLinkInDefaultBrowser:
@@ -719,6 +758,7 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
         selector = @selector(_lookupText:);
         title = WEB_UI_STRING_KEY("Look Up", "Look Up (action menu item)", "action menu item");
         image = [NSImage imageNamed:@"NSActionMenuLookup"];
+        enabled = getLULookupDefinitionModuleClass();
         break;
 
     case WebActionMenuItemTagPaste:
@@ -781,6 +821,7 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
     [item setImage:image];
     [item setTarget:self];
     [item setTag:tag];
+    [item setEnabled:enabled];
     return item;
 }
 
@@ -802,7 +843,8 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
         return [self _defaultMenuItemsForVideo];
     }
 
-    if (_hitTestResult.image() && !_hitTestResult.absoluteImageURL().isEmpty()) {
+    Image* image = _hitTestResult.image();
+    if (image && !_hitTestResult.absoluteImageURL().isEmpty() && !image->filenameExtension().isEmpty() && image->data() && !image->data()->isEmpty()) {
         _type = WebActionMenuImage;
         return [self _defaultMenuItemsForImage];
     }

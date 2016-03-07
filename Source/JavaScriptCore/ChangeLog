@@ -1,3 +1,94 @@
+2014-11-18  David Kilzer  <ddkilzer@apple.com>
+
+        FeatureDefines.xcconfig: Switch from using PLATFORM_NAME to SDK selectors
+        <http://webkit.org/b/138813>
+
+        Reviewed by Mark Rowe.
+
+        * Configurations/FeatureDefines.xcconfig: Switch to using SDK
+        selectors.
+
+2014-11-18  Chris Dumez  <cdumez@apple.com>
+
+        Update the Vector API to deal with unsigned types instead of size_t
+        https://bugs.webkit.org/show_bug.cgi?id=138824
+
+        Reviewed by Andreas Kling.
+
+        Update code base to fix build errors related to the typing changes
+        in the Vector API (size_t -> unsigned).
+
+        * bytecode/PreciseJumpTargets.cpp:
+        * replay/EncodedValue.h:
+
+2014-11-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r176207.
+        https://bugs.webkit.org/show_bug.cgi?id=138836
+
+        Not ready yet (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "Update WebKit to build with LLVM TOT"
+        https://bugs.webkit.org/show_bug.cgi?id=138519
+        http://trac.webkit.org/changeset/176207
+
+2014-11-17  Mark Lam  <mark.lam@apple.com>
+
+        Add printing functionality in JITted code for debugging purposes.
+        <https://webkit.org/b/138660>
+
+        Reviewed by Geoffrey Garen.
+
+        Sometimes, for debugging, it'd be nice to be able to just print the
+        values of constants or registers used in JITted code, or even just
+        a string to log that certain pieces of JITted code have been executed.
+        Using the JIT probe mechanism, we can make this happen.
+
+        * assembler/ARMv7Assembler.h:
+        * assembler/AbstractMacroAssembler.h:
+        (JSC::AbstractMacroAssembler::CPUState::registerName):
+        (JSC::AbstractMacroAssembler::CPUState::registerValue):
+        (JSC::AbstractMacroAssembler::print):
+        (JSC::AbstractMacroAssembler::PrintArg::PrintArg):
+        (JSC::AbstractMacroAssembler::appendPrintArg):
+        (JSC::AbstractMacroAssembler::printInternal):
+        (JSC::AbstractMacroAssembler::printCallback):
+        * assembler/MacroAssemblerARM.cpp:
+        (JSC::MacroAssemblerARM::printCPURegisters):
+        (JSC::MacroAssemblerARM::printRegister):
+        * assembler/MacroAssemblerARM.h:
+        * assembler/MacroAssemblerARMv7.cpp:
+        (JSC::MacroAssemblerARMv7::printCPURegisters):
+        (JSC::MacroAssemblerARMv7::printRegister):
+        * assembler/MacroAssemblerARMv7.h:
+        * assembler/MacroAssemblerX86Common.cpp:
+        (JSC::MacroAssemblerX86Common::printRegister):
+        * assembler/MacroAssemblerX86Common.h:
+
+2014-11-17  Anders Carlsson  <andersca@apple.com>
+
+        Fix JavaScriptCore build with newer versions of clang.
+        <rdar://problem/18978716>
+
+        * heap/Heap.cpp:
+        (JSC::Heap::visitTempSortVectors):
+        (JSC::Heap::deleteAllCompiledCode): Deleted.
+        * inspector/agents/InspectorConsoleAgent.h:
+
+2014-11-17  Juergen Ributzka  <juergen@apple.com>
+
+        Update WebKit to build with LLVM TOT
+        https://bugs.webkit.org/show_bug.cgi?id=138519
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/LLVMForJSC.xcconfig:
+        * llvm/LLVMAPIFunctions.h:
+        * llvm/library/LLVMExports.cpp:
+        (initializeAndGetJSCLLVMAPI):
+
 2014-11-14  Benjamin Poulain  <bpoulain@apple.com>
 
         STRH can store values with the wrong offset

@@ -626,6 +626,8 @@ static bool parseSimpleLengthValue(MutableStyleProperties* declaration, CSSPrope
     }
     if (number < 0 && !acceptsNegativeNumbers)
         return false;
+    if (std::isinf(number))
+        return false;
 
     RefPtr<CSSValue> value = cssValuePool().createValue(number, unit);
     declaration->addParsedProperty(CSSProperty(propertyId, value.release(), important));
@@ -1696,6 +1698,8 @@ bool CSSParser::validUnit(CSSParserValue* value, Units unitflags, CSSParserMode 
     }
     if (b && unitflags & FNonNeg && value->fValue < 0)
         b = false;
+    if (b && std::isinf(value->fValue))
+        b = false;
     return b;
 }
 
@@ -2500,7 +2504,8 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
     case CSSPropertyOrder:
         if (validUnit(value, FInteger, CSSStrictMode)) {
             // We restrict the smallest value to int min + 2 because we use int min and int min + 1 as special values in a hash set.
-            parsedValue = cssValuePool().createValue(std::max<double>(std::numeric_limits<int>::min() + 2, value->fValue), static_cast<CSSPrimitiveValue::UnitTypes>(value->unit));
+            double result = std::max<double>(std::numeric_limits<int>::min() + 2, parsedDouble(value, ReleaseParsedCalcValue));
+            parsedValue = cssValuePool().createValue(result, CSSPrimitiveValue::CSS_NUMBER);
             m_valueList->next();
         }
         break;
@@ -10697,6 +10702,10 @@ inline bool CSSParser::detectFunctionTypeToken(int length)
 #if ENABLE(CSS_SELECTORS_LEVEL4)
         if (isEqualToCSSIdentifier(name, "lang")) {
             m_token = LANGFUNCTION;
+            return true;
+        }
+        if (isEqualToCSSIdentifier(name, "role")) {
+            m_token = ROLEFUNCTION;
             return true;
         }
 #endif

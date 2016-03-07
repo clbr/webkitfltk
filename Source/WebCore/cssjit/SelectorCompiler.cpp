@@ -563,6 +563,9 @@ static inline FunctionType addPseudoClassType(const CSSSelector& selector, Selec
     case CSSSelector::PseudoClassNthLastChild:
     case CSSSelector::PseudoClassNthLastOfType:
     case CSSSelector::PseudoClassDrag:
+#if ENABLE(CSS_SELECTORS_LEVEL4)
+    case CSSSelector::PseudoClassRole:
+#endif
         return FunctionType::CannotCompile;
 
     // Optimized pseudo selectors.
@@ -1033,7 +1036,7 @@ static unsigned minimumRegisterRequirements(const SelectorFragment& selectorFrag
 }
 
 bool hasAnyCombinators(const Vector<SelectorFragmentList>& selectorList);
-template <size_t inlineCapacity>
+template <unsigned inlineCapacity>
 bool hasAnyCombinators(const Vector<SelectorFragment, inlineCapacity>& selectorFragmentList);
 
 bool hasAnyCombinators(const Vector<SelectorFragmentList>& selectorList)
@@ -1045,7 +1048,7 @@ bool hasAnyCombinators(const Vector<SelectorFragmentList>& selectorList)
     return false;
 }
 
-template <size_t inlineCapacity>
+template <unsigned inlineCapacity>
 bool hasAnyCombinators(const Vector<SelectorFragment, inlineCapacity>& selectorFragmentList)
 {
     if (selectorFragmentList.isEmpty())
@@ -3696,7 +3699,7 @@ void SelectorCodeGenerator::generateNthFilterTest(Assembler::JumpList& failureCa
                 failureCases.append(m_assembler.branchSub32(Assembler::Signed, Assembler::TrustedImm32(b), counterCopy));
                 moduloIsZero(failureCases, counterCopy, a);
             } else
-            moduloIsZero(failureCases, counter, a);
+                moduloIsZero(failureCases, counter, a);
         }
     } else {
         LocalRegister bRegister(m_registerAllocator);

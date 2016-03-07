@@ -205,7 +205,7 @@ void HTMLTextAreaElement::parseAttribute(const QualifiedName& name, const Atomic
     } else if (name == accesskeyAttr) {
         // ignore for the moment
     } else if (name == maxlengthAttr)
-        setNeedsValidityCheck();
+        updateValidity();
     else
         HTMLTextFormControlElement::parseAttribute(name, value);
 }
@@ -287,7 +287,7 @@ void HTMLTextAreaElement::subtreeHasChanged()
 {
     setChangedSinceLastFormControlChangeEvent(true);
     setFormControlValueMatchesRenderer(false);
-    setNeedsValidityCheck();
+    updateValidity();
 
     if (!focused())
         return;
@@ -364,14 +364,14 @@ void HTMLTextAreaElement::setValue(const String& value)
 {
     setValueCommon(value);
     m_isDirty = true;
-    setNeedsValidityCheck();
+    updateValidity();
 }
 
 void HTMLTextAreaElement::setNonDirtyValue(const String& value)
 {
     setValueCommon(value);
     m_isDirty = false;
-    setNeedsValidityCheck();
+    updateValidity();
 }
 
 void HTMLTextAreaElement::setValueCommon(const String& newValue)

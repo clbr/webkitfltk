@@ -587,7 +587,13 @@ static AtkRole atkRole(AccessibilityObject* coreObject)
     case UnknownRole:
         return ATK_ROLE_UNKNOWN;
     case AudioRole:
+#if ATK_CHECK_VERSION(2, 11, 3)
+        return ATK_ROLE_AUDIO;
+#endif
     case VideoRole:
+#if ATK_CHECK_VERSION(2, 11, 3)
+        return ATK_ROLE_VIDEO;
+#endif
         return ATK_ROLE_EMBEDDED;
     case ButtonRole:
         return ATK_ROLE_PUSH_BUTTON;
@@ -689,7 +695,7 @@ static AtkRole atkRole(AccessibilityObject* coreObject)
     case HeadingRole:
         return ATK_ROLE_HEADING;
     case ListBoxRole:
-        return ATK_ROLE_LIST;
+        return ATK_ROLE_LIST_BOX;
     case ListItemRole:
         return coreObject->inheritsPresentationalRole() ? ATK_ROLE_SECTION : ATK_ROLE_LIST_ITEM;
     case ListBoxOptionRole:
@@ -699,8 +705,14 @@ static AtkRole atkRole(AccessibilityObject* coreObject)
     case LabelRole:
     case LegendRole:
         return ATK_ROLE_LABEL;
+    case BlockquoteRole:
+#if ATK_CHECK_VERSION(2, 11, 3)
+        return ATK_ROLE_BLOCK_QUOTE;
+#endif
     case DivRole:
         return ATK_ROLE_SECTION;
+    case FooterRole:
+        return ATK_ROLE_FOOTER;
     case FormRole:
         return ATK_ROLE_FORM;
     case CanvasRole:

@@ -200,6 +200,8 @@ public:
     double offsetWidth();
     double offsetHeight();
 
+    bool isInsideViewport(const IntRect* visibleRect = nullptr) const;
+
     // FIXME: Replace uses of offsetParent in the platform with calls
     // to the render layer and merge bindingsOffsetParent and offsetParent.
     Element* bindingsOffsetParent();
@@ -453,14 +455,14 @@ public:
     virtual bool isMediaElement() const { return false; }
 #endif
 
+    virtual bool matchesValidPseudoClass() const { return false; }
+    virtual bool matchesInvalidPseudoClass() const { return false; }
     virtual bool isFormControlElement() const { return false; }
     virtual bool isSpinButtonElement() const { return false; }
     virtual bool isTextFormControl() const { return false; }
     virtual bool isOptionalFormControl() const { return false; }
     virtual bool isRequiredFormControl() const { return false; }
     virtual bool isDefaultButtonForForm() const { return false; }
-    virtual bool willValidate() const { return false; }
-    virtual bool isValidFormControlElement() const { return false; }
     virtual bool isInRange() const { return false; }
     virtual bool isOutOfRange() const { return false; }
     virtual bool isFrameElementBase() const { return false; }
