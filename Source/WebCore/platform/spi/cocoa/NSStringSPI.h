@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,47 +23,17 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-WebInspector.ResourceSearchMatchObject = function(resource, lineText, searchTerm, textRange)
-{
-    console.assert(resource instanceof WebInspector.Resource);
+#import <Foundation/NSString.h>
 
-    WebInspector.Object.call(this);
+#if USE(APPLE_INTERNAL_SDK)
 
-    this._resource = resource;
-    this._lineText = lineText;
-    this._searchTerm = searchTerm;
-    this._sourceCodeTextRange = resource.createSourceCodeTextRange(textRange);
-};
+#import <Foundation/NSString_NSURLExtras.h>
 
-WebInspector.ResourceSearchMatchObject.ResourceMatchIconStyleClassName = "resource-match-icon";
+#else
 
-WebInspector.ResourceSearchMatchObject.prototype = {
-    constructor: WebInspector.ResourceSearchMatchObject,
+@interface NSString (Details)
+- (BOOL)_web_hasCaseInsensitivePrefix:(NSString *)suffix;
+- (NSString *)_web_stringByExpandingTildeInPath;
+@end
 
-    get resource()
-    {
-        return this._resource;
-    },
-
-    get title()
-    {
-        return this._lineText;
-    },
-
-    get className()
-    {
-        return WebInspector.ResourceSearchMatchObject.ResourceMatchIconStyleClassName;
-    },
-
-    get searchTerm()
-    {
-        return this._searchTerm;
-    },
-
-    get sourceCodeTextRange()
-    {
-        return this._sourceCodeTextRange;
-    }
-};
-
-WebInspector.ResourceSearchMatchObject.prototype.__proto__ = WebInspector.Object.prototype;
+#endif

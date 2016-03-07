@@ -150,6 +150,11 @@ struct DictionaryPopupInfo {
 
     for (NSMenuItem *item in menuItems)
         [actionMenu addItem:item];
+
+    if (_type == WebActionMenuDataDetectedItem && _currentActionContext && ![getDDActionsManagerClass() shouldUseActionsWithContext:_currentActionContext.get()]) {
+        [menu cancelTracking];
+        [menu removeAllItems];
+    }
 }
 
 - (BOOL)isMenuForTextContent
@@ -182,12 +187,10 @@ struct DictionaryPopupInfo {
     if (menu != _webView.actionMenu)
         return;
 
-    if (_type == WebActionMenuDataDetectedItem) {
-        if (![getDDActionsManagerClass() shouldUseActionsWithContext:_currentActionContext.get()]) {
-            [menu cancelTracking];
-            return;
-        }
+    if (!menu.numberOfItems)
+        return;
 
+    if (_type == WebActionMenuDataDetectedItem) {
         if (menu.numberOfItems == 1)
             [[_webView _selectedOrMainFrame] _clearSelection];
         else
@@ -664,7 +667,7 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
     popupInfo.origin = NSMakePoint(rangeRect.x(), rangeRect.y() + (style.fontMetrics().descent() * frame->page()->pageScaleFactor()));
     popupInfo.options = options;
 
-    NSAttributedString *nsAttributedString = editingAttributedStringFromRange(range);
+    NSAttributedString *nsAttributedString = editingAttributedStringFromRange(range, IncludeImagesInAttributedString::No);
     RetainPtr<NSMutableAttributedString> scaledNSAttributedString = adoptNS([[NSMutableAttributedString alloc] initWithString:[nsAttributedString string]]);
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
 
@@ -852,7 +855,12 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
     Node* node = _hitTestResult.innerNode();
     if (node && node->isTextNode()) {
         NSArray *dataDetectorMenuItems = [self _defaultMenuItemsForDataDetectedText];
-        if (dataDetectorMenuItems.count) {
+        if (_currentActionContext) {
+            // If this is a data detected item with no menu items, we should not fall back to regular text options.
+            if (!dataDetectorMenuItems.count) {
+                _type = WebActionMenuNone;
+                return @[ ];
+            }
             _type = WebActionMenuDataDetectedItem;
             return dataDetectorMenuItems;
         }
@@ -875,6 +883,13 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
     if (_hitTestResult.isContentEditable()) {
         _type = WebActionMenuWhitespaceInEditableArea;
         return [self _defaultMenuItemsForWhitespaceInEditableArea];
+    }
+
+    if (_hitTestResult.isSelected()) {
+        // A selection should present the read-only text menu. It might make more sense to present a new
+        // type of menu with just copy, but for the time being, we should stay consistent with text.
+        _type = WebActionMenuReadOnlyText;
+        return [self _defaultMenuItemsForText];
     }
 
     _type = WebActionMenuNone;

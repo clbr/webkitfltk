@@ -1850,7 +1850,7 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
         return parseSize(propId, important);
 
     case CSSPropertyQuotes:               // [<string> <string>]+ | none | inherit
-        if (id)
+        if (id == CSSValueNone)
             validPrimitive = true;
         else
             return parseQuotes(propId, important);
@@ -5294,7 +5294,7 @@ bool CSSParser::parseGridTrackRepeatFunction(CSSValueList& list)
     ASSERT(arguments->valueAt(0)->fValue > 0);
     // If arguments->valueAt(0)->fValue > SIZE_MAX then repetitions becomes 0 during the type casting, that's why we
     // clamp it down to kGridMaxTracks before the type casting.
-    size_t repetitions = clampTo<size_t>(arguments->valueAt(0)->fValue, 0, kGridMaxTracks);
+    unsigned repetitions = clampTo<unsigned>(arguments->valueAt(0)->fValue, 0, kGridMaxTracks);
 
     RefPtr<CSSValueList> repeatedValues = CSSValueList::createSpaceSeparated();
     arguments->next(); // Skip the repetition count.
@@ -10973,6 +10973,13 @@ inline void CSSParser::detectAtToken(int length, bool hasEscape)
         }
         return;
 
+    case 'k':
+        if (length == 10 && isEqualToCSSIdentifier(name + 2, "eyframes"))
+            m_token = KEYFRAMES_SYM;
+        else if (length == 14 && !hasEscape && isEqualToCSSIdentifier(name + 2, "eyframe-rule"))
+            m_token = KEYFRAME_RULE_SYM;
+        return;
+
     case 'l':
         if (hasEscape)
             return;
@@ -11103,7 +11110,7 @@ inline void CSSParser::detectAtToken(int length, bool hasEscape)
 
         case 18:
             if (isEqualToCSSIdentifier(name + 2, "webkit-keyframes"))
-                m_token = WEBKIT_KEYFRAMES_SYM;
+                m_token = KEYFRAMES_SYM;
 #if ENABLE(PICTURE_SIZES)
             else if (isEqualToCSSIdentifier(name + 2, "webkit-sizesattr"))
                 m_token = WEBKIT_SIZESATTR_SYM;
@@ -11119,7 +11126,7 @@ inline void CSSParser::detectAtToken(int length, bool hasEscape)
 
         case 22:
             if (!hasEscape && isEqualToCSSIdentifier(name + 2, "webkit-keyframe-rule"))
-                m_token = WEBKIT_KEYFRAME_RULE_SYM;
+                m_token = KEYFRAME_RULE_SYM;
             return;
 
         case 27:

@@ -145,22 +145,6 @@ public:
     static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
 };
 
-template <typename GetterType, GetterType (RenderStyle::*getterFunction)() const, typename SetterType, void (RenderStyle::*setterFunction)(SetterType), typename InitialType, InitialType (*initialFunction)()>
-class ApplyPropertyDefault {
-public:
-    static void setValue(RenderStyle* style, SetterType value) { (style->*setterFunction)(value); }
-    static void applyValue(CSSPropertyID, StyleResolver* styleResolver, CSSValue* value)
-    {
-        if (is<CSSPrimitiveValue>(*value))
-            setValue(styleResolver->style(), downcast<CSSPrimitiveValue>(*value));
-    }
-    static PropertyHandler createHandler()
-    {
-        PropertyHandler handler = ApplyPropertyDefaultBase<GetterType, getterFunction, SetterType, setterFunction, InitialType, initialFunction>::createHandler();
-        return PropertyHandler(handler.inheritFunction(), handler.initialFunction(), &applyValue);
-    }
-};
-
 template <StyleImage* (RenderStyle::*getterFunction)() const, void (RenderStyle::*setterFunction)(PassRefPtr<StyleImage>), StyleImage* (*initialFunction)(), CSSPropertyID property>
 class ApplyPropertyStyleImage {
 public:
@@ -203,51 +187,6 @@ public:
             setValue(styleResolver->style(), primitiveValue);
         else if (valueType == ComputeLength)
             setValue(styleResolver->style(), primitiveValue.computeLength<T>(styleResolver->state().cssToLengthConversionData()));
-    }
-
-    static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
-};
-
-class ApplyPropertyClip {
-private:
-    static Length convertToLength(StyleResolver* styleResolver, CSSPrimitiveValue* value)
-    {
-        return value->convertToLength<FixedIntegerConversion | PercentConversion | AutoConversion>(styleResolver->state().cssToLengthConversionData());
-    }
-public:
-    static void applyInheritValue(CSSPropertyID propertyID, StyleResolver* styleResolver)
-    {
-        RenderStyle* parentStyle = styleResolver->parentStyle();
-        if (!parentStyle->hasClip())
-            return applyInitialValue(propertyID, styleResolver);
-        styleResolver->style()->setClip(parentStyle->clipTop(), parentStyle->clipRight(), parentStyle->clipBottom(), parentStyle->clipLeft());
-        styleResolver->style()->setHasClip(true);
-    }
-
-    static void applyInitialValue(CSSPropertyID, StyleResolver* styleResolver)
-    {
-        styleResolver->style()->setClip(Length(), Length(), Length(), Length());
-        styleResolver->style()->setHasClip(false);
-    }
-
-    static void applyValue(CSSPropertyID, StyleResolver* styleResolver, CSSValue* value)
-    {
-        if (!is<CSSPrimitiveValue>(*value))
-            return;
-
-        CSSPrimitiveValue& primitiveValue = downcast<CSSPrimitiveValue>(*value);
-
-        if (Rect* rect = primitiveValue.getRectValue()) {
-            Length top = convertToLength(styleResolver, rect->top());
-            Length right = convertToLength(styleResolver, rect->right());
-            Length bottom = convertToLength(styleResolver, rect->bottom());
-            Length left = convertToLength(styleResolver, rect->left());
-            styleResolver->style()->setClip(top, right, bottom, left);
-            styleResolver->style()->setHasClip(true);
-        } else if (primitiveValue.getValueID() == CSSValueAuto) {
-            styleResolver->style()->setClip(Length(), Length(), Length(), Length());
-            styleResolver->style()->setHasClip(false);
-        }
     }
 
     static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
@@ -1087,29 +1026,6 @@ public:
     static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
 };
 
-class ApplyPropertyOutlineStyle {
-public:
-    static void applyInheritValue(CSSPropertyID propertyID, StyleResolver* styleResolver)
-    {
-        ApplyPropertyDefaultBase<OutlineIsAuto, &RenderStyle::outlineStyleIsAuto, OutlineIsAuto, &RenderStyle::setOutlineStyleIsAuto, OutlineIsAuto, &RenderStyle::initialOutlineStyleIsAuto>::applyInheritValue(propertyID, styleResolver);
-        ApplyPropertyDefaultBase<EBorderStyle, &RenderStyle::outlineStyle, EBorderStyle, &RenderStyle::setOutlineStyle, EBorderStyle, &RenderStyle::initialBorderStyle>::applyInheritValue(propertyID, styleResolver);
-    }
-
-    static void applyInitialValue(CSSPropertyID propertyID, StyleResolver* styleResolver)
-    {
-        ApplyPropertyDefaultBase<OutlineIsAuto, &RenderStyle::outlineStyleIsAuto, OutlineIsAuto, &RenderStyle::setOutlineStyleIsAuto, OutlineIsAuto, &RenderStyle::initialOutlineStyleIsAuto>::applyInitialValue(propertyID, styleResolver);
-        ApplyPropertyDefaultBase<EBorderStyle, &RenderStyle::outlineStyle, EBorderStyle, &RenderStyle::setOutlineStyle, EBorderStyle, &RenderStyle::initialBorderStyle>::applyInitialValue(propertyID, styleResolver);
-    }
-
-    static void applyValue(CSSPropertyID propertyID, StyleResolver* styleResolver, CSSValue* value)
-    {
-        ApplyPropertyDefault<OutlineIsAuto, &RenderStyle::outlineStyleIsAuto, OutlineIsAuto, &RenderStyle::setOutlineStyleIsAuto, OutlineIsAuto, &RenderStyle::initialOutlineStyleIsAuto>::applyValue(propertyID, styleResolver, value);
-        ApplyPropertyDefault<EBorderStyle, &RenderStyle::outlineStyle, EBorderStyle, &RenderStyle::setOutlineStyle, EBorderStyle, &RenderStyle::initialBorderStyle>::applyValue(propertyID, styleResolver, value);
-    }
-
-    static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
-};
-
 class ApplyPropertyAspectRatio {
 public:
     static void applyInheritValue(CSSPropertyID, StyleResolver* styleResolver)
@@ -1226,7 +1142,6 @@ DeprecatedStyleBuilder::DeprecatedStyleBuilder()
     setPropertyHandler(CSSPropertyBorderLeftColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::borderLeftColor, &RenderStyle::setBorderLeftColor, &RenderStyle::setVisitedLinkBorderLeftColor, &RenderStyle::color>::createHandler());
     setPropertyHandler(CSSPropertyBorderRightColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::borderRightColor, &RenderStyle::setBorderRightColor, &RenderStyle::setVisitedLinkBorderRightColor, &RenderStyle::color>::createHandler());
     setPropertyHandler(CSSPropertyBorderTopColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::borderTopColor, &RenderStyle::setBorderTopColor, &RenderStyle::setVisitedLinkBorderTopColor, &RenderStyle::color>::createHandler());
-    setPropertyHandler(CSSPropertyClip, ApplyPropertyClip::createHandler());
     setPropertyHandler(CSSPropertyColor, ApplyPropertyColor<InheritFromParent, &RenderStyle::color, &RenderStyle::setColor, &RenderStyle::setVisitedLinkColor, &RenderStyle::invalidColor, RenderStyle::initialColor>::createHandler());
     setPropertyHandler(CSSPropertyCounterIncrement, ApplyPropertyCounter<Increment>::createHandler());
     setPropertyHandler(CSSPropertyCounterReset, ApplyPropertyCounter<Reset>::createHandler());
@@ -1240,7 +1155,6 @@ DeprecatedStyleBuilder::DeprecatedStyleBuilder()
     setPropertyHandler(CSSPropertyListStyleImage, ApplyPropertyStyleImage<&RenderStyle::listStyleImage, &RenderStyle::setListStyleImage, &RenderStyle::initialListStyleImage, CSSPropertyListStyleImage>::createHandler());
     setPropertyHandler(CSSPropertyOrphans, ApplyPropertyAuto<short, &RenderStyle::orphans, &RenderStyle::setOrphans, &RenderStyle::hasAutoOrphans, &RenderStyle::setHasAutoOrphans>::createHandler());
     setPropertyHandler(CSSPropertyOutlineColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::outlineColor, &RenderStyle::setOutlineColor, &RenderStyle::setVisitedLinkOutlineColor, &RenderStyle::color>::createHandler());
-    setPropertyHandler(CSSPropertyOutlineStyle, ApplyPropertyOutlineStyle::createHandler());
     setPropertyHandler(CSSPropertyWebkitTextDecorationColor, ApplyPropertyColor<NoInheritFromParent, &RenderStyle::textDecorationColor, &RenderStyle::setTextDecorationColor, &RenderStyle::setVisitedLinkTextDecorationColor, &RenderStyle::color>::createHandler());
     setPropertyHandler(CSSPropertyWebkitTextDecorationSkip, ApplyPropertyTextDecorationSkip::createHandler());
     setPropertyHandler(CSSPropertyTextRendering, ApplyPropertyFont<TextRenderingMode, &FontDescription::textRenderingMode, &FontDescription::setTextRenderingMode, AutoTextRendering>::createHandler());

@@ -1,3 +1,258 @@
+2014-11-20  Mark Lam  <mark.lam@apple.com>
+
+        Add some comments to describe the DFG UseKind representations.
+        <https://webkit.org/b/138934>
+
+        Reviewed by Filip Pizlo.
+
+        * dfg/DFGUseKind.h:
+        - Also regrouped the UseKind enums by representation to be more readable.
+
+2014-11-20  Mark Lam  <mark.lam@apple.com>
+
+        Add Heap verification infrastructure.
+        <https://webkit.org/b/138851>
+
+        Reviewed by Geoffrey Garen.
+
+        The verification infrastructure code is always built in but disabled by
+        default.  When disabled, the cost is minimal:
+        1. Heap has a m_verifier field.
+        2. GC does a few "if (m_verifier)" checks that should fail.
+        3. HeapVerifier takes up code space though not used.
+
+        When enabled:
+        1. The HeapVerifier will keep N number of GC cycle data.
+           Each GC cycle will contain a "before marking" and "after marking" live
+           object list.
+           The GC cycles is a circular buffer.  Only data for the last N GC cycles
+           will be retained.
+        2. During GC, the current GC cycle's live objects lists will be populated
+           before and after marking.
+        3. The current GC cycle's live object lists will be validated before GC,
+           after marking, and after GC.
+
+        Currently, the only validation being done is to verify that object
+        butterflies are allocated from valid blocks in the Storage (aka Copied)
+        space.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::collect):
+        * heap/Heap.h:
+        * heap/HeapVerifier.cpp: Added.
+        (JSC::LiveObjectList::findObject):
+        (JSC::HeapVerifier::HeapVerifier):
+        (JSC::HeapVerifier::collectionTypeName):
+        (JSC::HeapVerifier::phaseName):
+        (JSC::getButterflyDetails):
+        (JSC::HeapVerifier::initializeGCCycle):
+        (JSC::GatherLiveObjFunctor::GatherLiveObjFunctor):
+        (JSC::GatherLiveObjFunctor::operator()):
+        (JSC::HeapVerifier::gatherLiveObjects):
+        (JSC::HeapVerifier::liveObjectListForGathering):
+        (JSC::trimDeadObjectsFromList):
+        (JSC::HeapVerifier::trimDeadObjects):
+        (JSC::HeapVerifier::verifyButterflyIsInStorageSpace):
+        (JSC::HeapVerifier::verify):
+        (JSC::HeapVerifier::reportObject):
+        (JSC::HeapVerifier::checkIfRecorded):
+        * heap/HeapVerifier.h: Added.
+        (JSC::LiveObjectData::LiveObjectData):
+        (JSC::LiveObjectList::LiveObjectList):
+        (JSC::LiveObjectList::reset):
+        (JSC::HeapVerifier::GCCycle::GCCycle):
+        (JSC::HeapVerifier::GCCycle::collectionTypeName):
+        (JSC::HeapVerifier::incrementCycle):
+        (JSC::HeapVerifier::currentCycle):
+        (JSC::HeapVerifier::cycleForIndex):
+        * runtime/Options.h:
+
+2014-11-20  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Rename String.prototype.contains to String.prototype.includes
+        https://bugs.webkit.org/show_bug.cgi?id=138923
+
+        As per the latest TC39 meeting[1, 2], String.prototype.contains is
+        renamed to String.prototype.includes. This is because the name
+        `contains` breaks the web since it conflicts with existing `contains`
+        implementations in major libraries.
+
+        [1]: https://github.com/mathiasbynens/String.prototype.includes
+        [2]: https://github.com/tc39/test262/pull/119
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/StringPrototype.cpp:
+        (JSC::StringPrototype::finishCreation):
+        (JSC::stringProtoFuncIncludes):
+        (JSC::stringProtoFuncContains): Deleted.
+
+2014-11-19  Mark Lam  <mark.lam@apple.com>
+
+        WTFCrashWithSecurityImplication under SpeculativeJIT::compile() when loading a page from theblaze.com.
+        <https://webkit.org/b/137642>
+
+        Reviewed by Filip Pizlo.
+
+        In the DFG, we have a ConstantFolding phase that occurs after all LocalCSE
+        phases have already transpired.  Hence, Identity nodes introduced in the
+        ConstantFolding phase will be left in the node graph.  Subsequently, the
+        DFG code generator asserts that CSE phases have consumed all Identity nodes.
+        This turns out to not be true.  Hence, the crash.  We fix this by teaching
+        the DFG code generator to emit code for Identity nodes.
+
+        Unlike the DFG, the FTL does not have this issue.  That is because the FTL
+        plan has GlobalCSE phases that come after ConstantFolding and any other
+        phases that can generate Identity nodes.  Hence, for the FTL, it is true that
+        CSE will consume all Identity nodes, and the code generator should not see any
+        Identity nodes.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2014-11-19  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: JSContext inspection Resource search does not work
+        https://bugs.webkit.org/show_bug.cgi?id=131252
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::searchInContent):
+        * inspector/protocol/Debugger.json:
+        Do some cleanup of the description and implementation of content searching.
+
+2014-11-19  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Provide $exception in the console for the thrown exception value
+        https://bugs.webkit.org/show_bug.cgi?id=138726
+
+        Reviewed by Timothy Hatcher.
+
+        * debugger/DebuggerScope.cpp:
+        (JSC::DebuggerScope::caughtValue):
+        * debugger/DebuggerScope.h:
+        Access the caught value if this scope is a catch scope.
+
+        * runtime/JSNameScope.h:
+        (JSC::JSNameScope::isFunctionNameScope):
+        (JSC::JSNameScope::isCatchScope):
+        (JSC::JSNameScope::value):
+        Provide an accessor for the single value in the JSNameScope (with / catch block).
+
+        * inspector/InjectedScriptSource.js:
+        Save the exception value and expose it via $exception. Since the command line api
+        is recreated on each evaluation, $exception is essentially readonly.
+
+        * inspector/ScriptDebugServer.h:
+        * inspector/ScriptDebugServer.cpp:
+        (Inspector::ScriptDebugServer::dispatchDidPause):
+        (Inspector::ScriptDebugServer::exceptionOrCaughtValue):
+        When pausing, get the exception or caught value. The exception will be provided
+        if we are breaking on an explicit exception. When inside of a catch block, we
+        can get the caught value by walking up the scope chain.
+
+        * inspector/agents/InspectorDebuggerAgent.h:
+        * inspector/agents/InspectorDebuggerAgent.cpp:
+        (Inspector::InspectorDebuggerAgent::InspectorDebuggerAgent):
+        (Inspector::InspectorDebuggerAgent::resume):
+        (Inspector::InspectorDebuggerAgent::stepOver):
+        (Inspector::InspectorDebuggerAgent::stepInto):
+        (Inspector::InspectorDebuggerAgent::stepOut):
+        Clearing state can be done in didContinue.
+
+        (Inspector::InspectorDebuggerAgent::didPause):
+        Set the exception value explicitly in the injected script when we have it.
+
+        (Inspector::InspectorDebuggerAgent::didContinue):
+        Clear state saved when we had paused, including clearly an exception value if needed.
+
+        (Inspector::InspectorDebuggerAgent::clearDebuggerBreakpointState):
+        (Inspector::InspectorDebuggerAgent::clearExceptionValue):
+        Call into the injected script only when needed.
+
+        * inspector/InjectedScript.cpp:
+        (Inspector::InjectedScript::setExceptionValue):
+        (Inspector::InjectedScript::clearExceptionValue):
+        * inspector/InjectedScript.h:
+        * inspector/InjectedScriptManager.cpp:
+        (Inspector::InjectedScriptManager::clearExceptionValue):
+        * inspector/InjectedScriptManager.h:
+        Clear on all injected scripts.
+
+2014-11-19  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Unreviewed build fixes after r176329.
+
+          - export all of the codegen python files as they are included by the main generator
+          - update the imports of the main generator to match __init__.py
+          - remove bundling the python scripts as framework resources, just have them PrivateHeaders
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * inspector/scripts/generate-inspector-protocol-bindings.py:
+
+2014-11-18  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: standardize language-specific protocol generator file, class, and method prefixes
+        https://bugs.webkit.org/show_bug.cgi?id=138237
+
+        Reviewed by Joseph Pecoraro.
+
+        Settle on cpp/objc/js file prefixes and Cpp/ObjC/JS class prefixes for generators.
+        Move C++-specific static methods into CppGenerator and add cpp_ prefixes where relevant.
+        Split the templates file into language-specific template files.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * inspector/scripts/codegen/__init__.py:
+        * inspector/scripts/codegen/cpp_generator.py: Copied from Source/JavaScriptCore/inspector/scripts/codegen/generator.py.
+        * inspector/scripts/codegen/cpp_generator_templates.py: Copied from Source/JavaScriptCore/inspector/scripts/codegen/generator_templates.py.
+        (CppGeneratorTemplates):
+        * inspector/scripts/codegen/generate_cpp_alternate_backend_dispatcher_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_alternate_backend_dispatcher_header.py.
+        * inspector/scripts/codegen/generate_cpp_backend_dispatcher_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_backend_dispatcher_header.py.
+        * inspector/scripts/codegen/generate_cpp_backend_dispatcher_implementation.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_backend_dispatcher_implementation.py.
+        * inspector/scripts/codegen/generate_cpp_frontend_dispatcher_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_frontend_dispatcher_header.py.
+        * inspector/scripts/codegen/generate_cpp_frontend_dispatcher_implementation.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_frontend_dispatcher_implementation.py.
+        * inspector/scripts/codegen/generate_cpp_protocol_types_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_protocol_types_header.py.
+        * inspector/scripts/codegen/generate_cpp_protocol_types_implementation.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_protocol_types_implementation.py.
+        * inspector/scripts/codegen/generate_js_backend_commands.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_backend_commands.py.
+        * inspector/scripts/codegen/generate_objc_backend_dispatcher_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_backend_dispatcher_header.py.
+        * inspector/scripts/codegen/generate_objc_backend_dispatcher_implementation.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_backend_dispatcher_implementation.py.
+        * inspector/scripts/codegen/generate_objc_configuration_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_configuration_header.py.
+        * inspector/scripts/codegen/generate_objc_configuration_implementation.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_configuration_implementation.py.
+        * inspector/scripts/codegen/generate_objc_conversion_helpers.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_conversion_helpers.py.
+        * inspector/scripts/codegen/generate_objc_frontend_dispatcher_implementation.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_frontend_dispatcher_implementation.py.
+        * inspector/scripts/codegen/generate_objc_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_header.py.
+        * inspector/scripts/codegen/generate_objc_internal_header.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_internal_header.py.
+        * inspector/scripts/codegen/generate_objc_protocol_types_implementation.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c_types_implementation.py.
+        * inspector/scripts/codegen/generator.py:
+        * inspector/scripts/codegen/generator_templates.py:
+        * inspector/scripts/codegen/objc_generator.py: Renamed from Source/JavaScriptCore/inspector/scripts/codegen/generate_objective_c.py.
+        * inspector/scripts/codegen/objc_generator_templates.py: Added.
+        * inspector/scripts/generate-inspector-protocol-bindings.py:
+
+2014-11-19  Juergen Ributzka  <juergen@apple.com>
+
+        Update WebKit to build with LLVM TOT
+        https://bugs.webkit.org/show_bug.cgi?id=138519
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/LLVMForJSC.xcconfig:
+        * llvm/LLVMAPIFunctions.h:
+        * llvm/library/LLVMExports.cpp:
+        (initializeAndGetJSCLLVMAPI):
+
 2014-11-18  David Kilzer  <ddkilzer@apple.com>
 
         FeatureDefines.xcconfig: Switch from using PLATFORM_NAME to SDK selectors

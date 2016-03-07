@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc.  All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,16 +23,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef CFURLRequestSPI_h
-#define CFURLRequestSPI_h
+#include "config.h"
+#include "AnimationEvent.h"
 
-#if USE(APPLE_INTERNAL_SDK)
-#include <CFNetwork/CFURLRequest.h>
-#else
-#include <CoreFoundation/CFBase.h>
-typedef const struct _CFURLRequest *CFURLRequestRef;
-#endif
+#include "EventNames.h"
 
-extern "C" void CFURLRequestSetShouldStartSynchronously(CFURLRequestRef, Boolean);
+namespace WebCore {
 
-#endif
+AnimationEventInit::AnimationEventInit()
+    : animationName()
+    , elapsedTime(0)
+{
+}
+
+AnimationEvent::AnimationEvent()
+    : m_elapsedTime(0)
+{
+}
+
+AnimationEvent::AnimationEvent(const AtomicString& type, const AnimationEventInit& initializer)
+    : Event(type, initializer)
+    , m_animationName(initializer.animationName)
+    , m_elapsedTime(initializer.elapsedTime)
+{
+}
+
+AnimationEvent::AnimationEvent(const AtomicString& type, const String& animationName, double elapsedTime)
+    : Event(type, true, true)
+    , m_animationName(animationName)
+    , m_elapsedTime(elapsedTime)
+{
+}
+
+AnimationEvent::~AnimationEvent()
+{
+}
+
+const String& AnimationEvent::animationName() const
+{
+    return m_animationName;
+}
+
+double AnimationEvent::elapsedTime() const
+{
+    return m_elapsedTime;
+}
+
+EventInterface AnimationEvent::eventInterface() const
+{
+    return AnimationEventInterfaceType;
+}
+
+} // namespace WebCore

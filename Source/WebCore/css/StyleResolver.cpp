@@ -1891,12 +1891,12 @@ static void createImplicitNamedGridLinesFromGridArea(const NamedGridAreaMap& nam
     for (auto& area : namedGridAreas) {
         GridSpan areaSpan = direction == ForRows ? area.value.rows : area.value.columns;
         {
-            auto& startVector = namedGridLines.add(area.key + "-start", Vector<size_t>()).iterator->value;
+            auto& startVector = namedGridLines.add(area.key + "-start", Vector<unsigned>()).iterator->value;
             startVector.append(areaSpan.resolvedInitialPosition.toInt());
             std::sort(startVector.begin(), startVector.end());
         }
         {
-            auto& endVector = namedGridLines.add(area.key + "-end", Vector<size_t>()).iterator->value;
+            auto& endVector = namedGridLines.add(area.key + "-end", Vector<unsigned>()).iterator->value;
             endVector.append(areaSpan.resolvedFinalPosition.next().toInt());
             std::sort(endVector.begin(), endVector.end());
         }
@@ -1966,12 +1966,12 @@ static bool createGridTrackList(CSSValue* value, Vector<GridTrackSize>& trackSiz
     if (!is<CSSValueList>(*value))
         return false;
 
-    size_t currentNamedGridLine = 0;
+    unsigned currentNamedGridLine = 0;
     for (auto& currentValue : downcast<CSSValueList>(*value)) {
         if (is<CSSGridLineNamesValue>(currentValue.get())) {
             for (auto& currentGridLineName : downcast<CSSGridLineNamesValue>(currentValue.get())) {
                 String namedGridLine = downcast<CSSPrimitiveValue>(currentGridLineName.get()).getStringValue();
-                NamedGridLinesMap::AddResult result = namedGridLines.add(namedGridLine, Vector<size_t>());
+                NamedGridLinesMap::AddResult result = namedGridLines.add(namedGridLine, Vector<unsigned>());
                 result.iterator->value.append(currentNamedGridLine);
                 OrderedNamedGridLinesMap::AddResult orderedResult = orderedNamedGridLines.add(currentNamedGridLine, Vector<String>());
                 orderedResult.iterator->value.append(namedGridLine);
@@ -2265,37 +2265,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
                 state.style()->setContentAltText(emptyAtom);
             return;
         }
-        
-    case CSSPropertyQuotes:
-        if (isInherit) {
-            state.style()->setQuotes(state.parentStyle()->quotes());
-            return;
-        }
-        if (isInitial) {
-            state.style()->setQuotes(nullptr);
-            return;
-        }
-        if (is<CSSValueList>(*value)) {
-            CSSValueList& list = downcast<CSSValueList>(*value);
-            Vector<std::pair<String, String>> quotes;
-            for (size_t i = 0; i < list.length(); i += 2) {
-                CSSValue* first = list.itemWithoutBoundsCheck(i);
-                // item() returns null if out of bounds so this is safe.
-                CSSValue* second = list.item(i + 1);
-                if (!second)
-                    continue;
-                String startQuote = downcast<CSSPrimitiveValue>(*first).getStringValue();
-                String endQuote = downcast<CSSPrimitiveValue>(*second).getStringValue();
-                quotes.append(std::make_pair(startQuote, endQuote));
-            }
-            state.style()->setQuotes(QuotesData::create(quotes));
-            return;
-        }
-        if (primitiveValue) {
-            if (primitiveValue->getValueID() == CSSValueNone)
-                state.style()->setQuotes(QuotesData::create(Vector<std::pair<String, String>>()));
-        }
-        return;
     // Shorthand properties.
     case CSSPropertyFont:
         if (isInherit) {
@@ -3065,6 +3034,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyPageBreakInside:
     case CSSPropertyPointerEvents:
     case CSSPropertyPosition:
+    case CSSPropertyQuotes:
     case CSSPropertyResize:
     case CSSPropertyRight:
     case CSSPropertySize:
