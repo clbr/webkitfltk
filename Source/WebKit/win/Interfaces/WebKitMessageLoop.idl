@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,39 +20,38 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "TextNodeTraversal.h"
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+import "ocidl.idl";
+#endif
 
-#include "ContainerNode.h"
-#include <wtf/text/StringBuilder.h>
+[
+    object,
+    oleautomation,
+    uuid(72457E23-F464-4308-931D-539E844DF9C5),
+    pointer_default(unique)
+]
 
-namespace WebCore {
-namespace TextNodeTraversal {
-
-void appendContents(const ContainerNode& root, StringBuilder& result)
+interface IWebKitMessageLoop : IUnknown
 {
-    for (Text* text = TextNodeTraversal::firstWithin(root); text; text = TextNodeTraversal::next(*text, &root))
-        result.append(text->data());
-}
+    /*!
+    @method run
+    @abstract Runs the WebKit message loop, and performs required WebKit tasks in the message loop.
+    The host can implement its own message loop, but then it needs to call the performMessageLoopTasks() method
+    for each iteration in its message loop.
+    @param hAccelTable A handle to the keyboard accelerator table for the application.
+    */
 
-String contentsAsString(const ContainerNode& root)
-{
-    StringBuilder result;
-    appendContents(root, result);
-    return result.toString();
-}
+    HRESULT run(HACCEL hAccelTable);
 
-String contentsAsString(const Node& root)
-{
-    if (is<Text>(root))
-        return downcast<Text>(root).data();
-    if (is<ContainerNode>(root))
-        return contentsAsString(downcast<ContainerNode>(root));
-    return String();
-}
+    /*!
+    @method performMessageLoopTasks
+    @abstract Performs required message loop WebKit tasks.
+    This method needs to be called from the host message loop, if the host does not use the run() method.
+    */
 
-}
+    HRESULT performMessageLoopTasks();
 }

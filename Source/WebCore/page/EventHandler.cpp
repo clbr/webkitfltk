@@ -2901,9 +2901,6 @@ void EventHandler::dispatchFakeMouseMoveEventSoon()
     if (m_mousePositionIsUnknown)
         return;
 
-    if (!m_frame.settings().deviceSupportsMouse())
-        return;
-
     if (Page* page = m_frame.page()) {
         if (!page->chrome().client().shouldDispatchFakeMouseMoveEvents())
             return;
@@ -2949,9 +2946,6 @@ void EventHandler::cancelFakeMouseMoveEvent()
 void EventHandler::fakeMouseMoveEventTimerFired()
 {
     ASSERT(!m_mousePressed);
-
-    if (!m_frame.settings().deviceSupportsMouse())
-        return;
 
     FrameView* view = m_frame.view();
     if (!view)

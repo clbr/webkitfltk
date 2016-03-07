@@ -1,3 +1,117 @@
+2015-01-26  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Win] Enable JSC stress tests by default
+        https://bugs.webkit.org/show_bug.cgi?id=128307
+
+        Unreviewed typo fix after r179165.
+
+        * tests/mozilla/mozilla-tests.yaml:
+
+2015-01-26  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Win] Enable JSC stress tests by default
+        https://bugs.webkit.org/show_bug.cgi?id=128307
+
+        Reviewed by Brent Fulgham.
+
+        * tests/mozilla/mozilla-tests.yaml: Skipped on Windows.
+        * tests/stress/ftl-arithcos.js: Skipped on Windows.
+
+2015-01-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Parse a function expression as a primary expression
+        https://bugs.webkit.org/show_bug.cgi?id=140908
+
+        Reviewed by Mark Lam.
+
+        Moved the code to generate an AST node for a function expression from parseMemberExpression
+        to parsePrimaryExpression to match the ES6 specification terminology:
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-primary-expression
+
+        There should be no behavior change from this change since parsePrimaryExpression is only
+        called in parseMemberExpression other than the fact failIfStackOverflow() is called.
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parsePrimaryExpression):
+        (JSC::Parser<LexerType>::parseMemberExpression):
+
+2015-01-26  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [iOS] [SVG -> OTF Converter] Flip the switch off on iOS
+        https://bugs.webkit.org/show_bug.cgi?id=140860
+
+        Reviewed by Darin Adler.
+
+        The fonts it makes are grotesque. (See what I did there? Typographic
+        humor is the best humor.)
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-01-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Rename InjectedScriptHost::type to subtype
+        https://bugs.webkit.org/show_bug.cgi?id=140841
+
+        Reviewed by Timothy Hatcher.
+
+        We were using this to set the subtype of an "object" type RemoteObject
+        so we should clean up the name and call it subtype.
+
+        * inspector/InjectedScriptHost.h:
+        * inspector/InjectedScriptSource.js:
+        * inspector/JSInjectedScriptHost.cpp:
+        (Inspector::JSInjectedScriptHost::subtype):
+        (Inspector::JSInjectedScriptHost::type): Deleted.
+        * inspector/JSInjectedScriptHost.h:
+        * inspector/JSInjectedScriptHostPrototype.cpp:
+        (Inspector::JSInjectedScriptHostPrototype::finishCreation):
+        (Inspector::jsInjectedScriptHostPrototypeFunctionSubtype):
+        (Inspector::jsInjectedScriptHostPrototypeFunctionType): Deleted.
+
+2015-01-23  Michael Saboff  <msaboff@apple.com>
+
+        LayoutTests/js/script-tests/reentrant-caching.js crashing on 32 bit builds
+        https://bugs.webkit.org/show_bug.cgi?id=140843
+
+        Reviewed by Oliver Hunt.
+
+        When we are in vmEntryToJavaScript, we keep the stack pointer at an
+        alignment sutiable for pointing to a call frame header, which is the
+        alignment post making a call.  We adjust the sp when calling to JS code,
+        but don't adjust it before calling the out of stack handler.
+
+        * llint/LowLevelInterpreter32_64.asm:
+        Moved stack point down 8 bytes to get it aligned.
+
+2015-01-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Object Previews in the Console
+        https://bugs.webkit.org/show_bug.cgi?id=129204
+
+        Reviewed by Timothy Hatcher.
+
+        Update the very old, unused object preview code. Part of this comes from
+        the earlier WebKit legacy implementation, and the Blink implementation.
+
+        A RemoteObject may include a preview, if it is asked for, and if the
+        RemoteObject is an object. Previews are a shallow (single level) list
+        of a limited number of properties on the object. The previewed
+        properties are always stringified (even if primatives). Previews are
+        limited to just 5 properties or 100 indices. Previews are marked
+        as lossless if they are a complete snapshot of the object.
+
+        There is a path to make previews two levels deep, that is currently
+        unused but should soon be used for tables (e.g. IndexedDB).
+
+        * inspector/InjectedScriptSource.js:
+        - Move some code off of InjectedScript to be generic functions
+        usable by RemoteObject as well.
+        - Update preview generation to use 
+
+        * inspector/protocol/Runtime.json:
+        - Add a new type, "accessor" for preview objects. This represents
+        a getter / setter. We currently don't get the value.
+
 2015-01-23  Michael Saboff  <msaboff@apple.com>
 
         Immediate crash when setting JS breakpoint

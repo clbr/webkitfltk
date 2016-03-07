@@ -32,6 +32,7 @@
 #include "CSSFontFaceRule.h"
 #include "CSSFontFaceSource.h"
 #include "CSSFontFaceSrcValue.h"
+#include "CSSFontFamily.h"
 #include "CSSPrimitiveValue.h"
 #include "CSSPropertyNames.h"
 #include "CSSSegmentedFontFace.h"
@@ -256,16 +257,15 @@ void CSSFontSelector::addFontFaceRule(const StyleRuleFontFace* fontFaceRule)
     }
 
     // Hash under every single family name.
-    int familyLength = familyList.length();
-    for (int i = 0; i < familyLength; i++) {
-        CSSPrimitiveValue* item = downcast<CSSPrimitiveValue>(familyList.itemWithoutBoundsCheck(i));
+    for (auto& item : familyList) {
+        auto& value = downcast<CSSPrimitiveValue>(item.get());
         String familyName;
-        if (item->isString()) {
-            familyName = item->getStringValue();
-        } else if (item->isValueID()) {
+        if (value.isFontFamily()) {
+            familyName = value.fontFamily().familyName;
+        } else if (value.isValueID()) {
             // We need to use the raw text for all the generic family types, since @font-face is a way of actually
             // defining what font to use for those types.
-            switch (item->getValueID()) {
+            switch (value.getValueID()) {
                 case CSSValueSerif:
                     familyName = serifFamily;
                     break;
@@ -338,15 +338,6 @@ void CSSFontSelector::dispatchInvalidationCallbacks()
     copyToVector(m_clients, clients);
     for (size_t i = 0; i < clients.size(); ++i)
         clients[i]->fontsNeedUpdate(this);
-
-    // FIXME: Make Document a FontSelectorClient so that it can simply register for invalidation callbacks.
-    if (!m_document)
-        return;
-    if (StyleResolver* styleResolver = m_document->styleResolverIfExists())
-        styleResolver->invalidateMatchedPropertiesCache();
-    if (m_document->inPageCache() || !m_document->renderView())
-        return;
-    m_document->scheduleForcedStyleRecalc();
 }
 
 void CSSFontSelector::fontLoaded()

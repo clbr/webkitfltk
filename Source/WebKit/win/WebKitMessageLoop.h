@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,39 +20,32 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "TextNodeTraversal.h"
+#ifndef WebKitMessageLoop_h
+#define WebKitMessageLoop_h
 
-#include "ContainerNode.h"
-#include <wtf/text/StringBuilder.h>
+#include "WebKit.h"
 
-namespace WebCore {
-namespace TextNodeTraversal {
+class WebKitMessageLoop : public IWebKitMessageLoop {
+public:
+    WebKitMessageLoop();
+    ~WebKitMessageLoop();
 
-void appendContents(const ContainerNode& root, StringBuilder& result)
-{
-    for (Text* text = TextNodeTraversal::firstWithin(root); text; text = TextNodeTraversal::next(*text, &root))
-        result.append(text->data());
-}
+    static WebKitMessageLoop* createInstance();
 
-String contentsAsString(const ContainerNode& root)
-{
-    StringBuilder result;
-    appendContents(root, result);
-    return result.toString();
-}
+    // IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) override;
+    virtual ULONG STDMETHODCALLTYPE AddRef() override;
+    virtual ULONG STDMETHODCALLTYPE Release() override;
 
-String contentsAsString(const Node& root)
-{
-    if (is<Text>(root))
-        return downcast<Text>(root).data();
-    if (is<ContainerNode>(root))
-        return contentsAsString(downcast<ContainerNode>(root));
-    return String();
-}
+    // IWebKitMessageLoop
+    virtual HRESULT STDMETHODCALLTYPE run(HACCEL hAccelTable) override;
+    virtual HRESULT STDMETHODCALLTYPE performMessageLoopTasks() override;
 
-}
-}
+private:
+    ULONG m_refCount;
+};
+
+#endif

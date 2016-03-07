@@ -406,7 +406,7 @@ void HTMLTextAreaElement::setValueCommon(const String& newValue)
 
 String HTMLTextAreaElement::defaultValue() const
 {
-    return TextNodeTraversal::contentsAsString(this);
+    return TextNodeTraversal::contentsAsString(*this);
 }
 
 void HTMLTextAreaElement::setDefaultValue(const String& defaultValue)
@@ -415,7 +415,7 @@ void HTMLTextAreaElement::setDefaultValue(const String& defaultValue)
 
     // To preserve comments, remove only the text nodes, then add a single text node.
     Vector<RefPtr<Text>> textNodes;
-    for (Text* textNode = TextNodeTraversal::firstChild(this); textNode; textNode = TextNodeTraversal::nextSibling(textNode))
+    for (Text* textNode = TextNodeTraversal::firstChild(*this); textNode; textNode = TextNodeTraversal::nextSibling(*textNode))
         textNodes.append(textNode);
 
     size_t size = textNodes.size();
