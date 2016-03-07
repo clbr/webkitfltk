@@ -1,3 +1,189 @@
+2014-06-16  Sam Weinig  <sam@webkit.org>
+
+        Move forward declaration of bindings static functions into their implementation files
+        https://bugs.webkit.org/show_bug.cgi?id=133943
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/CommonIdentifiers.h:
+        Add a few identifiers that are needed by the DOM.
+
+2014-06-16  Mark Lam  <mark.lam@apple.com>
+
+        Parser statementDepth accounting needs to account for when a function body excludes its braces.
+        <https://webkit.org/b/133832>
+
+        Reviewed by Oliver Hunt.
+
+        In some cases (e.g. when a Function object is instantiated from a string), the
+        function body source may not include its braces.  The parser needs to account
+        for this when calculating its statementDepth.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::generateFunctionCodeBlock):
+        (JSC::UnlinkedFunctionExecutable::codeBlockFor):
+        * bytecode/UnlinkedCodeBlock.h:
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseStatement):
+        - Also fixed the error message for declaring nested functions in strict mode
+          to be more accurate.
+        * parser/Parser.h:
+        (JSC::Parser<LexerType>::parse):
+        (JSC::parse):
+        * runtime/Executable.cpp:
+        (JSC::ScriptExecutable::newCodeBlockFor):
+
+2014-06-16  Juergen Ributzka  <juergen@apple.com>
+
+        Change the order of the alias analysis passes to align with the opt pipeline of LLVM
+        https://bugs.webkit.org/show_bug.cgi?id=133753
+
+        Reviewed by Geoffrey Garen.
+
+        The order in which the alias analysis passes are added affects also the
+        order in which they are utilized. Change the order to align with the
+        one use by LLVM itself. The last alias analysis pass added will be
+        evaluated first. With this change we first perform a basic alias
+        analysis and then use the type-based alias analysis (if required).
+
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::compile):
+
+2014-06-16  Juergen Ributzka  <juergen@apple.com>
+
+        Fix the arguments passed to the LLVM dylib
+        https://bugs.webkit.org/show_bug.cgi?id=133757
+
+        Reviewed by Geoffrey Garen.
+
+        The LLVM command line argument parser assumes that the first argument
+        is the program name. We need to add a fake program name, otherwise the
+        first argument will be parsed as program name and ignored.
+
+        * llvm/library/LLVMExports.cpp:
+        (initializeAndGetJSCLLVMAPI):
+
+2014-06-16  Michael Saboff  <msaboff@apple.com>
+
+        Convert ASSERT in inlineFunctionForCapabilityLevel to early return
+        https://bugs.webkit.org/show_bug.cgi?id=133903
+
+        Reviewed by Mark Hahnenberg.
+
+        Hardened code by Converting ASSERT to return CannotCompile.
+
+        * dfg/DFGCapabilities.h:
+        (JSC::DFG::inlineFunctionForCapabilityLevel):
+
+2014-06-13  Sam Weinig  <sam@webkit.org>
+
+        Store DOM constants directly in the JS object rather than jumping through a custom accessor
+        https://bugs.webkit.org/show_bug.cgi?id=133898
+
+        Reviewed by Oliver Hunt.
+
+        * runtime/Lookup.h:
+        (JSC::HashTableValue::attributes):
+        Switch attributes to be stored as an unsigned rather than an unsigned char, since there is no difference in memory use
+        and will make adding more flags possibles.
+
+        (JSC::HashTableValue::propertyGetter):
+        (JSC::HashTableValue::propertyPutter):
+        Change assertion to use BuiltinOrFunctionOrConstant.
+
+        (JSC::HashTableValue::constantInteger):
+        Added.
+
+        (JSC::getStaticPropertySlot):
+        (JSC::getStaticValueSlot):
+        Use PropertySlot::setValue() for constants during static lookup.
+
+        (JSC::reifyStaticProperties):
+        Put the constant directly on the object when eagerly reifying.
+
+        * runtime/PropertySlot.h:
+        Add ConstantInteger flag and BuiltinOrFunctionOrConstant helper.
+
+2014-06-14  Michael Saboff  <msaboff@apple.com>
+
+        operationCreateArguments could cause a GC during OSR exit
+        https://bugs.webkit.org/show_bug.cgi?id=133905
+
+        Reviewed by Filip Pizlo.
+
+        Defer GC via new wrapper functions for operationCreateArguments and operationCreateInlinedArguments
+        for use by OSR exit stubs.
+
+        * dfg/DFGOSRExitCompilerCommon.cpp:
+        (JSC::DFG::ArgumentsRecoveryGenerator::generateFor):
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+
+2014-06-13  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        OSR exit should barrier the Executables for all InlineCallFrames, not just those on the stack at the time of exit
+        https://bugs.webkit.org/show_bug.cgi?id=133880
+
+        Reviewed by Filip Pizlo.
+
+        We could have exited due to a value received from an inlined block that's no longer on 
+        the stack, so we should just barrier all InlineCallFrames.
+
+        * dfg/DFGOSRExitCompilerCommon.cpp:
+        (JSC::DFG::adjustAndJumpToTarget):
+
+2014-06-13  Alex Christensen  <achristensen@webkit.org>
+
+        Make css jit compile for armv7.
+        https://bugs.webkit.org/show_bug.cgi?id=133596
+
+        Reviewed by Benjamin Poulain.
+
+        * assembler/MacroAssembler.h:
+        Use branchPtr on ARM_THUMB2.
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::addPtrNoFlags):
+        (JSC::MacroAssemblerARMv7::or32):
+        (JSC::MacroAssemblerARMv7::test32):
+        (JSC::MacroAssemblerARMv7::branch):
+        (JSC::MacroAssemblerARMv7::branchPtr):
+        Added macros necessary for css jit.
+
+2014-06-13  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix ARMv7.
+
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::abortWithReason):
+
+2014-06-12  Filip Pizlo  <fpizlo@apple.com>
+
+        Even better diagnostics from DFG traps
+        https://bugs.webkit.org/show_bug.cgi?id=133836
+
+        Reviewed by Oliver Hunt.
+        
+        We now stuff the DFG::NodeType into a register before bailing. Also made the
+        DFGBailed abort reason a bit more specific. As planned, the new abort reasons use
+        different numbers than any previous abort reasons.
+
+        * assembler/AbortReason.h:
+        * assembler/MacroAssemblerARM64.h:
+        (JSC::MacroAssemblerARM64::abortWithReason):
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::abortWithReason):
+        * assembler/MacroAssemblerX86.h:
+        (JSC::MacroAssemblerX86::abortWithReason):
+        * assembler/MacroAssemblerX86_64.h:
+        (JSC::MacroAssemblerX86_64::abortWithReason):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::SpeculativeJIT):
+        (JSC::DFG::SpeculativeJIT::bail):
+        (JSC::DFG::SpeculativeJIT::compileCurrentBlock):
+        * dfg/DFGSpeculativeJIT.h:
+
 2014-06-12  Simon Fraser  <simon.fraser@apple.com>
 
         Fix assertions under JSC::setNeverInline() when running js tests in WebKitTestRunner

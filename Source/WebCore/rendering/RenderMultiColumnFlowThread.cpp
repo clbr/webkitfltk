@@ -378,13 +378,18 @@ void RenderMultiColumnFlowThread::flowThreadDescendantInserted(RenderObject* des
                 ancestorBlock->moveChildTo(placeholder->parentBox(), spanner, placeholder->nextSibling(), true);
                 gShiftingSpanner = false;
                 
-                // We have to nuke the placeholder, since the ancestor already lost the mapping to it when
-                // we shifted the placeholder down into this flow thread.
-                ancestorBlock->multiColumnFlowThread()->handleSpannerRemoval(spanner);
-                placeholder->destroy();
+                // Advance descendant.
+                descendant = placeholderNextSibling;
                 
-                // Now we process the spanner.
-                descendant = processPossibleSpannerDescendant(subtreeRoot, spanner);
+                // If the spanner was the subtree root, then we're done, since there is nothing else left to insert.
+                if (!descendant)
+                    return;
+
+                // Now that we have done this, we can continue past the spanning content, since we advanced
+                // descendant already.
+                if (descendant)
+                    descendant = descendant->previousInPreOrder(subtreeRoot);
+
                 continue;
             }
             

@@ -32,7 +32,6 @@
 #include "Region.h"
 #include "TileCoverageMap.h"
 #include "TileGrid.h"
-#include "WebLayer.h"
 #include <utility>
 #include <wtf/MainThread.h>
 
@@ -383,7 +382,7 @@ unsigned TileController::blankPixelCountForTiles(const PlatformLayerList& tiles,
     for (PlatformLayerList::const_iterator it = tiles.begin(), end = tiles.end(); it != end; ++it) {
         const PlatformLayer* tileLayer = it->get();
 
-        FloatRect visiblePart(CGRectOffset(frameForLayer(tileLayer), tileTranslation.x(), tileTranslation.y()));
+        FloatRect visiblePart(CGRectOffset(PlatformCALayer::frameForLayer(tileLayer), tileTranslation.x(), tileTranslation.y()));
         visiblePart.intersect(visibleRect);
 
         if (!visiblePart.isEmpty())

@@ -35,6 +35,7 @@
 #import "FormDataStreamMac.h"
 #import "Frame.h"
 #import "FrameLoader.h"
+#import "HTTPHeaderNames.h"
 #import "Logging.h"
 #import "MIMETypeRegistry.h"
 #import "NetworkingContext.h"
@@ -101,8 +102,8 @@ namespace WebCore {
 static void applyBasicAuthorizationHeader(ResourceRequest& request, const Credential& credential)
 {
     String authenticationHeader = "Basic " + base64Encode(String(credential.user() + ":" + credential.password()).utf8());
-    request.clearHTTPAuthorization(); // FIXME: Should addHTTPHeaderField be smart enough to not build comma-separated lists in headers like Authorization?
-    request.addHTTPHeaderField("Authorization", authenticationHeader);
+
+    request.setHTTPHeaderField(HTTPHeaderName::Authorization, authenticationHeader);
 }
 
 static NSOperationQueue *operationQueueForAsyncClients()
@@ -455,7 +456,7 @@ void ResourceHandle::willSendRequest(ResourceRequest& request, const ResourceRes
 
             String originalContentType = d->m_firstRequest.httpContentType();
             if (!originalContentType.isEmpty())
-                request.setHTTPHeaderField("Content-Type", originalContentType);
+                request.setHTTPHeaderField(HTTPHeaderName::ContentType, originalContentType);
         }
     }
 

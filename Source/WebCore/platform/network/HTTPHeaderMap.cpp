@@ -51,7 +51,7 @@ std::unique_ptr<CrossThreadHTTPHeaderMapData> HTTPHeaderMap::copyData() const
     data->reserveInitialCapacity(m_headers.size());
 
     for (const auto& header : *this)
-        data->uncheckedAppend(std::make_pair(header.key.string().isolatedCopy(), header.value.isolatedCopy()));
+        data->uncheckedAppend(std::make_pair(header.key.isolatedCopy(), header.value.isolatedCopy()));
 
     return data;
 }
@@ -64,57 +64,54 @@ void HTTPHeaderMap::adopt(std::unique_ptr<CrossThreadHTTPHeaderMapData> data)
         m_headers.add(std::move(header.first), std::move(header.second));
 }
 
-String HTTPHeaderMap::get(const AtomicString& name) const
+static String internHTTPHeaderNameString(const String& nameString)
 {
-    return m_headers.get(name);
+    HTTPHeaderName headerName;
+    if (!findHTTPHeaderName(nameString, headerName))
+        return nameString;
+
+    return httpHeaderNameString(headerName).toStringWithoutCopying();
 }
 
-void HTTPHeaderMap::set(const AtomicString& name, const String& value)
+String HTTPHeaderMap::get(const String& name) const
 {
-    m_headers.set(name, value);
+    return m_headers.get(internHTTPHeaderNameString(name));
 }
 
-void HTTPHeaderMap::add(const AtomicString& name, const String& value)
+void HTTPHeaderMap::set(const String& name, const String& value)
 {
-    auto result = m_headers.add(name, value);
+    m_headers.set(internHTTPHeaderNameString(name), value);
+}
+
+void HTTPHeaderMap::add(const String& name, const String& value)
+{
+    auto result = m_headers.add(internHTTPHeaderNameString(name), value);
     if (!result.isNewEntry)
         result.iterator->value = result.iterator->value + ", " + value;
 }
 
-// Adapter that allows the HashMap to take C strings as keys.
-struct CaseFoldingCStringTranslator {
-    static unsigned hash(const char* cString)
-    {
-        return CaseFoldingHash::hash(cString, strlen(cString));
-    }
-    
-    static bool equal(const AtomicString& key, const char* cString)
-    {
-        return equalIgnoringCase(key, cString);
-    }
-    
-    static void translate(AtomicString& location, const char* cString, unsigned /*hash*/)
-    {
-        location = AtomicString(cString);
-    }
-};
+String HTTPHeaderMap::get(HTTPHeaderName name) const
+{
+    auto it = find(name);
+    if (it == end())
+        return String();
+
+    return it->value;
+}
+
+void HTTPHeaderMap::set(HTTPHeaderName name, const String& value)
+{
+    m_headers.set(httpHeaderNameString(name).toStringWithoutCopying(), value);
+}
 
 bool HTTPHeaderMap::contains(HTTPHeaderName name) const
 {
     return m_headers.contains(httpHeaderNameString(name).toStringWithoutCopying());
 }
 
-String HTTPHeaderMap::get(const char* name) const
+HTTPHeaderMap::const_iterator HTTPHeaderMap::find(HTTPHeaderName name) const
 {
-    auto it = find(name);
-    if (it == end())
-        return String();
-    return it->value;
-}
-
-HTTPHeaderMap::const_iterator HTTPHeaderMap::find(const char* name) const
-{
-    return m_headers.find<CaseFoldingCStringTranslator>(name);
+    return m_headers.find(httpHeaderNameString(name).toStringWithoutCopying());
 }
 
 bool HTTPHeaderMap::remove(HTTPHeaderName name)
