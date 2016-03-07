@@ -1,3 +1,825 @@
+2015-03-04  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] the GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED should be wrapped by a ifdef
+        https://bugs.webkit.org/show_bug.cgi?id=142274
+
+        Reviewed by Carlos Garcia Campos.
+
+        Don't handle scheduling queries if building against versions of
+        GStreamer older than 1.2.0.
+
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+        (webKitWebSrcQueryWithParent):
+
+2015-03-03  Yoav Weiss  <yoav@yoav.ws>
+
+        Add a microtask abstraction
+        https://bugs.webkit.org/show_bug.cgi?id=137496
+
+        Reviewed by Sam Weinig.
+
+        This patch adds a microtask abstraction: https://html.spec.whatwg.org/multipage/webappapis.html#microtask
+        That abstraction is required in order to enable async loading of images,
+        which is in turn required to enable support for the picture element, as well as
+        to make sure that the order of properties set on HTMLImageElement has no implications.
+
+        A similar patch was rolled back in r180914. This patch is an improved version.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Add MicroTask.{h,cpp} to the project.
+        * WebCore.vcxproj/WebCoreTestSupport.vcxproj: Add MicroTaskTest.{h,cpp} to the project.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Add MicroTask.{h,cpp} to the project.
+        * WebCore.vcxproj/WebCoreTestSupport.vcxproj.filters: Add MicroTaskTest.{h,cpp} to the project.
+        * WebCore.xcodeproj/project.pbxproj: Add MicroTask{,Test}.{h,cpp} to the project.
+        * dom/Document.h: Add WEBCORE_EXPORT to addConsoleMessage, so it can be used in MicroTaskTest that's in WebCoreTestSupport..
+        * dom/MicroTask.h: Add a MicroTask interface class. Add a MicroTaskQueue singleton.
+        (WebCore::MicroTask::~MicroTask):
+        (WebCore::MicroTask::run): Run the microtask.
+        * dom/MicroTask.cpp: Implement the MicroTaskQueue singleton.
+        (WebCore::MicroTaskQueue::singleton): Get a singleton instance of MicroTaskQueue.
+        (WebCore::MicroTaskQueue::queueMicroTask): Add a microtask to the queue.
+        (WebCore::MicroTaskQueue::runMicroTasks): Run all the microtasks in the queue and clear it.
+        * dom/ScriptRunner.cpp: Trigger running of all microtasks in queue.
+        (WebCore::ScriptRunner::timerFired):
+        * html/parser/HTMLScriptRunner.cpp: Trigger running of all microtasks in queue.
+        (WebCore::HTMLScriptRunner::executePendingScriptAndDispatchEvent):
+        (WebCore::HTMLScriptRunner::executeScriptsWaitingForParsing):
+        (WebCore::HTMLScriptRunner::runScript):
+        * testing/Internals.cpp: Add a method to queue a test microtask.
+        (WebCore::Internals::queueMicroTask):
+        * testing/Internals.h: Add a method to queue a test microtask.
+        (WebCore::Internals::queueMicroTask):
+        * testing/Internals.idl: Expose test microtask queueing to test JS.
+        * testing/MicroTaskTest.cpp: Add a test class that implements a microtask and prints to the console when it runs.
+        (WebCore::MicroTaskTest::run): Run the microtask
+        (WebCore::MicroTaskTest::create): Create a test microtask.
+        * testing/MicroTaskTest.h: Add a test class that implements a microtask.
+        (WebCore::MicroTaskTest::run):
+        (WebCore::MicroTaskTest::create):
+
+2015-03-03  Brent Fulgham  <bfulgham@apple.com>
+
+        Scroll snap points are not supported on the main frame
+        https://bugs.webkit.org/show_bug.cgi?id=141973
+        <rdar://problem/19938393>
+
+        Reviewed by Simon Fraser.
+
+        No new tests. Tests will be added when the animation behavior is finalized. Manual tests are attached to the bug.
+
+        Update the ScrollingTreeFrameScrollingNodeMac class to implement the delegate interface needed by the
+        ScrollController. This involves the following:
+        1. Implement scrollOffsetOnAxis: Used by the AxisScrollAnimator to determine the current position of the ScrollableArea.
+        2. Implement immediateScrollOnAxis: Used by the AxisScrollAnimator to scroll the ScrollableArea
+
+        We also need to hold a copy of the snap points vector to send to the scrolling thread.
+
+        * page/scrolling/mac/ScrollingTreeFrameScrollingNodeMac.mm:
+        (WebCore::convertToLayoutUnits): Added helper function to match Scroll Snap Points API.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::updateBeforeChildren): Recognize and react to changes to
+        Scroll Snap Points on top-level frames.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::scrollOffsetOnAxis): Implement delegate method needed by the ScrollController.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::immediateScrollOnAxis): Ditto.
+        * platform/cocoa/ScrollController.h:
+        * platform/cocoa/ScrollController.mm:
+        (WebCore::ScrollController::updateScrollAnimatorsAndTimers): Pass snap offsets to AxisScrollSnapAnimator constructor as references.
+        (WebCore::ScrollController::updateScrollSnapPoints): Added. Used by ScrollingTreeFrameScrollingNodeMac to update scroll snap point
+        settings in the scrolling thread.
+        * platform/mac/AxisScrollSnapAnimator.h:
+        * platform/mac/AxisScrollSnapAnimator.mm:
+        (WebCore::toWheelEventStatus): Don't ignore the "MayBegin" or "Cancelled" event phases.
+        (WebCore::AxisScrollSnapAnimator::AxisScrollSnapAnimator): Revise signature to take a reference to the layout units.
+        (WebCore::AxisScrollSnapAnimator::scrollSnapAnimationUpdate): Handle the case where this method gets called from a thread
+        when the scrollable area has already reached its final destination.
+        (WebCore::AxisScrollSnapAnimator::beginScrollSnapAnimation): Handle the possibility that the snap offset point vector might be
+        empty. Update method to account for m_snapOffsets being a value, instead of a pointer.
+
+2015-03-03  Andy Estes  <aestes@apple.com>
+
+        [Content Filtering] Separate unblock handling into its own class
+        https://bugs.webkit.org/show_bug.cgi?id=142251
+
+        Reviewed by Andreas Kling.
+
+        Unblock handling is currently supported only for one type of content filter (WebFilterEvaluator) on one
+        platform (iOS). Having its implementation in ContentFilter is making it difficult to support other filters and
+        platforms, so let's separate unblock handling into its own class called ContentFilterUnblockHandler.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::finishedLoading): Passed a ContentFilterUnblockHandler to FrameLoaderClient::contentFilterDidBlockLoad.
+        (WebCore::DocumentLoader::dataReceived): Ditto.
+        * loader/FrameLoaderClient.h:
+        * platform/ContentFilter.h:
+        * platform/ContentFilterUnblockHandler.h: Copied from Source/WebCore/platform/ios/ContentFilterIOS.mm.
+        (WebCore::ContentFilterUnblockHandler::clear):
+        * platform/cocoa/ContentFilterUnblockHandlerCocoa.mm: Renamed from Source/WebCore/platform/ios/ContentFilterIOS.mm.
+        (WebCore::ContentFilterUnblockHandler::ContentFilterUnblockHandler):
+        (WebCore::ContentFilterUnblockHandler::encode):
+        (WebCore::ContentFilterUnblockHandler::decode):
+        (WebCore::scheme):
+        (WebCore::ContentFilterUnblockHandler::handleUnblockRequestAndDispatchIfSuccessful):
+        * platform/mac/ContentFilterMac.mm:
+        (WebCore::ContentFilter::unblockHandler):
+        (WebCore::ContentFilter::ContentFilter): Deleted.
+        (WebCore::ContentFilter::encode): Deleted.
+        (WebCore::ContentFilter::decode): Deleted.
+
+2015-03-03  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Track localized name follows locale instead of primary language
+        https://bugs.webkit.org/show_bug.cgi?id=142242
+        rdar://problem/20000365
+
+        Reviewed by Eric Carlson.
+
+        * page/CaptionUserPreferencesMediaAF.cpp: (WebCore::trackDisplayName): Use the
+        language for localization, as CFBundle does.
+
+2015-03-03  Alex Christensen  <achristensen@webkit.org>
+
+        [Win] Unreviewed build fix.
+
+        * WebCore.vcxproj/WebCoreIncludeCommon.props:
+        Include contentextensions subdirectory.
+
+2015-03-03  Alex Christensen  <achristensen@webkit.org>
+
+        Prepare to use CSS selectors in content extensions.
+        https://bugs.webkit.org/show_bug.cgi?id=142227
+
+        Reviewed by Benjamin Poulain.
+
+        Test: http/tests/usercontentfilter/css-display-none.html
+
+        * CMakeLists.txt:
+        * WebCore.xcodeproj/project.pbxproj:
+        * contentextensions/ContentExtensionActions.h: Added.
+        * contentextensions/ContentExtensionRule.cpp:
+        (WebCore::ContentExtensions::Action::deserialize):
+        * contentextensions/ContentExtensionRule.h:
+        (WebCore::ContentExtensions::Action::Action):
+        (WebCore::ContentExtensions::Action::type):
+        (WebCore::ContentExtensions::Action::cssSelector):
+        * contentextensions/ContentExtensionsBackend.cpp:
+        (WebCore::ContentExtensions::ContentExtensionsBackend::serializeActions):
+        Put action descriptions into a compact format in a Vector 
+        to be able to be put into one block of shared read-only memory.
+        (WebCore::ContentExtensions::ContentExtensionsBackend::setRuleList):
+        Put an index of the beginning of the description into the NFA instead of the index of the rule
+        because we will be sharing the descriptions of the actions and not the rules.
+        (WebCore::ContentExtensions::ContentExtensionsBackend::actionsForURL):
+        (WebCore::ContentExtensions::ContentExtensionsBackend::actionForURL): Deleted.
+        Return a vector of actions to be able to do multiple actions for one URL.
+        * contentextensions/ContentExtensionsBackend.h:
+        * contentextensions/ContentExtensionsManager.cpp:
+        (WebCore::ContentExtensions::ExtensionsManager::loadTrigger):
+        (WebCore::ContentExtensions::ExtensionsManager::loadAction):
+        Added the css-display-none action type, which requires a selector.
+        (WebCore::ContentExtensions::ExtensionsManager::loadRule):
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::requestResource):
+        * page/UserContentController.cpp:
+        (WebCore::UserContentController::actionsForURL):
+        (WebCore::UserContentController::actionForURL): Deleted.
+        * page/UserContentController.h:
+
+2015-03-03  Brent Fulgham  <bfulgham@apple.com>
+
+        Move scroll animating functions from ScrollAnimator to ScrollController
+        https://bugs.webkit.org/show_bug.cgi?id=142102
+        <rdar://problem/20007161>
+
+        Reviewed by Simon Fraser.
+
+        Tested by platform/mac-wk2/tiled-drawing/scrolling/fast-scroll-mainframe-zoom.html.
+
+        Do some refactoring of the various scrolling classes:
+        1. Consolidate animation times to RunLoop::Timer instead of a combination of WebCore::Timer
+           and CFRunLoopTimers. Do this for Scroll Snap Point and Rubberband animations.
+        2. Move ScrollController from platform/mac to platform/cocoa to enable sharing with iOS.
+        3. Move code from ScrollAnimator{Mac} -> ScrollController.
+        4. Rename scrollOffsetInAxis -> scrollOffsetOnAxis
+        5. Rename immediateScrollInAxis -> immediateScrollOnAxis
+
+        * WebCore.xcodeproj/project.pbxproj: Move ScrollController to 'platform/cocoa'
+        * page/mac/EventHandlerMac.mm: Make sure the scroll controller is notified of end-of-scroll
+        events, just as is done for the "event not handled" case in EventHandler.cpp. 
+        (WebCore::EventHandler::platformCompleteWheelEvent):
+        * page/scrolling/mac/ScrollingTreeFrameScrollingNodeMac.h: Remove timer and some delegate
+        methods, now that ScrollController is controlling this state.
+        * page/scrolling/mac/ScrollingTreeFrameScrollingNodeMac.mm:
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::~ScrollingTreeFrameScrollingNodeMac): We no longer
+        need to clean up the CFRunLoopTimer.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::stopSnapRubberbandTimer): Make sure scroll
+        state is updated after rubber band snap.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::scrollOffsetOnAxis): Add temporary stub needed
+        until Bug1973 is completed.).
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::immediateScrollOnAxis): Ditto.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::startSnapRubberbandTimer): Deleted.
+        * platform/ScrollAnimator.cpp:
+        (WebCore::ScrollAnimator::ScrollAnimator):
+        (WebCore::ScrollAnimator::processWheelEventForScrollSnap): Just call the ScrollController method.
+        (WebCore::ScrollAnimator::handleWheelEvent): Ditto.
+        (WebCore::ScrollAnimator::updateScrollAnimatorsAndTimers): Ditto.
+        (WebCore::ScrollAnimator::scrollOffsetOnAxis): Renamed from scrollOffsetInAxis.
+        (WebCore::ScrollAnimator::immediateScrollOnAxis): Renamed from immediateScrollInAxis.
+        (WebCore::ScrollAnimator::scrollOffsetInAxis): Deleted.
+        (WebCore::ScrollAnimator::immediateScrollInAxis): Deleted.
+        (WebCore::ScrollAnimator::startScrollSnapTimer): Deleted.
+        (WebCore::ScrollAnimator::stopScrollSnapTimer): Deleted.
+        (WebCore::ScrollAnimator::horizontalScrollSnapTimerFired): Deleted.
+        (WebCore::ScrollAnimator::verticalScrollSnapTimerFired): Deleted.
+        * platform/ScrollAnimator.h:
+        * platform/cocoa/ScrollController.h: Copied from platform/mac/ScrollController.h.
+        (WebCore::ScrollControllerClient::startSnapRubberbandTimer):
+        (WebCore::ScrollControllerClient::stopSnapRubberbandTimer):
+        (WebCore::ScrollControllerClient::startScrollSnapTimer):
+        (WebCore::ScrollControllerClient::stopScrollSnapTimer):
+        * platform/cocoa/ScrollController.mm: Copied from platform/mac/ScrollController.mm.
+        (WebCore::ScrollController::ScrollController): Update to initialize new timers.
+        (WebCore::ScrollController::handleWheelEvent): Update to handle Scroll Snap Point events.
+        (WebCore::ScrollController::startSnapRubberbandTimer): Added.
+        (WebCore::ScrollController::stopSnapRubberbandTimer): Manage animation timers locally, do not
+        require client to maintain timers.
+        (WebCore::ScrollController::snapRubberBand): Ditto.
+        (WebCore::ScrollController::processWheelEventForScrollSnap): Added. (Moved from ScrollAnimatorMac)
+        (WebCore::ScrollController::updateScrollAnimatorsAndTimers): Ditto. Also updated to use RunLoop::Timer.
+        (WebCore::ScrollController::startScrollSnapTimer): Ditto. Also updated to use RunLoop::Timer.
+        (WebCore::ScrollController::stopScrollSnapTimer): Ditto. Also updated to use RunLoop::Timer.
+        (WebCore::ScrollController::horizontalScrollSnapTimerFired): Ditto.
+        (WebCore::ScrollController::verticalScrollSnapTimerFired): Ditto.
+        (WebCore::ScrollController::scrollOffsetOnAxis): Moved from ScrollAnimatorMac.
+        (WebCore::ScrollController::immediateScrollOnAxis): Ditto.
+        * platform/mac/AxisScrollSnapAnimator.h: Rename methods from 'InAxis' to 'OnAxis'
+        * platform/mac/AxisScrollSnapAnimator.mm:
+        (WebCore::AxisScrollSnapAnimator::handleWheelEvent): Update for 'InAxis' to 'OnAxis' renaming.
+        (WebCore::AxisScrollSnapAnimator::scrollSnapAnimationUpdate): Ditto.
+        (WebCore::AxisScrollSnapAnimator::beginScrollSnapAnimation): Ditto.
+        (WebCore::AxisScrollSnapAnimator::computeSnapDelta): Ditto.
+        (WebCore::AxisScrollSnapAnimator::computeGlideDelta): Ditto.
+        * platform/mac/ScrollAnimatorMac.h:
+        * platform/mac/ScrollAnimatorMac.mm:
+        (WebCore::ScrollAnimatorMac::ScrollAnimatorMac): Remove unused Rubberband timers (now that this is
+        controlled in the ScrollController)
+        (WebCore::ScrollAnimatorMac::startSnapRubberbandTimer): Deleted.
+        (WebCore::ScrollAnimatorMac::stopSnapRubberbandTimer): Deleted.
+        (WebCore::ScrollAnimatorMac::snapRubberBandTimerFired): Deleted.
+        * platform/mac/ScrollController.h: Removed.
+        * platform/mac/ScrollController.mm: Removed.
+
+2015-03-03  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r180683.
+        https://bugs.webkit.org/show_bug.cgi?id=142249
+
+        Broke fast/css/acid2-pixel.html (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "Setting any of the <object> element plugin controlling
+        attributes does not have any affect."
+        https://bugs.webkit.org/show_bug.cgi?id=141936
+        http://trac.webkit.org/changeset/180683
+
+2015-03-03  Dean Jackson  <dino@apple.com>
+
+        Controls panel should have system blurry background
+        https://bugs.webkit.org/show_bug.cgi?id=142154
+        <rdar://problem/20000964>
+
+        Reviewed by Simon Fraser.
+
+        In order to replicate the system style of media controls
+        on OS X and iOS, we need to expose a special -webkit-appearance.
+        This patch adds the new property value, and implements
+        the iOS part of the appearance, which is a blurry shaded
+        background.
+
+        Test: compositing/media-controls-bar-appearance.html
+
+        * css/CSSPrimitiveValueMappings.h:
+        (WebCore::CSSPrimitiveValue::CSSPrimitiveValue): Map the new
+        keywords from ControlParts.
+
+        * css/CSSValueKeywords.in: Add media-controls-light-bar-background
+        and media-controls-dark-bar-background. Darin suggested they
+        be sorted, so I did this at the same time.
+        * platform/ThemeTypes.h: New ControlParts for the values, and
+        sort the values since they need to be in sync with
+        CSSValueKeywords.in.
+
+        * platform/graphics/GraphicsLayer.h: Expose two new custom appearance
+        values.
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::GraphicsLayerCA):
+        (WebCore::layerTypeForCustomBackdropAppearance): Helper function.
+        (WebCore::isCustomBackdropLayerType): Ditto.
+        (WebCore::GraphicsLayerCA::commitLayerChangesBeforeSublayers): Merge setting
+        a system backdrop layer in with the code that swaps to/from tiled layers.
+        (WebCore::GraphicsLayerCA::changeLayerTypeTo): New method that does what
+        swapFromOrToTiledLayer implemented, but also allows us to change to a
+        system backdrop layer.
+        (WebCore::GraphicsLayerCA::swapFromOrToTiledLayer): Deleted.
+        * platform/graphics/ca/GraphicsLayerCA.h:
+
+        * platform/graphics/ca/PlatformCALayer.h: New layer types.
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm: For now expose these
+        as regular backdrop layers.
+        (PlatformCALayerMac::PlatformCALayerMac):
+        (PlatformCALayerMac::updateCustomAppearance):
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::createPrimaryGraphicsLayer): Make sure to update
+        custom appearance,
+        (WebCore::RenderLayerBacking::updateCustomAppearance): New method.
+        * rendering/RenderLayerBacking.h:
+
+2015-03-03  Chris Dumez  <cdumez@apple.com>
+
+        Access ApplicationCacheStorage global instance via singleton() static member function
+        https://bugs.webkit.org/show_bug.cgi?id=142239
+
+        Reviewed by Anders Carlsson.
+
+        Access ApplicationCacheStorage global instance via singleton() static
+        member function as per WebKit coding style.
+
+2015-03-03  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix the build.
+
+        * platform/spi/cf/CFNetworkSPI.h:
+
+2015-03-03  Timothy Horton  <timothy_horton@apple.com>
+
+        <attachment> label can get very wide, doesn't wrap/truncate
+        https://bugs.webkit.org/show_bug.cgi?id=142214
+        <rdar://problem/19982499>
+
+        Reviewed by Simon Fraser.
+
+        Test: fast/attachment/attachment-label-highlight.html
+
+        * rendering/RenderThemeMac.h:
+        * rendering/RenderThemeMac.mm:
+        (WebCore::labelTextColorForAttachment):
+        (WebCore::AttachmentLayout::addLine):
+        (WebCore::AttachmentLayout::layOutText):
+        (WebCore::AttachmentLayout::AttachmentLayout):
+        Make it possible to lay out multiple lines of label text.
+        We lay out the whole string normally, but then only draw N (where N=1 for now,
+        but is adjustable) of the lines. The remainder of the string is then
+        merged into a single line, which is middle-truncated with an ellipsis
+        and drawn in place of the N+1 line.
+
+        (WebCore::addAttachmentLabelBackgroundRightCorner):
+        (WebCore::addAttachmentLabelBackgroundLeftCorner):
+        (WebCore::paintAttachmentLabelBackground):
+        Wrap the label background around the multiple lines of text with curved edges.
+        We run first down the right side of the label, determining whether to use
+        concave or convex arcs based on the relative widths of adjacent lines.
+        Then, we run back up the left side of the label doing the same thing.
+
+        If the background rects of two lines are very similar (within the rounded rect radius),
+        they will be expanded to the larger of the two, because otherwise the arcs
+        look quite wrong.
+
+        (WebCore::paintAttachmentLabel):
+        Draw the label with CoreText directly instead of bothering with WebCore
+        text layout primitives. There's no need, and it makes wrapping much more complicated.
+
+        (WebCore::RenderThemeMac::paintAttachment):
+        (WebCore::RenderThemeMac::paintAttachmentLabelBackground): Deleted.
+        (WebCore::RenderThemeMac::paintAttachmentLabel): Deleted.
+
+2015-03-03  Simon Fraser  <simon.fraser@apple.com>
+
+        Avoid applying the clip-path when painting, if a layer also has a shape layer mask
+        https://bugs.webkit.org/show_bug.cgi?id=142212
+
+        Reviewed by Zalan Bujtas.
+
+        After r180882 we translate clip-path into a composited shape mask when the layer
+        is composited. However, we were also still applying the clip-path when painting
+        the layer contents.
+        
+        Now, we set the GraphicsLayer bits GraphicsLayerPaintClipPath and GraphicsLayerPaintMask
+        only for the m_maskLayer's painting. This translate into setting PaintLayerPaintingCompositingMaskPhase
+        and PaintLayerPaintingCompositingClipPathPhase only when painting that same mask layer,
+        rather than always. To ensure that masks and clip-path get applied for software paints,
+        add shouldPaintMask() and shouldApplyClipPath() that return true for non-composited layers,
+        and when doing a flattening paint.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::paintLayerContents): Use shouldApplyClipPath().
+        Pull three chunks of code under a single "if (shouldPaintContent && !selectionOnly)" condition.
+        The condition for paintChildClippingMaskForFragments() is changed slightly; we need to call this
+        only when painting the clip-path/mask layer contents, but also only when there is no mask to fill
+        the clipped area for us.
+        (WebCore::RenderLayer::calculateClipRects):
+        (WebCore::RenderLayer::paintsWithClipPath): Deleted.
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateMaskingLayer): Be sure to set the GraphicsLayerPaintClipPath bit
+        when having a mask forces us onto the painting path.
+
+2015-03-03  Anders Carlsson  <andersca@apple.com>
+
+        Use the correct display name for website data for local files
+        https://bugs.webkit.org/show_bug.cgi?id=142228
+
+        Reviewed by Dan Bernstein.
+
+        * English.lproj/Localizable.strings:
+        Add local file display name.
+
+        * platform/spi/cf/CFNetworkSPI.h:
+        Add kCFHTTPCookieLocalFileDomain declaration.
+
+2015-03-03  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        BreakingContext cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=142146
+
+        Reviewed by Dean Jackson.
+
+        1. Use commitLineBreakAtCurrentWidth() instead of directly
+        updating m_width and m_lineBreak, because the name makes the
+        intent clearer.
+        2. Remove duplicate function LineBreaker::nextSegmentBreak().
+        3. lineStyle() takes care of inspecting RenderText's parent's
+        style.
+        4. Add FIXME to BreakingContext::initializeForCurrentObject()
+        because it seems like we are ignoring first-line style for
+        some properties.
+
+        No new tests because there is no behavior change.
+
+        * rendering/line/BreakingContextInlineHeaders.h:
+        (WebCore::BreakingContext::BreakingContext):
+        (WebCore::BreakingContext::initializeForCurrentObject):
+        (WebCore::BreakingContext::handleReplaced):
+        (WebCore::BreakingContext::handleText):
+        (WebCore::BreakingContext::commitAndUpdateLineBreakIfNeeded):
+        (WebCore::BreakingContext::handleEndOfLine):
+        * rendering/line/LineBreaker.cpp:
+        (WebCore::LineBreaker::nextLineBreak): Deleted.
+        (WebCore::LineBreaker::nextSegmentBreak): Deleted.
+        * rendering/line/LineBreaker.h:
+        * rendering/line/LineInlineHeaders.h:
+        (WebCore::lineStyle):
+
+2015-03-03  Chris Dumez  <cdumez@apple.com>
+
+        Make AudioContext suspendable when it is not rendering
+        https://bugs.webkit.org/show_bug.cgi?id=142210
+        <rdar://problem/19923085>
+
+        Reviewed by Eric Carlson.
+
+        Make AudioContext suspendable when it is not rendering to increase the
+        likelihood of entering the PageCache for pages using WebAudio.
+
+        This patch adds a state member to AudioContext with 3 possible states:
+        Suspended / Running / Closed, as defined in the specification:
+        http://webaudio.github.io/web-audio-api/#widl-AudioContext-state
+
+        This state is used to decide if we can suspend the page or not. We
+        can safely suspend if the AudioContext's state is suspended (did not
+        start rendering) or closed (Stopped rendering).
+
+        Note that this patch does not expose the AudioContext's state to the
+        Web yet, even though it is exposed in the latest specification.
+
+        Tests: fast/history/page-cache-closed-audiocontext.html
+               fast/history/page-cache-running-audiocontext.html
+               fast/history/page-cache-suspended-audiocontext.html
+
+        * Modules/webaudio/AudioContext.cpp:
+        (WebCore::AudioContext::AudioContext):
+        (WebCore::AudioContext::uninitialize):
+        (WebCore::AudioContext::canSuspend):
+        (WebCore::AudioContext::startRendering):
+        (WebCore::AudioContext::fireCompletionEvent):
+        * Modules/webaudio/AudioContext.h:
+
+2015-03-02  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [SOUP] Use SoupMessage::starting instead of SoupSession::request-started
+        https://bugs.webkit.org/show_bug.cgi?id=142164
+
+        Reviewed by Sergio Villar Senin.
+
+        SoupSession::request-started is deprecated in libsoup 2.50. Both
+        signals are equivalent, but SoupMessage::starting is also emitted
+        for resources loaded from the disk cache. This fixes web timing
+        calculations for cached resources, since we were not initializing
+        m_requestStart.
+
+        * platform/network/soup/ResourceHandleSoup.cpp:
+        (WebCore::startingCallback):
+        (WebCore::createSoupMessageForHandleAndRequest):
+        * platform/network/soup/SoupNetworkSession.cpp:
+        (WebCore::SoupNetworkSession::SoupNetworkSession):
+
+2015-03-03  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [SOUP] Synchronous XMLHttpRequests can time out when we reach the max connections limit
+        https://bugs.webkit.org/show_bug.cgi?id=141508
+
+        Reviewed by Sergio Villar Senin.
+
+        Use SOUP_MESSAGE_IGNORE_CONNECTION_LIMITS flag when loading a
+        synchronous message instead of increasing the maximum number of
+        connections allowed if the soup version is recent enough.
+        The current solution of increasing/decreasing the limits doesn't
+        always work, because connections are not marked as IDLE in libsoup
+        until the message is unqueued, but we don't wait for the message
+        to be unqueued to finish our loads in WebKit, we finish them as
+        soon as we have finished reading the stream. This causes that
+        synchronous loads keep blocked in the nested main loop until the
+        timeout of 10 seconds is fired and the load fails.
+        Also marked WebCoreSynchronousLoader class as final, the virtual
+        methods as override and removed the unsused method isSynchronousClient.
+
+        * platform/network/soup/ResourceHandleSoup.cpp:
+        (WebCore::createSoupMessageForHandleAndRequest):
+        (WebCore::WebCoreSynchronousLoader::WebCoreSynchronousLoader):
+        (WebCore::WebCoreSynchronousLoader::isSynchronousClient): Deleted.
+        (WebCore::WebCoreSynchronousLoader::didReceiveResponse):
+        (WebCore::WebCoreSynchronousLoader::didReceiveData):
+        (WebCore::WebCoreSynchronousLoader::didReceiveBuffer):
+        (WebCore::WebCoreSynchronousLoader::didFinishLoading):
+        (WebCore::WebCoreSynchronousLoader::didFail):
+        (WebCore::WebCoreSynchronousLoader::didReceiveAuthenticationChallenge):
+        (WebCore::WebCoreSynchronousLoader::shouldUseCredentialStorage):
+
+2015-03-02  David Kilzer  <ddkilzer@apple.com>
+
+        [iOS] Disable -Wdeprecated-declaration warnings in WebVideoFullscreenInterfaceAVKit.mm
+
+        Fixing the deprecations is tracked by: <rdar://problem/20018692>
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::enterFullscreenOptimized):
+        Ignore -Wdeprecated-declaration warnings via clang pragmas.
+
+2015-03-02  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r180902.
+        https://bugs.webkit.org/show_bug.cgi?id=142205
+
+        It broke scrolling in some cases. See bug 142202 for details.
+        (Requested by bdash on #webkit).
+
+        Reverted changeset:
+
+        "Move scroll animating functions from ScrollAnimator to
+        ScrollController"
+        https://bugs.webkit.org/show_bug.cgi?id=142102
+        http://trac.webkit.org/changeset/180902
+
+2015-03-02  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r180911.
+        https://bugs.webkit.org/show_bug.cgi?id=142204
+
+        The tests it added are crashing (Requested by bdash on
+        #webkit).
+
+        Reverted changeset:
+
+        "Add a microtask abstraction"
+        https://bugs.webkit.org/show_bug.cgi?id=137496
+        http://trac.webkit.org/changeset/180911
+
+2015-03-02  Yoav Weiss  <yoav@yoav.ws>
+
+        Add a microtask abstraction
+        https://bugs.webkit.org/show_bug.cgi?id=137496
+
+        Reviewed by Sam Weinig.
+
+        This patch adds a microtask abstraction: https://html.spec.whatwg.org/multipage/webappapis.html#microtask
+        That abstraction is required in order to enable async loading of images,
+        which is in turn required to enable support for the picture element, as well as
+        to make sure that the order of properties set on HTMLImageElement has no implications.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Add MicroTask.{h,cpp} to the project.
+        * WebCore.vcxproj/WebCoreTestSupport.vcxproj: Add MicroTaskTest.{h,cpp} to the project.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Add MicroTask.{h,cpp} to the project.
+        * WebCore.vcxproj/WebCoreTestSupport.vcxproj.filters: Add MicroTaskTest.{h,cpp} to the project.
+        * WebCore.xcodeproj/project.pbxproj: Add MicroTask{,Test}.{h,cpp} to the project.
+        * dom/Document.h: Add WEBCORE_EXPORT to addConsoleMessage, so it can be used in MicroTaskTest that's in WebCoreTestSupport..
+        * dom/MicroTask.h: Add a MicroTask interface class. Add a MicroTaskQueue singleton.
+        (WebCore::MicroTask::~MicroTask):
+        (WebCore::MicroTask::run): Run the microtask.
+        * dom/MicroTask.cpp: Implement the MicroTaskQueue singleton.
+        (WebCore::MicroTaskQueue::singleton): Get a singleton instance of MicroTaskQueue.
+        (WebCore::MicroTaskQueue::queueMicroTask): Add a microtask to the queue.
+        (WebCore::MicroTaskQueue::runMicroTasks): Run all the microtasks in the queue and clear it.
+        * dom/ScriptRunner.cpp: Trigger running of all microtasks in queue.
+        (WebCore::ScriptRunner::timerFired):
+        * html/parser/HTMLScriptRunner.cpp: Trigger running of all microtasks in queue.
+        (WebCore::HTMLScriptRunner::executePendingScriptAndDispatchEvent):
+        (WebCore::HTMLScriptRunner::executeScriptsWaitingForParsing):
+        (WebCore::HTMLScriptRunner::runScript):
+        * testing/Internals.cpp: Add a method to queue a test microtask.
+        (WebCore::Internals::queueMicroTask):
+        * testing/Internals.h: Add a method to queue a test microtask.
+        (WebCore::Internals::queueMicroTask):
+        * testing/Internals.idl: Expose test microtask queueing to test JS.
+        * testing/MicroTaskTest.cpp: Add a test class that implements a microtask and prints to the console when it runs.
+        (WebCore::MicroTaskTest::run): Run the microtask
+        (WebCore::MicroTaskTest::create): Create a test microtask.
+        * testing/MicroTaskTest.h: Add a test class that implements a microtask.
+        (WebCore::MicroTaskTest::run):
+        (WebCore::MicroTaskTest::create):
+
+2015-03-02  Jeremy Jones  <jeremyj@apple.com>
+
+        RenderVideo should not paint the video frame when video is fullscreen.
+        https://bugs.webkit.org/show_bug.cgi?id=142097
+
+        Reviewed by Eric Carlson.
+
+        For performance and correctness, RenderVideo should not paint the current video frame
+        inline when video is fullscreen. This happens when snapshots are taken and can have a
+        negative performance impact.
+
+        * rendering/RenderVideo.cpp:
+        (WebCore::RenderVideo::paintReplaced):
+
+2015-03-02  Dean Jackson  <dino@apple.com>
+
+        [iOS Media] Airplay button should be blue when active
+        https://bugs.webkit.org/show_bug.cgi?id=142193
+
+        Reviewed by Brent Fulgham.
+
+        Add a blue form of the Airplay button that is used
+        when we are actively displaying on another screen.
+
+        * Modules/mediacontrols/mediaControlsiOS.css:
+        (video::-webkit-media-controls-wireless-playback-picker-button):
+        (video::-webkit-media-controls-wireless-playback-picker-button:active):
+        (video::-webkit-media-controls-wireless-playback-picker-button.playing):
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.updateWirelessPlaybackStatus):
+
+2015-03-02  Brent Fulgham  <bfulgham@apple.com>
+
+        Move scroll animating functions from ScrollAnimator to ScrollController
+        https://bugs.webkit.org/show_bug.cgi?id=142102
+        <rdar://problem/20007161>
+
+        Reviewed by Simon Fraser.
+
+        No change in functionality.
+        
+        Do some refactoring of the various scrolling classes:
+        1. Consolidate animation times to RunLoop::Timer instead of a combination of WebCore::Timer
+           and CFRunLoopTimers. Do this for Scroll Snap Point and Rubberband animations.
+        2. Move ScrollController from platform/mac to platform/cocoa to enable sharing with iOS.
+        3. Move code from ScrollAnimator{Mac} -> ScrollController.
+        4. Rename scrollOffsetInAxis -> scrollOffsetOnAxis
+        5. Rename immediateScrollInAxis -> immediateScrollOnAxis
+
+        * WebCore.xcodeproj/project.pbxproj: Move ScrollController to 'platform/cocoa'
+        * page/mac/EventHandlerMac.mm: Make sure the scroll controller is notified of end-of-scroll
+        events, just as is done for the "event not handled" case in EventHandler.cpp. 
+        (WebCore::EventHandler::platformCompleteWheelEvent):
+        * page/scrolling/mac/ScrollingTreeFrameScrollingNodeMac.h: Remove timer and some delegate
+        methods, now that ScrollController is controlling this state.
+        * page/scrolling/mac/ScrollingTreeFrameScrollingNodeMac.mm:
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::~ScrollingTreeFrameScrollingNodeMac): We no longer
+        need to clean up the CFRunLoopTimer.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::scrollOffsetOnAxis): Add temporary stub needed
+        until Bug 141973 is completed.).
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::immediateScrollOnAxis): Ditto.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::startSnapRubberbandTimer): Deleted.
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::stopSnapRubberbandTimer): Deleted.
+        * platform/ScrollAnimator.cpp:
+        (WebCore::ScrollAnimator::ScrollAnimator):
+        (WebCore::ScrollAnimator::processWheelEventForScrollSnap): Just call the ScrollController method.
+        (WebCore::ScrollAnimator::handleWheelEvent): Ditto.
+        (WebCore::ScrollAnimator::updateScrollAnimatorsAndTimers): Ditto.
+        (WebCore::ScrollAnimator::scrollOffsetOnAxis): Renamed from scrollOffsetInAxis.
+        (WebCore::ScrollAnimator::scrollOffsetInAxis): Deleted.
+        (WebCore::ScrollAnimator::immediateScrollOnAxis): Renamed from immediateScrollInAxis.
+        (WebCore::ScrollAnimator::immediateScrollInAxis): Deleted.
+        (WebCore::ScrollAnimator::startScrollSnapTimer): Deleted.
+        (WebCore::ScrollAnimator::stopScrollSnapTimer): Deleted.
+        (WebCore::ScrollAnimator::horizontalScrollSnapTimerFired): Deleted.
+        (WebCore::ScrollAnimator::verticalScrollSnapTimerFired): Deleted.
+        * platform/ScrollAnimator.h:
+        * platform/cocoa/ScrollController.h: Copied from platform/mac/ScrollController.h.
+        * platform/cocoa/ScrollController.mm: Copied from platform/mac/ScrollController.mm.
+        (WebCore::ScrollController::ScrollController): Update to initialize new timers.
+        (WebCore::ScrollController::handleWheelEvent): Update to handle Scroll Snap Point events.
+        (WebCore::ScrollController::startSnapRubberbandTimer): Added.
+        (WebCore::ScrollController::stopSnapRubberbandTimer): Manage animation timers locally, do not
+        require client to maintain timers.
+        (WebCore::ScrollController::snapRubberBand): Ditto.
+        (WebCore::ScrollController::processWheelEventForScrollSnap): Added. (Moved from ScrollAnimatorMac)
+        (WebCore::ScrollController::updateScrollAnimatorsAndTimers): Ditto. Also updated to use RunLoop::Timer.
+        (WebCore::ScrollController::startScrollSnapTimer): Ditto. Also updated to use RunLoop::Timer.
+        (WebCore::ScrollController::stopScrollSnapTimer):  Ditto. Also updated to use RunLoop::Timer.
+        (WebCore::ScrollController::horizontalScrollSnapTimerFired): Ditto.
+        (WebCore::ScrollController::verticalScrollSnapTimerFired): Ditto.
+        (WebCore::ScrollController::scrollOffsetOnAxis): Moved from ScrollAnimatorMac.
+        (WebCore::ScrollController::immediateScrollOnAxis): Ditto.
+        * platform/mac/AxisScrollSnapAnimator.h: Rename methods from 'InAxis' to 'OnAxis'
+        * platform/mac/AxisScrollSnapAnimator.mm: Ditto.
+        * platform/mac/ScrollAnimatorMac.h:
+        * platform/mac/ScrollAnimatorMac.mm:
+        (WebCore::ScrollAnimatorMac::ScrollAnimatorMac): Remove unused Rubberband timers (now that this is
+        controlled in the ScrollController)
+        (WebCore::ScrollAnimatorMac::startSnapRubberbandTimer): Deleted.
+        (WebCore::ScrollAnimatorMac::stopSnapRubberbandTimer): Deleted.
+        (WebCore::ScrollAnimatorMac::snapRubberBandTimerFired): Deleted.
+        * platform/mac/ScrollController.h: Removed.
+        * platform/mac/ScrollController.mm: Removed.
+
+2015-03-02  Mark Lam  <mark.lam@apple.com>
+
+        The InspectorTimelineAgent should gracefully handle attempts to start more than once.
+        <https://webkit.org/b/142189>
+
+        Reviewed by Joseph Pecoraro.
+
+        No new tests.  Unskipped an existing test that already asserts this.
+
+        InspectorTimelineAgent::internalStop() already checks for redundant calls to it in
+        case the InspectorTimelineAgent is already disabled. Similarly,
+        InspectorTimelineAgent::internalStart() should check if the InspectorTimelineAgent
+        is already enabled before proceeding to do work to enable it. Though wasteful,
+        it is legal for clients of the InspectorTimelineAgent to invoke start on it more
+        than once. Hence, this check is needed.
+
+        This check fixes the debug assertion failure when running the
+        inspector/timeline/debugger-paused-while-recording.html test. The test can now
+        be unskipped.
+
+        * inspector/InspectorTimelineAgent.cpp:
+        (WebCore::InspectorTimelineAgent::internalStart):
+
+2015-03-02  Roger Fong  <roger_fong@apple.com>
+
+        Update backgrounds of sliders for inline media controls on OS X.
+        https://bugs.webkit.org/show_bug.cgi?id=142188.
+        <rdar://problem/20012413>
+
+        Reviewed by Dean Jackson.
+
+        Don’t use CSS to draw volume and timeline slider backgrounds.
+        * Modules/mediacontrols/mediaControlsApple.css:
+        (video::-webkit-media-controls-volume-slider):
+        (audio::-webkit-media-controls-volume-slider::-webkit-slider-thumb):
+        (audio::-webkit-media-controls-timeline):
+        (audio::-webkit-media-controls-timeline::-webkit-slider-thumb):
+        (audio::-webkit-media-controls-panel .thumbnail-track):
+        (audio::-webkit-media-controls-volume-slider::-webkit-slider-thumb:active::-webkit-slider-thumb): Deleted.
+        (audio::-webkit-media-controls-timeline:active::-webkit-slider-thumb,): Deleted.
+
+        Draw volume and timeline slider backgrounds using 2d canvases.
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller.prototype.createControls):
+        (Controller.prototype.handleVolumeSliderInput):
+        (Controller.prototype.addRoundedRect):
+        (Controller.prototype.drawTimelineBackground):
+        (Controller.prototype.drawVolumeBackground):
+        (Controller.prototype.showControls):
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.addRoundedRect): Deleted.
+
+2015-03-01  Roger Fong  <roger_fong@apple.com>
+
+        Update inline media element controls appearance Part 1.
+        https://bugs.webkit.org/show_bug.cgi?id=142138.
+        <rdar://problem/19997384>
+
+        Reviewed by Dean Jackson.
+
+        Update positioning, sizes, and background colors media control elements.
+        Volume and timeline sliders will be drawn in a separate patch via 2d canvases.
+
+        * Modules/mediacontrols/mediaControlsApple.css:
+        (audio::-webkit-media-controls-panel):
+        (video::-webkit-media-controls-panel):
+        (audio::-webkit-media-controls-rewind-button):
+        (audio::-webkit-media-controls-play-button):
+        (audio::-webkit-media-controls-panel .mute-box):
+        (video::-webkit-media-controls-volume-max-button):
+        (audio::-webkit-media-controls-panel .volume-box):
+        (audio::-webkit-media-controls-panel .volume-box:active):
+        (video::-webkit-media-controls-volume-slider):
+        (audio::-webkit-media-controls-toggle-closed-captions-button):
+        (audio::-webkit-media-controls-fullscreen-button):
+        (audio::-webkit-media-controls-current-time-display):
+        (audio::-webkit-media-controls-time-remaining-display):
+        (audio::-webkit-media-controls-timeline-container .hour-long-time): Deleted.
+
 2015-03-02  David Kilzer  <ddkilzer@apple.com>
 
         REGRESSION (r180882): Build failure: Methods not marked override in GraphicsLayerCA.h

@@ -58,13 +58,15 @@ public:
     void removeAllRuleLists();
 
     // - Internal WebCore Interface.
-    ContentFilterAction actionForURL(const URL&);
+    Vector<Action> actionsForURL(const URL&);
 
 private:
     struct CompiledContentExtension {
         Vector<DFABytecode> bytecode;
-        Vector<ContentExtensionRule> ruleList;
+        Vector<SerializedActionByte> actions;
     };
+
+    Vector<unsigned> serializeActions(const Vector<ContentExtensionRule>& ruleList, Vector<SerializedActionByte>& actions);
 
     HashMap<String, CompiledContentExtension> m_ruleLists;
 };
