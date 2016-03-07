@@ -42,6 +42,7 @@
 #include "CredentialStorage.h"
 #include "CurlCacheManager.h"
 #include "DataURL.h"
+#include "HTTPHeaderNames.h"
 #include "HTTPParsers.h"
 #include "MIMETypeRegistry.h"
 #include "MultipartHandle.h"
@@ -413,7 +414,7 @@ static bool getProtectionSpace(CURL* h, const ResourceResponse& response, Protec
 
     String realm;
 
-    const String authHeader = response.httpHeaderField("WWW-Authenticate");
+    const String authHeader = response.httpHeaderField(HTTPHeaderName::WWWAuthenticate);
     const String realmString = "realm=";
     int realmPos = authHeader.find(realmString);
     if (realmPos > 0) {
@@ -514,13 +515,13 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
         d->m_response.setURL(url);
 
         d->m_response.setHTTPStatusCode(httpCode);
-        d->m_response.setMimeType(extractMIMETypeFromMediaType(d->m_response.httpHeaderField("Content-Type")).lower());
-        d->m_response.setTextEncodingName(extractCharsetFromMediaType(d->m_response.httpHeaderField("Content-Type")));
-        d->m_response.setSuggestedFilename(filenameFromHTTPContentDisposition(d->m_response.httpHeaderField("Content-Disposition")));
+        d->m_response.setMimeType(extractMIMETypeFromMediaType(d->m_response.httpHeaderField(HTTPHeaderName::ContentType)).lower());
+        d->m_response.setTextEncodingName(extractCharsetFromMediaType(d->m_response.httpHeaderField(HTTPHeaderName::ContentType)));
+        d->m_response.setSuggestedFilename(filenameFromHTTPContentDisposition(d->m_response.httpHeaderField(HTTPHeaderName::ContentDisposition)));
 
         if (d->m_response.isMultipart()) {
             String boundary;
-            bool parsed = MultipartHandle::extractBoundary(d->m_response.httpHeaderField("Content-Type"), boundary);
+            bool parsed = MultipartHandle::extractBoundary(d->m_response.httpHeaderField(HTTPHeaderName::ContentType), boundary);
             if (parsed)
                 d->m_multipartHandle = MultipartHandle::create(job, boundary);
         }
@@ -532,7 +533,7 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
 
         // HTTP redirection
         if (isHttpRedirect(httpCode)) {
-            String location = d->m_response.httpHeaderField("location");
+            String location = d->m_response.httpHeaderField(HTTPHeaderName::Location);
             if (!location.isEmpty()) {
                 URL newURL = URL(job->firstRequest().url(), location);
 

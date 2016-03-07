@@ -2002,7 +2002,7 @@ static bool fastDocumentTeardownEnabled()
     }
     
     ASSERT(newItemToGoTo);
-    _private->page->goToItem(newItemToGoTo, FrameLoadTypeIndexedBackForward);
+    _private->page->goToItem(newItemToGoTo, FrameLoadType::IndexedBackForward);
 }
 
 - (void)_setFormDelegate: (id<WebFormDelegate>)delegate
@@ -2342,6 +2342,8 @@ static bool needsSelfRetainWhileLoadingQuirk()
 #if ENABLE(IOS_TEXT_AUTOSIZING)
     settings.setMinimumZoomFontSize([preferences _minimumZoomFontSize]);
 #endif
+
+    settings.setAllowNavigationToInvalidURL(!WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_NAVIGATION_URL_VALIDATION));
 #endif // PLATFORM(IOS)
 
 #if PLATFORM(MAC)
@@ -5607,7 +5609,7 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
     if (!_private->page)
         return NO;
 
-    _private->page->goToItem(core(item), FrameLoadTypeIndexedBackForward);
+    _private->page->goToItem(core(item), FrameLoadType::IndexedBackForward);
     return YES;
 }
 

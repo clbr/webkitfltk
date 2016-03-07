@@ -1483,11 +1483,14 @@ void DOMWindow::scrollTo(int x, int y) const
     if (!isCurrentlyDisplayedInFrame())
         return;
 
-    document()->updateLayoutIgnorePendingStylesheets();
-
     RefPtr<FrameView> view = m_frame->view();
     if (!view)
         return;
+
+    if (!x && !y && view->contentsScrollPosition() == IntPoint(0, 0))
+        return;
+
+    document()->updateLayoutIgnorePendingStylesheets();
 
     IntPoint layoutPos(view->mapFromCSSToLayoutUnits(x), view->mapFromCSSToLayoutUnits(y));
     view->setContentsScrollPosition(layoutPos);

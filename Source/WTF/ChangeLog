@@ -1,3 +1,88 @@
+2014-06-19  Dániel Bátyai  <dbatyai.u-szeged@partner.samsung.com>
+
+        Remove ENABLE(LLINT) and ENABLE(LLINT_C_LOOP) guards
+        https://bugs.webkit.org/show_bug.cgi?id=130389
+
+        Reviewed by Mark Lam.
+
+        Removed ENABLE(LLINT) since we always build with it, and changed ENABLE(LLINT_C_LOOP)
+        into !ENABLE(JIT) since they are mutually exclusive.
+
+        * wtf/OSAllocatorPosix.cpp:
+        (WTF::OSAllocator::reserveAndCommit):
+        * wtf/Platform.h:
+
+2014-06-18  Anders Carlsson  <andersca@apple.com>
+
+        Add CF type cast function templates and use them in KeyedDecoder in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=134033
+
+        Reviewed by Sam Weinig.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/cf/TypeCasts.h: Added.
+        (WTF::dynamic_cf_cast):
+        Returns null if the given CFTypeRef object doesn't have the right type.
+
+        (WTF::checked_cf_cast):
+        ASSERTs (with security implication) if the given CFTypeRef object is null or doesn't have the right type.
+
+2014-06-17  Tamas Gergely  <tgergely.u-szeged@partner.samsung.com>
+
+        Misused PLATFORM(MIDDLE_ENDIAN) and PLATFORM(BIG_ENDIAN).
+        https://bugs.webkit.org/show_bug.cgi?id=128301
+
+        Reviewed by Daniel Bates.
+
+        Endianness is a CPU attribute, not a PLATFORM. PLATFORM() macro is replaced to CPU().
+
+        * wtf/text/ASCIIFastPath.h:
+        (WTF::copyLCharsFromUCharSource):
+
+2014-06-17  Andreas Kling  <akling@apple.com>
+
+        Web process main thread priority is lower than some network process threads.
+        <https://webkit.org/b/133987>
+        <rdar://problem/17330300>
+
+        Bring all of our threads to the appropriate priority level by opting in to the
+        threading QoS APIs. By marking them "user initiated", they still yield to UI
+        interaction, but take priority over background tasks.
+
+        Reviewed by Maciej Stachowiak.
+
+        * wtf/Platform.h:
+        * wtf/Threading.cpp:
+        (WTF::setCurrentThreadIsUserInitiated):
+        * wtf/Threading.h:
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::createThreadInternal):
+
+2014-06-17  Alex Christensen  <achristensen@webkit.org>
+
+        Enable css jit for armv7 on iOS.
+        https://bugs.webkit.org/show_bug.cgi?id=133961
+        <rdar://problem/17310631>
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Platform.h:
+        Enable css jit for ARM thumb on iOS.
+
+2014-06-17  Dan Bernstein  <mitz@apple.com>
+
+        String::isolatedCopy doesn’t return an isolated copy when used on an rvalue reference
+        https://bugs.webkit.org/show_bug.cgi?id=133968
+
+        Reviewed by Anders Carlsson.
+
+        Made the rvalue reference overload of isolatedCopy() non-const, so that std::move(*this) is
+        an rvalue reference that can be moved, rather than copied, into the returned String.
+
+        * wtf/text/WTFString.cpp:
+        (WTF::String::isolatedCopy):
+        * wtf/text/WTFString.h:
+
 2014-06-15  Dan Bernstein  <mitz@apple.com>
 
         iOS build fix after r169995.

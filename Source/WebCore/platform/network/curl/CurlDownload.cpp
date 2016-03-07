@@ -29,6 +29,7 @@
 
 #include "CurlDownload.h"
 
+#include "HTTPHeaderNames.h"
 #include "HTTPParsers.h"
 #include "MainThreadTask.h"
 #include "ResourceHandleManager.h"
@@ -462,9 +463,9 @@ void CurlDownload::didReceiveHeader(const String& header)
             }
             m_response->setExpectedContentLength(contentLength); // -1 on parse error or null
 
-            m_response->setMimeType(extractMIMETypeFromMediaType(m_response->httpHeaderField("Content-Type")));
-            m_response->setTextEncodingName(extractCharsetFromMediaType(m_response->httpHeaderField("Content-Type")));
-            m_response->setSuggestedFilename(filenameFromHTTPContentDisposition(m_response->httpHeaderField("Content-Disposition")));
+            m_response.setMimeType(extractMIMETypeFromMediaType(m_response.httpHeaderField(HTTPHeaderName::ContentType)));
+            m_response.setTextEncodingName(extractCharsetFromMediaType(m_response.httpHeaderField(HTTPHeaderName::ContentType)));
+            m_response.setSuggestedFilename(filenameFromHTTPContentDisposition(m_response.httpHeaderField(HTTPHeaderName::ContentDisposition)));
 
             callOnMainThread(MainThreadTask(receivedResponseCallback, this));
         }

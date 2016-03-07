@@ -72,17 +72,21 @@ ScrollingNodeID ScrollingStateTree::attachNode(ScrollingNodeType nodeType, Scrol
     ASSERT(newNodeID);
 
     if (ScrollingStateNode* node = stateNodeForID(newNodeID)) {
+        if (!parentID)
+            return newNodeID;
+
         ScrollingStateNode* parent = stateNodeForID(parentID);
         if (!parent)
             return newNodeID;
+
         if (node->parent() == parent)
             return newNodeID;
 
         // The node is being re-parented. To do that, we'll remove it, and then re-create a new node.
-        removeNode(node);
+        removeNodeAndAllDescendants(node);
     }
 
-    ScrollingStateNode* newNode = 0;
+    ScrollingStateNode* newNode = nullptr;
     if (!parentID) {
         // If we're resetting the root node, we should clear the HashMap and destroy the current children.
         clear();
@@ -97,25 +101,25 @@ ScrollingNodeID ScrollingStateTree::attachNode(ScrollingNodeType nodeType, Scrol
 
         switch (nodeType) {
         case FixedNode: {
-            OwnPtr<ScrollingStateFixedNode> fixedNode = ScrollingStateFixedNode::create(*this, newNodeID);
+            RefPtr<ScrollingStateFixedNode> fixedNode = ScrollingStateFixedNode::create(*this, newNodeID);
             newNode = fixedNode.get();
             parent->appendChild(fixedNode.release());
             break;
         }
         case StickyNode: {
-            OwnPtr<ScrollingStateStickyNode> stickyNode = ScrollingStateStickyNode::create(*this, newNodeID);
+            RefPtr<ScrollingStateStickyNode> stickyNode = ScrollingStateStickyNode::create(*this, newNodeID);
             newNode = stickyNode.get();
             parent->appendChild(stickyNode.release());
             break;
         }
         case FrameScrollingNode: {
-            OwnPtr<ScrollingStateFrameScrollingNode> scrollingNode = ScrollingStateFrameScrollingNode::create(*this, newNodeID);
+            RefPtr<ScrollingStateFrameScrollingNode> scrollingNode = ScrollingStateFrameScrollingNode::create(*this, newNodeID);
             newNode = scrollingNode.get();
             parent->appendChild(scrollingNode.release());
             break;
         }
         case OverflowScrollingNode: {
-            OwnPtr<ScrollingStateOverflowScrollingNode> scrollingNode = ScrollingStateOverflowScrollingNode::create(*this, newNodeID);
+            RefPtr<ScrollingStateOverflowScrollingNode> scrollingNode = ScrollingStateOverflowScrollingNode::create(*this, newNodeID);
             newNode = scrollingNode.get();
             parent->appendChild(scrollingNode.release());
             break;
@@ -137,12 +141,13 @@ void ScrollingStateTree::detachNode(ScrollingNodeID nodeID)
     if (!node)
         return;
 
-    removeNode(node);
+    removeNodeAndAllDescendants(node);
 }
 
 void ScrollingStateTree::clear()
 {
-    removeNode(rootStateNode());
+    removeNodeAndAllDescendants(rootStateNode());
+    ASSERT(m_stateNodeMap.isEmpty());
     m_stateNodeMap.clear();
 }
 
@@ -173,30 +178,39 @@ void ScrollingStateTree::addNode(ScrollingStateNode* node)
     m_stateNodeMap.add(node->scrollingNodeID(), node);
 }
 
-void ScrollingStateTree::removeNode(ScrollingStateNode* node)
+void ScrollingStateTree::removeNodeAndAllDescendants(ScrollingStateNode* node)
 {
     if (!node)
         return;
 
-    if (node == m_rootStateNode) {
-        didRemoveNode(node->scrollingNodeID());
+    recursiveNodeWillBeRemoved(node);
+
+    if (node == m_rootStateNode)
         m_rootStateNode = nullptr;
-        return;
+    else if (ScrollingStateNode* parent = node->parent()) {
+        ASSERT(parent->children() && parent->children()->find(node) != notFound);
+        if (auto children = parent->children()) {
+            size_t index = children->find(node);
+            if (index != notFound)
+                children->remove(index);
+        }
     }
-
-    ASSERT(m_rootStateNode);
-    m_rootStateNode->removeChild(node);
-
-    // ScrollingStateTree::removeNode() will destroy children, so we have to make sure we remove those children
-    // from the HashMap.
-    size_t size = m_nodesRemovedSinceLastCommit.size();
-    for (size_t i = 0; i < size; ++i)
-        m_stateNodeMap.remove(m_nodesRemovedSinceLastCommit[i]);
 }
 
-void ScrollingStateTree::didRemoveNode(ScrollingNodeID nodeID)
+void ScrollingStateTree::recursiveNodeWillBeRemoved(ScrollingStateNode* currNode)
 {
-    m_nodesRemovedSinceLastCommit.append(nodeID);
+    willRemoveNode(currNode);
+
+    if (auto children = currNode->children()) {
+        for (auto& child : *children)
+            recursiveNodeWillBeRemoved(child.get());
+    }
+}
+
+void ScrollingStateTree::willRemoveNode(ScrollingStateNode* node)
+{
+    m_nodesRemovedSinceLastCommit.append(node->scrollingNodeID());
+    m_stateNodeMap.remove(node->scrollingNodeID());
     setHasChangedProperties();
 }
 

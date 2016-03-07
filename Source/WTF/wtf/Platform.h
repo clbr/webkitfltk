@@ -645,16 +645,6 @@
 #endif
 #endif /* !defined(WTF_USE_JSVALUE64) && !defined(WTF_USE_JSVALUE32_64) */
 
-/* Disable the JITs if we're forcing the cloop to be enabled */
-#if defined(ENABLE_LLINT_C_LOOP) && ENABLE_LLINT_C_LOOP
-#define ENABLE_JIT 0
-#define ENABLE_DFG_JIT 0
-#ifdef ENABLE_FTL_JIT
-#undef ENABLE_FTL_JIT
-#endif
-#define ENABLE_FTL_JIT 0
-#endif
-
 /* The JIT is enabled by default on all x86, x86-64, ARM & MIPS platforms except ARMv7k and Windows. */
 #if !defined(ENABLE_JIT) \
     && (CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(ARM64) || CPU(MIPS)) \
@@ -748,21 +738,20 @@
 #define ENABLE_CONCURRENT_JIT 1
 #endif
 
-/* If the jit is not available, enable the LLInt C Loop: */
-#if !ENABLE(JIT)
-#undef ENABLE_LLINT        /* Undef so that we can redefine it. */
-#undef ENABLE_LLINT_C_LOOP /* Undef so that we can redefine it. */
-#undef ENABLE_DFG_JIT      /* Undef so that we can redefine it. */
-#define ENABLE_LLINT 1
-#define ENABLE_LLINT_C_LOOP 1
-#define ENABLE_DFG_JIT 0
+/* Disable the JIT if we force the LLInt C Loop */
+#if defined(ENABLE_LLINT_C_LOOP) && ENABLE_LLINT_C_LOOP
+#undef ENABLE_JIT
+#define ENABLE_JIT 0
 #endif
 
-/* Do a sanity check to make sure that we at least have one execution engine in
-   use: */
-#if !(ENABLE(JIT) || ENABLE(LLINT))
-#error You have to have at least one execution model enabled to build JSC
+/* If the baseline jit is not available, then disable upper tiers as well: */
+#if !ENABLE(JIT)
+#undef ENABLE_DFG_JIT      /* Undef so that we can redefine it. */
+#undef ENABLE_FTL_JIT      /* Undef so that we can redefine it. */
+#define ENABLE_DFG_JIT 0
+#define ENABLE_FTL_JIT 0
 #endif
+
 
 /* Generational collector for JSC */
 #if !defined(ENABLE_GGC)
@@ -814,7 +803,7 @@
 #endif
 
 /* Determine if we need to enable Computed Goto Opcodes or not: */
-#if HAVE(COMPUTED_GOTO) || !ENABLE(LLINT_C_LOOP)
+#if HAVE(COMPUTED_GOTO) || ENABLE(JIT)
 #define ENABLE_COMPUTED_GOTO_OPCODES 1
 #endif
 
@@ -822,7 +811,7 @@
 #define ENABLE_REGEXP_TRACING 0
 
 /* Yet Another Regex Runtime - turned on by default for JIT enabled ports. */
-#if !defined(ENABLE_YARR_JIT) && (ENABLE(JIT) || ENABLE(LLINT_C_LOOP))
+#if !defined(ENABLE_YARR_JIT)
 #define ENABLE_YARR_JIT 1
 
 /* Setting this flag compares JIT results with interpreter results. */
@@ -862,7 +851,7 @@
 
 /* CSS Selector JIT Compiler */
 #if !defined(ENABLE_CSS_SELECTOR_JIT)
-#if (CPU(X86_64) || CPU(ARM64)) && ENABLE(JIT) && \
+#if (CPU(X86_64) || CPU(ARM64) || (CPU(ARM_THUMB2) && PLATFORM(IOS))) && ENABLE(JIT) && \
 	(OS(DARWIN) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(FLTK))
 #define ENABLE_CSS_SELECTOR_JIT 1
 #else
@@ -1011,7 +1000,7 @@
 #endif
 
 #ifndef HAVE_QOS_CLASSES
-#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+#if PLATFORM(IOS) || (PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000)
 #define HAVE_QOS_CLASSES 1
 #endif
 #endif
