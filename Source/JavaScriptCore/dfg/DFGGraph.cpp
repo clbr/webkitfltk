@@ -832,9 +832,22 @@ void Graph::clearReplacements()
         if (!block)
             continue;
         for (unsigned phiIndex = block->phis.size(); phiIndex--;)
-            block->phis[phiIndex]->replacement = 0;
+            block->phis[phiIndex]->setReplacement(nullptr);
         for (unsigned nodeIndex = block->size(); nodeIndex--;)
-            block->at(nodeIndex)->replacement = 0;
+            block->at(nodeIndex)->setReplacement(nullptr);
+    }
+}
+
+void Graph::clearEpochs()
+{
+    for (BlockIndex blockIndex = numBlocks(); blockIndex--;) {
+        BasicBlock* block = m_blocks[blockIndex].get();
+        if (!block)
+            continue;
+        for (unsigned phiIndex = block->phis.size(); phiIndex--;)
+            block->phis[phiIndex]->setEpoch(Epoch());
+        for (unsigned nodeIndex = block->size(); nodeIndex--;)
+            block->at(nodeIndex)->setEpoch(Epoch());
     }
 }
 
@@ -931,8 +944,6 @@ bool Graph::isLiveInBytecode(VirtualRegister operand, CodeOrigin codeOrigin)
 
         // Arguments are always live. This would be redundant if it wasn't for our
         // op_call_varargs inlining.
-        // FIXME: 'this' might not be live, but we don't have a way of knowing.
-        // https://bugs.webkit.org/show_bug.cgi?id=128519
         if (reg.isArgument()
             && static_cast<size_t>(reg.toArgument()) < inlineCallFrame->arguments.size())
             return true;
@@ -941,6 +952,19 @@ bool Graph::isLiveInBytecode(VirtualRegister operand, CodeOrigin codeOrigin)
     }
     
     return true;
+}
+
+BitVector Graph::localsLiveInBytecode(CodeOrigin codeOrigin)
+{
+    BitVector result;
+    result.ensureSize(block(0)->variablesAtHead.numberOfLocals());
+    forAllLocalsLiveInBytecode(
+        codeOrigin,
+        [&] (VirtualRegister reg) {
+            ASSERT(reg.isLocal());
+            result.quickSet(reg.toLocal());
+        });
+    return result;
 }
 
 unsigned Graph::frameRegisterCount()

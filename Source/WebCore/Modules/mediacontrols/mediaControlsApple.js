@@ -396,6 +396,7 @@ Controller.prototype = {
 
         var muteBox = this.controls.muteBox = document.createElement('div');
         muteBox.classList.add(this.ClassNames.muteBox);
+        this.listenFor(muteBox, 'mouseover', this.handleMuteBoxOver);
 
         var muteButton = this.controls.muteButton = document.createElement('button');
         muteButton.setAttribute('pseudo', '-webkit-media-controls-mute-button');
@@ -926,6 +927,11 @@ Controller.prototype = {
         return true;
     },
 
+    handleMuteBoxOver: function(event)
+    {
+        this.drawVolumeBackground();
+    },
+
     handleMinButtonClicked: function(event)
     {
         if (this.video.muted) {
@@ -1125,8 +1131,8 @@ Controller.prototype = {
 
     drawTimelineBackground: function() {
         var dpr = window.devicePixelRatio;
-        var width = this.controls.timeline.offsetWidth * dpr;
-        var height = this.controls.timeline.offsetHeight * dpr;
+        var width = this.timelineWidth * dpr;
+        var height = this.timelineHeight * dpr;
         
         if (!width || !height)
             return;
@@ -1301,6 +1307,7 @@ Controller.prototype = {
                 this.controls.panelBackground.classList.add(this.ClassNames.paused);
             this.controls.playButton.classList.add(this.ClassNames.paused);
             this.controls.playButton.setAttribute('aria-label', this.UIString('Play'));
+            this.showControls();
         } else {
             this.controls.panel.classList.remove(this.ClassNames.paused);
             if (this.controls.panelBackground)
@@ -1315,9 +1322,10 @@ Controller.prototype = {
     {
         this.setNeedsTimelineMetricsUpdate();
 
-        this.updateTime();
+        this.updateTime(true);
         this.updateProgress(true);
         this.drawVolumeBackground();
+        this.drawTimelineBackground();
 
         this.controls.panel.classList.add(this.ClassNames.show);
         this.controls.panel.classList.remove(this.ClassNames.hidden);

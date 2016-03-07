@@ -55,7 +55,6 @@
 #include <memory>
 #include <wtf/Deque.h>
 #include <wtf/HashSet.h>
-#include <wtf/OwnPtr.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/WeakPtr.h>
 
@@ -1689,10 +1688,10 @@ private:
     MediaProducer::MediaStateFlags m_mediaState { MediaProducer::IsNotPlaying };
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    typedef HashMap<uint64_t, WebCore::MediaPlaybackTargetClient*> TargetClientToIdMap;
-    TargetClientToIdMap m_idToClientMap;
-    typedef HashMap<WebCore::MediaPlaybackTargetClient*, uint64_t> TargetIdToClientMap;
-    TargetIdToClientMap m_clientToIDMap;
+    typedef HashMap<uint64_t, WebCore::MediaPlaybackTargetClient*> TargetIdToClientMap;
+    TargetIdToClientMap m_idToClientMap;
+    typedef HashMap<WebCore::MediaPlaybackTargetClient*, uint64_t> TargetClientToIdMap;
+    TargetClientToIdMap m_clientToIDMap;
 #endif
 };
 

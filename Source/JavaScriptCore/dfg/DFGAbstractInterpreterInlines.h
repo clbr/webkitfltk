@@ -1353,6 +1353,7 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
         break;
         
     case PhantomNewObject:
+    case PhantomNewFunction:
     case PhantomDirectArguments:
     case PhantomClonedArguments:
     case BottomValue:
@@ -2068,7 +2069,7 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
     case ProfileType:
     case ProfileControlFlow:
     case Phantom:
-    case HardPhantom:
+    case MustGenerate:
     case CountExecution:
     case CheckTierUpInLoop:
     case CheckTierUpAtReturn:

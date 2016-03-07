@@ -2077,6 +2077,8 @@
 		51FA2D78152132B300C1BA0B /* DOMWindowExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = 517FBA18151AA71B00B57959 /* DOMWindowExtension.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		51FB5504113E3E9100821176 /* JSCloseEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 51FB5502113E3E9100821176 /* JSCloseEvent.h */; };
 		51FB5505113E3E9100821176 /* JSCloseEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51FB5503113E3E9100821176 /* JSCloseEvent.cpp */; };
+		51FB67DB1AE6B82B00D06C5A /* ContentExtensionStyleSheet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51FB67D91AE6B5E400D06C5A /* ContentExtensionStyleSheet.cpp */; };
+		51FB67DC1AE6B82F00D06C5A /* ContentExtensionStyleSheet.h in Headers */ = {isa = PBXBuildFile; fileRef = 51FB67DA1AE6B5E400D06C5A /* ContentExtensionStyleSheet.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		521D46F611AEC98100514613 /* KillRingMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 521D46F511AEC98100514613 /* KillRingMac.mm */; };
 		521D46F811AEC9B100514613 /* KillRing.h in Headers */ = {isa = PBXBuildFile; fileRef = 521D46F711AEC9B100514613 /* KillRing.h */; };
 		52B6C9C215E3F4DF00690B05 /* DOMNamedFlowCollection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 52B6C9BD15E3F4DF00690B05 /* DOMNamedFlowCollection.cpp */; };
@@ -2117,6 +2119,12 @@
 		580371611A66F00A00BAF519 /* ClipRect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5803715F1A66F00A00BAF519 /* ClipRect.cpp */; };
 		580371621A66F00A00BAF519 /* ClipRect.h in Headers */ = {isa = PBXBuildFile; fileRef = 580371601A66F00A00BAF519 /* ClipRect.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		580371641A66F1D300BAF519 /* LayerFragment.h in Headers */ = {isa = PBXBuildFile; fileRef = 580371631A66F1D300BAF519 /* LayerFragment.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		5824ABA21AE81116009074B7 /* RubyElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5824ABA01AE81116009074B7 /* RubyElement.cpp */; };
+		5824ABA31AE81116009074B7 /* RubyElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 5824ABA11AE81116009074B7 /* RubyElement.h */; };
+		5824ABA61AE81384009074B7 /* RubyTextElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5824ABA41AE81384009074B7 /* RubyTextElement.cpp */; };
+		5824ABA71AE81384009074B7 /* RubyTextElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 5824ABA51AE81384009074B7 /* RubyTextElement.h */; };
+		5824ABAA1AE849C8009074B7 /* RenderTreePosition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5824ABA81AE849C8009074B7 /* RenderTreePosition.cpp */; };
+		5824ABAB1AE849C8009074B7 /* RenderTreePosition.h in Headers */ = {isa = PBXBuildFile; fileRef = 5824ABA91AE849C8009074B7 /* RenderTreePosition.h */; };
 		582CB0531A78A14B00AFFCC4 /* SimpleLineLayoutTextFragmentIterator.h in Headers */ = {isa = PBXBuildFile; fileRef = 582CB0521A78A14B00AFFCC4 /* SimpleLineLayoutTextFragmentIterator.h */; };
 		582CB0551A78A2B200AFFCC4 /* SimpleLineLayoutTextFragmentIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 582CB0541A78A2B200AFFCC4 /* SimpleLineLayoutTextFragmentIterator.cpp */; };
 		585D6DFC1A15355600FA4F12 /* SimpleLineLayoutResolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 585D6DFB1A15355600FA4F12 /* SimpleLineLayoutResolver.cpp */; };
@@ -3955,7 +3963,6 @@
 		A7197F2617568AE5007B9442 /* PageThrottler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7197F2517568AE5007B9442 /* PageThrottler.cpp */; };
 		A723F77B1484CA4C008C6DBE /* PlatformExportMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = A723F77A1484CA4C008C6DBE /* PlatformExportMacros.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A72763BF16689BFB002FCACB /* UserActionElementSet.h in Headers */ = {isa = PBXBuildFile; fileRef = A72763BE16689BFB002FCACB /* UserActionElementSet.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		A72EA3BB1585CF55004FAA26 /* RefCountedSupplement.h in Headers */ = {isa = PBXBuildFile; fileRef = A72EA3BA1585CF55004FAA26 /* RefCountedSupplement.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A73F95FE12C97BFE0031AAF9 /* RoundedRect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A73F95FC12C97BFE0031AAF9 /* RoundedRect.cpp */; };
 		A73F95FF12C97BFE0031AAF9 /* RoundedRect.h in Headers */ = {isa = PBXBuildFile; fileRef = A73F95FD12C97BFE0031AAF9 /* RoundedRect.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A740B59514C935AB00A77FA4 /* JSMallocStatistics.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B4EA6914C9348400C8F5BF /* JSMallocStatistics.h */; };
@@ -5990,6 +5997,7 @@
 		E0FEF372B47C53EAC1C1FBEE /* JSEventSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E0FEF371B47C53EAC1C1FBEE /* JSEventSource.cpp */; };
 		E107400D0E77BDC00033AF24 /* JSMessageChannel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E107400B0E77BDC00033AF24 /* JSMessageChannel.cpp */; };
 		E107400E0E77BDC00033AF24 /* JSMessageChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = E107400C0E77BDC00033AF24 /* JSMessageChannel.h */; };
+		E10A39E21AE84E7100A29AE3 /* CFBundleSPI.h in Headers */ = {isa = PBXBuildFile; fileRef = E10A39E11AE84E7100A29AE3 /* CFBundleSPI.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E10B937C0B73C00A003ED890 /* JSCustomXPathNSResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = E10B937B0B73C00A003ED890 /* JSCustomXPathNSResolver.h */; };
 		E10B93C30B73C291003ED890 /* JSCustomXPathNSResolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E10B93C20B73C291003ED890 /* JSCustomXPathNSResolver.cpp */; };
 		E10B9B6C0B747599003ED890 /* NativeXPathNSResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = E10B9B6A0B747599003ED890 /* NativeXPathNSResolver.h */; };
@@ -9287,6 +9295,8 @@
 		51F6A3D60663BF04004D2919 /* HTMLCanvasElement.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = HTMLCanvasElement.h; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
 		51FB5502113E3E9100821176 /* JSCloseEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSCloseEvent.h; sourceTree = "<group>"; };
 		51FB5503113E3E9100821176 /* JSCloseEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSCloseEvent.cpp; sourceTree = "<group>"; };
+		51FB67D91AE6B5E400D06C5A /* ContentExtensionStyleSheet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ContentExtensionStyleSheet.cpp; sourceTree = "<group>"; };
+		51FB67DA1AE6B5E400D06C5A /* ContentExtensionStyleSheet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContentExtensionStyleSheet.h; sourceTree = "<group>"; };
 		521D46F511AEC98100514613 /* KillRingMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = KillRingMac.mm; sourceTree = "<group>"; };
 		521D46F711AEC9B100514613 /* KillRing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KillRing.h; sourceTree = "<group>"; };
 		52B6C9BD15E3F4DF00690B05 /* DOMNamedFlowCollection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DOMNamedFlowCollection.cpp; sourceTree = "<group>"; };
@@ -9328,6 +9338,12 @@
 		5803715F1A66F00A00BAF519 /* ClipRect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ClipRect.cpp; sourceTree = "<group>"; };
 		580371601A66F00A00BAF519 /* ClipRect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClipRect.h; sourceTree = "<group>"; };
 		580371631A66F1D300BAF519 /* LayerFragment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LayerFragment.h; sourceTree = "<group>"; };
+		5824ABA01AE81116009074B7 /* RubyElement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RubyElement.cpp; sourceTree = "<group>"; };
+		5824ABA11AE81116009074B7 /* RubyElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RubyElement.h; sourceTree = "<group>"; };
+		5824ABA41AE81384009074B7 /* RubyTextElement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RubyTextElement.cpp; sourceTree = "<group>"; };
+		5824ABA51AE81384009074B7 /* RubyTextElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RubyTextElement.h; sourceTree = "<group>"; };
+		5824ABA81AE849C8009074B7 /* RenderTreePosition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RenderTreePosition.cpp; sourceTree = "<group>"; };
+		5824ABA91AE849C8009074B7 /* RenderTreePosition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderTreePosition.h; sourceTree = "<group>"; };
 		582CB0521A78A14B00AFFCC4 /* SimpleLineLayoutTextFragmentIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleLineLayoutTextFragmentIterator.h; sourceTree = "<group>"; };
 		582CB0541A78A2B200AFFCC4 /* SimpleLineLayoutTextFragmentIterator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleLineLayoutTextFragmentIterator.cpp; sourceTree = "<group>"; };
 		585D6DFB1A15355600FA4F12 /* SimpleLineLayoutResolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleLineLayoutResolver.cpp; sourceTree = "<group>"; };
@@ -11247,7 +11263,6 @@
 		A7211F241678A54200957444 /* NodeRenderingTraversal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NodeRenderingTraversal.h; sourceTree = "<group>"; };
 		A723F77A1484CA4C008C6DBE /* PlatformExportMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlatformExportMacros.h; sourceTree = "<group>"; };
 		A72763BE16689BFB002FCACB /* UserActionElementSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UserActionElementSet.h; sourceTree = "<group>"; };
-		A72EA3BA1585CF55004FAA26 /* RefCountedSupplement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RefCountedSupplement.h; sourceTree = "<group>"; };
 		A73F95FC12C97BFE0031AAF9 /* RoundedRect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RoundedRect.cpp; sourceTree = "<group>"; };
 		A73F95FD12C97BFE0031AAF9 /* RoundedRect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoundedRect.h; sourceTree = "<group>"; };
 		A74BB76A13BDA86300FF7BF0 /* ExceptionCodePlaceholder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionCodePlaceholder.h; sourceTree = "<group>"; };
@@ -13588,6 +13603,7 @@
 		E0FEF371B47C53EAC1C1FBEE /* JSEventSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSEventSource.cpp; sourceTree = "<group>"; };
 		E107400B0E77BDC00033AF24 /* JSMessageChannel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSMessageChannel.cpp; sourceTree = "<group>"; };
 		E107400C0E77BDC00033AF24 /* JSMessageChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSMessageChannel.h; sourceTree = "<group>"; };
+		E10A39E11AE84E7100A29AE3 /* CFBundleSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFBundleSPI.h; sourceTree = "<group>"; };
 		E10B937B0B73C00A003ED890 /* JSCustomXPathNSResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSCustomXPathNSResolver.h; sourceTree = "<group>"; };
 		E10B93C20B73C291003ED890 /* JSCustomXPathNSResolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSCustomXPathNSResolver.cpp; sourceTree = "<group>"; };
 		E10B9B6A0B747599003ED890 /* NativeXPathNSResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeXPathNSResolver.h; sourceTree = "<group>"; };
@@ -15557,6 +15573,8 @@
 				26F0C8961A2E724B002794F8 /* ContentExtensionParser.h */,
 				26F0C8991A2EC110002794F8 /* ContentExtensionRule.cpp */,
 				26F0C89A1A2EC110002794F8 /* ContentExtensionRule.h */,
+				51FB67D91AE6B5E400D06C5A /* ContentExtensionStyleSheet.cpp */,
+				51FB67DA1AE6B5E400D06C5A /* ContentExtensionStyleSheet.h */,
 				26F0C89D1A2EC3BE002794F8 /* ContentExtensionsBackend.cpp */,
 				26F0C89E1A2EC3BE002794F8 /* ContentExtensionsBackend.h */,
 				262391351A648CEE007251A3 /* ContentExtensionsDebugging.h */,
@@ -16473,6 +16491,7 @@
 		65086DA619AC1719009AF46B /* cf */ = {
 			isa = PBXGroup;
 			children = (
+				E10A39E11AE84E7100A29AE3 /* CFBundleSPI.h */,
 				65086DA719AC1719009AF46B /* CFLocaleSPI.h */,
 				CE8245EF19B671BA00AC0122 /* CFNetworkConnectionCacheSPI.h */,
 				CE12525A1A1C018200864480 /* CFNetworkSPI.h */,
@@ -17909,6 +17928,10 @@
 		93EEC1EC09C2877700C515D1 /* html */ = {
 			isa = PBXGroup;
 			children = (
+				5824ABA01AE81116009074B7 /* RubyElement.cpp */,
+				5824ABA11AE81116009074B7 /* RubyElement.h */,
+				5824ABA41AE81384009074B7 /* RubyTextElement.cpp */,
+				5824ABA51AE81384009074B7 /* RubyTextElement.h */,
 				49484FAE102CF01E00187DD3 /* canvas */,
 				1A88A90117553CD7000C74F9 /* forms */,
 				97C1F5511228558800EDE616 /* parser */,
@@ -21755,7 +21778,6 @@
 				ABC128760B33AA6D00C693D5 /* PopupMenuClient.h */,
 				BC3BE12A0E98092F00835588 /* PopupMenuStyle.h */,
 				0081FEFD16B0A244008AAA7A /* PublicSuffix.h */,
-				A72EA3BA1585CF55004FAA26 /* RefCountedSupplement.h */,
 				9831AE49154225A200FE2644 /* ReferrerPolicy.h */,
 				CDFC360318CA61C20026E56F /* RemoteCommandListener.cpp */,
 				CDFC360418CA61C20026E56F /* RemoteCommandListener.h */,
@@ -22262,6 +22284,8 @@
 		E4763D4A17B2704900D35206 /* style */ = {
 			isa = PBXGroup;
 			children = (
+				5824ABA81AE849C8009074B7 /* RenderTreePosition.cpp */,
+				5824ABA91AE849C8009074B7 /* RenderTreePosition.h */,
 				1C0106FE192594DF008A4201 /* InlineTextBoxStyle.cpp */,
 				1C0106FF192594DF008A4201 /* InlineTextBoxStyle.h */,
 				E4D58EB617B4ED8900CBDCA8 /* StyleFontSizeFunctions.cpp */,
@@ -24732,6 +24756,7 @@
 				9746AF2914F4DDE6003E7A70 /* GeolocationPosition.h in Headers */,
 				0FB6252F18DE1B1500A07C05 /* GeometryUtilities.h in Headers */,
 				9746AF2A14F4DDE6003E7A70 /* Geoposition.h in Headers */,
+				5824ABAB1AE849C8009074B7 /* RenderTreePosition.h in Headers */,
 				086BBD0F136039C2008B15D8 /* Glyph.h in Headers */,
 				B2C3DA6C0D006CD600EF6F26 /* GlyphBuffer.h in Headers */,
 				C5D4AA7A116BAFB60069CA93 /* GlyphMetricsMap.h in Headers */,
@@ -25473,6 +25498,7 @@
 				A83B79020CCAFF15000B0825 /* JSSVGFontFaceNameElement.h in Headers */,
 				A83B78FE0CCAFF15000B0825 /* JSSVGFontFaceSrcElement.h in Headers */,
 				A83B78FC0CCAFF15000B0825 /* JSSVGFontFaceUriElement.h in Headers */,
+				5824ABA31AE81116009074B7 /* RubyElement.h in Headers */,
 				B2FA3D990AB75A6F000E5AC4 /* JSSVGForeignObjectElement.h in Headers */,
 				B2FA3D9B0AB75A6F000E5AC4 /* JSSVGGElement.h in Headers */,
 				724ED3321A3A8B2300F5F13C /* JSEXTBlendMinMax.h in Headers */,
@@ -26046,7 +26072,6 @@
 				FD31603C12B0267600C1A359 /* RealtimeAnalyser.h in Headers */,
 				BC4368E80C226E32005EFB5F /* Rect.h in Headers */,
 				FD45A958175D414C00C21EC8 /* RectangleShape.h in Headers */,
-				A72EA3BB1585CF55004FAA26 /* RefCountedSupplement.h in Headers */,
 				9831AE4A154225C900FE2644 /* ReferrerPolicy.h in Headers */,
 				BCAB418213E356E800D8AAF3 /* Region.h in Headers */,
 				6CDDE8D01770BB220016E072 /* RegionOversetState.h in Headers */,
@@ -26706,6 +26731,7 @@
 				83C1D436178D5AB500141E68 /* SVGPathSegMovetoRel.h in Headers */,
 				082DE42D1292621600D923DF /* SVGPathSegWithContext.h in Headers */,
 				84300BD8120C9AD40021954A /* SVGPathSource.h in Headers */,
+				5824ABA71AE81384009074B7 /* RubyTextElement.h in Headers */,
 				8419D2BA120E0C7600141F8F /* SVGPathStringBuilder.h in Headers */,
 				84300BD6120C9AAC0021954A /* SVGPathStringSource.h in Headers */,
 				84C5B2FB1216DC810088B53A /* SVGPathTraversalStateBuilder.h in Headers */,
@@ -26883,6 +26909,7 @@
 				26F0C8A01A2EC3BE002794F8 /* ContentExtensionsBackend.h in Headers */,
 				49E911C40EF86D47009D0CAF /* TransformationMatrix.h in Headers */,
 				FB484F4D171F821E00040755 /* TransformFunctions.h in Headers */,
+				51FB67DC1AE6B82F00D06C5A /* ContentExtensionStyleSheet.h in Headers */,
 				49E911CE0EF86D47009D0CAF /* TransformOperation.h in Headers */,
 				49E911D00EF86D47009D0CAF /* TransformOperations.h in Headers */,
 				5DB1BC6A10715A6400EFAA49 /* TransformSource.h in Headers */,
@@ -27127,6 +27154,7 @@
 				2E4346510F546A8200B0F1BA /* WorkerObjectProxy.h in Headers */,
 				416E29A6102FA962007FC14E /* WorkerReportingProxy.h in Headers */,
 				2E4346530F546A8200B0F1BA /* WorkerRunLoop.h in Headers */,
+				E10A39E21AE84E7100A29AE3 /* CFBundleSPI.h in Headers */,
 				F3820899147D35F90010BC06 /* WorkerRuntimeAgent.h in Headers */,
 				E1A643F20EC0972500779668 /* WorkerScriptController.h in Headers */,
 				F34742E91343635000531BC2 /* WorkerScriptDebugServer.h in Headers */,
@@ -27574,6 +27602,7 @@
 				FDC54F041399B0DA008D9117 /* BiquadFilterNode.cpp in Sources */,
 				FD31602612B0267600C1A359 /* BiquadProcessor.cpp in Sources */,
 				A89943290B42338800D7C802 /* BitmapImage.cpp in Sources */,
+				51FB67DB1AE6B82B00D06C5A /* ContentExtensionStyleSheet.cpp in Sources */,
 				377A3A9015EFCE9B0059F5C7 /* BitmapImageCG.cpp in Sources */,
 				976D6C78122B8A3D001FD1F7 /* Blob.cpp in Sources */,
 				2EDEF1F3121B0EFC00726DB2 /* BlobData.cpp in Sources */,
@@ -28892,6 +28921,7 @@
 				E51A81DF17298D7700BFCA61 /* JSPerformance.cpp in Sources */,
 				8A9A587011E84C36008ACFD1 /* JSPerformanceNavigation.cpp in Sources */,
 				0F43C85F189E15A600019AE2 /* JSPerformanceTiming.cpp in Sources */,
+				5824ABA61AE81384009074B7 /* RubyTextElement.cpp in Sources */,
 				FDEA6246152102FC00479DF0 /* JSPeriodicWave.cpp in Sources */,
 				93B70D6B09EB0C7C009D8468 /* JSPluginElementFunctions.cpp in Sources */,
 				5189F01D10B37BD900F3C739 /* JSPopStateEvent.cpp in Sources */,
@@ -29827,6 +29857,7 @@
 				FD00D7A414A3F61900734011 /* SincResampler.cpp in Sources */,
 				51327D6111A33A2B004F9D65 /* SinkDocument.cpp in Sources */,
 				49E911CC0EF86D47009D0CAF /* SkewTransformOperation.cpp in Sources */,
+				5824ABA21AE81116009074B7 /* RubyElement.cpp in Sources */,
 				4150F9F212B6E0E70008C860 /* SliderThumbElement.cpp in Sources */,
 				1C0939EA1A13E12900B788E5 /* CachedSVGFont.cpp in Sources */,
 				4B6FA6F70C39E4A100087011 /* SmartReplaceCF.cpp in Sources */,
@@ -29905,6 +29936,7 @@
 				BC2273030E82F1E600E7F975 /* StyleInheritedData.cpp in Sources */,
 				E47127CA163438A100ED6F5A /* StyleInvalidationAnalysis.cpp in Sources */,
 				BC5EB7290E81DE8100B25965 /* StyleMarqueeData.cpp in Sources */,
+				5824ABAA1AE849C8009074B7 /* RenderTreePosition.cpp in Sources */,
 				0FF50271102BA96A0066F39A /* StyleMedia.cpp in Sources */,
 				7C4EDD741A7B607800198C4D /* FontCocoa.mm in Sources */,
 				BC5EB74D0E81E06700B25965 /* StyleMultiColData.cpp in Sources */,

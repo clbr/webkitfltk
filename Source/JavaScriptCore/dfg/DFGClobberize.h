@@ -115,7 +115,7 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
         
     case Identity:
     case Phantom:
-    case HardPhantom:
+    case MustGenerate:
     case Check:
     case ExtractOSREntryLocal:
     case CheckStructureImmediate:
@@ -857,6 +857,7 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
     case NewStringObject:
     case PhantomNewObject:
     case MaterializeNewObject:
+    case PhantomNewFunction:
         read(HeapObjectCount);
         write(HeapObjectCount);
         return;

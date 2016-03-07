@@ -428,12 +428,19 @@ putDirectWithoutTransition(vm, vm.propertyNames-> jsName, lowerName ## Construct
     JSFunction* privateFuncFloor = JSFunction::create(vm, this, 0, String(), globalPrivateFuncFloor);
     JSFunction* privateFuncIsFinite = JSFunction::create(vm, this, 0, String(), globalFuncIsFinite);
 
+    JSFunction* privateFuncObjectKeys = JSFunction::create(vm, this, 0, String(), objectConstructorKeys);
+    JSFunction* privateFuncObjectGetOwnPropertyDescriptor = JSFunction::create(vm, this, 0, String(), objectConstructorGetOwnPropertyDescriptor);
+    JSFunction* privateFuncObjectGetOwnPropertySymbols = JSFunction::create(vm, this, 0, String(), objectConstructorGetOwnPropertySymbols);
+
     GlobalPropertyInfo staticGlobals[] = {
         GlobalPropertyInfo(vm.propertyNames->NaN, jsNaN(), DontEnum | DontDelete | ReadOnly),
         GlobalPropertyInfo(vm.propertyNames->Infinity, jsNumber(std::numeric_limits<double>::infinity()), DontEnum | DontDelete | ReadOnly),
         GlobalPropertyInfo(vm.propertyNames->undefinedKeyword, jsUndefined(), DontEnum | DontDelete | ReadOnly),
         GlobalPropertyInfo(vm.propertyNames->undefinedPrivateName, jsUndefined(), DontEnum | DontDelete | ReadOnly),
         GlobalPropertyInfo(vm.propertyNames->ObjectPrivateName, objectConstructor, DontEnum | DontDelete | ReadOnly),
+        GlobalPropertyInfo(vm.propertyNames->objectKeysPrivateName, privateFuncObjectKeys, DontEnum | DontDelete | ReadOnly),
+        GlobalPropertyInfo(vm.propertyNames->objectGetOwnPropertyDescriptorPrivateName, privateFuncObjectGetOwnPropertyDescriptor, DontEnum | DontDelete | ReadOnly),
+        GlobalPropertyInfo(vm.propertyNames->objectGetOwnPropertySymbolsPrivateName, privateFuncObjectGetOwnPropertySymbols, DontEnum | DontDelete | ReadOnly),
         GlobalPropertyInfo(vm.propertyNames->TypeErrorPrivateName, m_typeErrorConstructor.get(), DontEnum | DontDelete | ReadOnly),
         GlobalPropertyInfo(vm.propertyNames->BuiltinLogPrivateName, builtinLog, DontEnum | DontDelete | ReadOnly),
         GlobalPropertyInfo(vm.propertyNames->ArrayPrivateName, arrayConstructor, DontEnum | DontDelete | ReadOnly),
@@ -539,9 +546,11 @@ namespace {
 class ObjectsWithBrokenIndexingFinder : public MarkedBlock::VoidFunctor {
 public:
     ObjectsWithBrokenIndexingFinder(MarkedArgumentBuffer&, JSGlobalObject*);
-    void operator()(JSCell*);
+    IterationStatus operator()(JSCell*);
 
 private:
+    void visit(JSCell*);
+
     MarkedArgumentBuffer& m_foundObjects;
     JSGlobalObject* m_globalObject;
 };
@@ -562,7 +571,7 @@ inline bool hasBrokenIndexing(JSObject* object)
     return hasUndecided(type) || hasInt32(type) || hasDouble(type) || hasContiguous(type) || hasArrayStorage(type);
 }
 
-void ObjectsWithBrokenIndexingFinder::operator()(JSCell* cell)
+inline void ObjectsWithBrokenIndexingFinder::visit(JSCell* cell)
 {
     if (!cell->isObject())
         return;
@@ -592,6 +601,12 @@ void ObjectsWithBrokenIndexingFinder::operator()(JSCell* cell)
         return;
     
     m_foundObjects.append(object);
+}
+
+IterationStatus ObjectsWithBrokenIndexingFinder::operator()(JSCell* cell)
+{
+    visit(cell);
+    return IterationStatus::Continue;
 }
 
 } // end private namespace for helpers for JSGlobalObject::haveABadTime()

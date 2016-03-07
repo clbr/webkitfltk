@@ -267,6 +267,8 @@ private:
 
     WEBCORE_EXPORT virtual void setReplicatedByLayer(GraphicsLayer*) override;
 
+    WEBCORE_EXPORT virtual bool canThrottleLayerFlush() const override;
+
     WEBCORE_EXPORT virtual void getDebugBorderInfo(Color&, float& width) const override;
     WEBCORE_EXPORT virtual void dumpAdditionalProperties(TextStream&, int indent, LayerTreeAsTextBehavior) const override;
 
@@ -283,8 +285,8 @@ private:
     static FloatRect adjustTiledLayerVisibleRect(TiledBacking*, const FloatRect& oldVisibleRect, const FloatRect& newVisibleRect, const FloatSize& oldSize, const FloatSize& newSize);
 
     bool recursiveVisibleRectChangeRequiresFlush(const TransformState&) const;
-
-    WEBCORE_EXPORT virtual bool canThrottleLayerFlush() const override;
+    
+    bool isPageTiledBackingLayer() const { return type() == Type::PageTiledBacking; }
 
     // Used to track the path down the tree for replica layers.
     struct ReplicaState {
@@ -350,7 +352,7 @@ private:
     FloatPoint positionForCloneRootLayer() const;
 
     // All these "update" methods will be called inside a BEGIN_BLOCK_OBJC_EXCEPTIONS/END_BLOCK_OBJC_EXCEPTIONS block.
-    void updateLayerNames();
+    void updateNames();
     void updateSublayerList(bool maxLayerDepthReached = false);
     void updateGeometry(float pixelAlignmentScale, const FloatPoint& positionRelativeToBase);
     void updateTransform();
@@ -360,7 +362,8 @@ private:
     void updateContentsOpaque(float pageScaleFactor);
     void updateBackfaceVisibility();
     void updateStructuralLayer();
-    void updateLayerDrawsContent();
+    void updateDrawsContent();
+    void updateBackingStoreAttachment();
     void updateBackgroundColor();
 
     void updateContentsImage();
@@ -491,7 +494,6 @@ private:
     FloatSize m_sizeAtLastVisibleRectUpdate;
     
     ContentsLayerPurpose m_contentsLayerPurpose;
-    bool m_isPageTiledBackingLayer : 1;
     bool m_needsFullRepaint : 1;
     bool m_usingBackdropLayerType : 1;
 

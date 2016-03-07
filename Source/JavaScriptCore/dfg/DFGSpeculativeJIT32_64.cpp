@@ -4617,7 +4617,7 @@ void SpeculativeJIT::compile(Node* node)
         break;
 
     case Phantom:
-    case HardPhantom:
+    case MustGenerate:
     case Check:
         DFG_NODE_DO_TO_CHILDREN(m_jit.graph(), node, speculate);
         noResult(node);
@@ -4656,6 +4656,7 @@ void SpeculativeJIT::compile(Node* node)
     case CheckBadCell:
     case BottomValue:
     case PhantomNewObject:
+    case PhantomNewFunction:
     case PutHint:
     case CheckStructureImmediate:
     case MaterializeNewObject:

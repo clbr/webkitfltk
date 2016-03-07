@@ -1,3 +1,465 @@
+2015-04-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Speculative fix for non-main thread auto-attach failures
+        https://bugs.webkit.org/show_bug.cgi?id=144134
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::singleton):
+
+2015-04-23  Basile Clement  <basile_clement@apple.com>
+
+        Allow function allocation sinking
+        https://bugs.webkit.org/show_bug.cgi?id=144016
+
+        Reviewed by Filip Pizlo.
+
+        This adds the ability to sink function allocations in the
+        DFGObjectAllocationSinkingPhase.
+
+        In order to enable this, we add a new PhantomNewFunction node that is
+        used similarily to the PhantomNewObject node, i.e. as a placeholder to replace
+        a sunk NewFunction and keep track of the allocations that have to be performed
+        in case of OSR exit after the sunk allocation but before the real one.
+        The FunctionExecutable and JSLexicalEnvironment (activation) of the function
+        are stored onto the PhantomNewFunction through PutHints in order for them
+        to be recovered on OSR exit.
+
+        Contrary to sunk object allocations, sunk function allocations do not
+        support any kind of operations (e.g. storing into a field) ; any such operation
+        will mark the function allocation as escaping and trigger materialization. As
+        such, function allocations can only be sunk to places where it would have been
+        correct to syntactically move them, and we don't need a special
+        MaterializeNewFunction node to recover possible operations on the function. A
+        sunk NewFunction node will simply create new NewFunction nodes, then replace
+        itself with a PhantomNewFunction node.
+
+        In itself, this change is not expected to have a significant impact on
+        performances other than in degenerate cases (see e.g.
+        JSRegress/sink-function), but it is a step towards being able to sink recursive
+        closures onces we support CreateActivation sinking as well as allocation cycles
+        sinking.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertToPhantomNewFunction):
+        (JSC::DFG::Node::isPhantomAllocation):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGObjectAllocationSinkingPhase.cpp:
+        (JSC::DFG::ObjectAllocationSinkingPhase::lowerNonReadingOperationsOnPhantomAllocations):
+        (JSC::DFG::ObjectAllocationSinkingPhase::handleNode):
+        (JSC::DFG::ObjectAllocationSinkingPhase::createMaterialize):
+        (JSC::DFG::ObjectAllocationSinkingPhase::populateMaterialize):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGPromotedHeapLocation.cpp:
+        (WTF::printInternal):
+        * dfg/DFGPromotedHeapLocation.h:
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::validateCPS):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        * ftl/FTLOperations.cpp:
+        (JSC::FTL::operationMaterializeObjectInOSR):
+        * tests/stress/function-sinking-no-double-allocate.js: Added.
+        (call):
+        (.f):
+        (sink):
+        * tests/stress/function-sinking-osrexit.js: Added.
+        (.g):
+        (sink):
+        * tests/stress/function-sinking-put.js: Added.
+        (.g):
+        (sink):
+
+2015-04-23  Basile Clement  <basile_clement@apple.com>
+
+        Make FunctionRareData allocation thread-safe
+        https://bugs.webkit.org/show_bug.cgi?id=144001
+
+        Reviewed by Mark Lam.
+
+        The two things we want to prevent are:
+
+         1. A thread seeing a pointer to a not-yet-fully-created rare data from
+            a JSFunction
+         2. A thread seeing a pointer to a not-yet-fully-created Structure from
+            an ObjectAllocationProfile
+
+        For 1., only the JS thread can be creating the rare data (in
+        runtime/CommonSlowPaths.cpp or in dfg/DFGOperations.cpp), so we don't need to
+        worry about concurrent writes, and we don't need any fences when *reading* the
+        rare data from the JS thread. Thus we only need a storeStoreFence between the
+        rare data creation and assignment to m_rareData in
+        JSFunction::createAndInitializeRareData() to ensure that when the store to
+        m_rareData is issued, the rare data has been properly created.
+
+        For the DFG compilation threads, the only place they can access the
+        rare data is through JSFunction::rareData(), and so we only need a
+        loadLoadFence there to ensure that when we see a non-null pointer in
+        m_rareData, the pointed object will be seen as a fully created
+        FunctionRareData.
+
+
+        For 2., the structure is created in
+        ObjectAllocationProfile::initialize() (which appears to be called only by the
+        JS thread as well, in bytecode/CodeBlock.cpp and on rare data initialization,
+        which always happen in the JS thread), and read through
+        ObjectAllocationProfile::structure() and
+        ObjectAllocationProfile::inlineCapacity(), so following the same reasoning we
+        put a storeStoreFence in ObjectAllocationProfile::initialize() and a
+        loadLoadFence in ObjectAllocationProfile::structure() (and change
+        ObjectAllocationProfile::inlineCapacity() to go through
+        ObjectAllocationProfile::structure()).
+
+        We don't need a fence in ObjectAllocationProfile::clear() because
+        clearing the structure is already as atomic as it gets.
+
+        Finally, notice that we don't care about the ObjectAllocationProfile's
+        m_allocator as that is only used by ObjectAllocationProfile::initialize() and
+        ObjectAllocationProfile::clear() that are always run in the JS thread.
+        ObjectAllocationProfile::isNull() could cause some trouble, but it is
+        currently only used in the ObjectAllocationProfile::clear()'s ASSERT in the JS
+        thread.  Doing isNull()-style pre-checks would be wrong in any other concurrent
+        thread anyway.
+
+        * bytecode/ObjectAllocationProfile.h:
+        (JSC::ObjectAllocationProfile::initialize):
+        (JSC::ObjectAllocationProfile::structure):
+        (JSC::ObjectAllocationProfile::inlineCapacity):
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::allocateAndInitializeRareData):
+        * runtime/JSFunction.h:
+        (JSC::JSFunction::rareData):
+        (JSC::JSFunction::allocationStructure): Deleted.
+        This is no longer used, as all the accesses to the ObjectAllocationProfile go through the rare data.
+
+2015-04-22  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should insert Phantoms late using BytecodeKills and block-local OSR availability
+        https://bugs.webkit.org/show_bug.cgi?id=143735
+
+        Reviewed by Geoffrey Garen.
+        
+        We've always had bugs arising from the fact that we would MovHint something into a local,
+        and then fail to keep it alive. We would then try to keep things alive by putting Phantoms
+        on those Nodes that were MovHinted. But this became increasingly tricky. Given the
+        sophistication of the transformations we are doing today, this approach is just not sound
+        anymore.
+        
+        This comprehensively fixes these bugs by having the DFG backend automatically insert
+        Phantoms just before codegen based on bytecode liveness. To make this practical, this also
+        makes it much faster to query bytecode liveness.
+        
+        It's about as perf-neutral as it gets for a change that increases compiler work without
+        actually optimizing anything. Later changes will remove the old Phantom-preserving logic,
+        which should then speed us up. I can't really report concrete slow-down numbers because
+        they are low enough to basically be in the noise. For example, a 20-iteration run of
+        SunSpider yields "maybe 0.8% slower", whatever that means.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/BytecodeLivenessAnalysis.cpp:
+        (JSC::BytecodeLivenessAnalysis::computeFullLiveness):
+        * bytecode/FullBytecodeLiveness.h:
+        (JSC::FullBytecodeLiveness::getLiveness):
+        * bytecode/VirtualRegister.h:
+        (JSC::VirtualRegister::operator+):
+        (JSC::VirtualRegister::operator-):
+        * dfg/DFGForAllKills.h:
+        (JSC::DFG::forAllLiveNodesAtTail):
+        (JSC::DFG::forAllKilledOperands):
+        (JSC::DFG::forAllKilledNodesAtNodeIndex):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::isLiveInBytecode):
+        (JSC::DFG::Graph::localsLiveInBytecode):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::forAllLocalsLiveInBytecode):
+        (JSC::DFG::Graph::forAllLiveInBytecode):
+        * dfg/DFGMayExit.cpp:
+        (JSC::DFG::mayExit):
+        * dfg/DFGMovHintRemovalPhase.cpp:
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPhantomInsertionPhase.cpp: Added.
+        (JSC::DFG::performPhantomInsertion):
+        * dfg/DFGPhantomInsertionPhase.h: Added.
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * dfg/DFGScoreBoard.h:
+        (JSC::DFG::ScoreBoard::sortFree):
+        (JSC::DFG::ScoreBoard::assertClear):
+        * dfg/DFGVirtualRegisterAllocationPhase.cpp:
+        (JSC::DFG::VirtualRegisterAllocationPhase::run):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::buildExitArguments):
+        * tests/stress/phantom-inadequacy.js: Added.
+        (bar):
+        (baz):
+        (foo):
+
+2015-04-23  Filip Pizlo  <fpizlo@apple.com>
+
+        Rename HardPhantom to MustGenerate.
+
+        Rubber stamped by Geoffrey Garen.
+        
+        We are steadily moving towards Phantom just being a backend hack in the DFG. HardPhantom
+        is more than that; it's a utility for forcing the execution of otherwise killable nodes.
+        NodeMustGenerate is the flag we use to indicate that something isn't killable. So this
+        node should just be called MustGenerate.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGArgumentsEliminationPhase.cpp:
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDCEPhase.cpp:
+        (JSC::DFG::DCEPhase::run):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        (JSC::DFG::FixupPhase::tryToRelaxRepresentation):
+        * dfg/DFGIntegerCheckCombiningPhase.cpp:
+        (JSC::DFG::IntegerCheckCombiningPhase::insertMustAdd):
+        * dfg/DFGMayExit.cpp:
+        (JSC::DFG::mayExit):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::willHaveCodeGenOrOSR):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGObjectAllocationSinkingPhase.cpp:
+        (JSC::DFG::ObjectAllocationSinkingPhase::handleNode):
+        * dfg/DFGPhantomCanonicalizationPhase.cpp:
+        (JSC::DFG::PhantomCanonicalizationPhase::run):
+        * dfg/DFGPhantomRemovalPhase.cpp:
+        (JSC::DFG::PhantomRemovalPhase::run):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGTypeCheckHoistingPhase.cpp:
+        (JSC::DFG::TypeCheckHoistingPhase::identifyRedundantStructureChecks):
+        (JSC::DFG::TypeCheckHoistingPhase::identifyRedundantArrayChecks):
+        * dfg/DFGVarargsForwardingPhase.cpp:
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+
+2015-04-23  Jordan Harband  <ljharb@gmail.com>
+
+        Implement `Object.assign`
+        https://bugs.webkit.org/show_bug.cgi?id=143980
+
+        Reviewed by Filip Pizlo.
+
+        per https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
+
+        * builtins/ObjectConstructor.js: Added.
+        (assign):
+        * runtime/CommonIdentifiers.h:
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/ObjectConstructor.cpp:
+        * runtime/ObjectConstructor.h:
+
+2015-04-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix debug build.
+
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::performSubstitutionForEdge):
+
+2015-04-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Nodes should have an optional epoch field
+        https://bugs.webkit.org/show_bug.cgi?id=144084
+
+        Reviewed by Ryosuke Niwa and Mark Lam.
+        
+        This makes it easier to do epoch-based analyses on nodes. I plan to do just that in
+        https://bugs.webkit.org/show_bug.cgi?id=143735. Currently the epoch field is not yet
+        used.
+
+        * dfg/DFGCPSRethreadingPhase.cpp:
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeGetLocalFor):
+        * dfg/DFGCSEPhase.cpp:
+        * dfg/DFGEpoch.h:
+        (JSC::DFG::Epoch::fromUnsigned):
+        (JSC::DFG::Epoch::toUnsigned):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::clearReplacements):
+        (JSC::DFG::Graph::clearEpochs):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::performSubstitutionForEdge):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::Node):
+        (JSC::DFG::Node::replaceWith):
+        (JSC::DFG::Node::replacement):
+        (JSC::DFG::Node::setReplacement):
+        (JSC::DFG::Node::epoch):
+        (JSC::DFG::Node::setEpoch):
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+
+2015-04-22  Mark Lam  <mark.lam@apple.com>
+
+        Fix assertion failure and race condition in Options::dumpSourceAtDFGTime().
+        https://bugs.webkit.org/show_bug.cgi?id=143898
+
+        Reviewed by Filip Pizlo.
+
+        CodeBlock::dumpSource() will access SourceCode strings in a way that requires
+        ref'ing of the underlying StringImpls. This is unsafe to do from arbitrary
+        compilation threads because StringImpls are not thread safe. As a result, we get
+        an assertion failure when we run with JSC_dumpSourceAtDFGTime=true on a debug
+        build.
+
+        This patch fixes the issue by only collecting the CodeBlock (and associated info)
+        into a DeferredSourceDump record while compiling, and stashing it away in a
+        deferredSourceDump list in the DeferredCompilationCallback object to be dumped
+        later.
+
+        When compilation is done, the callback object will be notified that
+        compilationDidComplete().  We will dump the SourceCode strings from there. 
+        Since compilationDidComplete() is guaranteed to only be called on the thread
+        doing JS execution, it is safe to access the SourceCode strings there and ref
+        their underlying StringImpls as needed.        
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/DeferredCompilationCallback.cpp:
+        (JSC::DeferredCompilationCallback::compilationDidComplete):
+        (JSC::DeferredCompilationCallback::sourceDumpInfo):
+        (JSC::DeferredCompilationCallback::dumpCompiledSources):
+        * bytecode/DeferredCompilationCallback.h:
+        * bytecode/DeferredSourceDump.cpp: Added.
+        (JSC::DeferredSourceDump::DeferredSourceDump):
+        (JSC::DeferredSourceDump::dump):
+        * bytecode/DeferredSourceDump.h: Added.
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseCodeBlock):
+        * dfg/DFGDriver.cpp:
+        (JSC::DFG::compileImpl):
+
+2015-04-22  Benjamin Poulain  <benjamin@webkit.org>
+
+        Implement String.codePointAt()
+        https://bugs.webkit.org/show_bug.cgi?id=143934
+
+        Reviewed by Darin Adler.
+
+        This patch adds String.codePointAt() as defined by ES6.
+        I opted for a C++ implementation for now.
+
+        * runtime/StringPrototype.cpp:
+        (JSC::StringPrototype::finishCreation):
+        (JSC::codePointAt):
+        (JSC::stringProtoFuncCodePointAt):
+
+2015-04-22  Mark Lam  <mark.lam@apple.com>
+
+        SparseArrayEntry's write barrier owner should be the SparseArrayValueMap.
+        https://bugs.webkit.org/show_bug.cgi?id=144067
+
+        Reviewed by Michael Saboff.
+
+        Currently, there are a few places where the JSObject that owns the
+        SparseArrayValueMap is designated as the owner of the SparseArrayEntry
+        write barrier.  This is a bug and can result in the GC collecting the
+        SparseArrayEntry even though it is being referenced by the
+        SparseArrayValueMap.  This patch fixes the bug.
+
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::enterDictionaryIndexingModeWhenArrayStorageAlreadyExists):
+        (JSC::JSObject::putIndexedDescriptor):
+        * tests/stress/sparse-array-entry-update-144067.js: Added.
+        (useMemoryToTriggerGCs):
+        (foo):
+
+2015-04-22  Mark Lam  <mark.lam@apple.com>
+
+        Give the heap object iterators the ability to return early.
+        https://bugs.webkit.org/show_bug.cgi?id=144011
+
+        Reviewed by Michael Saboff.
+
+        JSDollarVMPrototype::isValidCell() uses a heap object iterator to validate
+        candidate cell pointers, and, when in use, is called a lot more often than
+        the normal way those iterators are used.  As a result, I see my instrumented
+        VM killed with a SIGXCPU (CPU time limit exceeded).  This patch gives the
+        callback functor the ability to tell the iterators to return early when the
+        functor no longer needs to continue iterating.  With this, my instrumented
+        VM is useful again for debugging.
+
+        Since heap iteration is not something that we do in a typical fast path,
+        I don't expect this to have any noticeable impact on performance.
+
+        I also renamed ObjectAddressCheckFunctor to CellAddressCheckFunctor since
+        it checks JSCell addresses, not just JSObjects.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * debugger/Debugger.cpp:
+        * heap/GCLogging.cpp:
+        (JSC::LoggingFunctor::operator()):
+        * heap/Heap.cpp:
+        (JSC::Zombify::visit):
+        (JSC::Zombify::operator()):
+        * heap/HeapStatistics.cpp:
+        (JSC::StorageStatistics::visit):
+        (JSC::StorageStatistics::operator()):
+        * heap/HeapVerifier.cpp:
+        (JSC::GatherLiveObjFunctor::visit):
+        (JSC::GatherLiveObjFunctor::operator()):
+        * heap/MarkedBlock.cpp:
+        (JSC::SetNewlyAllocatedFunctor::operator()):
+        * heap/MarkedBlock.h:
+        (JSC::MarkedBlock::forEachCell):
+        (JSC::MarkedBlock::forEachLiveCell):
+        (JSC::MarkedBlock::forEachDeadCell):
+        * heap/MarkedSpace.h:
+        (JSC::MarkedSpace::forEachLiveCell):
+        (JSC::MarkedSpace::forEachDeadCell):
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::TypeRecompiler::visit):
+        (Inspector::TypeRecompiler::operator()):
+        * runtime/IterationStatus.h: Added.
+        * runtime/JSGlobalObject.cpp:
+        * runtime/VM.cpp:
+        (JSC::StackPreservingRecompiler::visit):
+        (JSC::StackPreservingRecompiler::operator()):
+        * tools/JSDollarVMPrototype.cpp:
+        (JSC::CellAddressCheckFunctor::CellAddressCheckFunctor):
+        (JSC::CellAddressCheckFunctor::operator()):
+        (JSC::JSDollarVMPrototype::isValidCell):
+        (JSC::ObjectAddressCheckFunctor::ObjectAddressCheckFunctor): Deleted.
+        (JSC::ObjectAddressCheckFunctor::operator()): Deleted.
+
 2015-04-22  Yusuke Suzuki  <utatane.tea@gmail.com>
 
         [[Set]] should be properly executed in JS builtins

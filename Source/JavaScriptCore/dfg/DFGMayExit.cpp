@@ -71,7 +71,7 @@ bool mayExit(Graph& graph, Node* node)
     case Flush:
     case Phantom:
     case Check:
-    case HardPhantom:
+    case MustGenerate:
     case GetLocal:
     case LoopHint:
     case Phi:
@@ -88,6 +88,9 @@ bool mayExit(Graph& graph, Node* node)
     case GetScope:
     case PhantomLocal:
     case CountExecution:
+    case Jump:
+    case Branch:
+    case Unreachable:
         break;
         
     default:

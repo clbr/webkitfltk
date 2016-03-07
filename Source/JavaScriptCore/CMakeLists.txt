@@ -80,6 +80,7 @@ set(JavaScriptCore_SOURCES
     bytecode/ConstantStructureCheck.cpp
     bytecode/DFGExitProfile.cpp
     bytecode/DeferredCompilationCallback.cpp
+    bytecode/DeferredSourceDump.cpp
     bytecode/ExecutionCounter.cpp
     bytecode/ExitKind.cpp
     bytecode/ExitingJITType.cpp
@@ -202,6 +203,7 @@ set(JavaScriptCore_SOURCES
     dfg/DFGObjectMaterializationData.cpp
     dfg/DFGOperations.cpp
     dfg/DFGPhantomCanonicalizationPhase.cpp
+    dfg/DFGPhantomInsertionPhase.cpp
     dfg/DFGPhantomRemovalPhase.cpp
     dfg/DFGPhase.cpp
     dfg/DFGPhiChildren.cpp
@@ -1228,3 +1230,4 @@ endif ()
 if (ENABLE_FTL_JIT)
     add_dependencies(JavaScriptCore llvmForJSC)
 endif ()
+

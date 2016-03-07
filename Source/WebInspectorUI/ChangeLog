@@ -1,3 +1,144 @@
+2015-04-23  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: run a customizable bootstrap function after the UI has fully loaded
+        https://bugs.webkit.org/show_bug.cgi?id=144124
+
+        Reviewed by Joseph Pecoraro.
+
+        It can be really annoying to click through the Inspector UI dozens of times to debug one
+        interaction or iterate on a specific widget.
+
+        This patch adds a blank "bootstrap" function that can be used to hard-wire commands to
+        automate repetitive UI state setup. The function is run immediately after the inspector loads.
+        Setup commands can be shared as bug report reproduction steps.
+
+        * UserInterface/Base/Bootstrap.js: Added.
+        (WebInspector.runBootstrapOperations): Added.
+        * UserInterface/Base/Main.js:
+        (WebInspector.contentLoaded): Bootstrap after setting up everything and restoring view state from cookie.
+        * UserInterface/Main.html:
+
+2015-04-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Adopt Object.assign and improve its display in Console
+        https://bugs.webkit.org/show_bug.cgi?id=144135
+
+        Reviewed by Darin Adler.
+
+        * UserInterface/Models/NativeFunctionParameters.js:
+
+2015-04-23  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: DebuggerSidebarPanel's _callStackContentTreeOutline should suppress filtering
+        https://bugs.webkit.org/show_bug.cgi?id=144114
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/DebuggerSidebarPanel.js:
+        (WebInspector.DebuggerSidebarPanel):
+
+2015-04-23  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Fix layering issues with ApplicationCacheFrameTreeElement
+        https://bugs.webkit.org/show_bug.cgi?id=144113
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/ApplicationCacheFrameTreeElement.js:
+        (WebInspector.ApplicationCacheFrameTreeElement.prototype.updateTitles):
+        (WebInspector.ApplicationCacheFrameTreeElement):
+
+2015-04-22  Matt Baker  <mattbaker@apple.com>
+
+        Web Inspector: clicking Timelines tree view nodes should not change the current content view
+        https://bugs.webkit.org/show_bug.cgi?id=132202
+
+        Reviewed by Brian Burg.
+
+        TimelineSidebarPanel now prevents timeline views from switching to another content view while the content
+        browser is showing the TimelineRecordingContentView. Code responsible for creating and updating the tree
+        element close button, which was duplicated in multiple derived TimelineView classes, has been moved to the
+        TimelineView base class.
+
+        * UserInterface/Views/LayoutTimelineView.js:
+        Updated name of location column, which was broken in a recent patch.
+        (WebInspector.LayoutTimelineView.prototype.treeElementDeselected):
+        (WebInspector.LayoutTimelineView.prototype.treeElementSelected):
+        Added overrides of new base class methods to handle view-specific highlight logic.
+        (WebInspector.LayoutTimelineView.prototype._treeElementDeselected): Deleted.
+        (WebInspector.LayoutTimelineView.prototype._treeElementSelected): Deleted.
+        (WebInspector.LayoutTimelineView.prototype._updateTreeElementWithCloseButton): Deleted.
+        (WebInspector.LayoutTimelineView.prototype._closeStatusButtonClicked): Deleted.
+        Removed tree element close button logic.
+
+        * UserInterface/Views/NetworkTimelineView.js:
+        (WebInspector.NetworkTimelineView.prototype.showContentViewForTreeElement):
+        (WebInspector.NetworkTimelineView.prototype.treeElementSelected):
+        Added overrides of new base class methods.
+        (WebInspector.NetworkTimelineView.prototype._treeElementDeselected): Deleted.
+        (WebInspector.NetworkTimelineView.prototype._treeElementSelected): Deleted.
+        Removed tree element close button logic.
+
+        * UserInterface/Views/RenderingFrameTimelineView.js:
+        (WebInspector.RenderingFrameTimelineView.prototype.showContentViewForTreeElement):
+        (WebInspector.RenderingFrameTimelineView.prototype.treeElementSelected):
+        Added overrides of new base class methods.
+
+        * UserInterface/Views/ResourceTimelineDataGridNode.js:
+        (WebInspector.ResourceTimelineDataGridNode.prototype.get data):
+        (WebInspector.ResourceTimelineDataGridNode.prototype.createCellContent):
+        Removed unused Name column and added "go to" button to the Domain column to show the selected resource.
+
+        * UserInterface/Views/ScriptTimelineView.js:
+        (WebInspector.ScriptTimelineView):
+        (WebInspector.ScriptTimelineView.prototype.showContentViewForTreeElement):
+        (WebInspector.ScriptTimelineView.prototype.treeElementSelected):
+        Added overrides of new base class methods.
+        (WebInspector.ScriptTimelineView.prototype._dataGridNodeSelected):
+        (WebInspector.ScriptTimelineView.prototype._treeElementDeselected): Deleted.
+        (WebInspector.ScriptTimelineView.prototype._treeElementSelected): Deleted.
+        (WebInspector.ScriptTimelineView.prototype._updateTreeElementWithCloseButton): Deleted.
+        (WebInspector.ScriptTimelineView.prototype._closeStatusButtonClicked): Deleted.
+        Removed tree element close button logic.
+
+        * UserInterface/Views/TimelineSidebarPanel.js:
+        (WebInspector.TimelineSidebarPanel.showTimelineViewForTimeline.this._timelineTreeElementMap.get select):
+        Prevent navigating to a different content view when showing the TimelineRecordingContentView.
+
+        * UserInterface/Views/TimelineView.js:
+        (WebInspector.TimelineView):
+        (WebInspector.TimelineView.prototype.showContentViewForTreeElement):
+        (WebInspector.TimelineView.prototype.treeElementDeselected):
+        (WebInspector.TimelineView.prototype.treeElementSelected):
+        Tree element selection handlers are now protected methods, which derived classes may override as needed.
+        (WebInspector.TimelineView.prototype.needsLayout):
+        (WebInspector.TimelineView.prototype._closeStatusButtonClicked):
+        (WebInspector.TimelineView.prototype._updateTreeElementWithCloseButton):
+        Encapsulated logic related to close button creation and behavior.
+
+2015-04-22  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Remove an unused index argument from Sidebar.removeSidebarPanel
+        https://bugs.webkit.org/show_bug.cgi?id=144054
+
+        Reviewed by Darin Adler.
+
+        * UserInterface/Views/Sidebar.js:
+
+2015-04-22  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Fix an exception preventing switching timelines
+        https://bugs.webkit.org/show_bug.cgi?id=144053
+
+        Reviewed by Darin Adler.
+
+        * UserInterface/Views/TreeOutline.js:
+        (WebInspector.TreeElement.prototype.select): Store treeOutline in a local so
+        we have a reference to it when we go to reset processingSelectionChange.
+        The calls to onselect was removing the tree element from the outline, causing
+        "delete this.treeOutline.processingSelectionChange" to throw an exception.
+        This patch changes the delete to a set to false for good measure too.
+
 2015-04-21  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Use String.prototype.startsWith in more places

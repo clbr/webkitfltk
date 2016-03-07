@@ -1688,6 +1688,8 @@ set(WebCore_SOURCES
     html/RangeInputType.cpp
     html/RelList.cpp
     html/ResetInputType.cpp
+    html/RubyElement.cpp
+    html/RubyTextElement.cpp
     html/SearchInputType.cpp
     html/StepRange.cpp
     html/SubmitInputType.cpp
@@ -2540,6 +2542,7 @@ set(WebCore_SOURCES
     storage/StorageNamespaceProvider.cpp
 
     style/InlineTextBoxStyle.cpp
+    style/RenderTreePosition.cpp
     style/StyleFontSizeFunctions.cpp
     style/StyleResolveForDocument.cpp
     style/StyleResolveTree.cpp
