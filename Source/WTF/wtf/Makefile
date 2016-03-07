@@ -2,7 +2,6 @@ SRC = Assertions.cpp \
     Atomics.cpp \
     BitVector.cpp \
     CompilationThread.cpp \
-    Compression.cpp \
     CryptographicUtilities.cpp \
     CryptographicallyRandomNumber.cpp \
     CurrentTime.cpp \
@@ -21,22 +20,22 @@ SRC = Assertions.cpp \
     MetaAllocator.cpp \
     NumberOfCores.cpp \
     OSRandomSource.cpp \
-    PageAllocationAligned.cpp \
     PageBlock.cpp \
     ParallelJobsGeneric.cpp \
     PrintStream.cpp \
     RAMSize.cpp \
     RandomNumber.cpp \
     RefCountedLeakCounter.cpp \
+    RefCounter.cpp \
     RunLoop.cpp \
     SHA1.cpp \
     SixCharacterHash.cpp \
     StackStats.cpp \
     StackBounds.cpp \
     StringPrintStream.cpp \
-    TCSystemAlloc.cpp \
     Threading.cpp \
     WTFThreadData.cpp \
+    WorkQueue.cpp \
     dtoa.cpp \
     dtoa/bignum-dtoa.cc \
     dtoa/bignum.cc \
@@ -53,6 +52,8 @@ SRC = Assertions.cpp \
     text/StringBuilder.cpp \
     text/StringImpl.cpp \
     text/StringStatics.cpp \
+    text/StringView.cpp \
+    text/SymbolRegistry.cpp \
     text/WTFString.cpp \
     threads/BinarySemaphore.cpp \
     unicode/UTF8.cpp \
@@ -66,7 +67,7 @@ SRC = Assertions.cpp \
 OBJ := $(SRC:.cpp=.o)
 OBJ := $(OBJ:.cc=.o)
 
-CXXFLAGS += -I dtoa -I threads -I unicode -I .. -I .
+CXXFLAGS += -I dtoa -I threads -I unicode -I .. -I . -I ../../bmalloc
 CXXFLAGS += -std=gnu++11
 CXXFLAGS += -DBUILDING_FLTK__
 CXXFLAGS += $(shell icu-config --cppflags)
