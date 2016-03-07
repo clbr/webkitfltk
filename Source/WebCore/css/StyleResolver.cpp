@@ -428,7 +428,7 @@ inline void StyleResolver::State::initForStyleResolve(Document& document, Elemen
     updateConversionData();
 }
 
-inline void StyleResolver::State::setStyle(PassRef<RenderStyle> style)
+inline void StyleResolver::State::setStyle(Ref<RenderStyle>&& style)
 {
     m_style = WTF::move(style);
     updateConversionData();
@@ -739,7 +739,7 @@ static inline bool isAtShadowBoundary(const Element* element)
     return parentNode && parentNode->isShadowRoot();
 }
 
-PassRef<RenderStyle> StyleResolver::styleForElement(Element* element, RenderStyle* defaultParent,
+Ref<RenderStyle> StyleResolver::styleForElement(Element* element, RenderStyle* defaultParent,
     StyleSharingBehavior sharingBehavior, RuleMatchingBehavior matchingBehavior, const RenderRegion* regionForStyling)
 {
     // Once an element has a renderer, we don't try to destroy it, since otherwise the renderer
@@ -811,7 +811,7 @@ PassRef<RenderStyle> StyleResolver::styleForElement(Element* element, RenderStyl
     return state.takeStyle();
 }
 
-PassRef<RenderStyle> StyleResolver::styleForKeyframe(const RenderStyle* elementStyle, const StyleKeyframe* keyframe, KeyframeValue& keyframeValue)
+Ref<RenderStyle> StyleResolver::styleForKeyframe(const RenderStyle* elementStyle, const StyleKeyframe* keyframe, KeyframeValue& keyframeValue)
 {
     MatchResult result;
     result.addMatchedProperties(keyframe->properties());
@@ -985,7 +985,7 @@ PassRefPtr<RenderStyle> StyleResolver::pseudoStyleForElement(Element* element, c
     return state.takeStyle();
 }
 
-PassRef<RenderStyle> StyleResolver::styleForPage(int pageIndex)
+Ref<RenderStyle> StyleResolver::styleForPage(int pageIndex)
 {
     m_state.initForStyleResolve(m_document, m_document.documentElement(), m_document.renderStyle());
 
@@ -1025,7 +1025,7 @@ PassRef<RenderStyle> StyleResolver::styleForPage(int pageIndex)
     return m_state.takeStyle();
 }
 
-PassRef<RenderStyle> StyleResolver::defaultStyleForElement()
+Ref<RenderStyle> StyleResolver::defaultStyleForElement()
 {
     m_state.setStyle(RenderStyle::create());
     // Make sure our fonts are initialized if we don't inherit them from our parent style.
@@ -1157,61 +1157,6 @@ void StyleResolver::adjustStyleForInterCharacterRuby()
         style->setWritingMode(LeftToRightWritingMode);
 }
 
-void StyleResolver::adjustStyleForMaskImages()
-{
-    // If we already have the same mask image objects loaded on the old style,
-    // use the old ones instead of loading new ones.
-    RenderStyle* newStyle = m_state.style();
-    RenderStyle* oldStyle = (m_state.element() ? m_state.element()->renderStyle() : nullptr);
-
-    if (newStyle && oldStyle) {
-        Vector<RefPtr<MaskImageOperation>> removedExternalResources;
-        
-        // Get all mask objects from the old style in a vector
-        // so we can remove them as we match them, making the following steps faster.
-        Vector<RefPtr<MaskImageOperation>> oldStyleMaskImages;
-        const FillLayer* oldMaskLayer = oldStyle->maskLayers();
-        while (oldMaskLayer) {
-            RefPtr<MaskImageOperation> oldMaskImage = oldMaskLayer->maskImage();
-            if (oldMaskImage.get())
-                oldStyleMaskImages.append(oldMaskImage);
-
-            oldMaskLayer = oldMaskLayer->next();
-        }
-        
-        // Try to match the new mask objects through the list from the old style.
-        // This should work perfectly and optimal when the list of masks remained
-        // the same and also work correctly (but slower) when they were reordered.
-        FillLayer* newMaskLayer = newStyle->accessMaskLayers();
-        int countOldStyleMaskImages = oldStyleMaskImages.size();
-        while (newMaskLayer && countOldStyleMaskImages) {
-            RefPtr<MaskImageOperation> newMaskImage = newMaskLayer->maskImage();
-            if (newMaskImage.get()) {
-                for (int i = 0; i < countOldStyleMaskImages; i++) {
-                    RefPtr<MaskImageOperation> oldMaskImage = oldStyleMaskImages[i];
-                    if (*oldMaskImage == *newMaskImage) {
-                        newMaskLayer->setMaskImage(oldMaskImage);
-                        if (newMaskImage->isExternalDocument())
-                            removedExternalResources.append(newMaskImage);
-
-                        oldStyleMaskImages.remove(i);
-                        countOldStyleMaskImages--;
-                        break;
-                    }
-                }
-            }
-
-            newMaskLayer = newMaskLayer->next();
-        }
-
-        Vector<RefPtr<MaskImageOperation>>& pendingResources = m_state.maskImagesWithPendingSVGDocuments();
-        for (int i = pendingResources.size() - 1; i >= 0; i--) {
-            if (removedExternalResources.contains(pendingResources[i]))
-                pendingResources.remove(i);
-        }
-    }
-}
-
 void StyleResolver::adjustRenderStyle(RenderStyle& style, const RenderStyle& parentStyle, Element *e)
 {
     // Cache our original display.
@@ -1323,7 +1268,7 @@ void StyleResolver::adjustRenderStyle(RenderStyle& style, const RenderStyle& par
         || style.hasBlendMode()
         || style.hasIsolation()
         || style.position() == StickyPosition
-        || (style.position() == FixedPosition && e && e->document().page() && e->document().page()->settings().fixedPositionCreatesStackingContext())
+        || (style.position() == FixedPosition && documentSettings() && documentSettings()->fixedPositionCreatesStackingContext())
         || style.hasFlowFrom()
         ))
         style.setZIndex(0);
@@ -1818,8 +1763,6 @@ void StyleResolver::applyMatchedProperties(const MatchResult& matchResult, const
     // There are some CSS properties that affect the same RenderStyle values,
     // so to preserve behavior, we queue them up during cascade and flush here.
     cascade.applyDeferredProperties(*this);
-    
-    adjustStyleForMaskImages();
 
     // Start loading resources referenced by this style.
     loadPendingResources();
@@ -2597,14 +2540,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     }
 #endif
 
-    case CSSPropertyWebkitMaskImage: {
-        Vector<RefPtr<MaskImageOperation>> operations;
-        if (createMaskImageOperations(value, operations))
-            state.style()->setMaskImage(operations);
-
-        return;
-    }
-
 #if ENABLE(CSS_GRID_LAYOUT)
     case CSSPropertyWebkitGridAutoColumns: {
         HANDLE_INHERIT_AND_INITIAL(gridAutoColumns, GridAutoColumns);
@@ -3031,6 +2966,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitMaskBoxImageWidth:
     case CSSPropertyWebkitMaskClip:
     case CSSPropertyWebkitMaskComposite:
+    case CSSPropertyWebkitMaskImage:
     case CSSPropertyWebkitMaskOrigin:
     case CSSPropertyWebkitMaskPositionX:
     case CSSPropertyWebkitMaskPositionY:
@@ -3381,30 +3317,14 @@ void StyleResolver::loadPendingSVGDocuments()
     // style is NULL. We don't know exactly why this happens. Our guess is
     // reentering styleForElement().
     ASSERT(state.style());
-    if (!state.style())
-        return;
-    
-    bool hasFilters = (state.style()->hasFilter() && !state.filtersWithPendingSVGDocuments().isEmpty());
-    bool hasMasks = (state.style()->hasMask() && !state.maskImagesWithPendingSVGDocuments().isEmpty());
-    
-    if (!hasFilters && !hasMasks)
+    if (!state.style() || !state.style()->hasFilter() || state.filtersWithPendingSVGDocuments().isEmpty())
         return;
 
     CachedResourceLoader* cachedResourceLoader = state.document().cachedResourceLoader();
-    
-    if (hasFilters) {
-        for (auto& filterOperation : state.filtersWithPendingSVGDocuments())
-            filterOperation->getOrCreateCachedSVGDocumentReference()->load(cachedResourceLoader);
+    for (auto& filterOperation : state.filtersWithPendingSVGDocuments())
+        filterOperation->getOrCreateCachedSVGDocumentReference()->load(cachedResourceLoader);
 
-        state.filtersWithPendingSVGDocuments().clear();
-    }
-    
-    if (hasMasks) {
-        for (auto& maskImageOperation : state.maskImagesWithPendingSVGDocuments())
-            maskImageOperation->ensureCachedSVGDocumentReference()->load(cachedResourceLoader);
-
-        state.maskImagesWithPendingSVGDocuments().clear();
-    }
+    state.filtersWithPendingSVGDocuments().clear();
 }
 
 bool StyleResolver::createFilterOperations(CSSValue* inValue, FilterOperations& outOperations)
@@ -3552,22 +3472,16 @@ bool StyleResolver::createMaskImageOperations(CSSValue* inValue, Vector<RefPtr<M
     if (!inValue)
         return false;
 
-    RefPtr<WebKitCSSResourceValue> maskImageValue;
-    RefPtr<CSSValueList> maskImagesList;
-    CSSValueList::iterator listIterator;
-    if (is<WebKitCSSResourceValue>(*inValue))
-        maskImageValue = downcast<WebKitCSSResourceValue>(inValue);
-    else if (is<CSSValueList>(*inValue)) {
-        maskImagesList = downcast<CSSValueList>(inValue);
-        listIterator = maskImagesList->begin();
-        if (listIterator != maskImagesList->end())
-            maskImageValue = &downcast<WebKitCSSResourceValue>(listIterator->get());
-    }
+    ASSERT(is<CSSValueList>(*inValue));
 
-    while (maskImageValue.get()) {
-        RefPtr<CSSValue> maskInnerValue = maskImageValue->innerValue();
+    for (auto& currValue : downcast<CSSValueList>(*inValue)) {
+        if (!is<WebKitCSSResourceValue>(currValue.get()))
+            continue;
+        
+        WebKitCSSResourceValue& maskImageValue = downcast<WebKitCSSResourceValue>(currValue.get());
+        RefPtr<CSSValue> maskInnerValue = maskImageValue.innerValue();
         RefPtr<MaskImageOperation> newMaskImage;
-
+        
         if (is<CSSPrimitiveValue>(maskInnerValue.get())) {
             RefPtr<CSSPrimitiveValue> primitiveValue = downcast<CSSPrimitiveValue>(maskInnerValue.get());
             if (primitiveValue->isValueID() && primitiveValue->getValueID() == CSSValueNone)
@@ -3577,7 +3491,7 @@ bool StyleResolver::createMaskImageOperations(CSSValue* inValue, Vector<RefPtr<M
                 URL url = m_state.document().completeURL(cssUrl);
                 
                 bool isExternalDocument = (SVGURIReference::isExternalURIReference(cssUrl, m_state.document()));
-                newMaskImage = MaskImageOperation::create(maskImageValue, cssUrl, url.fragmentIdentifier(), isExternalDocument, m_state.document().cachedResourceLoader());
+                newMaskImage = MaskImageOperation::create(&maskImageValue, cssUrl, url.fragmentIdentifier(), isExternalDocument, m_state.document().cachedResourceLoader());
                 if (isExternalDocument)
                     m_state.maskImagesWithPendingSVGDocuments().append(newMaskImage);
             }
@@ -3592,12 +3506,6 @@ bool StyleResolver::createMaskImageOperations(CSSValue* inValue, Vector<RefPtr<M
             newMaskImage = MaskImageOperation::create();
 
         outOperations.append(newMaskImage);
-
-        if (maskImagesList.get()) {
-            listIterator++;
-            maskImageValue = (listIterator != maskImagesList->end() ? &downcast<WebKitCSSResourceValue>(listIterator->get()) : nullptr);
-        } else
-            maskImageValue = nullptr;
     }
 
     return true;
@@ -3721,10 +3629,9 @@ void StyleResolver::loadPendingImages()
         }
         case CSSPropertyWebkitMaskImage: {
             for (FillLayer* maskLayer = m_state.style()->accessMaskLayers(); maskLayer; maskLayer = maskLayer->next()) {
-                RefPtr<MaskImageOperation> maskImage = maskLayer->maskImage();
-                auto* styleImage = maskImage.get() ? maskImage->image() : nullptr;
+                auto* styleImage = maskLayer->image();
                 if (is<StylePendingImage>(styleImage))
-                    maskImage->setImage(loadPendingImage(downcast<StylePendingImage>(*styleImage)));
+                    maskLayer->setImage(loadPendingImage(downcast<StylePendingImage>(*styleImage)));
             }
             break;
         }

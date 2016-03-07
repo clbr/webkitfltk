@@ -86,17 +86,17 @@ inline RenderStyle& defaultStyle()
     return style;
 }
 
-PassRef<RenderStyle> RenderStyle::create()
+Ref<RenderStyle> RenderStyle::create()
 {
     return adoptRef(*new RenderStyle(defaultStyle()));
 }
 
-PassRef<RenderStyle> RenderStyle::createDefaultStyle()
+Ref<RenderStyle> RenderStyle::createDefaultStyle()
 {
     return adoptRef(*new RenderStyle(true));
 }
 
-PassRef<RenderStyle> RenderStyle::createAnonymousStyleWithDisplay(const RenderStyle* parentStyle, EDisplay display)
+Ref<RenderStyle> RenderStyle::createAnonymousStyleWithDisplay(const RenderStyle* parentStyle, EDisplay display)
 {
     auto newStyle = RenderStyle::create();
     newStyle.get().inheritFrom(parentStyle);
@@ -105,12 +105,12 @@ PassRef<RenderStyle> RenderStyle::createAnonymousStyleWithDisplay(const RenderSt
     return newStyle;
 }
 
-PassRef<RenderStyle> RenderStyle::clone(const RenderStyle* other)
+Ref<RenderStyle> RenderStyle::clone(const RenderStyle* other)
 {
     return adoptRef(*new RenderStyle(*other));
 }
 
-PassRef<RenderStyle> RenderStyle::createStyleInheritingFromPseudoStyle(const RenderStyle& pseudoStyle)
+Ref<RenderStyle> RenderStyle::createStyleInheritingFromPseudoStyle(const RenderStyle& pseudoStyle)
 {
     ASSERT(pseudoStyle.styleType() == BEFORE || pseudoStyle.styleType() == AFTER);
 
@@ -829,28 +829,6 @@ bool RenderStyle::diffRequiresLayerRepaint(const RenderStyle& style, bool isComp
         return changedContextSensitiveProperties & ContextSensitivePropertyClipRect;
 
     return false;
-}
-    
-void RenderStyle::setMaskImage(const Vector<RefPtr<MaskImageOperation>>& ops)
-{
-    FillLayer* curLayer = &rareNonInheritedData.access()->m_mask;
-    while (curLayer) {
-        curLayer->setMaskImage(nullptr);
-        curLayer = curLayer->next();
-    }
-
-    curLayer = &rareNonInheritedData.access()->m_mask;
-    FillLayer* prevLayer = nullptr;
-    for (auto& maskImage : ops) {
-        if (!curLayer) {
-            prevLayer->setNext(std::make_unique<FillLayer>(MaskFillLayer));
-            curLayer = prevLayer->next();
-        }
-
-        curLayer->setMaskImage(maskImage);
-        prevLayer = curLayer;
-        curLayer = curLayer->next();
-    }
 }
 
 void RenderStyle::setClip(Length top, Length right, Length bottom, Length left)

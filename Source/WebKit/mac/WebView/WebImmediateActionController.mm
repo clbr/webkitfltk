@@ -27,6 +27,7 @@
 
 #if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 
+#import "WebElementDictionary.h"
 #import "WebFrameInternal.h"
 #import "WebHTMLView.h"
 #import "WebHTMLViewInternal.h"
@@ -34,21 +35,29 @@
 #import "WebViewInternal.h"
 #import <WebCore/EventHandler.h>
 #import <WebCore/Frame.h>
-#import <WebCore/NSImmediateActionGestureRecognizerSPI.h>
+#import <WebCore/NSMenuSPI.h>
+#import <WebCore/SoftLinking.h>
 #import <objc/objc-class.h>
 #import <objc/objc.h>
+
+SOFT_LINK_FRAMEWORK_IN_UMBRELLA(Quartz, QuickLookUI)
+SOFT_LINK_CLASS(QuickLookUI, QLPreviewMenuItem)
+
+@interface WebImmediateActionController () <QLPreviewMenuItemDelegate>
+@end
 
 using namespace WebCore;
 
 @implementation WebImmediateActionController
 
-- (instancetype)initWithWebView:(WebView *)webView
+- (instancetype)initWithWebView:(WebView *)webView recognizer:(NSImmediateActionGestureRecognizer *)immediateActionRecognizer
 {
     if (!(self = [super init]))
         return nil;
 
     _webView = webView;
     _type = WebImmediateActionNone;
+    _immediateActionRecognizer = immediateActionRecognizer;
 
     return self;
 }
@@ -56,6 +65,7 @@ using namespace WebCore;
 - (void)webViewClosed
 {
     _webView = nil;
+    _immediateActionRecognizer = nil;
 }
 
 - (void)_clearImmediateActionState
@@ -71,24 +81,25 @@ using namespace WebCore;
     _hitTestResult = coreFrame->eventHandler().hitTestResultAtPoint(IntPoint(viewPoint));
 }
 
-#pragma mark NSGestureRecognizerDelegate
+#pragma mark NSImmediateActionGestureRecognizerDelegate
 
 - (void)immediateActionRecognizerWillPrepare:(NSImmediateActionGestureRecognizer *)immediateActionRecognizer
 {
     if (!_webView)
         return;
 
-    if (immediateActionRecognizer.view != _webView)
+    if (immediateActionRecognizer != _immediateActionRecognizer)
         return;
 
     WebHTMLView *documentView = [[[_webView _selectedOrMainFrame] frameView] documentView];
     NSPoint locationInDocumentView = [immediateActionRecognizer locationInView:documentView];
     [self performHitTestAtPoint:locationInDocumentView];
+    [self _updateImmediateActionItem];
 }
 
 - (void)immediateActionRecognizerWillBeginAnimation:(NSImmediateActionGestureRecognizer *)immediateActionRecognizer
 {
-    if (immediateActionRecognizer.view != _webView)
+    if (immediateActionRecognizer != _immediateActionRecognizer)
         return;
 
     // FIXME: Add support for the types of functionality provided in Action menu's menuNeedsUpdate.
@@ -96,7 +107,7 @@ using namespace WebCore;
 
 - (void)immediateActionRecognizerDidCancelAnimation:(NSImmediateActionGestureRecognizer *)immediateActionRecognizer
 {
-    if (immediateActionRecognizer.view != _webView)
+    if (immediateActionRecognizer != _immediateActionRecognizer)
         return;
 
     [self _clearImmediateActionState];
@@ -104,7 +115,7 @@ using namespace WebCore;
 
 - (void)immediateActionRecognizerDidCompleteAnimation:(NSImmediateActionGestureRecognizer *)immediateActionRecognizer
 {
-    if (immediateActionRecognizer.view != _webView)
+    if (immediateActionRecognizer != _immediateActionRecognizer)
         return;
 
     // FIXME: Add support for the types of functionality provided in Action menu's willOpenMenu.
@@ -114,7 +125,54 @@ using namespace WebCore;
 
 - (void)_updateImmediateActionItem
 {
-    // FIXME: Implement. Inspect _hitTestResult to determine if there is an immediate action to take.
+    _type = WebImmediateActionNone;
+    _immediateActionRecognizer.animationController = nil;
+    id <NSImmediateActionAnimationController> defaultAnimationController = nil;
+
+    NSURL *url = _hitTestResult.absoluteLinkURL();
+    NSString *absoluteURLString = [url absoluteString];
+    if (url && WebCore::protocolIsInHTTPFamily(absoluteURLString)) {
+        _type = WebImmediateActionLinkPreview;
+
+        RetainPtr<QLPreviewMenuItem> qlPreviewLinkItem = [NSMenuItem standardQuickLookMenuItem];
+        [qlPreviewLinkItem setPreviewStyle:QLPreviewStylePopover];
+        [qlPreviewLinkItem setDelegate:self];
+        defaultAnimationController = (id <NSImmediateActionAnimationController>)qlPreviewLinkItem.get();
+    }
+
+    // Allow clients the opportunity to override the default immediate action.
+    id customClientAnimationController = nil;
+    if ([[_webView UIDelegate] respondsToSelector:@selector(_webView:immediateActionAnimationControllerForHitTestResult:withType:)]) {
+        RetainPtr<WebElementDictionary> webHitTestResult = adoptNS([[WebElementDictionary alloc] initWithHitTestResult:_hitTestResult]);
+        customClientAnimationController = [[_webView UIDelegate] _webView:_webView immediateActionAnimationControllerForHitTestResult:webHitTestResult.get() withType:_type];
+    }
+
+    if (customClientAnimationController == [NSNull null])
+        return;
+    if (customClientAnimationController && [customClientAnimationController conformsToProtocol:@protocol(NSImmediateActionAnimationController)])
+        _immediateActionRecognizer.animationController = (id <NSImmediateActionAnimationController>)customClientAnimationController;
+    else
+        _immediateActionRecognizer.animationController = defaultAnimationController;
+}
+
+#pragma mark QLPreviewMenuItemDelegate implementation
+
+- (NSView *)menuItem:(NSMenuItem *)menuItem viewAtScreenPoint:(NSPoint)screenPoint
+{
+    return _webView;
+}
+
+- (id<QLPreviewItem>)menuItem:(NSMenuItem *)menuItem previewItemAtPoint:(NSPoint)point
+{
+    if (!_webView)
+        return nil;
+
+    return _hitTestResult.absoluteLinkURL();
+}
+
+- (NSRectEdge)menuItem:(NSMenuItem *)menuItem preferredEdgeForPoint:(NSPoint)point
+{
+    return NSMaxYEdge;
 }
 
 @end

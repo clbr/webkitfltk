@@ -27,18 +27,20 @@
 
 #import "WebUIDelegatePrivate.h"
 #import <WebCore/HitTestResult.h>
+#import <WebCore/NSImmediateActionGestureRecognizerSPI.h>
 #import <wtf/RetainPtr.h>
 
 @class WebView;
 
-@interface WebImmediateActionController : NSObject <NSGestureRecognizerDelegate> {
+@interface WebImmediateActionController : NSObject <NSImmediateActionGestureRecognizerDelegate> {
 @private
     WebView *_webView;
     WebImmediateActionType _type;
     WebCore::HitTestResult _hitTestResult;
+    NSImmediateActionGestureRecognizer *_immediateActionRecognizer;
 }
 
-- (instancetype)initWithWebView:(WebView *)webView;
+- (instancetype)initWithWebView:(WebView *)webView recognizer:(NSImmediateActionGestureRecognizer *)immediateActionRecognizer;
 - (void)webViewClosed;
 
 @end

@@ -1646,7 +1646,7 @@ void Page::setUserContentController(UserContentController* userContentController
     }
 }
 
-void Page::setStorageNamespaceProvider(PassRef<StorageNamespaceProvider> storageNamespaceProvider)
+void Page::setStorageNamespaceProvider(Ref<StorageNamespaceProvider>&& storageNamespaceProvider)
 {
     m_storageNamespaceProvider->removePage(*this);
     m_storageNamespaceProvider = WTF::move(storageNamespaceProvider);
@@ -1660,7 +1660,7 @@ VisitedLinkStore& Page::visitedLinkStore()
     return m_visitedLinkStore;
 }
 
-void Page::setVisitedLinkStore(PassRef<VisitedLinkStore> visitedLinkStore)
+void Page::setVisitedLinkStore(Ref<VisitedLinkStore>&& visitedLinkStore)
 {
     m_visitedLinkStore->removePage(*this);
     m_visitedLinkStore = WTF::move(visitedLinkStore);
