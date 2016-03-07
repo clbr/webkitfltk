@@ -148,6 +148,9 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef group, JSClass
 
     if (!globalObjectClass) {
         JSGlobalObject* globalObject = JSGlobalObject::create(*vm, JSGlobalObject::createStructure(*vm, jsNull()));
+#if ENABLE(REMOTE_INSPECTOR)
+        globalObject->setRemoteDebuggingEnabled(true);
+#endif
         return JSGlobalContextRetain(toGlobalRef(globalObject->globalExec()));
     }
 
@@ -157,6 +160,9 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef group, JSClass
     if (!prototype)
         prototype = jsNull();
     globalObject->resetPrototype(*vm, prototype);
+#if ENABLE(REMOTE_INSPECTOR)
+    globalObject->setRemoteDebuggingEnabled(true);
+#endif
     return JSGlobalContextRetain(toGlobalRef(exec));
 }
 

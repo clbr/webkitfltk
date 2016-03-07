@@ -383,7 +383,7 @@ public:
     WEBCORE_EXPORT LayoutRect renderRect(bool* isReplaced);
     IntRect pixelSnappedRenderRect(bool* isReplaced) { return snappedIntRect(renderRect(isReplaced)); }
 
-    WEBCORE_EXPORT unsigned nodeIndex() const;
+    WEBCORE_EXPORT unsigned computeNodeIndex() const;
 
     // Returns the DOM ownerDocument attribute. This method never returns null, except in the case
     // of a Document node.
@@ -416,8 +416,8 @@ public:
     bool isReadOnlyNode() const { return nodeType() == ENTITY_REFERENCE_NODE; }
     bool isDocumentTypeNode() const { return nodeType() == DOCUMENT_TYPE_NODE; }
     virtual bool childTypeAllowed(NodeType) const { return false; }
-    unsigned childNodeCount() const;
-    Node* childNode(unsigned index) const;
+    unsigned countChildNodes() const;
+    Node* traverseToChildAt(unsigned) const;
 
     void checkSetPrefix(const AtomicString& prefix, ExceptionCode&);
 

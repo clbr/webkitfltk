@@ -1,3 +1,209 @@
+2014-09-16  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, disable native inlining because it causes build failures.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2014-09-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Reduce a bit of churn setting initial remote inspection state
+        https://bugs.webkit.org/show_bug.cgi?id=136875
+
+        Reviewed by Timothy Hatcher.
+
+        * API/JSContextRef.cpp:
+        (JSGlobalContextCreateInGroup):
+        Set the defaultl remote debuggable state at the API boundary.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        Do not set remote debuggable state here. Let clients set it.
+
+2014-09-16  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Promise: Drop Promise.cast
+        https://bugs.webkit.org/show_bug.cgi?id=136222
+
+        Reviewed by Sam Weinig.
+
+        Promise.cast is dropped and Promise.resolve is replaced with old Promise.cast.
+
+        * runtime/CommonIdentifiers.h:
+        * runtime/JSPromiseConstructor.cpp:
+        (JSC::JSPromiseConstructorFuncResolve):
+        (JSC::JSPromiseConstructorFuncRace):
+        (JSC::JSPromiseConstructorFuncAll):
+        (JSC::JSPromiseConstructorFuncCast): Deleted.
+
+2014-09-16  Filip Pizlo  <fpizlo@apple.com>
+
+        Local OSR availability calculation should be reusable
+        https://bugs.webkit.org/show_bug.cgi?id=136860
+
+        Reviewed by Oliver Hunt.
+        
+        Previously, the FTL lowering repeated some of the logic of the OSR availability analysis
+        phase. Humorously, it actually did this logic a bit differently; for example the phase
+        would claim that a SetLocal makes both the flush and the node available while the FTL
+        only claimed that the flush was available. This different was benign, but still: yuck!
+        
+        Also, previously if you wanted to use availability information then you'd have to repeat
+        some of the logic that both the phase itself and the FTL lowering already had.
+        Presumably, you could get epic style points for finding other benign ways in which to
+        make your copy of the logic different from the other two!
+        
+        This reduces the amount of style points one could conceivably get in the future when
+        hacking JSC, by creating a single reusable thingy for computing local OSR availability.
+
+        * dfg/DFGOSRAvailabilityAnalysisPhase.cpp:
+        (JSC::DFG::OSRAvailabilityAnalysisPhase::run):
+        (JSC::DFG::LocalOSRAvailabilityCalculator::LocalOSRAvailabilityCalculator):
+        (JSC::DFG::LocalOSRAvailabilityCalculator::~LocalOSRAvailabilityCalculator):
+        (JSC::DFG::LocalOSRAvailabilityCalculator::beginBlock):
+        (JSC::DFG::LocalOSRAvailabilityCalculator::executeNode):
+        * dfg/DFGOSRAvailabilityAnalysisPhase.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::LowerDFGToLLVM):
+        (JSC::FTL::LowerDFGToLLVM::compileBlock):
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileSetLocal):
+        (JSC::FTL::LowerDFGToLLVM::compileInvalidationPoint):
+        (JSC::FTL::LowerDFGToLLVM::appendOSRExit):
+        (JSC::FTL::LowerDFGToLLVM::buildExitArguments):
+        (JSC::FTL::LowerDFGToLLVM::availability):
+        (JSC::FTL::LowerDFGToLLVM::compileMovHint): Deleted.
+        (JSC::FTL::LowerDFGToLLVM::compileZombieHint): Deleted.
+        (JSC::FTL::LowerDFGToLLVM::initializeOSRExitStateForBlock): Deleted.
+
+2014-09-16  Csaba Osztrogonác  <ossy@webkit.org>
+
+        JSC test gardening
+        https://bugs.webkit.org/show_bug.cgi?id=136823
+
+        Reviewed by Geoffrey Garen.
+
+        * tests/mozilla/mozilla-tests.yaml: Unskip passing tests.
+
+2014-09-15  Michael Saboff  <msaboff@apple.com>
+
+        Create a JSCallee for GlobalExec object
+        https://bugs.webkit.org/show_bug.cgi?id=136840
+
+        Reviewed by Geoffrey Garen.
+
+        Added m_globalCallee, initialized it and then used it to set the globalExec's callee.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        (JSC::JSGlobalObject::visitChildren):
+        * runtime/JSGlobalObject.h:
+
+2014-09-14  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG ref count calculation should be reusable
+        https://bugs.webkit.org/show_bug.cgi?id=136811
+
+        Reviewed by Oliver Hunt.
+        
+        Henceforth if you call Graph::computeRefCounts(), a nifty O(n) operation, every Node
+        will be able to tell you how many places it is used from. Currently only DCE uses this,
+        but it will be useful for https://bugs.webkit.org/show_bug.cgi?id=136330.
+
+        * dfg/DFGDCEPhase.cpp:
+        (JSC::DFG::DCEPhase::run):
+        (JSC::DFG::DCEPhase::findTypeCheckRoot): Deleted.
+        (JSC::DFG::DCEPhase::countNode): Deleted.
+        (JSC::DFG::DCEPhase::countEdge): Deleted.
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::computeRefCounts):
+        * dfg/DFGGraph.h:
+
+2014-09-12  Michael Saboff  <msaboff@apple.com>
+
+        Merge JSGlobalObject::reset() into ::init()
+        https://bugs.webkit.org/show_bug.cgi?id=136800
+
+        Reviewed by Oliver Hunt.
+
+        Moved the contents of reset() into init().
+        Note that the diff shows more changes.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init): Moved body of reset() into init.
+        (JSC::JSGlobalObject::put):
+        (JSC::JSGlobalObject::defineOwnProperty):
+        (JSC::JSGlobalObject::addGlobalVar):
+        (JSC::JSGlobalObject::addFunction):
+        (JSC::lastInPrototypeChain):
+        (JSC::JSGlobalObject::reset): Deleted.
+        * runtime/JSGlobalObject.h:
+
+2014-09-12  Michael Saboff  <msaboff@apple.com>
+
+        Add JSCallee to program and eval CallFrames
+        https://bugs.webkit.org/show_bug.cgi?id=136785
+
+        Reviewed by Mark Lam.
+
+        Populated Callee slot for program and call eval CallFrames with a JSCallee objects.
+        Made supporting changes including adding a JSCallee structure to global object and adding
+        JSCallee::create() method.  Added code so that the newly added callee object won't be
+        returned by Function.caller.  Changed null pointer checks of callee to check the if
+        the type is JSFunction* or JSCallee*.
+
+        * debugger/DebuggerCallFrame.cpp:
+        (JSC::DebuggerCallFrame::functionName):
+        (JSC::DebuggerCallFrame::type):
+        * profiler/LegacyProfiler.cpp:
+        (JSC::LegacyProfiler::createCallIdentifier):
+        * interpreter/Interpreter.cpp:
+        (JSC::unwindCallFrame):
+        Changed checks of callee is a JSFunction* or JSCallee* instead of just checking
+        if it is null or not.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::execute): Create and use JSCallee objects for execute(EvalExecutable, ...)
+        and execute(ProgramExecutable, ...)
+
+        * jit/JITCode.cpp:
+        (JSC::JITCode::execute): Use jsDynamicCast to cast only JSFunctions.
+
+        * runtime/JSCallee.cpp:
+        (JSC::JSCallee::create): Not used, therefore deleted.
+
+        * runtime/JSCallee.h:
+        (JSC::JSCallee::create): Added.
+
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::callerGetter): Added test to return null for JSCallee's that aren't
+        JSFunction's.  This can only be the case when the JSCallee comes from a program or
+        call eval CallFrame.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::reset):
+        (JSC::JSGlobalObject::visitChildren):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::calleeStructure):
+        Added new JSCallee structure.
+
+2014-09-10  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Re-add the request autocomplete feature
+
+        <https://bugs.webkit.org/show_bug.cgi?id=136730>
+
+        This feature was rolled out in r148731 because it was only used by
+        Chromium. As we consider supporting this feature, roll it back in, but
+        leave it disabled.
+
+        This rolls out r148731 (which removed the feature) with small changes
+        needed to make the code build in ToT, to match modern style, to make
+        the tests run, and to remove unused code.
+
+        Reviewed by Andy Estes.
+
+        * Configurations/FeatureDefines.xcconfig:
+
 2014-09-12  Julien Brianceau  <jbriance@cisco.com>
 
         [x86] moveDoubleToInts() does not clobber its source register anymore

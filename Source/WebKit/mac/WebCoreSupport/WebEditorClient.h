@@ -184,10 +184,10 @@ private:
 inline NSSelectionAffinity kit(WebCore::EAffinity affinity)
 {
     switch (affinity) {
-    case WebCore::EAffinity::UPSTREAM:
-        return NSSelectionAffinityUpstream;
-    case WebCore::EAffinity::DOWNSTREAM:
-        return NSSelectionAffinityDownstream;
+        case WebCore::EAffinity::UPSTREAM:
+            return NSSelectionAffinityUpstream;
+        case WebCore::EAffinity::DOWNSTREAM:
+            return NSSelectionAffinityDownstream;
     }
     ASSERT_NOT_REACHED();
     return NSSelectionAffinityUpstream;

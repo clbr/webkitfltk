@@ -160,6 +160,7 @@ protected:
 
     WriteBarrier<JSObject> m_globalThis;
 
+    WriteBarrier<JSObject> m_globalCallee;
     WriteBarrier<RegExpConstructor> m_regExpConstructor;
     WriteBarrier<ErrorConstructor> m_errorConstructor;
     WriteBarrier<NativeErrorConstructor> m_evalErrorConstructor;
@@ -206,6 +207,7 @@ protected:
     WriteBarrier<Structure> m_objcWrapperObjectStructure;
 #endif
     WriteBarrier<Structure> m_nullPrototypeObjectStructure;
+    WriteBarrier<Structure> m_calleeStructure;
     WriteBarrier<Structure> m_functionStructure;
     WriteBarrier<Structure> m_boundFunctionStructure;
     WriteBarrier<Structure> m_namedFunctionStructure;
@@ -429,6 +431,7 @@ public:
     Structure* dateStructure() const { return m_dateStructure.get(); }
     Structure* nullPrototypeObjectStructure() const { return m_nullPrototypeObjectStructure.get(); }
     Structure* errorStructure() const { return m_errorStructure.get(); }
+    Structure* calleeStructure() const { return m_calleeStructure.get(); }
     Structure* functionStructure() const { return m_functionStructure.get(); }
     Structure* boundFunctionStructure() const { return m_boundFunctionStructure.get(); }
     Structure* namedFunctionStructure() const { return m_namedFunctionStructure.get(); }
@@ -601,9 +604,7 @@ private:
 
     JS_EXPORT_PRIVATE void setGlobalThis(VM&, JSObject* globalThis);
 
-    // FIXME: Fold reset into init.
     JS_EXPORT_PRIVATE void init();
-    void reset(JSValue prototype);
 
     void createThrowTypeError(VM&);
 

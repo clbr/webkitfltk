@@ -163,12 +163,12 @@ PassRefPtr<Range> Editor::avoidIntersectionWithDeleteButtonController(const Rang
     if (startContainer == element || startContainer->isDescendantOf(element)) {
         ASSERT(element->parentNode());
         startContainer = element->parentNode();
-        startOffset = element->nodeIndex();
+        startOffset = element->computeNodeIndex();
     }
     if (endContainer == element || endContainer->isDescendantOf(element)) {
         ASSERT(element->parentNode());
         endContainer = element->parentNode();
-        endOffset = element->nodeIndex();
+        endOffset = element->computeNodeIndex();
     }
 
     return Range::create(range->ownerDocument(), startContainer, startOffset, endContainer, endOffset);
@@ -704,7 +704,7 @@ void Editor::setTextAsChildOfElement(const String& text, Element* elem)
     // set the selection to the end
     VisibleSelection selection;
 
-    Position pos = createLegacyEditingPosition(elem, elem->childNodeCount());
+    Position pos = createLegacyEditingPosition(elem, elem->countChildNodes());
 
     VisiblePosition visiblePos(pos, VP_DEFAULT_AFFINITY);
     if (visiblePos.isNull())
@@ -3168,7 +3168,7 @@ PassRefPtr<Range> Editor::rangeOfString(const String& target, Range* referenceRa
     RefPtr<Node> shadowTreeRoot = referenceRange && referenceRange->startContainer() ? referenceRange->startContainer()->nonBoundaryShadowTreeRootNode() : 0;
     if (shadowTreeRoot) {
         if (forward)
-            searchRange->setEnd(shadowTreeRoot.get(), shadowTreeRoot->childNodeCount());
+            searchRange->setEnd(shadowTreeRoot.get(), shadowTreeRoot->countChildNodes());
         else
             searchRange->setStart(shadowTreeRoot.get(), 0);
     }
@@ -3186,7 +3186,7 @@ PassRefPtr<Range> Editor::rangeOfString(const String& target, Range* referenceRa
 
         if (shadowTreeRoot) {
             if (forward)
-                searchRange->setEnd(shadowTreeRoot.get(), shadowTreeRoot->childNodeCount());
+                searchRange->setEnd(shadowTreeRoot.get(), shadowTreeRoot->countChildNodes());
             else
                 searchRange->setStart(shadowTreeRoot.get(), 0);
         }
@@ -3279,7 +3279,7 @@ unsigned Editor::countMatchesForText(const String& target, Range* range, FindOpt
 
         Node* shadowTreeRoot = searchRange->shadowRoot();
         if (searchRange->collapsed(IGNORE_EXCEPTION) && shadowTreeRoot)
-            searchRange->setEnd(shadowTreeRoot, shadowTreeRoot->childNodeCount(), IGNORE_EXCEPTION);
+            searchRange->setEnd(shadowTreeRoot, shadowTreeRoot->countChildNodes(), IGNORE_EXCEPTION);
     } while (true);
 
     if (markMatches || matches) {

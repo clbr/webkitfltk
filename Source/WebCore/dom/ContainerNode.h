@@ -87,12 +87,13 @@ public:
     static ptrdiff_t firstChildMemoryOffset() { return OBJECT_OFFSETOF(ContainerNode, m_firstChild); }
     Node* lastChild() const { return m_lastChild; }
     bool hasChildNodes() const { return m_firstChild; }
+    bool hasOneChild() const { return m_firstChild && !m_firstChild->nextSibling(); }
 
     bool directChildNeedsStyleRecalc() const { return getFlag(DirectChildNeedsStyleRecalcFlag); }
     void setDirectChildNeedsStyleRecalc() { setFlag(DirectChildNeedsStyleRecalcFlag); }
 
-    WEBCORE_EXPORT unsigned childNodeCount() const;
-    WEBCORE_EXPORT Node* childNode(unsigned index) const;
+    WEBCORE_EXPORT unsigned countChildNodes() const;
+    WEBCORE_EXPORT Node* traverseToChildAt(unsigned) const;
 
     bool insertBefore(PassRefPtr<Node> newChild, Node* refChild, ExceptionCode& = ASSERT_NO_EXCEPTION);
     bool replaceChild(PassRefPtr<Node> newChild, Node* oldChild, ExceptionCode& = ASSERT_NO_EXCEPTION);
@@ -136,7 +137,7 @@ public:
     PassRefPtr<NodeList> getElementsByTagName(const AtomicString&);
     PassRefPtr<NodeList> getElementsByTagNameNS(const AtomicString& namespaceURI, const AtomicString& localName);
     PassRefPtr<NodeList> getElementsByName(const String& elementName);
-    PassRefPtr<NodeList> getElementsByClassName(const String& classNames);
+    PassRefPtr<NodeList> getElementsByClassName(const AtomicString& classNames);
     PassRefPtr<RadioNodeList> radioNodeList(const AtomicString&);
 
 protected:
@@ -184,18 +185,18 @@ inline ContainerNode::ContainerNode(Document& document, ConstructionType type)
 {
 }
 
-inline unsigned Node::childNodeCount() const
+inline unsigned Node::countChildNodes() const
 {
     if (!isContainerNode())
         return 0;
-    return toContainerNode(this)->childNodeCount();
+    return toContainerNode(this)->countChildNodes();
 }
 
-inline Node* Node::childNode(unsigned index) const
+inline Node* Node::traverseToChildAt(unsigned index) const
 {
     if (!isContainerNode())
         return 0;
-    return toContainerNode(this)->childNode(index);
+    return toContainerNode(this)->traverseToChildAt(index);
 }
 
 inline Node* Node::firstChild() const

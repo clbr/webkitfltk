@@ -1975,13 +1975,23 @@ void CanvasRenderingContext2D::webkitPutImageDataHD(ImageData* data, float dx, f
 
 void CanvasRenderingContext2D::drawFocusIfNeeded(Element* element)
 {
+    drawFocusIfNeededInternal(m_path, element);
+}
+
+void CanvasRenderingContext2D::drawFocusIfNeeded(DOMPath* path, Element* element)
+{
+    drawFocusIfNeededInternal(path->path(), element);
+}
+
+void CanvasRenderingContext2D::drawFocusIfNeededInternal(const Path& path, Element* element)
+{
     GraphicsContext* context = drawingContext();
 
-    if (!element || !element->focused() || !state().m_hasInvertibleTransform || m_path.isEmpty()
+    if (!element || !element->focused() || !state().m_hasInvertibleTransform || path.isEmpty()
         || !element->isDescendantOf(canvas()) || !context)
         return;
 
-    context->drawFocusRing(m_path, 1, 1, RenderTheme::focusRingColor());
+    context->drawFocusRing(path, 1, 1, RenderTheme::focusRingColor());
 }
 
 void CanvasRenderingContext2D::putImageData(ImageData* data, ImageBuffer::CoordinateSystem coordinateSystem, float dx, float dy, float dirtyX, float dirtyY,
@@ -2084,6 +2094,7 @@ void CanvasRenderingContext2D::setFont(const String& newFont)
     // Map the <canvas> font into the text style. If the font uses keywords like larger/smaller, these will work
     // relative to the canvas.
     RefPtr<RenderStyle> newStyle = RenderStyle::create();
+    canvas()->document().updateStyleIfNeeded();
     if (RenderStyle* computedStyle = canvas()->computedStyle())
         newStyle->setFontDescription(computedStyle->fontDescription());
     else {

@@ -1396,7 +1396,7 @@ PassRefPtr<Range> Document::caretRangeFromPoint(int x, int y)
 
     Node* shadowAncestorNode = ancestorInThisScope(node);
     if (shadowAncestorNode != node) {
-        unsigned offset = shadowAncestorNode->nodeIndex();
+        unsigned offset = shadowAncestorNode->computeNodeIndex();
         ContainerNode* container = shadowAncestorNode->parentNode();
         return Range::create(*this, container, offset, container, offset);
     }
@@ -5379,10 +5379,10 @@ void Document::webkitWillEnterFullScreenForElement(Element* element)
 
     m_fullScreenElement->setContainsFullScreenElementOnAncestorsCrossingFrameBoundaries(true);
 
+    recalcStyle(Style::Force);
+
     if (settings() && settings()->needsSiteSpecificQuirks() && hostIsYouTube(url().host()))
         fullScreenChangeDelayTimerFired(m_fullScreenChangeDelayTimer);
-
-    recalcStyle(Style::Force);
 }
 
 void Document::webkitDidEnterFullScreenForElement(Element*)

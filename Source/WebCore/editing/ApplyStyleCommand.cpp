@@ -777,7 +777,7 @@ void ApplyStyleCommand::applyInlineStyleToNodeRange(EditingStyle* style, PassRef
         if (isBlock(node.get()))
             continue;
         
-        if (node->childNodeCount()) {
+        if (node->hasChildNodes()) {
             if (node->contains(pastEndNode.get()) || containsNonEditableRegion(node.get()) || !node->parentNode()->hasEditableStyle())
                 continue;
             if (editingIgnoresContent(node.get())) {
@@ -835,7 +835,7 @@ bool ApplyStyleCommand::shouldApplyInlineStyleToRun(EditingStyle* style, Node* r
     ASSERT(style && runStart);
 
     for (Node* node = runStart; node && node != pastEndNode; node = NodeTraversal::next(node)) {
-        if (node->childNodeCount())
+        if (node->hasChildNodes())
             continue;
         // We don't consider m_isInlineElementToRemoveFunction here because we never apply style when m_isInlineElementToRemoveFunction is specified
         if (!style->styleIsPresentInComputedStyleOfNode(node))
@@ -1007,7 +1007,7 @@ void ApplyStyleCommand::applyInlineStyleToPushDown(Node* node, EditingStyle* sty
 
     // Since addInlineStyleIfNeeded can't add styles to block-flow render objects, add style attribute instead.
     // FIXME: applyInlineStyleToRange should be used here instead.
-    if ((node->renderer()->isRenderBlockFlow() || node->childNodeCount()) && node->isHTMLElement()) {
+    if ((node->renderer()->isRenderBlockFlow() || node->hasChildNodes()) && node->isHTMLElement()) {
         setNodeAttribute(toHTMLElement(node), styleAttr, newInlineStyle->style()->asText());
         return;
     }
@@ -1291,8 +1291,8 @@ bool ApplyStyleCommand::mergeStartWithPreviousIfIdentical(const Position& start,
         ASSERT(startChild);
         mergeIdenticalElements(previousElement, element);
 
-        int startOffsetAdjustment = startChild->nodeIndex();
-        int endOffsetAdjustment = startNode == end.deprecatedNode() ? startOffsetAdjustment : 0;
+        unsigned startOffsetAdjustment = startChild->computeNodeIndex();
+        unsigned endOffsetAdjustment = startNode == end.deprecatedNode() ? startOffsetAdjustment : 0;
         updateStartEnd(Position(startNode, startOffsetAdjustment, Position::PositionIsOffsetInAnchor),
                        Position(end.deprecatedNode(), end.deprecatedEditingOffset() + endOffsetAdjustment, Position::PositionIsOffsetInAnchor)); 
         return true;
@@ -1325,7 +1325,7 @@ bool ApplyStyleCommand::mergeEndWithNextIfIdentical(const Position& start, const
         mergeIdenticalElements(element, nextElement);
 
         bool shouldUpdateStart = start.containerNode() == endNode;
-        int endOffset = nextChild ? nextChild->nodeIndex() : nextElement->childNodeCount();
+        unsigned endOffset = nextChild ? nextChild->computeNodeIndex() : nextElement->countChildNodes();
         updateStartEnd(shouldUpdateStart ? Position(nextElement, start.offsetInContainerNode(), Position::PositionIsOffsetInAnchor) : start,
                        Position(nextElement, endOffset, Position::PositionIsOffsetInAnchor));
         return true;
@@ -1433,7 +1433,7 @@ void ApplyStyleCommand::applyInlineStyleChange(PassRefPtr<Node> passedStart, Pas
         if (container->isHTMLElement() && container->hasTagName(fontTag))
             fontContainer = toHTMLElement(container);
         bool styleContainerIsNotSpan = !styleContainer || !styleContainer->hasTagName(spanTag);
-        if (container->isHTMLElement() && (container->hasTagName(spanTag) || (styleContainerIsNotSpan && container->childNodeCount())))
+        if (container->isHTMLElement() && (container->hasTagName(spanTag) || (styleContainerIsNotSpan && container->hasChildNodes())))
             styleContainer = toHTMLElement(container);
         if (!container->firstChild())
             break;

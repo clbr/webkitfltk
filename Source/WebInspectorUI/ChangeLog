@@ -1,3 +1,41 @@
+2014-09-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Add Versioned Inspector protocol JSON files for iOS 8.0
+        https://bugs.webkit.org/show_bug.cgi?id=136873
+
+        Reviewed by Timothy Hatcher.
+
+        * Scripts/update-LegacyInspectorBackendCommands.rb:
+        * UserInterface/Protocol/Legacy/8.0/InspectorJSBackendCommands.js: Added.
+        * UserInterface/Protocol/Legacy/8.0/InspectorWebBackendCommands.js: Added.
+        * Versions/InspectorJS-iOS-8.0.json: Added.
+        * Versions/InspectorWeb-iOS-8.0.json: Added.
+
+2014-09-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Fix ESLint no-extra-bind warnings
+        https://bugs.webkit.org/show_bug.cgi?id=136659
+
+        Reviewed by Timothy Hatcher.
+
+        * .eslintrc:
+        * UserInterface/Controllers/LayerTreeManager.js:
+        (WebInspector.LayerTreeManager.prototype.layersForNode):
+
+2014-09-15  Matt Baker  <mattbaker@apple.com>
+
+        Web Inspector: mouse drifts away from resizer when resizing docked inspector
+        https://bugs.webkit.org/show_bug.cgi?id=22263
+
+        Reviewed by Joseph Pecoraro.
+
+        Modified the docked resizer dragging logic to record the initial mouse down position relative to the
+        resizer client rectangle. Added check while dragging the resizer to ensure that the cursor is positioned
+        correctly with respect to the resize direction before updating the attached window dimension.
+
+        * UserInterface/Base/Main.js:
+        (WebInspector._dockedResizerMouseDown.dockedResizerDrag):
+
 2014-09-11  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Fix assert in QuickConsole - main frame execution context path component

@@ -34,6 +34,7 @@
 
 #if PLATFORM(GTK)
 typedef struct _GtkClipboard GtkClipboard;
+#include <wtf/gobject/GRefPtr.h>
 #endif
 
 #if PLATFORM(IOS)
@@ -78,6 +79,12 @@ struct PasteboardWebContent {
     Vector<String> clientTypes;
     Vector<RefPtr<SharedBuffer>> clientData;
 #endif
+#if PLATFORM(GTK)
+    bool canSmartCopyOrDelete;
+    String text;
+    String markup;
+    GRefPtr<GClosure> callback;
+#endif
 };
 
 struct PasteboardURL {
@@ -85,6 +92,9 @@ struct PasteboardURL {
     String title;
 #if PLATFORM(MAC)
     String userVisibleForm;
+#endif
+#if PLATFORM(GTK)
+    String markup;
 #endif
 };
 
@@ -94,6 +104,8 @@ struct PasteboardImage {
     RefPtr<Image> image;
 #if !(PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(WIN) || PLATFORM(FLTK))
     PasteboardURL url;
+#endif
+#if !(PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(WIN))
     RefPtr<SharedBuffer> resourceData;
     String resourceMIMEType;
 #endif
@@ -162,7 +174,7 @@ public:
     void setDragImage(DragImageRef, const IntPoint& hotSpot);
 #endif
 
-#if PLATFORM(GTK) || PLATFORM(WIN)
+#if PLATFORM(WIN)
     PassRefPtr<DocumentFragment> documentFragment(Frame&, Range&, bool allowPlainText, bool& chosePlainText); // FIXME: Layering violation.
     void writeImage(Element&, const URL&, const String& title); // FIXME: Layering violation.
     void writeSelection(Range&, bool canSmartCopyOrDelete, Frame&, ShouldSerializeSelectedTextForDataTransfer = DefaultSelectedTextType); // FIXME: Layering violation.

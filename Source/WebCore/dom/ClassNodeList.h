@@ -39,24 +39,28 @@ namespace WebCore {
 
 class ClassNodeList final : public CachedLiveNodeList<ClassNodeList> {
 public:
-    static PassRef<ClassNodeList> create(ContainerNode& rootNode, const String& classNames)
-    {
-        return adoptRef(*new ClassNodeList(rootNode, classNames));
-    }
+    static PassRef<ClassNodeList> create(ContainerNode&, const AtomicString& classNames);
 
     virtual ~ClassNodeList();
 
-    virtual bool nodeMatches(Element*) const override;
+    virtual bool elementMatches(Element*) const override;
     virtual bool isRootedAtDocument() const override { return false; }
 
 private:
-    ClassNodeList(ContainerNode& rootNode, const String& classNames);
+    ClassNodeList(ContainerNode& rootNode, const AtomicString& classNames);
 
     SpaceSplitString m_classNames;
-    String m_originalClassNames;
+    AtomicString m_originalClassNames;
 };
 
-inline bool ClassNodeList::nodeMatches(Element* element) const
+inline ClassNodeList::ClassNodeList(ContainerNode& rootNode, const AtomicString& classNames)
+    : CachedLiveNodeList(rootNode, InvalidateOnClassAttrChange)
+    , m_classNames(classNames, document().inQuirksMode())
+    , m_originalClassNames(classNames)
+{
+}
+
+inline bool ClassNodeList::elementMatches(Element* element) const
 {
     if (!element->hasClass())
         return false;

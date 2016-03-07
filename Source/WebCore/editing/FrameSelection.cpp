@@ -616,7 +616,7 @@ void FrameSelection::willBeModified(EAlteration alter, SelectionDirection direct
 
 VisiblePosition FrameSelection::positionForPlatform(bool isGetStart) const
 {
-    if (m_frame && m_frame->settings().editingBehaviorType() == EditingMacBehavior)
+    if (m_frame && (m_frame->settings().editingBehaviorType() == EditingMacBehavior || m_frame->settings().editingBehaviorType() == EditingIOSBehavior))
         return isGetStart ? m_selection.visibleStart() : m_selection.visibleEnd();
     // Linux and Windows always extend selections from the extent endpoint.
     // FIXME: VisibleSelection should be fixed to ensure as an invariant that
@@ -1654,7 +1654,7 @@ void FrameSelection::selectFrameElementInParentIfFullySelected()
         return;
 
     // Create compute positions before and after the element.
-    unsigned ownerElementNodeIndex = ownerElement->nodeIndex();
+    unsigned ownerElementNodeIndex = ownerElement->computeNodeIndex();
     VisiblePosition beforeOwnerElement(VisiblePosition(Position(ownerElementParent, ownerElementNodeIndex, Position::PositionIsOffsetInAnchor)));
     VisiblePosition afterOwnerElement(VisiblePosition(Position(ownerElementParent, ownerElementNodeIndex + 1, Position::PositionIsOffsetInAnchor), VP_UPSTREAM_IF_POSSIBLE));
 
@@ -2112,7 +2112,7 @@ void FrameSelection::setSelectionFromNone()
         return;
 #endif
 
-    Element* documentElement = document->documentElement();
+    auto* documentElement = document->documentElement();
     if (!documentElement)
         return;
     if (auto body = childrenOfType<HTMLBodyElement>(*documentElement).first())
@@ -2196,7 +2196,7 @@ PassRefPtr<Range> FrameSelection::elementRangeContainingCaretSelection() const
         return nullptr;
 
     Position startPos = createLegacyEditingPosition(element, 0);
-    Position endPos = createLegacyEditingPosition(element, element->childNodeCount());
+    Position endPos = createLegacyEditingPosition(element, element->countChildNodes());
     
     VisiblePosition startVisiblePos(startPos, VP_DEFAULT_AFFINITY);
     VisiblePosition endVisiblePos(endPos, VP_DEFAULT_AFFINITY);

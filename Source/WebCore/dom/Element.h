@@ -560,11 +560,7 @@ public:
     WEBCORE_EXPORT URL absoluteLinkURL() const;
 
 protected:
-    Element(const QualifiedName& tagName, Document& document, ConstructionType type)
-        : ContainerNode(document, type)
-        , m_tagName(tagName)
-    {
-    }
+    Element(const QualifiedName&, Document&, ConstructionType);
 
     virtual InsertionNotificationRequest insertedInto(ContainerNode&) override;
     virtual void removedFrom(ContainerNode&) override;
@@ -674,9 +670,24 @@ inline bool isElement(const Node& node) { return node.isElementNode(); }
 
 NODE_TYPE_CASTS(Element)
 
-template <typename Type> bool isElementOfType(const Element&);
-template <typename Type> inline bool isElementOfType(const Node& node) { return node.isElementNode() && isElementOfType<const Type>(toElement(node)); }
-template <> inline bool isElementOfType<const Element>(const Element&) { return true; }
+template <typename ExpectedType, typename ArgType>
+struct ElementTypeCastTraits {
+    static bool is(ArgType&);
+};
+
+// This is needed so that the compiler can deduce the second template parameter (ArgType).
+template <typename ExpectedType, typename ArgType>
+inline bool isElementOfType(const ArgType& node) { return ElementTypeCastTraits<ExpectedType, const ArgType>::is(node); }
+
+template <>
+struct ElementTypeCastTraits<const Element, const Node> {
+    static bool is(const Node& node) { return node.isElementNode(); }
+};
+
+template <typename ExpectedType>
+struct ElementTypeCastTraits<ExpectedType, ExpectedType> {
+    static bool is(ExpectedType&) { return true; }
+};
 
 inline bool Node::hasAttributes() const
 {

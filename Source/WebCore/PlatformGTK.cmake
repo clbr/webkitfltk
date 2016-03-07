@@ -14,6 +14,7 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/graphics/harfbuzz/ng"
     "${WEBCORE_DIR}/platform/graphics/opengl"
     "${WEBCORE_DIR}/platform/graphics/opentype"
+    "${WEBCORE_DIR}/platform/graphics/wayland"
     "${WEBCORE_DIR}/platform/linux"
     "${WEBCORE_DIR}/platform/mediastream/gstreamer"
     "${WEBCORE_DIR}/platform/mock/mediasource"
@@ -179,6 +180,7 @@ list(APPEND WebCorePlatformGTK_SOURCES
     accessibility/atk/WebKitAccessibleWrapperAtk.cpp
 
     editing/atk/FrameSelectionAtk.cpp
+    editing/gtk/EditorGtk.cpp
 
     page/gtk/DragControllerGtk.cpp
     page/gtk/EventHandlerGtk.cpp
@@ -429,10 +431,18 @@ add_custom_command(
 
 if (ENABLE_WAYLAND_TARGET)
     list(APPEND WebCorePlatformGTK_SOURCES
+        platform/graphics/wayland/WaylandDisplay.cpp
         platform/graphics/wayland/WaylandEventSource.cpp
         platform/graphics/wayland/WaylandSurface.cpp
 
         ${DERIVED_SOURCES_WEBCORE_DIR}/WebKitGtkWaylandClientProtocol.c
+    )
+
+    list(APPEND WebCore_INCLUDE_DIRECTORIES
+        ${WAYLAND_INCLUDE_DIRECTORIES}
+    )
+    list(APPEND WebCore_LIBRARIES
+        ${WAYLAND_LIBRARIES}
     )
 endif ()
 
