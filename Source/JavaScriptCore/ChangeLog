@@ -1,3 +1,44 @@
+2014-12-17  Michael Saboff  <msaboff@apple.com>
+
+        Tests with infinite recursion frequently crash
+        https://bugs.webkit.org/show_bug.cgi?id=139548
+
+        Reviewed by Geoffrey Garen.
+
+        While unwinding, if the call frame doesn't have a codeblock, then we
+        are in native code, handle appropriately.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::unwindCallFrame):
+        (JSC::UnwindFunctor::operator()):
+        Added checks for null CodeBlock.
+
+        (JSC::Interpreter::unwind): Removed wrong ASSERT.
+
+2014-12-17  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Make it possible to toggle FeatureCounter support at runtime
+        https://bugs.webkit.org/show_bug.cgi?id=139688
+        <rdar://problem/19266254>
+
+        Reviewed by Andreas Kling.
+
+        Stop linking against AppSupport framework as the functionality is no
+        longer in WTF (it was moved to WebCore).
+
+        * Configurations/JavaScriptCore.xcconfig:
+
+2014-12-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Correct DebugSuffix builds under MSBuild
+        https://bugs.webkit.org/show_bug.cgi?id=139733
+        <rdar://problem/19276880>
+
+        Reviewed by Simon Fraser.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.proj: Make sure to use the
+        '_debug' suffix when building the DebugSuffix target.
+
 2014-12-16  Enrica Casucci  <enrica@apple.com>
 
         Fix iOS builders for 8.0

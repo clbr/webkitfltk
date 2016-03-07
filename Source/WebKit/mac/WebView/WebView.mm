@@ -886,13 +886,12 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     [frameView release];
 
 #if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
-    // FIXME: Temporarily disable action menu installation.
-    /*if ([self respondsToSelector:@selector(setActionMenu:)]) {
+    if ([self respondsToSelector:@selector(setActionMenu:)]) {
         RetainPtr<NSMenu> actionMenu = adoptNS([[NSMenu alloc] init]);
         self.actionMenu = actionMenu.get();
         _private->actionMenuController = [[WebActionMenuController alloc] initWithWebView:self];
         self.actionMenu.autoenablesItems = NO;
-    }*/
+    }
 
     if (Class gestureClass = NSClassFromString(@"NSImmediateActionGestureRecognizer")) {
         RetainPtr<NSImmediateActionGestureRecognizer> recognizer = adoptNS([(NSImmediateActionGestureRecognizer *)[gestureClass alloc] initWithTarget:nil action:NULL]);
@@ -1220,9 +1219,6 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     _private->page->settings().setAcceleratedDrawingEnabled([preferences acceleratedDrawingEnabled]);
     _private->page->settings().setScreenFontSubstitutionEnabled(false);
     
-    // FIXME: <rdar://problem/7394370> Always use primary font baseline in text field base line calculation, ignore fallback fonts.
-    _private->page->settings().setAlwaysUseBaselineOfPrimaryFont([preferences _alwaysUseBaselineOfPrimaryFont]);
-
     _private->page->settings().setFontFallbackPrefersPictographs(true);
     _private->page->settings().setPictographFontFamily("AppleColorEmoji");
     
@@ -2348,7 +2344,6 @@ static bool needsSelfRetainWhileLoadingQuirk()
 #if PLATFORM(IOS)
     settings.setStandalone([preferences _standalone]);
     settings.setTelephoneNumberParsingEnabled([preferences _telephoneNumberParsingEnabled]);
-    settings.setAlwaysUseBaselineOfPrimaryFont([preferences _alwaysUseBaselineOfPrimaryFont]);
     settings.setAllowMultiElementImplicitSubmission([preferences _allowMultiElementImplicitFormSubmission]);
     settings.setLayoutInterval(std::chrono::milliseconds([preferences _layoutInterval]));
     settings.setMaxParseDuration([preferences _maxParseDuration]);
@@ -3965,12 +3960,12 @@ static inline IMP getMethod(id o, SEL s)
 
 + (void)_addOriginAccessWhitelistEntryWithSourceOrigin:(NSString *)sourceOrigin destinationProtocol:(NSString *)destinationProtocol destinationHost:(NSString *)destinationHost allowDestinationSubdomains:(BOOL)allowDestinationSubdomains
 {
-    SecurityPolicy::addOriginAccessWhitelistEntry(*SecurityOrigin::createFromString(sourceOrigin), destinationProtocol, destinationHost, allowDestinationSubdomains);
+    SecurityPolicy::addOriginAccessWhitelistEntry(SecurityOrigin::createFromString(sourceOrigin).get(), destinationProtocol, destinationHost, allowDestinationSubdomains);
 }
 
 + (void)_removeOriginAccessWhitelistEntryWithSourceOrigin:(NSString *)sourceOrigin destinationProtocol:(NSString *)destinationProtocol destinationHost:(NSString *)destinationHost allowDestinationSubdomains:(BOOL)allowDestinationSubdomains
 {
-    SecurityPolicy::removeOriginAccessWhitelistEntry(*SecurityOrigin::createFromString(sourceOrigin), destinationProtocol, destinationHost, allowDestinationSubdomains);
+    SecurityPolicy::removeOriginAccessWhitelistEntry(SecurityOrigin::createFromString(sourceOrigin).get(), destinationProtocol, destinationHost, allowDestinationSubdomains);
 }
 
 + (void)_resetOriginAccessWhitelists
@@ -7206,9 +7201,14 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
     return [[self _editingDelegateForwarder] webView:self shouldChangeSelectedDOMRange:currentRange toDOMRange:proposedRange affinity:selectionAffinity stillSelecting:flag];
 }
 
+- (void)_setMaintainsInactiveSelection:(BOOL)shouldMaintainInactiveSelection
+{
+    _private->shouldMaintainInactiveSelection = shouldMaintainInactiveSelection;
+}
+
 - (BOOL)maintainsInactiveSelection
 {
-    return NO;
+    return _private->shouldMaintainInactiveSelection;
 }
 
 - (void)setSelectedDOMRange:(DOMRange *)range affinity:(NSSelectionAffinity)selectionAffinity
@@ -8632,6 +8632,7 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
         if (!mutableOptions)
             mutableOptions = adoptNS([[NSMutableDictionary alloc] init]);
         [mutableOptions setObject:@YES forKey:getLUTermOptionDisableSearchTermIndicator()];
+        [self _setTextIndicator:dictionaryPopupInfo.textIndicator.get() fadeOut:NO];
         return [getLULookupDefinitionModuleClass() lookupAnimationControllerForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:mutableOptions.get()];
     }
 
@@ -8639,7 +8640,7 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
 }
 #endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 
-- (void)_setTextIndicator:(TextIndicator *)textIndicator fadeOut:(BOOL)fadeOut animationCompletionHandler:(std::function<void ()>)completionHandler
+- (void)_setTextIndicator:(TextIndicator *)textIndicator fadeOut:(BOOL)fadeOut
 {
     if (!textIndicator) {
         _private->textIndicatorWindow = nullptr;
@@ -8650,12 +8651,18 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
         _private->textIndicatorWindow = std::make_unique<TextIndicatorWindow>(self);
 
     NSRect contentRect = [self.window convertRectToScreen:textIndicator->textBoundingRectInWindowCoordinates()];
-    _private->textIndicatorWindow->setTextIndicator(textIndicator, NSRectToCGRect(contentRect), fadeOut, WTF::move(completionHandler));
+    _private->textIndicatorWindow->setTextIndicator(textIndicator, NSRectToCGRect(contentRect), fadeOut);
 }
 
 - (void)_clearTextIndicator
 {
-    [self _setTextIndicator:nullptr fadeOut:NO animationCompletionHandler:^ { }];
+    [self _setTextIndicator:nullptr fadeOut:NO];
+}
+
+- (void)_setTextIndicatorAnimationProgress:(float)progress
+{
+    if (_private->textIndicatorWindow)
+        _private->textIndicatorWindow->setAnimationProgress(progress);
 }
 
 - (void)_showDictionaryLookupPopup:(const DictionaryPopupInfo&)dictionaryPopupInfo
@@ -8678,16 +8685,15 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
         if (!mutableOptions)
             mutableOptions = adoptNS([[NSMutableDictionary alloc] init]);
         [mutableOptions setObject:@YES forKey:getLUTermOptionDisableSearchTermIndicator()];
-        [self _setTextIndicator:dictionaryPopupInfo.textIndicator.get() fadeOut:NO animationCompletionHandler:[dictionaryPopupInfo, textBaselineOrigin, mutableOptions] {
-            [getLULookupDefinitionModuleClass() showDefinitionForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:mutableOptions.get()];
-        }];
+        [self _setTextIndicator:dictionaryPopupInfo.textIndicator.get() fadeOut:NO];
+        [getLULookupDefinitionModuleClass() showDefinitionForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:mutableOptions.get()];
     } else
         [getLULookupDefinitionModuleClass() showDefinitionForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:dictionaryPopupInfo.options.get()];
 }
 
 - (void)_dictionaryLookupPopoverWillClose:(NSNotification *)notification
 {
-    [self _setTextIndicator:nullptr fadeOut:NO animationCompletionHandler:[] { }];
+    [self _setTextIndicator:nullptr fadeOut:NO];
 }
 #endif // PLATFORM(MAC)
 

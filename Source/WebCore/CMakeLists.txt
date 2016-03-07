@@ -1978,6 +1978,7 @@ set(WebCore_SOURCES
     platform/DisplaySleepDisabler.cpp
     platform/DragData.cpp
     platform/DragImage.cpp
+    platform/FeatureCounter.cpp
     platform/FileChooser.cpp
     platform/FileStream.cpp
     platform/FileSystem.cpp
@@ -2242,7 +2243,6 @@ set(WebCore_SOURCES
     plugins/DOMPlugin.cpp
     plugins/DOMPluginArray.cpp
     plugins/PluginData.cpp
-    plugins/PluginDatabase.cpp
     plugins/PluginDebug.cpp
     plugins/PluginMainThreadScheduler.cpp
     plugins/PluginStream.cpp
@@ -2783,7 +2783,6 @@ endif ()
 
 if (NOT ENABLE_NETSCAPE_PLUGIN_API)
     list(APPEND WebCore_SOURCES
-        plugins/PluginPackageNone.cpp
         plugins/PluginViewNone.cpp
     )
 endif ()

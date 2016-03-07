@@ -673,6 +673,8 @@
 		197B180C1506353200E4ADA8 /* SVGRenderingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 197B180B150634C000E4ADA8 /* SVGRenderingContext.h */; };
 		19BFF64E11C0F2AC00B8C04D /* JSSVGFEConvolveMatrixElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19BFF64911C0F2AC00B8C04D /* JSSVGFEConvolveMatrixElement.cpp */; };
 		19BFF64F11C0F2AC00B8C04D /* JSSVGFEConvolveMatrixElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 19BFF64A11C0F2AC00B8C04D /* JSSVGFEConvolveMatrixElement.h */; };
+		1A0409DC1A4360B5009E47F3 /* MachSendRight.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A0409DB1A4360B5009E47F3 /* MachSendRight.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		1A0409F31A43675C009E47F3 /* MachSendRight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0409F21A43675C009E47F3 /* MachSendRight.cpp */; };
 		1A0D57360A5C77FE007EDD4C /* OverflowEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D57340A5C77FE007EDD4C /* OverflowEvent.cpp */; };
 		1A0D57370A5C77FE007EDD4C /* OverflowEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A0D57350A5C77FE007EDD4C /* OverflowEvent.h */; };
 		1A0D57400A5C7867007EDD4C /* JSOverflowEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D573E0A5C7867007EDD4C /* JSOverflowEvent.cpp */; };
@@ -1614,6 +1616,9 @@
 		45BAC2B01360BBAB005DA258 /* IconURL.h in Headers */ = {isa = PBXBuildFile; fileRef = 45BAC2AF1360BBAB005DA258 /* IconURL.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		45FEA5CF156DDE8C00654101 /* Decimal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45FEA5CD156DDE8C00654101 /* Decimal.cpp */; };
 		45FEA5D0156DDE8C00654101 /* Decimal.h in Headers */ = {isa = PBXBuildFile; fileRef = 45FEA5CE156DDE8C00654101 /* Decimal.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		467438541A421330000494FB /* FeatureCounter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 467438531A421330000494FB /* FeatureCounter.mm */; };
+		46779CE21A40B97200B6864E /* FeatureCounter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 46779CE01A40B97100B6864E /* FeatureCounter.cpp */; };
+		46779CE31A40B97200B6864E /* FeatureCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 46779CE11A40B97200B6864E /* FeatureCounter.h */; };
 		4689F1AF1267BAE100E8D380 /* FileMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 4689F1AE1267BAE100E8D380 /* FileMetadata.h */; };
 		490707E61219C04300D90E51 /* ANGLEWebKitBridge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 490707E41219C04300D90E51 /* ANGLEWebKitBridge.cpp */; };
 		490707E71219C04300D90E51 /* ANGLEWebKitBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 490707E51219C04300D90E51 /* ANGLEWebKitBridge.h */; };
@@ -7662,6 +7667,8 @@
 		197B180B150634C000E4ADA8 /* SVGRenderingContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SVGRenderingContext.h; sourceTree = "<group>"; };
 		19BFF64911C0F2AC00B8C04D /* JSSVGFEConvolveMatrixElement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSSVGFEConvolveMatrixElement.cpp; sourceTree = "<group>"; };
 		19BFF64A11C0F2AC00B8C04D /* JSSVGFEConvolveMatrixElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSSVGFEConvolveMatrixElement.h; sourceTree = "<group>"; };
+		1A0409DB1A4360B5009E47F3 /* MachSendRight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MachSendRight.h; sourceTree = "<group>"; };
+		1A0409F21A43675C009E47F3 /* MachSendRight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MachSendRight.cpp; sourceTree = "<group>"; };
 		1A0D57340A5C77FE007EDD4C /* OverflowEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = OverflowEvent.cpp; sourceTree = "<group>"; };
 		1A0D57350A5C77FE007EDD4C /* OverflowEvent.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = OverflowEvent.h; sourceTree = "<group>"; };
 		1A0D57380A5C7812007EDD4C /* OverflowEvent.idl */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = OverflowEvent.idl; sourceTree = "<group>"; };
@@ -8714,6 +8721,9 @@
 		45BAC2AF1360BBAB005DA258 /* IconURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IconURL.h; sourceTree = "<group>"; };
 		45FEA5CD156DDE8C00654101 /* Decimal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Decimal.cpp; sourceTree = "<group>"; };
 		45FEA5CE156DDE8C00654101 /* Decimal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Decimal.h; sourceTree = "<group>"; };
+		467438531A421330000494FB /* FeatureCounter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = FeatureCounter.mm; path = ios/FeatureCounter.mm; sourceTree = "<group>"; };
+		46779CE01A40B97100B6864E /* FeatureCounter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FeatureCounter.cpp; sourceTree = "<group>"; };
+		46779CE11A40B97200B6864E /* FeatureCounter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeatureCounter.h; sourceTree = "<group>"; };
 		4689F1AE1267BAE100E8D380 /* FileMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileMetadata.h; path = platform/FileMetadata.h; sourceTree = "<group>"; };
 		490707E41219C04300D90E51 /* ANGLEWebKitBridge.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ANGLEWebKitBridge.cpp; sourceTree = "<group>"; };
 		490707E51219C04300D90E51 /* ANGLEWebKitBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ANGLEWebKitBridge.h; sourceTree = "<group>"; };
@@ -18588,6 +18598,7 @@
 				3140379A124BEA7F00AF40E4 /* DeviceOrientationClientIOS.mm */,
 				0FDA7C22188330A900C954B5 /* DragImageIOS.mm */,
 				26F40D4914904A6300CA67C4 /* EventLoopIOS.mm */,
+				467438531A421330000494FB /* FeatureCounter.mm */,
 				26C17A3C1491D2D400D12BA2 /* FileSystemIOS.h */,
 				26C17A3D1491D2D400D12BA2 /* FileSystemIOS.mm */,
 				265541371489811C000DFC5D /* KeyEventCodesIOS.h */,
@@ -18657,6 +18668,8 @@
 				5D8C4DBE1428222C0026CE72 /* DisplaySleepDisablerCocoa.h */,
 				A5C974CF11485FF10066F2AB /* KeyEventCocoa.h */,
 				A5C974D011485FF10066F2AB /* KeyEventCocoa.mm */,
+				1A0409F21A43675C009E47F3 /* MachSendRight.cpp */,
+				1A0409DB1A4360B5009E47F3 /* MachSendRight.h */,
 				ADB6B29718FB90240081963E /* MemoryPressureHandlerCocoa.mm */,
 				5D5975B119635F1100D00878 /* SystemVersion.h */,
 				5D5975B219635F1100D00878 /* SystemVersion.mm */,
@@ -21462,6 +21475,8 @@
 				A7CFB3D00B7ED10A0070C32D /* DragImage.h */,
 				1CA19E150DC255CA0065A994 /* EventLoop.h */,
 				1ABA34FD1A409FEA005570EA /* FeatureCounterKeys.h */,
+				46779CE01A40B97100B6864E /* FeatureCounter.cpp */,
+				46779CE11A40B97200B6864E /* FeatureCounter.h */,
 				934FE9E40B5CA539003E4A73 /* FileChooser.cpp */,
 				066C772A0AB603B700238CC4 /* FileChooser.h */,
 				2EF1BFE8121C9F4200C27627 /* FileStream.cpp */,
@@ -23719,6 +23734,7 @@
 				A80E6D040A1989CA007FB8C5 /* Counter.h in Headers */,
 				BC5EB9790E82069200B25965 /* CounterContent.h in Headers */,
 				BC5EB9510E82056B00B25965 /* CounterDirectives.h in Headers */,
+				46779CE31A40B97200B6864E /* FeatureCounter.h in Headers */,
 				9392F14C0AD1861B00691BD4 /* CounterNode.h in Headers */,
 				D0B0556809C6700100307E43 /* CreateLinkCommand.h in Headers */,
 				514C766E0CE923A1007EF3CD /* Credential.h in Headers */,
@@ -26454,6 +26470,7 @@
 				B2227A9A0D00BF220071B782 /* SVGRadialGradientElement.h in Headers */,
 				08EDE19F12A50B8E00B95797 /* SVGRect.h in Headers */,
 				B2227A9E0D00BF220071B782 /* SVGRectElement.h in Headers */,
+				1A0409DC1A4360B5009E47F3 /* MachSendRight.h in Headers */,
 				197B180C1506353200E4ADA8 /* SVGRenderingContext.h in Headers */,
 				B2227AA00D00BF220071B782 /* SVGRenderingIntent.h in Headers */,
 				BC2274790E8366E200E7F975 /* SVGRenderStyle.h in Headers */,
@@ -28431,6 +28448,7 @@
 				1AE2AA240A1CDAB400B42B25 /* JSHTMLBRElement.cpp in Sources */,
 				A80E7EA00A1A83E3007FB8C5 /* JSHTMLButtonElement.cpp in Sources */,
 				938E666009F09B81008A48EC /* JSHTMLCanvasElement.cpp in Sources */,
+				1A0409F31A43675C009E47F3 /* MachSendRight.cpp in Sources */,
 				9392262D1032107B006E7D5D /* JSHTMLCanvasElementCustom.cpp in Sources */,
 				BCCBAD400C18C14200CE890F /* JSHTMLCollection.cpp in Sources */,
 				BCCBAD3B0C18BFF800CE890F /* JSHTMLCollectionCustom.cpp in Sources */,
@@ -28609,6 +28627,7 @@
 				77A17AA612F28B2A004E02F6 /* JSOESVertexArrayObject.cpp in Sources */,
 				FDF6BAF8134A4C9800822920 /* JSOfflineAudioCompletionEvent.cpp in Sources */,
 				FDA9326616703BA9008982DC /* JSOfflineAudioContext.cpp in Sources */,
+				46779CE21A40B97200B6864E /* FeatureCounter.cpp in Sources */,
 				FDEA6242152102E200479DF0 /* JSOscillatorNode.cpp in Sources */,
 				FDBD1DFC167FE27D0051A11E /* JSOscillatorNodeCustom.cpp in Sources */,
 				1A0D57400A5C7867007EDD4C /* JSOverflowEvent.cpp in Sources */,
@@ -29565,6 +29584,7 @@
 				CD3A496417A9D01B00274E42 /* SourceBufferList.cpp in Sources */,
 				CDC8B5AA18047FF10016E685 /* SourceBufferPrivateAVFObjC.mm in Sources */,
 				84A81F410FC7E02700955300 /* SourceGraphic.cpp in Sources */,
+				467438541A421330000494FB /* FeatureCounter.mm in Sources */,
 				076306D717E149CF005A7C4E /* SourceInfo.cpp in Sources */,
 				536D5A25193F40FC00CE4CAB /* SourceSizeList.cpp in Sources */,
 				2D58D8561A15F65F00A5F726 /* DataDetection.mm in Sources */,

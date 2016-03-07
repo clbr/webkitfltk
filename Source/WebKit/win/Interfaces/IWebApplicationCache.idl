@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Kevin Ollivier <kevino@theolliviers.com> All Rights Reserved.
+ * Copyright (C) 2014 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,57 +20,39 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "PluginPackage.h"
-
-namespace WebCore {
-
-void PluginPackage::determineQuirks(const String&)
-{
-}
-
-bool PluginPackage::fetchInfo()
-{
-    return false;
-}
-
-bool PluginPackage::load()
-{
-    return false;
-}
-
-#if ENABLE(NETSCAPE_PLUGIN_API)
-uint16_t PluginPackage::NPVersion() const
-{
-    return 0;
-}
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+import "ocidl.idl";
 #endif
 
-PassRefPtr<PluginPackage> PluginPackage::createPackage(const String&, const time_t&)
-{
-    return 0;
-}
+interface IWebSecurityOrigin;
 
-unsigned PluginPackage::hash() const
-{
-    return 0;
-}
+#ifndef DO_NO_IMPORTS
+import "IWebSecurityOrigin.idl";
+#endif
 
-bool PluginPackage::equal(const PluginPackage&, const PluginPackage&)
+[
+    object,
+    oleautomation,
+    hidden,
+    uuid(D5762EBC-B712-4C99-BBF5-220FF4DC8DF5),
+    pointer_default(unique)
+]
+interface IWebApplicationCache : IUnknown
 {
-    return true;
-}
+    HRESULT maximumSize([out, retval] long long*);
+    HRESULT setMaximumSize([in] long long);
 
-int PluginPackage::compare(const PluginPackage&) const
-{
-    return 0;
-}
+    HRESULT defaultOriginQuota([out, retval] long long*);
+    HRESULT setDefaultOriginQuota([in] long long);
 
-PluginPackage::~PluginPackage()
-{
-}
+    HRESULT diskUsageForOrigin([in] IWebSecurityOrigin*, [out, retval] long long*);
 
+    HRESULT deleteAllApplicationCaches();
+    HRESULT deleteCacheForOrigin([in] IWebSecurityOrigin*);
+
+    HRESULT originsWithCache([out, retval] IPropertyBag**);
 }

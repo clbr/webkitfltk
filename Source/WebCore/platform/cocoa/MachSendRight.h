@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,49 +23,33 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TextIndicatorWindow_h
-#define TextIndicatorWindow_h
+#ifndef MachSendRight_h
+#define MachSendRight_h
 
-#if PLATFORM(MAC)
-
-#import <wtf/Noncopyable.h>
-#import <wtf/RefPtr.h>
-#import <wtf/RetainPtr.h>
-#import <wtf/RunLoop.h>
-
-@class NSView;
-@class WebTextIndicatorView;
+#include <mach/mach_port.h>
 
 namespace WebCore {
 
-class TextIndicator;
-
-class TextIndicatorWindow {
-    WTF_MAKE_NONCOPYABLE(TextIndicatorWindow);
-
+class MachSendRight {
 public:
-    explicit TextIndicatorWindow(NSView *);
-    ~TextIndicatorWindow();
+    static MachSendRight adopt(mach_port_t);
+    static MachSendRight create(mach_port_t);
 
-    void setTextIndicator(PassRefPtr<TextIndicator>, CGRect contentRect, bool fadeOut);
+    MachSendRight(MachSendRight&&);
+    ~MachSendRight();
 
-    void setAnimationProgress(float);
+    MachSendRight& operator=(MachSendRight&&);
+
+    MachSendRight copySendRight() const;
+
+    mach_port_t leakSendRight() WARN_UNUSED_RETURN;
 
 private:
-    void closeWindow();
+    explicit MachSendRight(mach_port_t);
 
-    void startFadeOut();
-
-    NSView *m_targetView;
-    RefPtr<TextIndicator> m_textIndicator;
-    RetainPtr<NSWindow> m_textIndicatorWindow;
-    RetainPtr<WebTextIndicatorView> m_textIndicatorView;
-
-    RunLoop::Timer<TextIndicatorWindow> m_startFadeOutTimer;
+    mach_port_t m_port;
 };
 
-} // namespace WebKit
+}
 
-#endif // TextIndicatorWindow_h
-
-#endif // PLATFORM(MAC)
+#endif // MachSendRight_h

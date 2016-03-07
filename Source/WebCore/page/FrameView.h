@@ -224,7 +224,7 @@ public:
     WEBCORE_EXPORT void setViewportSizeForCSSViewportUnits(IntSize);
     IntSize viewportSizeForCSSViewportUnits() const;
     
-    virtual IntRect windowClipRect(bool clipToContents = true) const override;
+    virtual IntRect windowClipRect() const override;
     WEBCORE_EXPORT IntRect windowClipRectForFrameOwner(const HTMLFrameOwnerElement*, bool clipToLayerContents) const;
 
     virtual IntRect windowResizerRect() const override;
@@ -527,7 +527,6 @@ protected:
 
     virtual bool isVerticalDocument() const override;
     virtual bool isFlippedDocument() const override;
-    virtual bool containsSVGDocument() const override;
 
 private:
     explicit FrameView(Frame&);

@@ -891,7 +891,7 @@ IntRect Element::boundsInRootViewSpace()
     return result;
 }
 
-RefPtr<ClientRectList> Element::getClientRects()
+Ref<ClientRectList> Element::getClientRects()
 {
     document().updateLayoutIgnorePendingStylesheets();
 
@@ -908,7 +908,7 @@ RefPtr<ClientRectList> Element::getClientRects()
     return ClientRectList::create(quads);
 }
 
-RefPtr<ClientRect> Element::getBoundingClientRect()
+Ref<ClientRect> Element::getBoundingClientRect()
 {
     document().updateLayoutIgnorePendingStylesheets();
 
@@ -2100,7 +2100,7 @@ String Element::innerText()
     if (!renderer())
         return textContent(true);
 
-    return plainText(rangeOfContents(*this).get());
+    return plainText(rangeOfContents(*this).ptr());
 }
 
 String Element::outerText()

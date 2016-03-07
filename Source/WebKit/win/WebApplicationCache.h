@@ -23,28 +23,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#if  __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+#ifndef WebApplicationCache_h
+#define WebApplicationCache_h
 
-#import "NSImmediateActionGestureRecognizerSPI.h"
+#include "WebKit.h"
 
-// FIXME: This header should include system headers when possible.
+class WebApplicationCache : public IWebApplicationCache {
+public:
+    static WebApplicationCache* createInstance();
+protected:
+    WebApplicationCache();
+    ~WebApplicationCache();
 
-@interface NSPopoverAnimationController : NSObject <NSImmediateActionAnimationController>
-+ (instancetype)popoverAnimationControllerWithPopover:(NSPopover *)popover;
+public:
+    // IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
 
-@property (readonly) NSPopover *popover;
-@property NSRectEdge preferredEdge;
-@property (weak) NSView *anchorView;
-@property NSRect positioningRect;
-@end
+    // IWebApplicationCache
+    virtual HRESULT STDMETHODCALLTYPE maximumSize(/*[out, retval]*/ long long*);
+    virtual HRESULT STDMETHODCALLTYPE setMaximumSize(/*[in]*/ long long);
 
-typedef NS_OPTIONS(NSUInteger, NSPopoverPositioningOptions) {
-    NSPopoverPositioningOptionNone              = 0,
-    NSPopoverPositioningOptionKeepTopStable     = (1 << 0)
+    virtual HRESULT STDMETHODCALLTYPE defaultOriginQuota(/*[out, retval]*/ long long*);
+    virtual HRESULT STDMETHODCALLTYPE setDefaultOriginQuota(/*[in]*/ long long);
+
+    virtual HRESULT STDMETHODCALLTYPE diskUsageForOrigin(/*[in]*/ IWebSecurityOrigin*, /*[out, retval]*/ long long*);
+
+    virtual HRESULT STDMETHODCALLTYPE deleteAllApplicationCaches();
+    virtual HRESULT STDMETHODCALLTYPE deleteCacheForOrigin(/*[in]*/ IWebSecurityOrigin*);
+
+    virtual HRESULT STDMETHODCALLTYPE originsWithCache(/*[out, retval]*/ IPropertyBag**);
+
+protected:
+    ULONG m_refCount;
 };
 
-@interface NSPopover (WKDetails)
-@property NSPopoverPositioningOptions positioningOptions;
-@end
-
-#endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+#endif

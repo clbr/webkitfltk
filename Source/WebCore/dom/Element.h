@@ -220,8 +220,8 @@ public:
 
     WEBCORE_EXPORT IntRect boundsInRootViewSpace();
 
-    RefPtr<ClientRectList> getClientRects();
-    RefPtr<ClientRect> getBoundingClientRect();
+    Ref<ClientRectList> getClientRects();
+    Ref<ClientRect> getBoundingClientRect();
     
     // Returns the absolute bounding box translated into client coordinates.
     WEBCORE_EXPORT IntRect clientRect() const;

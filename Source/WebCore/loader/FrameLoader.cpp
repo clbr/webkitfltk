@@ -58,6 +58,7 @@
 #include "Event.h"
 #include "EventHandler.h"
 #include "EventNames.h"
+#include "FeatureCounter.h"
 #include "FloatRect.h"
 #include "FormState.h"
 #include "FormSubmission.h"
@@ -539,10 +540,18 @@ void FrameLoader::willTransitionToCommitted()
 bool FrameLoader::closeURL()
 {
     history().saveDocumentState();
-    
-    // Should only send the pagehide event here if the current document exists and has not been placed in the page cache.    
+
     Document* currentDocument = m_frame.document();
-    stopLoading(currentDocument && !currentDocument->inPageCache() ? UnloadEventPolicyUnloadAndPageHide : UnloadEventPolicyUnloadOnly);
+    UnloadEventPolicy unloadEventPolicy;
+    if (m_frame.page() && m_frame.page()->chrome().client().isSVGImageChromeClient()) {
+        // If this is the SVGDocument of an SVGImage, no need to dispatch events or recalcStyle.
+        unloadEventPolicy = UnloadEventPolicyNone;
+    } else {
+        // Should only send the pagehide event here if the current document exists and has not been placed in the page cache.
+        unloadEventPolicy = currentDocument && !currentDocument->inPageCache() ? UnloadEventPolicyUnloadAndPageHide : UnloadEventPolicyUnloadOnly;
+    }
+
+    stopLoading(unloadEventPolicy);
     
     m_frame.editor().clearUndoRedoOperations();
     return true;
@@ -948,41 +957,6 @@ void FrameLoader::loadArchive(PassRefPtr<Archive> archive)
     load(documentLoader.get());
 }
 #endif // ENABLE(WEB_ARCHIVE) || ENABLE(MHTML)
-
-ObjectContentType FrameLoader::defaultObjectContentType(const URL& url, const String& mimeTypeIn, bool shouldPreferPlugInsForImages)
-{
-    String mimeType = mimeTypeIn;
-
-    if (mimeType.isEmpty())
-        mimeType = mimeTypeFromURL(url);
-
-#if !PLATFORM(COCOA) && !PLATFORM(EFL) && !PLATFORM(FLTK) // Mac has no PluginDatabase, nor does EFL
-    if (mimeType.isEmpty()) {
-        String decodedPath = decodeURLEscapeSequences(url.path());
-        mimeType = PluginDatabase::installedPlugins()->MIMETypeForExtension(decodedPath.substring(decodedPath.reverseFind('.') + 1));
-    }
-#endif
-
-    if (mimeType.isEmpty())
-        return ObjectContentFrame; // Go ahead and hope that we can display the content.
-
-#if !PLATFORM(COCOA) && !PLATFORM(EFL) && !PLATFORM(FLTK) // Mac has no PluginDatabase, nor does EFL
-    bool plugInSupportsMIMEType = PluginDatabase::installedPlugins()->isMIMETypeRegistered(mimeType);
-#else
-    bool plugInSupportsMIMEType = false;
-#endif
-
-    if (MIMETypeRegistry::isSupportedImageMIMEType(mimeType))
-        return shouldPreferPlugInsForImages && plugInSupportsMIMEType ? WebCore::ObjectContentNetscapePlugin : WebCore::ObjectContentImage;
-
-    if (plugInSupportsMIMEType)
-        return WebCore::ObjectContentNetscapePlugin;
-
-    if (MIMETypeRegistry::isSupportedNonImageMIMEType(mimeType))
-        return WebCore::ObjectContentFrame;
-
-    return WebCore::ObjectContentNone;
-}
 
 String FrameLoader::outgoingReferrer() const
 {
@@ -1403,6 +1377,39 @@ void FrameLoader::load(DocumentLoader* newDocumentLoader)
     loadWithDocumentLoader(newDocumentLoader, type, 0, AllowNavigationToInvalidURL::Yes);
 }
 
+static void logNavigationWithFeatureCounter(Page* page, FrameLoadType type)
+{
+    const char* key;
+    switch (type) {
+    case FrameLoadType::Standard:
+        key = FeatureCounterNavigationStandard;
+        break;
+    case FrameLoadType::Back:
+        key = FeatureCounterNavigationBack;
+        break;
+    case FrameLoadType::Forward:
+        key = FeatureCounterNavigationForward;
+        break;
+    case FrameLoadType::IndexedBackForward:
+        key = FeatureCounterNavigationIndexedBackForward;
+        break;
+    case FrameLoadType::Reload:
+        key = FeatureCounterNavigationReload;
+        break;
+    case FrameLoadType::Same:
+        key = FeatureCounterNavigationSame;
+        break;
+    case FrameLoadType::ReloadFromOrigin:
+        key = FeatureCounterNavigationReloadFromOrigin;
+        break;
+    case FrameLoadType::Replace:
+    case FrameLoadType::RedirectWithLockedBackForwardList:
+        // Not logging those for now.
+        return;
+    }
+    FEATURE_COUNTER_INCREMENT_KEY(page, key);
+}
+
 void FrameLoader::loadWithDocumentLoader(DocumentLoader* loader, FrameLoadType type, PassRefPtr<FormState> prpFormState, AllowNavigationToInvalidURL allowNavigationToInvalidURL)
 {
     // Retain because dispatchBeforeLoadEvent may release the last reference to it.
@@ -1420,6 +1427,10 @@ void FrameLoader::loadWithDocumentLoader(DocumentLoader* loader, FrameLoadType t
 
     if (m_frame.document())
         m_previousURL = m_frame.document()->url();
+
+    // Log main frame navigation types.
+    if (m_frame.isMainFrame())
+        logNavigationWithFeatureCounter(m_frame.page(), type);
 
     policyChecker().setLoadType(type);
     RefPtr<FormState> formState = prpFormState;
@@ -1781,8 +1792,8 @@ void FrameLoader::commitProvisionalLoad()
 
     if (pdl && m_documentLoader) {
         // Check if the destination page is allowed to access the previous page's timing information.
-        RefPtr<SecurityOrigin> securityOrigin = SecurityOrigin::create(pdl->request().url());
-        m_documentLoader->timing()->setHasSameOriginAsPreviousDocument(securityOrigin->canRequest(m_previousURL));
+        Ref<SecurityOrigin> securityOrigin(SecurityOrigin::create(pdl->request().url()));
+        m_documentLoader->timing()->setHasSameOriginAsPreviousDocument(securityOrigin.get().canRequest(m_previousURL));
     }
 
     // Call clientRedirectCancelledOrFinished() here so that the frame load delegate is notified that the redirect's

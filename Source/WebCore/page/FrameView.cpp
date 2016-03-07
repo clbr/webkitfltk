@@ -3208,7 +3208,7 @@ void FrameView::setPagination(const Pagination& pagination)
     frame().document()->styleResolverChanged(DeferRecalcStyle);
 }
 
-IntRect FrameView::windowClipRect(bool clipToContents) const
+IntRect FrameView::windowClipRect() const
 {
     ASSERT(frame().view() == this);
 
@@ -3216,11 +3216,8 @@ IntRect FrameView::windowClipRect(bool clipToContents) const
         return contentsToWindow(IntRect(IntPoint(), totalContentsSize()));
 
     // Set our clip rect to be our contents.
-    IntRect clipRect;
-    if (clipToContents)
-        clipRect = contentsToWindow(visibleContentRect(LegacyIOSDocumentVisibleRect));
-    else
-        clipRect = contentsToWindow(visibleContentRectIncludingScrollbars(LegacyIOSDocumentVisibleRect));
+    IntRect clipRect = contentsToWindow(visibleContentRect(LegacyIOSDocumentVisibleRect));
+
     if (!frame().ownerElement())
         return clipRect;
 
@@ -4394,14 +4391,6 @@ bool FrameView::isFlippedDocument() const
         return false;
 
     return renderView->style().isFlippedBlocksWritingMode();
-}
-
-bool FrameView::containsSVGDocument() const
-{
-    if (frame().document())
-        return frame().document()->isSVGDocument();
-    
-    return false;
 }
 
 void FrameView::notifyWidgetsInAllFrames(WidgetNotification notification)

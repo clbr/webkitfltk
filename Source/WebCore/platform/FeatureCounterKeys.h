@@ -26,8 +26,6 @@
 #ifndef FeatureCounterKeys_h
 #define FeatureCounterKeys_h
 
-#include <wtf/FeatureCounter.h>
-
 namespace WebCore {
 
 // Page cache.
@@ -62,6 +60,24 @@ static const char FeatureCounterPageCacheFailureReloadFromOriginKey[] = "com.app
 static const char FeatureCounterPageCacheFailureSameLoadKey[] = "com.apple.WebKit.pageCache.failure.sameLoad";
 static const char FeatureCounterPageCacheFailureKey[] = "com.apple.WebKit.pageCache.failure";
 static const char FeatureCounterPageCacheSuccessKey[] = "com.apple.WebKit.pageCache.success";
+
+// Cached resources revalidation.
+static const char FeatureCounterCachedResourceRevalidationSuccessKey[] = "com.apple.WebKit.cachedResourceRevalidation.success";
+static const char FeatureCounterCachedResourceRevalidationFailureKey[] = "com.apple.WebKit.cachedResourceRevalidation.failure";
+static const char FeatureCounterCachedResourceRevalidationReasonReloadKey[] = "com.apple.WebKit.cachedResourceRevalidation.reason.reload";
+static const char FeatureCounterCachedResourceRevalidationReasonNoCacheKey[] = "com.apple.WebKit.cachedResourceRevalidation.reason.noCache";
+static const char FeatureCounterCachedResourceRevalidationReasonNoStoreKey[] = "com.apple.WebKit.cachedResourceRevalidation.reason.noStore";
+static const char FeatureCounterCachedResourceRevalidationReasonMustRevalidateIsExpiredKey[] = "com.apple.WebKit.cachedResourceRevalidation.reason.mustRevalidateIsExpired";
+static const char FeatureCounterCachedResourceRevalidationReasonIsExpiredKey[] = "com.apple.WebKit.cachedResourceRevalidation.reason.isExpired";
+
+// Navigation types.
+static const char FeatureCounterNavigationStandard[] = "com.apple.WebKit.navigation.standard";
+static const char FeatureCounterNavigationBack[] = "com.apple.WebKit.navigation.back";
+static const char FeatureCounterNavigationForward[] = "com.apple.WebKit.navigation.forward";
+static const char FeatureCounterNavigationIndexedBackForward[] = "com.apple.WebKit.navigation.indexedBackForward";
+static const char FeatureCounterNavigationReload[] = "com.apple.WebKit.navigation.reload";
+static const char FeatureCounterNavigationSame[] = "com.apple.WebKit.navigation.same";
+static const char FeatureCounterNavigationReloadFromOrigin[] = "com.apple.WebKit.navigation.reloadFromOrigin";
 
 } // namespace WebCore
 
