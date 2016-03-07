@@ -665,7 +665,7 @@
 #endif
 #endif /* !defined(WTF_USE_JSVALUE64) && !defined(WTF_USE_JSVALUE32_64) */
 
-/* The JIT is enabled by default on all x86, x86-64, ARM & MIPS platforms except ARMv7k and Windows. */
+/* The JIT is enabled by default on all x86, x86-64, ARM & MIPS platforms except ARMv7k. */
 #if !defined(ENABLE_JIT) \
     && (CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(ARM64) || CPU(MIPS)) \
     && !CPU(APPLE_ARMV7K)
@@ -829,7 +829,7 @@
 #define ENABLE_REGEXP_TRACING 0
 
 /* Yet Another Regex Runtime - turned on by default for JIT enabled ports. */
-#if !defined(ENABLE_YARR_JIT)
+#if !defined(ENABLE_YARR_JIT) && ENABLE(JIT)
 #define ENABLE_YARR_JIT 1
 
 /* Setting this flag compares JIT results with interpreter results. */
@@ -969,12 +969,6 @@
 
 #if !defined(ENABLE_COMPARE_AND_SWAP) && (OS(WINDOWS) || (COMPILER(GCC) && (CPU(X86) || CPU(X86_64) || CPU(ARM_THUMB2) || CPU(ARM64))))
 #define ENABLE_COMPARE_AND_SWAP 1
-#endif
-
-/* [ARM] GC sometimes stuck in an infinite loop if parallel GC is enabled
- FIXME: Enable it once #141290 is fixed. */
-#if !defined(ENABLE_PARALLEL_GC) && OS(LINUX) && CPU(ARM_THUMB2)
-#define ENABLE_PARALLEL_GC 0
 #endif
 
 #if !defined(ENABLE_PARALLEL_GC) && (OS(DARWIN) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(FLTK)) && ENABLE(COMPARE_AND_SWAP)

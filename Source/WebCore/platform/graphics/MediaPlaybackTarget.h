@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,23 +23,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "DrawingBuffer.h"
+#ifndef MediaPlaybackTarget_h
+#define MediaPlaybackTarget_h
 
-#if USE(CAIRO) && (ENABLE(ACCELERATED_2D_CANVAS) || USE(3D_GRAPHICS))
-#include "Extensions3D.h"
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+
+#include <wtf/RetainPtr.h>
+
+#if PLATFORM(COCOA)
+OBJC_CLASS NSKeyedArchiver;
+OBJC_CLASS NSKeyedUnarchiver;
+OBJC_CLASS AVOutputDevicePickerContext;
+#endif
 
 namespace WebCore {
 
-unsigned DrawingBuffer::frontColorBuffer() const
-{
-    return colorBuffer();
+class MediaPlaybackTarget {
+public:
+    virtual ~MediaPlaybackTarget() { }
+
+#if PLATFORM(COCOA)
+    WEBCORE_EXPORT MediaPlaybackTarget(AVOutputDevicePickerContext *context = nil) { m_devicePickerContext = context; }
+
+    WEBCORE_EXPORT void encode(NSKeyedArchiver *) const;
+    WEBCORE_EXPORT static bool decode(NSKeyedUnarchiver *, MediaPlaybackTarget&);
+
+    void setDevicePickerContext(AVOutputDevicePickerContext *context) { m_devicePickerContext = context; }
+    AVOutputDevicePickerContext *devicePickerContext() const { return m_devicePickerContext.get(); }
+#endif
+
+protected:
+#if PLATFORM(COCOA)
+    RetainPtr<AVOutputDevicePickerContext> m_devicePickerContext;
+#endif
+};
+
 }
 
-void DrawingBuffer::paintCompositedResultsToCanvas(ImageBuffer*)
-{
-}
+#endif // ENABLE(WIRELESS_PLAYBACK_TARGET)
 
-}
-
-#endif // USE(CAIRO) && (ENABLE(ACCELERATED_2D_CANVAS) || USE(3D_GRAPHICS))
+#endif

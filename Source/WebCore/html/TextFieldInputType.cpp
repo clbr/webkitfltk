@@ -34,6 +34,7 @@
 
 #include "BeforeTextInsertedEvent.h"
 #include "Chrome.h"
+#include "ChromeClient.h"
 #include "Editor.h"
 #include "FormDataList.h"
 #include "Frame.h"
@@ -258,6 +259,8 @@ void TextFieldInputType::createShadowSubtree()
     ASSERT(!m_innerText);
     ASSERT(!m_innerBlock);
     ASSERT(!m_innerSpinButton);
+    ASSERT(!m_capsLockIndicator);
+    ASSERT(!m_autoFillButton);
 
     Document& document = element().document();
     bool shouldHaveSpinButton = this->shouldHaveSpinButton();
@@ -265,21 +268,14 @@ void TextFieldInputType::createShadowSubtree()
     bool createsContainer = shouldHaveSpinButton || shouldHaveCapsLockIndicator || needsContainer();
 
     m_innerText = TextControlInnerTextElement::create(document);
+
     if (!createsContainer) {
         element().userAgentShadowRoot()->appendChild(m_innerText, IGNORE_EXCEPTION);
         updatePlaceholderText();
         return;
     }
 
-    ShadowRoot* shadowRoot = element().userAgentShadowRoot();
-    m_container = TextControlInnerContainer::create(document);
-    m_container->setPseudo(AtomicString("-webkit-textfield-decoration-container", AtomicString::ConstructFromLiteral));
-    shadowRoot->appendChild(m_container, IGNORE_EXCEPTION);
-
-    m_innerBlock = TextControlInnerElement::create(document);
-    m_innerBlock->appendChild(m_innerText, IGNORE_EXCEPTION);
-    m_container->appendChild(m_innerBlock, IGNORE_EXCEPTION);
-
+    createContainer();
     updatePlaceholderText();
 
     if (shouldHaveSpinButton) {
@@ -296,6 +292,8 @@ void TextFieldInputType::createShadowSubtree()
 
         m_container->appendChild(m_capsLockIndicator, IGNORE_EXCEPTION);
     }
+
+    updateAutoFillButton();
 }
 
 HTMLElement* TextFieldInputType::containerElement() const
@@ -324,6 +322,11 @@ HTMLElement* TextFieldInputType::capsLockIndicatorElement() const
     return m_capsLockIndicator.get();
 }
 
+HTMLElement* TextFieldInputType::autoFillButtonElement() const
+{
+    return m_autoFillButton.get();
+}
+
 HTMLElement* TextFieldInputType::placeholderElement() const
 {
     return m_placeholder.get();
@@ -339,6 +342,7 @@ void TextFieldInputType::destroyShadowSubtree()
         m_innerSpinButton->removeSpinButtonOwner();
     m_innerSpinButton = nullptr;
     m_capsLockIndicator = nullptr;
+    m_autoFillButton = nullptr;
     m_container = nullptr;
 }
 
@@ -459,6 +463,7 @@ void TextFieldInputType::updatePlaceholderText()
         m_placeholder->setPseudo(AtomicString("-webkit-input-placeholder", AtomicString::ConstructFromLiteral));
         m_placeholder->setInlineStyleProperty(CSSPropertyDisplay, element().isPlaceholderVisible() ? CSSValueBlock : CSSValueNone, true);
         element().userAgentShadowRoot()->insertBefore(m_placeholder, m_container ? m_container.get() : innerTextElement(), ASSERT_NO_EXCEPTION);
+        
     }
     m_placeholder->setInnerText(placeholderText, ASSERT_NO_EXCEPTION);
 }
@@ -564,6 +569,60 @@ void TextFieldInputType::capsLockStateMayHaveChanged()
 
     bool shouldDrawCapsLockIndicator = this->shouldDrawCapsLockIndicator();
     m_capsLockIndicator->setInlineStyleProperty(CSSPropertyDisplay, shouldDrawCapsLockIndicator ? CSSValueBlock : CSSValueNone, true);
+}
+
+bool TextFieldInputType::shouldDrawAutoFillButton() const
+{
+    return element().showAutoFillButton();
+}
+
+void TextFieldInputType::autoFillButtonElementWasClicked()
+{
+    Page* page = element().document().page();
+    if (!page)
+        return;
+
+    page->chrome().client().handleAutoFillButtonClick(element());
+}
+
+void TextFieldInputType::createContainer()
+{
+    ASSERT(!m_container);
+
+    m_container = TextControlInnerContainer::create(element().document());
+    m_container->setPseudo(AtomicString("-webkit-textfield-decoration-container", AtomicString::ConstructFromLiteral));
+
+    m_innerBlock = TextControlInnerElement::create(element().document());
+    m_innerBlock->appendChild(m_innerText, IGNORE_EXCEPTION);
+    m_container->appendChild(m_innerBlock, IGNORE_EXCEPTION);
+
+    element().userAgentShadowRoot()->appendChild(m_container, IGNORE_EXCEPTION);
+}
+
+void TextFieldInputType::createAutoFillButton()
+{
+    ASSERT(!m_autoFillButton);
+
+    m_autoFillButton = AutoFillButtonElement::create(element().document(), *this);
+    m_autoFillButton->setPseudo(AtomicString("-webkit-auto-fill-button", AtomicString::ConstructFromLiteral));
+    m_container->appendChild(m_autoFillButton, IGNORE_EXCEPTION);
+}
+
+void TextFieldInputType::updateAutoFillButton()
+{
+    if (shouldDrawAutoFillButton()) {
+        if (!m_container)
+            createContainer();
+
+        if (!m_autoFillButton)
+            createAutoFillButton();
+
+        m_autoFillButton->setInlineStyleProperty(CSSPropertyDisplay, CSSValueBlock, true);
+        return;
+    }
+    
+    if (m_autoFillButton)
+        m_autoFillButton->setInlineStyleProperty(CSSPropertyDisplay, CSSValueNone, true);        
 }
 
 } // namespace WebCore

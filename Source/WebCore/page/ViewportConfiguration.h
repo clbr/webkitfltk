@@ -77,7 +77,7 @@ public:
     const ViewportArguments& viewportArguments() const { return m_viewportArguments; }
     WEBCORE_EXPORT void setViewportArguments(const ViewportArguments&);
 
-    void setIgnoreScalingConstraints(bool ignoreScalingConstraints) {m_ignoreScalingConstraints = ignoreScalingConstraints; }
+    void setCanIgnoreScalingConstraints(bool canIgnoreScalingConstraints) { m_canIgnoreScalingConstraints = canIgnoreScalingConstraints; }
 
     WEBCORE_EXPORT IntSize layoutSize() const;
     WEBCORE_EXPORT double initialScale() const;
@@ -102,13 +102,17 @@ private:
     int layoutWidth() const;
     int layoutHeight() const;
 
+    bool shouldIgnoreScalingConstraints() const;
+    bool shouldIgnoreVerticalScalingConstraints() const;
+    bool shouldIgnoreHorizontalScalingConstraints() const;
+
     Parameters m_configuration;
     Parameters m_defaultConfiguration;
     IntSize m_contentSize;
     FloatSize m_minimumLayoutSize;
     ViewportArguments m_viewportArguments;
 
-    bool m_ignoreScalingConstraints;
+    bool m_canIgnoreScalingConstraints;
 };
 
 } // namespace WebCore

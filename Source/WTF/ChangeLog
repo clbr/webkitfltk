@@ -1,3 +1,189 @@
+2015-03-15  Benjamin Poulain  <bpoulain@apple.com>
+
+        Change the exact attribute matching to be ASCII case-insensitive
+        https://bugs.webkit.org/show_bug.cgi?id=142609
+
+        Reviewed by Darin Adler.
+
+        Add support for ASCII case insensitive comparisons to all the string
+        classes.
+
+        The new file StringCommon.h has the common algorithm to avoid repeating
+        the same code with different types.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * wtf/ASCIICType.h:
+        (WTF::toASCIILower):
+        * wtf/CMakeLists.txt:
+        * wtf/text/AtomicString.h:
+        (WTF::equalIgnoringASCIICase):
+        * wtf/text/StringCommon.h: Added.
+        (WTF::equalIgnoringASCIICase):
+        (WTF::equalIgnoringASCIICaseCommon):
+        * wtf/text/StringImpl.cpp:
+        (WTF::equalIgnoringASCIICase):
+        (WTF::equalIgnoringASCIICaseNonNull):
+        (WTF::StringImpl::utf8Impl):
+        (WTF::StringImpl::defaultWritingDirection): Deleted.
+        (WTF::StringImpl::adopt): Deleted.
+        (WTF::StringImpl::sizeInBytes): Deleted.
+        (WTF::putUTF8Triple): Deleted.
+        (WTF::StringImpl::utf8): Deleted.
+        * wtf/text/StringImpl.h:
+        (WTF::StringImpl::isSubString): Deleted.
+        (WTF::find): Deleted.
+
+2015-03-14  Michael Saboff  <msaboff@apple.com>
+
+        Disable Yarr JIT for ARMv7k
+        https://bugs.webkit.org/show_bug.cgi?id=142645
+
+        Rubber stamped by Geoffrey Garen.
+
+        Changed the setting of ENABLE_YARR_JIT to be predicated on ENABLED_JIT.
+
+        * wtf/Platform.h:
+
+2015-03-14  Michael Saboff  <msaboff@apple.com>
+
+        ES6: Add binary and octal literal support
+        https://bugs.webkit.org/show_bug.cgi?id=142681
+
+        Reviewed by Ryosuke Niwa.
+
+        * wtf/ASCIICType.h:
+        (WTF::isASCIIBinaryDigit): New support function.
+        (WTF::isASCIIOctalDigit): Updated to use logical and (&&) instead of binary and (&).
+
+2015-03-13  Mark Lam  <mark.lam@apple.com>
+
+        Replace TCSpinLock with a new WTF::SpinLock based on WTF::Atomic.
+        <https://webkit.org/b/142674>
+
+        Reviewed by Filip Pizlo.
+
+        We no longer use TCMalloc in our code, and we now have C++11.  This replaces the
+        TCMalloc_SpinLock with a new WTF::SpinLock based on WTF::Atomic (which is a
+        wrapper around std::atomic).
+
+        Note that there is a StaticSpinLock and a SpinLock:
+
+        1. StaticSpinLock is an alias for SpinLockBase, and its initialization relies on
+           static / global std:atomic being automatically initialized to 0 at compile time.
+           Hence, StaticSpinLock should only be used for statics / globals (including
+           static members of classes / structs).
+
+        2. SpinLock is derived from SpinLockBase, and adds a default constructor to
+           initialize its internal atomic value to 0.  Because SpinLock has a constructor,
+           it cannot be used for statics / globals.  Objects that want to embed a spin
+           lock as an instance field should use SpinLock so that it is initialized properly.
+           std::atomic will not automatically initialize instance fields to 0.  Hence,
+           StaticSpinLock will not work correctly as instance fields of a class / struct.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/MetaAllocator.cpp:
+        (WTF::MetaAllocator::~MetaAllocator):
+        (WTF::MetaAllocator::MetaAllocator):
+        * wtf/MetaAllocator.h:
+        * wtf/SpinLock.h: Added.
+        (WTF::SpinLockBase::lock):
+        (WTF::SpinLockBase::unlock):
+        (WTF::SpinLockBase::isLocked):
+        (WTF::SpinLockBase::slowLock):
+        (WTF::SpinLock::SpinLock):
+        * wtf/TCSpinLock.h: Removed.
+        * wtf/text/AtomicString.cpp:
+
+2015-03-13  Mark Lam  <mark.lam@apple.com>
+
+        Introduce WTF::Atomic to wrap std::atomic for a friendlier CAS.
+        <https://webkit.org/b/142661>
+
+        Reviewed by Filip Pizlo.
+
+        The CAS functions provided by std::atomic takes a reference to the expected
+        value and modifies it if the CAS fails.  However, in a lot of our CAS usage,
+        we don't want the expected value to change.  The solution to this is to
+        provide a WTF::Atomic struct that wraps std::atomic, and provide CAS
+        methods that won't alter the expected value if the CAS fails.
+
+        The method names in WTF::Atomic are chosen to be identical to those
+        in std::atomic so that WTF::Atomic can be a simple drop in replacement
+        for std::atomic.
+
+        Also changed ByteSpinLock to use WTF::Atomic instead of std::atomic.
+
+        * wtf/Atomics.h:
+        (WTF::Atomic::load):
+        (WTF::Atomic::store):
+        (WTF::Atomic::compare_exchange_weak):
+        (WTF::Atomic::compare_exchange_strong):
+        * wtf/ByteSpinLock.h:
+        (WTF::ByteSpinLock::ByteSpinLock):
+        (WTF::ByteSpinLock::lock):
+
+2015-03-12  Filip Pizlo  <fpizlo@apple.com>
+
+        Bytecode liveness analysis should have more lambdas and fewer sets
+        https://bugs.webkit.org/show_bug.cgi?id=142647
+
+        Reviewed by Mark Lam.
+        
+        Add a method for iterating each set bit in a FastBitVector. Uses a functor as a callback since
+        this allows for a more efficient algorithm.
+
+        * wtf/FastBitVector.h:
+        (WTF::FastBitVector::forEachSetBit):
+
+2015-03-12  Michael Saboff  <msaboff@apple.com>
+
+        Disable Yarr JIT for ARMv7k
+        https://bugs.webkit.org/show_bug.cgi?id=142645
+
+        Reviewed by Oliver Hunt.
+
+        Make the setting of ENABLE_YARR_JIT match ENABLE_JIT for ARMv7k.
+
+        * wtf/Platform.h:
+
+2015-03-12  Mark Lam  <mark.lam@apple.com>
+
+        Change WTF::ByteSpinLock to use std::atomic.
+        <https://webkit.org/b/142644>
+
+        Reviewed by Filip Pizlo.
+
+        * wtf/ByteSpinLock.h:
+        (WTF::ByteSpinLock::ByteSpinLock):
+        (WTF::ByteSpinLock::lock):
+        (WTF::ByteSpinLock::unlock):
+        (WTF::ByteSpinLock::isHeld):
+
+2015-03-12  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [ARM][Linux] GC sometimes stuck in an infinite loop if parallel GC is enabled
+        https://bugs.webkit.org/show_bug.cgi?id=141290
+
+        Reviewed by Carlos Garcia Campos.
+
+        * wtf/Platform.h: Enable parallel GC after r181319.
+
+2015-03-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Use out-of-band messaging for RenderBox::firstLineBaseline() and RenderBox::inlineBlockBaseline()
+        https://bugs.webkit.org/show_bug.cgi?id=142569
+
+        Reviewed by David Hyatt.
+
+        Provide a callback to Optional::valueOrCompute() which is evaluated only if necessary.
+
+        * wtf/Optional.h:
+        (WTF::Optional::valueOrCompute):
+
 2015-03-10  Brent Fulgham  <bfulgham@apple.com>
 
         [Win] 17 different JSC tests started to fail in DST

@@ -1343,7 +1343,10 @@ float RenderMathMLOperator::heightForGlyph(const GlyphData& data) const
 
 float RenderMathMLOperator::advanceForGlyph(const GlyphData& data) const
 {
-    return data.font && data.glyph ? data.font->widthForGlyph(data.glyph) : 0;
+    // FIXME: MathML code synthesizes bad GlyphDatas.
+    if (!data.font)
+        return 0;
+    return data.width ? data.width : data.font->computeWidthForGlyph(data.glyph);
 }
 
 void RenderMathMLOperator::computePreferredLogicalWidths()
@@ -1737,10 +1740,10 @@ void RenderMathMLOperator::updateStyle()
     }
 }
 
-int RenderMathMLOperator::firstLineBaseline() const
+Optional<int> RenderMathMLOperator::firstLineBaseline() const
 {
     if (m_stretchyData.mode() != DrawNormal)
-        return m_stretchHeightAboveBaseline;
+        return Optional<int>(m_stretchHeightAboveBaseline);
     return RenderMathMLToken::firstLineBaseline();
 }
 

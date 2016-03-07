@@ -1746,6 +1746,7 @@ set(WebCore_SOURCES
     html/parser/XSSAuditor.cpp
     html/parser/XSSAuditorDelegate.cpp
 
+    html/shadow/AutoFillButtonElement.cpp
     html/shadow/ContentDistributor.cpp
     html/shadow/DetailsMarkerControl.cpp
     html/shadow/InsertionPoint.cpp
@@ -3073,8 +3074,6 @@ if (WTF_USE_3D_GRAPHICS)
         platform/graphics/ANGLEWebKitBridge.cpp
         platform/graphics/GraphicsContext3D.cpp
         platform/graphics/FormatConverter.cpp
-
-        platform/graphics/gpu/DrawingBuffer.cpp
     )
 endif ()
 

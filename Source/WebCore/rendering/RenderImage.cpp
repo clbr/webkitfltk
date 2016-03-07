@@ -105,7 +105,7 @@ void RenderImage::collectSelectionRects(Vector<SelectionRect>& rects, unsigned, 
     }
 
     bool isFixed = false;
-    IntRect absoluteBounds = localToAbsoluteQuad(FloatRect(imageRect), false, &isFixed).enclosingBoundingBox();
+    IntRect absoluteBounds = localToAbsoluteQuad(FloatRect(imageRect), UseTransforms, &isFixed).enclosingBoundingBox();
     IntRect lineExtentBounds = localToAbsoluteQuad(FloatRect(lineExtentRect)).enclosingBoundingBox();
     if (!containingBlock->isHorizontalWritingMode())
         lineExtentBounds = lineExtentBounds.transposedRect();
@@ -360,6 +360,20 @@ void RenderImage::imageDimensionsChanged(bool imageSizeChanged, const IntRect* r
         repaintRectangle(repaintRect);
 
         // Tell any potential compositing layers that the image needs updating.
+        contentChanged(ImageChanged);
+    }
+}
+
+void RenderImage::notifyFinished(CachedResource* newImage)
+{
+    if (documentBeingDestroyed())
+        return;
+
+    invalidateBackgroundObscurationStatus();
+
+    if (newImage == imageResource().cachedImage()) {
+        // tell any potential compositing layers
+        // that the image is done and they can reference it directly.
         contentChanged(ImageChanged);
     }
 }

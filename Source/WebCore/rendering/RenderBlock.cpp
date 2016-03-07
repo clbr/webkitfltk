@@ -951,16 +951,6 @@ static RenderBlockRareData& ensureRareData(const RenderBlock* block)
     return *rareData.get();
 }
 
-#if ENABLE(CSS_SHAPES)
-void RenderBlock::imageChanged(WrappedImagePtr image, const IntRect*)
-{
-    RenderBox::imageChanged(image);
-
-    if (!parent() || !everHadLayout())
-        return;
-}
-#endif
-
 void RenderBlock::preparePaginationBeforeBlockLayout(bool& relayoutChildren)
 {
     // Regions changing widths can force us to relayout our children.
@@ -1748,9 +1738,8 @@ GapRects RenderBlock::selectionGapRectsForRepaint(const RenderLayerModelObject* 
     if (!shouldPaintSelectionGaps())
         return GapRects();
 
-    TransformState transformState(TransformState::ApplyTransformDirection, FloatPoint());
-    mapLocalToContainer(repaintContainer, transformState, ApplyContainerFlip | UseTransforms);
-    LayoutPoint offsetFromRepaintContainer(transformState.mappedPoint() - scrolledContentOffset());
+    FloatPoint containerPoint = localToContainerPoint(FloatPoint(), repaintContainer, UseTransforms);
+    LayoutPoint offsetFromRepaintContainer(containerPoint - scrolledContentOffset());
 
     LogicalSelectionOffsetCaches cache(*this);
     LayoutUnit lastTop = 0;
@@ -2848,7 +2837,7 @@ int RenderBlock::baselinePosition(FontBaseline baselineType, bool firstLine, Lin
         bool ignoreBaseline = (layer() && (layer()->marquee() || (direction == HorizontalLine ? (layer()->verticalScrollbar() || layer()->scrollYOffset() != 0)
             : (layer()->horizontalScrollbar() || layer()->scrollXOffset() != 0)))) || (isWritingModeRoot() && !isRubyRun());
         
-        int baselinePos = ignoreBaseline ? -1 : inlineBlockBaseline(direction);
+        Optional<int> baselinePos = ignoreBaseline ? Optional<int>() : inlineBlockBaseline(direction);
         
         if (isDeprecatedFlexibleBox()) {
             // Historically, we did this check for all baselines. But we can't
@@ -2857,11 +2846,11 @@ int RenderBlock::baselinePosition(FontBaseline baselineType, bool firstLine, Lin
             // calculate the baseline as if -webkit-line-clamp wasn't used.
             // For simplicity, we use this for all uses of deprecated flexbox.
             LayoutUnit bottomOfContent = direction == HorizontalLine ? borderTop() + paddingTop() + contentHeight() : borderRight() + paddingRight() + contentWidth();
-            if (baselinePos > bottomOfContent)
-                baselinePos = -1;
+            if (baselinePos && baselinePos.value() > bottomOfContent)
+                baselinePos = Optional<int>();
         }
-        if (baselinePos != -1)
-            return direction == HorizontalLine ? marginTop() + baselinePos : marginRight() + baselinePos;
+        if (baselinePos)
+            return direction == HorizontalLine ? marginTop() + baselinePos.value() : marginRight() + baselinePos.value();
 
         return RenderBox::baselinePosition(baselineType, firstLine, direction, linePositionMode);
     }
@@ -2883,45 +2872,43 @@ LayoutUnit RenderBlock::minLineHeightForReplacedRenderer(bool isFirstLine, Layou
     return std::max<LayoutUnit>(replacedHeight, lineHeight(isFirstLine, isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes));
 }
 
-int RenderBlock::firstLineBaseline() const
+Optional<int> RenderBlock::firstLineBaseline() const
 {
     if (isWritingModeRoot() && !isRubyRun())
-        return -1;
+        return Optional<int>();
 
     for (RenderBox* curr = firstChildBox(); curr; curr = curr->nextSiblingBox()) {
         if (!curr->isFloatingOrOutOfFlowPositioned()) {
-            int result = curr->firstLineBaseline();
-            if (result != -1)
-                return curr->logicalTop() + result; // Translate to our coordinate space.
+            if (Optional<int> result = curr->firstLineBaseline())
+                return Optional<int>(curr->logicalTop() + result.value()); // Translate to our coordinate space.
         }
     }
 
-    return -1;
+    return Optional<int>();
 }
 
-int RenderBlock::inlineBlockBaseline(LineDirectionMode lineDirection) const
+Optional<int> RenderBlock::inlineBlockBaseline(LineDirectionMode lineDirection) const
 {
     if (isWritingModeRoot() && !isRubyRun())
-        return -1;
+        return Optional<int>();
 
     bool haveNormalFlowChild = false;
     for (auto box = lastChildBox(); box; box = box->previousSiblingBox()) {
         if (box->isFloatingOrOutOfFlowPositioned())
             continue;
         haveNormalFlowChild = true;
-        int result = box->inlineBlockBaseline(lineDirection);
-        if (result != -1)
-            return box->logicalTop() + result; // Translate to our coordinate space.
+        if (Optional<int> result = box->inlineBlockBaseline(lineDirection))
+            return Optional<int>(box->logicalTop() + result.value()); // Translate to our coordinate space.
     }
 
     if (!haveNormalFlowChild && hasLineIfEmpty()) {
         auto& fontMetrics = firstLineStyle().fontMetrics();
-        return fontMetrics.ascent()
-             + (lineHeight(true, lineDirection, PositionOfInteriorLineBoxes) - fontMetrics.height()) / 2
-             + (lineDirection == HorizontalLine ? borderTop() + paddingTop() : borderRight() + paddingRight());
+        return Optional<int>(fontMetrics.ascent()
+            + (lineHeight(true, lineDirection, PositionOfInteriorLineBoxes) - fontMetrics.height()) / 2
+            + (lineDirection == HorizontalLine ? borderTop() + paddingTop() : borderRight() + paddingRight()));
     }
 
-    return -1;
+    return Optional<int>();
 }
 
 static inline bool isRenderBlockFlowOrRenderButton(RenderElement& renderElement)
@@ -3342,7 +3329,7 @@ void RenderBlock::absoluteQuads(Vector<FloatQuad>& quads, bool* wasFixed) const
     // https://bugs.webkit.org/show_bug.cgi?id=46781
     RenderFlowThread* flowThread = flowThreadContainingBlock();
     if (!flowThread || !flowThread->absoluteQuadsForBox(quads, wasFixed, this, localRect.y(), localRect.maxY()))
-        quads.append(localToAbsoluteQuad(localRect, 0 /* mode */, wasFixed));
+        quads.append(localToAbsoluteQuad(localRect, UseTransforms, wasFixed));
 
     if (isAnonymousBlockContinuation())
         continuation()->absoluteQuads(quads, wasFixed);

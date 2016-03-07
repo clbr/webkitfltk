@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014-2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -192,7 +192,7 @@ void MediaSession::visibilityChanged()
 
 void MediaSession::clientDataBufferingTimerFired()
 {
-    LOG(Media, "MediaSession::visibilityChanged(%p)- visible = %s", this, m_client.elementIsHidden() ? "false" : "true");
+    LOG(Media, "MediaSession::clientDataBufferingTimerFired(%p)- visible = %s", this, m_client.elementIsHidden() ? "false" : "true");
 
     updateClientDataBuffering();
 
@@ -220,11 +220,6 @@ bool MediaSession::isHidden() const
 MediaSession::DisplayType MediaSession::displayType() const
 {
     return m_client.displayType();
-}
-
-void MediaSession::wirelessRoutesAvailableDidChange() const
-{
-    m_client.wirelessRoutesAvailableDidChange();
 }
 
 String MediaSessionClient::mediaSessionTitle() const

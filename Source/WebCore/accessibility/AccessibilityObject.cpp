@@ -2028,7 +2028,7 @@ bool AccessibilityObject::isValueAutofilled() const
     if (!node || !is<HTMLInputElement>(*node))
         return false;
     
-    return downcast<HTMLInputElement>(*node).isAutofilled();
+    return downcast<HTMLInputElement>(*node).isAutoFilled();
 }
 
 const AtomicString& AccessibilityObject::placeholderValue() const
@@ -2604,5 +2604,21 @@ void AccessibilityObject::elementsFromAttribute(Vector<Element*>& elements, cons
             elements.append(idElement);
     }
 }
+
+#if PLATFORM(COCOA)
+bool AccessibilityObject::preventKeyboardDOMEventDispatch() const
+{
+    Frame* frame = this->frame();
+    return frame && frame->settings().preventKeyboardDOMEventDispatch();
+}
+
+void AccessibilityObject::setPreventKeyboardDOMEventDispatch(bool on)
+{
+    Frame* frame = this->frame();
+    if (!frame)
+        return;
+    frame->settings().setPreventKeyboardDOMEventDispatch(on);
+}
+#endif
 
 } // namespace WebCore

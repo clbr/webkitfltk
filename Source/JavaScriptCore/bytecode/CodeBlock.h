@@ -273,7 +273,7 @@ public:
     void setJITCode(PassRefPtr<JITCode> code)
     {
         ASSERT(m_heap->isDeferred());
-        m_heap->reportExtraMemoryCost(code->size());
+        m_heap->reportExtraMemoryAllocated(code->size());
         ConcurrentJITLocker locker(m_lock);
         WTF::storeStoreFence(); // This is probably not needed because the lock will also do something similar, but it's good to be paranoid.
         m_jitCode = code;
@@ -1065,7 +1065,7 @@ private:
     bool m_isStrictMode;
     bool m_needsActivation;
     bool m_mayBeExecuting;
-    uint8_t m_visitAggregateHasBeenCalled;
+    Atomic<bool> m_visitAggregateHasBeenCalled;
 
     RefPtr<SourceProvider> m_source;
     unsigned m_sourceOffset;
@@ -1301,7 +1301,7 @@ inline void CodeBlockSet::mark(CodeBlock* codeBlock)
     
     codeBlock->m_mayBeExecuting = true;
     // We might not have cleared the marks for this CodeBlock, but we need to visit it.
-    codeBlock->m_visitAggregateHasBeenCalled = false;
+    codeBlock->m_visitAggregateHasBeenCalled.store(false, std::memory_order_relaxed);
 #if ENABLE(GGC)
     m_currentlyExecuting.append(codeBlock);
 #endif
