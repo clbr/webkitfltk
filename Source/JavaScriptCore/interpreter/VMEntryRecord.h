@@ -20,34 +20,35 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DFGWatchableStructureWatchingPhase_h
-#define DFGWatchableStructureWatchingPhase_h
+#ifndef VMEntryRecord_h
+#define VMEntryRecord_h
 
-#if ENABLE(DFG_JIT)
+namespace JSC {
 
-namespace JSC { namespace DFG {
+typedef void VMEntryFrame;
 
-class Graph;
+class ExecState;
+class VM;
 
-// Set watchpoints on any structures that we know of that are currently watchable. It's
-// somewhat counterintuitive, but this ends up being the cleanest and most effective way
-// of reducing structure checks on terminal structures:
-//
-// - We used to only set watchpoints on watchable structures if we knew that this would
-//   remove a structure check. Experiments show that switching from that, to blindly
-//   setting watchpoints on all watchable structures, was not a regression.
-//
-// - It makes abstract interpretation a whole lot easier. We just assume that watchable
-//   structures are unclobberable without having to do any other logic.
+struct VMEntryRecord {
+    /*
+     * This record stored in a vmEntryTo{JavaScript,Host} allocated frame. It is allocated on the stack
+     * after callee save registers where local variables would go.
+     */
+    VM* m_vm;
+    ExecState* m_prevTopCallFrame;
+    VMEntryFrame* m_prevTopVMEntryFrame;
 
-bool performWatchableStructureWatching(Graph&);
+    ExecState* prevTopCallFrame() { return m_prevTopCallFrame; }
 
-} } // namespace JSC::DFG
+    VMEntryFrame* prevTopVMEntryFrame() { return m_prevTopVMEntryFrame; }
+};
 
-#endif // ENABLE(DFG_JIT)
+extern "C" VMEntryRecord* vmEntryRecord(VMEntryFrame*);
 
-#endif // DFGWatchableStructureWatchingPhase_h
+} // namespace JSC
 
+#endif // VMEntryRecord_h

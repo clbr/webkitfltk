@@ -200,7 +200,7 @@ public:
     void platformPrepareForWheelEvents(const PlatformWheelEvent&, const HitTestResult&, RefPtr<Element>& eventTarget, RefPtr<ContainerNode>& scrollableContainer, ScrollableArea*&, bool& isOverWidget);
     void platformRecordWheelEvent(const PlatformWheelEvent&);
     bool platformCompleteWheelEvent(const PlatformWheelEvent&, Element* eventTarget, ContainerNode* scrollableContainer, ScrollableArea*);
-    bool platformCompletePlatformWidgetWheelEvent(const PlatformWheelEvent&, ContainerNode* scrollableContainer);
+    bool platformCompletePlatformWidgetWheelEvent(const PlatformWheelEvent&, const Widget&, ContainerNode* scrollableContainer);
 
 #if ENABLE(IOS_TOUCH_EVENTS) || ENABLE(IOS_GESTURE_EVENTS)
     typedef Vector<RefPtr<Touch>> TouchArray;
@@ -440,7 +440,7 @@ private:
     void autoHideCursorTimerFired(Timer<EventHandler>&);
 #endif
 
-    void beginTrackingPotentialLongMousePress();
+    void beginTrackingPotentialLongMousePress(const HitTestResult&);
     void recognizeLongMousePress(Timer<EventHandler>&);
     void cancelTrackingPotentialLongMousePress();
     bool longMousePressHysteresisExceeded();

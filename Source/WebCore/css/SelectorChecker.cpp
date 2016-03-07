@@ -146,8 +146,9 @@ bool SelectorChecker::match(const SelectorCheckingContext& context) const
         if (m_mode == Mode::ResolvingStyle && pseudoId < FIRST_INTERNAL_PSEUDOID)
             context.elementStyle->setHasPseudoStyle(pseudoId);
 
-        // For SharingRules testing, any match is good enough, we don't care what is matched.
-        return m_mode == Mode::SharingRules || m_mode == Mode::StyleInvalidation;
+        // When ignoring virtual pseudo elements, the context's pseudo should also be NOPSEUDO but that does
+        // not cause a failure.
+        return m_mode == Mode::CollectingRulesIgnoringVirtualPseudoElements;
     }
     return true;
 }
@@ -523,10 +524,10 @@ bool SelectorChecker::checkOne(const SelectorCheckingContext& context) const
                 }
                 if (m_mode == Mode::ResolvingStyle) {
                     element->setStyleAffectedByEmpty();
+                    if (element->document().styleSheetCollection().usesSiblingRules())
+                        element->setStyleOfSiblingsAffectedByEmpty();
                     if (context.elementStyle)
                         context.elementStyle->setEmptyState(result);
-                    else if (element->renderStyle() && (element->document().styleSheetCollection().usesSiblingRules() || element->renderStyle()->unique()))
-                        element->renderStyle()->setEmptyState(result);
                 }
                 return result;
             }
@@ -723,7 +724,7 @@ bool SelectorChecker::checkOne(const SelectorCheckingContext& context) const
         case CSSSelector::PseudoClassEnabled:
             return isEnabled(element);
         case CSSSelector::PseudoClassFullPageMedia:
-            return element->document().isMediaDocument();
+            return isMediaDocument(element);
         case CSSSelector::PseudoClassDefault:
             return isDefaultButtonForForm(element);
         case CSSSelector::PseudoClassDisabled:
