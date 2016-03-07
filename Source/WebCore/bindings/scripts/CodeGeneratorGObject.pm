@@ -984,7 +984,7 @@ sub GenerateFunction {
         if ($paramIsGDOMType || ($paramIDLType eq "DOMString") || ($paramIDLType eq "CompareHow")) {
             $paramName = "converted" . $codeGenerator->WK_ucfirst($paramName);
         }
-        if ($paramIDLType eq "NodeFilter") {
+        if ($paramIDLType eq "NodeFilter" || $paramIDLType eq "XPathNSResolver") {
             $paramName = "WTF::getPtr(" . $paramName . ")";
         }
         push(@callImplParams, $paramName);
@@ -1088,7 +1088,7 @@ sub GenerateFunction {
             push(@cBody, "    WTF::String ${convertedParamName} = WTF::String::fromUTF8($paramName);\n");
         } elsif ($paramIDLType eq "CompareHow") {
             push(@cBody, "    WebCore::Range::CompareHow ${convertedParamName} = static_cast<WebCore::Range::CompareHow>($paramName);\n");
-        } elsif ($paramIDLType eq "NodeFilter") {
+        } elsif ($paramIDLType eq "NodeFilter" || $paramIDLType eq "XPathNSResolver") {
             push(@cBody, "    RefPtr<WebCore::$paramIDLType> ${convertedParamName} = WebKit::core($paramName);\n");
         } elsif ($paramIsGDOMType) {
             push(@cBody, "    WebCore::${paramIDLType}* ${convertedParamName} = WebKit::core($paramName);\n");
@@ -1652,12 +1652,13 @@ EOF
 #ifndef $guard
 #define $guard
 
-#include <webkitdom/${className}.h>
+#ifdef WEBKIT_DOM_USE_UNSTABLE_API
+
+#include <webkitdom/webkitdomdefines-unstable.h>
 EOF
 
         print UNSTABLE $text;
         print UNSTABLE "\n";
-        print UNSTABLE "#ifdef WEBKIT_DOM_USE_UNSTABLE_API\n\n";
         print UNSTABLE "#if ${conditionalString}\n\n" if $conditionalString;
         print UNSTABLE "G_BEGIN_DECLS\n";
         print UNSTABLE "\n";

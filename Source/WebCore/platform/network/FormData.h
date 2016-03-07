@@ -20,6 +20,7 @@
 #ifndef FormData_h
 #define FormData_h
 
+#include "BlobData.h"
 #include "URL.h"
 #include <wtf/Forward.h>
 #include <wtf/RefCounted.h>
@@ -30,8 +31,6 @@ namespace WebCore {
 
 class Document;
 class FormDataList;
-class KeyedDecoder;
-class KeyedEncoder;
 class TextEncoding;
 
 class FormDataElement {
@@ -70,12 +69,17 @@ public:
     {
     }
 
+    template<typename Encoder>
+    void encode(Encoder&) const;
+    template<typename Decoder>
+    static bool decode(Decoder&, FormDataElement& result);
+
     Type m_type;
     Vector<char> m_data;
     String m_filename;
     URL m_url; // For Blob or URL.
-    long long m_fileStart;
-    long long m_fileLength;
+    int64_t m_fileStart;
+    int64_t m_fileLength;
     double m_expectedFileModificationTime;
     // FIXME: Generated file support in FormData is almost identical to Blob, they should be merged.
     // We can't just switch to using Blobs for all files for two reasons:
@@ -108,6 +112,79 @@ inline bool operator!=(const FormDataElement& a, const FormDataElement& b)
     return !(a == b);
 }
 
+
+template<typename Encoder>
+void FormDataElement::encode(Encoder& encoder) const
+{
+    encoder.encodeEnum(m_type);
+
+    switch (m_type) {
+    case Type::Data:
+        encoder << m_data;
+        break;
+
+    case Type::EncodedFile:
+        encoder << m_filename;
+        encoder << m_generatedFilename;
+        encoder << m_shouldGenerateFile;
+        encoder << m_fileStart;
+        encoder << m_fileLength;
+        encoder << m_expectedFileModificationTime;
+        break;
+
+    case Type::EncodedBlob:
+        encoder << m_url.string();
+        break;
+    }
+}
+
+template<typename Decoder>
+bool FormDataElement::decode(Decoder& decoder, FormDataElement& result)
+{
+    if (!decoder.decodeEnum(result.m_type))
+        return false;
+
+    switch (result.m_type) {
+    case Type::Data:
+        if (!decoder.decode(result.m_data))
+            return false;
+
+        return true;
+
+    case Type::EncodedFile:
+        if (!decoder.decode(result.m_filename))
+            return false;
+        if (!decoder.decode(result.m_generatedFilename))
+            return false;
+        if (!decoder.decode(result.m_shouldGenerateFile))
+            return false;
+        if (!decoder.decode(result.m_fileStart))
+            return false;
+        if (!decoder.decode(result.m_fileLength))
+            return false;
+
+        if (result.m_fileLength != BlobDataItem::toEndOfFile && result.m_fileLength < result.m_fileStart)
+            return false;
+
+        if (!decoder.decode(result.m_expectedFileModificationTime))
+            return false;
+
+        return true;
+
+    case Type::EncodedBlob: {
+        String blobURLString;
+        if (!decoder.decode(blobURLString))
+            return false;
+
+        result.m_url = URL(URL(), blobURLString);
+
+        return true;
+    }
+    }
+
+    return false;
+}
+
 class FormData : public RefCounted<FormData> {
 public:
     enum EncodingType {
@@ -129,10 +206,10 @@ public:
     PassRefPtr<FormData> copy() const;
     PassRefPtr<FormData> deepCopy() const;
 
+    template<typename Encoder>
     void encode(Encoder&) const;
-    void encode(KeyedEncoder&) const;
+    template<typename Decoder>
     static PassRefPtr<FormData> decode(Decoder&);
-    static PassRefPtr<FormData> decode(KeyedDecoder&);
 
     void appendData(const void* data, size_t);
     void appendFile(const String& filePath, bool shouldGenerateFile = false);
@@ -199,6 +276,35 @@ inline bool operator==(const FormData& a, const FormData& b)
 inline bool operator!=(const FormData& a, const FormData& b)
 {
     return !(a == b);
+}
+
+template<typename Encoder>
+void FormData::encode(Encoder& encoder) const
+{
+    encoder << m_alwaysStream;
+    encoder << m_boundary;
+    encoder << m_elements;
+    encoder << m_identifier;
+}
+
+template<typename Decoder>
+PassRefPtr<FormData> FormData::decode(Decoder& decoder)
+{
+    RefPtr<FormData> data = FormData::create();
+
+    if (!decoder.decode(data->m_alwaysStream))
+        return nullptr;
+
+    if (!decoder.decode(data->m_boundary))
+        return nullptr;
+
+    if (!decoder.decode(data->m_elements))
+        return nullptr;
+
+    if (!decoder.decode(data->m_identifier))
+        return nullptr;
+
+    return data.release();
 }
 
 } // namespace WebCore

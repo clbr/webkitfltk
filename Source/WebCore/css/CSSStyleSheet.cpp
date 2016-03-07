@@ -77,12 +77,12 @@ static bool isAcceptableCSSStyleSheetParent(Node* parentNode)
 
 PassRef<CSSStyleSheet> CSSStyleSheet::create(PassRef<StyleSheetContents> sheet, CSSImportRule* ownerRule)
 { 
-    return adoptRef(*new CSSStyleSheet(std::move(sheet), ownerRule));
+    return adoptRef(*new CSSStyleSheet(WTF::move(sheet), ownerRule));
 }
 
 PassRef<CSSStyleSheet> CSSStyleSheet::create(PassRef<StyleSheetContents> sheet, Node* ownerNode)
 { 
-    return adoptRef(*new CSSStyleSheet(std::move(sheet), ownerNode, false));
+    return adoptRef(*new CSSStyleSheet(WTF::move(sheet), ownerNode, false));
 }
 
 PassRef<CSSStyleSheet> CSSStyleSheet::createInline(Node& ownerNode, const URL& baseURL, const String& encoding)
@@ -92,7 +92,7 @@ PassRef<CSSStyleSheet> CSSStyleSheet::createInline(Node& ownerNode, const URL& b
 }
 
 CSSStyleSheet::CSSStyleSheet(PassRef<StyleSheetContents> contents, CSSImportRule* ownerRule)
-    : m_contents(std::move(contents))
+    : m_contents(WTF::move(contents))
     , m_isInlineStylesheet(false)
     , m_isDisabled(false)
     , m_ownerNode(0)
@@ -102,7 +102,7 @@ CSSStyleSheet::CSSStyleSheet(PassRef<StyleSheetContents> contents, CSSImportRule
 }
 
 CSSStyleSheet::CSSStyleSheet(PassRef<StyleSheetContents> contents, Node* ownerNode, bool isInlineStylesheet)
-    : m_contents(std::move(contents))
+    : m_contents(WTF::move(contents))
     , m_isInlineStylesheet(isInlineStylesheet)
     , m_isDisabled(false)
     , m_ownerNode(ownerNode)

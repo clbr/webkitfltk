@@ -37,7 +37,7 @@ namespace WebCore {
 
 class FunctionCall {
 public:
-    FunctionCall(JSC::MacroAssembler& assembler, RegisterAllocator& registerAllocator, StackAllocator& stackAllocator, Vector<std::pair<JSC::MacroAssembler::Call, JSC::FunctionPtr>>& callRegistry)
+    FunctionCall(JSC::MacroAssembler& assembler, RegisterAllocator& registerAllocator, StackAllocator& stackAllocator, Vector<std::pair<JSC::MacroAssembler::Call, JSC::FunctionPtr>, 32>& callRegistry)
         : m_assembler(assembler)
         , m_registerAllocator(registerAllocator)
         , m_stackAllocator(stackAllocator)
@@ -162,13 +162,12 @@ private:
     {
         ASSERT(m_savedRegisterStackReferences.isEmpty());
         ASSERT(m_savedRegisters.isEmpty());
-        const Vector<JSC::MacroAssembler::RegisterID, registerCount>& allocatedRegisters = m_registerAllocator.allocatedRegisters();
+        const RegisterVector& allocatedRegisters = m_registerAllocator.allocatedRegisters();
         for (auto registerID : allocatedRegisters) {
             if (RegisterAllocator::isCallerSavedRegister(registerID))
                 m_savedRegisters.append(registerID);
         }
-        Vector<StackAllocator::StackReference> stackReferences = m_stackAllocator.push(m_savedRegisters);
-        m_savedRegisterStackReferences.appendVector(stackReferences);
+        m_savedRegisterStackReferences = m_stackAllocator.push(m_savedRegisters);
     }
 
     void restoreAllocatedCallerSavedRegisters()
@@ -180,10 +179,10 @@ private:
     JSC::MacroAssembler& m_assembler;
     RegisterAllocator& m_registerAllocator;
     StackAllocator& m_stackAllocator;
-    Vector<std::pair<JSC::MacroAssembler::Call, JSC::FunctionPtr>>& m_callRegistry;
+    Vector<std::pair<JSC::MacroAssembler::Call, JSC::FunctionPtr>, 32>& m_callRegistry;
 
-    Vector<JSC::MacroAssembler::RegisterID, registerCount> m_savedRegisters;
-    Vector<StackAllocator::StackReference, registerCount> m_savedRegisterStackReferences;
+    RegisterVector m_savedRegisters;
+    StackAllocator::StackReferenceVector m_savedRegisterStackReferences;
     
     JSC::FunctionPtr m_functionAddress;
     unsigned m_argumentCount;

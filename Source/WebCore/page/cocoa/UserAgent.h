@@ -28,10 +28,13 @@
 
 #include <wtf/text/WTFString.h>
 
-@class NSBundle;
-
 namespace WebCore {
+
 String standardUserAgentWithApplicationName(const String& applicationName, const String& webkitVersionString);
+
+String systemMarketingVersionForUserAgentString();
+String userAgentBundleVersionFromFullVersionString(const String&);
+
 }
 
-#endif // UserAgentMac_h
+#endif // UserAgent_h

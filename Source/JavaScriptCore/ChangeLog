@@ -1,3 +1,58 @@
+2014-07-03  Daniel Bates  <dabates@apple.com>
+
+        Add WTF::move()
+        https://bugs.webkit.org/show_bug.cgi?id=134500
+
+        Rubber-stamped by Anders Carlsson.
+
+        Substitute WTF::move() for std::move().
+
+        * bytecode/CodeBlock.h:
+        * bytecode/UnlinkedCodeBlock.cpp:
+        * bytecompiler/BytecodeGenerator.cpp:
+        * dfg/DFGGraph.cpp:
+        * dfg/DFGJITCompiler.cpp:
+        * dfg/DFGStackLayoutPhase.cpp:
+        * dfg/DFGWorklist.cpp:
+        * heap/DelayedReleaseScope.h:
+        * heap/HeapInlines.h:
+        [...]
+
+2014-07-03  Filip Pizlo  <fpizlo@apple.com>
+
+        SSA DCE should process blocks in forward order
+        https://bugs.webkit.org/show_bug.cgi?id=134611
+
+        Reviewed by Andreas Kling.
+
+        * dfg/DFGDCEPhase.cpp:
+        (JSC::DFG::DCEPhase::run):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::addExitArgumentForNode):
+        * tests/stress/dead-value-with-mov-hint-in-another-block.js: Added.
+        (foo):
+
+2014-07-03  Filip Pizlo  <fpizlo@apple.com>
+
+        JSActivation::symbolTablePut() should invalidate variable watchpoints
+        https://bugs.webkit.org/show_bug.cgi?id=134602
+
+        Reviewed by Oliver Hunt.
+        
+        Usually stores to captured variables cause us to invalidate the variable watchpoint because CodeBlock does so
+        during linking - we essentially assume that if it's at all possible for an inner function to store to a
+        variable we declare then this variable cannot be a constant. But this misses the dynamic store case, i.e.
+        JSActivation::symbolTablePut(). Part of the problem here is that JSActivation duplicates
+        JSSymbolTableObject's symbolTablePut() logic, which did have the invalidation. This patch keeps that code
+        duplicated, but fixes JSActivation::symbolTablePut() to do the right thing.
+
+        * runtime/JSActivation.cpp:
+        (JSC::JSActivation::symbolTablePut):
+        * runtime/JSSymbolTableObject.h:
+        (JSC::symbolTablePut):
+        * tests/stress/constant-closure-var-with-dynamic-invalidation.js: Added.
+        (.):
+
 2014-07-01  Mark Lam  <mark.lam@apple.com>
 
         Debugger's breakpoint list should not be a Vector.
