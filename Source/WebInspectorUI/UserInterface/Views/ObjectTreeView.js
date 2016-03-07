@@ -25,7 +25,8 @@
 
 WebInspector.ObjectTreeView = function(object, mode, propertyPath, forceExpanding)
 {
-    WebInspector.Object.call(this);
+    // FIXME: Convert this to a WebInspector.Object subclass, and call super().
+    // WebInspector.Object.call(this);
 
     console.assert(object instanceof WebInspector.RemoteObject);
     console.assert(!propertyPath || propertyPath instanceof WebInspector.PropertyPath);
@@ -151,6 +152,11 @@ WebInspector.ObjectTreeView.prototype = {
         return this._element;
     },
 
+    get treeOutline()
+    {
+        return this._outline;
+    },
+
     get expanded()
     {
         return this._expanded;
@@ -186,12 +192,27 @@ WebInspector.ObjectTreeView.prototype = {
         this._untrackWeakEntries();
     },
 
+    showOnlyProperties()
+    {
+        this._inConsole = false;
+
+        this._element.classList.add("properties-only");
+    },
+
     appendTitleSuffix(suffixElement)
     {
         if (this._previewView)
             this._previewView.element.appendChild(suffixElement);
         else
             this._titleElement.appendChild(suffixElement);
+    },
+
+    appendExtraPropertyDescriptor(propertyDescriptor)
+    {
+        if (!this._extraProperties)
+            this._extraProperties = [];
+
+        this._extraProperties.push(propertyDescriptor);
     },
 
     // Protected
@@ -243,6 +264,9 @@ WebInspector.ObjectTreeView.prototype = {
 
     _updateProperties(properties, propertyPath)
     {
+        if (this._extraProperties)
+            properties = properties.concat(this._extraProperties);
+
         properties.sort(WebInspector.ObjectTreeView.ComparePropertyDescriptors);
 
         var isArray = this._object.isArray();

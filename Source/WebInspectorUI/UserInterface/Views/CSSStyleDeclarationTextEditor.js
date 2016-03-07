@@ -25,7 +25,8 @@
 
 WebInspector.CSSStyleDeclarationTextEditor = function(delegate, style, element)
 {
-    WebInspector.Object.call(this);
+    // FIXME: Convert this to a WebInspector.Object subclass, and call super().
+    // WebInspector.Object.call(this);
 
     this._element = element || document.createElement("div");
     this._element.classList.add(WebInspector.CSSStyleDeclarationTextEditor.StyleClassName);
@@ -53,9 +54,6 @@ WebInspector.CSSStyleDeclarationTextEditor = function(delegate, style, element)
         autoCloseBrackets: true
     });
 
-    this._codeMirror.on("change", this._contentChanged.bind(this));
-    this._codeMirror.on("blur", this._editorBlured.bind(this));
-
     this._completionController = new WebInspector.CodeMirrorCompletionController(this._codeMirror, this);
     this._tokenTrackingController = new WebInspector.CodeMirrorTokenTrackingController(this._codeMirror, this);
 
@@ -65,10 +63,16 @@ WebInspector.CSSStyleDeclarationTextEditor = function(delegate, style, element)
     this._tokenTrackingController.mouseOutReleaseDelayDuration = 0;
     this._tokenTrackingController.mode = WebInspector.CodeMirrorTokenTrackingController.Mode.NonSymbolTokens;
 
+    // Make sure CompletionController adds event listeners first.
+    // Otherwise we end up in race conditions during complete or delete-complete phases.
+    this._codeMirror.on("change", this._contentChanged.bind(this));
+    this._codeMirror.on("blur", this._editorBlured.bind(this));
+
     this.style = style;
 };
 
-WebInspector.Object.addConstructorFunctions(WebInspector.CSSStyleDeclarationTextEditor);
+// FIXME: Move to a WebInspector.Object subclass and we can remove this.
+WebInspector.Object.deprecatedAddConstructorFunctions(WebInspector.CSSStyleDeclarationTextEditor);
 
 WebInspector.CSSStyleDeclarationTextEditor.StyleClassName = "css-style-text-editor";
 WebInspector.CSSStyleDeclarationTextEditor.ReadOnlyStyleClassName = "read-only";

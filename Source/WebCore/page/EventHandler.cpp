@@ -3311,6 +3311,9 @@ bool EventHandler::dragHysteresisExceeded(const FloatPoint& dragViewportLocation
         threshold = TextDragHysteresis;
         break;
     case DragSourceActionImage:
+#if ENABLE(ATTACHMENT_ELEMENT)
+    case DragSourceActionAttachment:
+#endif
         threshold = ImageDragHysteresis;
         break;
     case DragSourceActionLink:
@@ -3431,9 +3434,16 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event, CheckDr
     
     if (!ExactlyOneBitSet(dragState().type)) {
         ASSERT((dragState().type & DragSourceActionSelection));
+#if ENABLE(ATTACHMENT_ELEMENT)
+        ASSERT((dragState().type & ~DragSourceActionSelection) == DragSourceActionDHTML
+               || (dragState().type & ~DragSourceActionSelection) == DragSourceActionImage
+               || (dragState().type & ~DragSourceActionSelection) == DragSourceActionAttachment
+               || (dragState().type & ~DragSourceActionSelection) == DragSourceActionLink);
+#else
         ASSERT((dragState().type & ~DragSourceActionSelection) == DragSourceActionDHTML
             || (dragState().type & ~DragSourceActionSelection) == DragSourceActionImage
             || (dragState().type & ~DragSourceActionSelection) == DragSourceActionLink);
+#endif
         dragState().type = DragSourceActionSelection;
     }
 
@@ -4013,6 +4023,11 @@ void EventHandler::setLastKnownMousePosition(const PlatformMouseEvent& event)
     m_mousePositionIsUnknown = false;
     m_lastKnownMousePosition = event.position();
     m_lastKnownMouseGlobalPosition = event.globalPosition();
+}
+
+void EventHandler::setImmediateActionStage(ImmediateActionStage stage)
+{
+    m_immediateActionStage = stage;
 }
 
 } // namespace WebCore
