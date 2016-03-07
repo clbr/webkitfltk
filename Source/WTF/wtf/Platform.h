@@ -1023,6 +1023,10 @@
 #define WTF_USE_MARKER_REMOVAL_UPON_EDITING 1
 #endif
 
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
+#define WTF_USE_INSERTION_UNDO_GROUPING 1
+#endif
+
 #if PLATFORM(IOS)
 #define WTF_USE_PLATFORM_TEXT_TRACK_MENU 1
 #endif
@@ -1064,7 +1068,9 @@
 #define ENABLE_OPENTYPE_MATH 1
 #endif
 
-#if PLATFORM(EFL) || PLATFORM(GTK)
+/* Set TARGET_OS_IPHONE to 0 by default to allow using it as a guard 
+ * in cross-platform the same way as it is used in OS(DARWIN) code. */ 
+#if !defined(TARGET_OS_IPHONE) && !OS(DARWIN)
 #define TARGET_OS_IPHONE 0
 #endif
 

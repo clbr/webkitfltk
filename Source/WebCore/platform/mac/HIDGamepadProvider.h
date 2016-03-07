@@ -23,48 +23,49 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HIDGamepadListener_h
-#define HIDGamepadListener_h
+#ifndef HIDGamepadProvider_h
+#define HIDGamepadProvider_h
 
 #if ENABLE(GAMEPAD)
 
+#include "GamepadProvider.h"
 #include "HIDGamepad.h"
+#include "Timer.h"
 #include <IOKit/hid/IOHIDManager.h>
 #include <wtf/Deque.h>
 #include <wtf/HashMap.h>
+#include <wtf/HashSet.h>
 #include <wtf/NeverDestroyed.h>
 #include <wtf/RetainPtr.h>
 
 namespace WebCore {
 
-class HIDGamepadListenerClient {
+class GamepadProviderClient;
+
+class HIDGamepadProvider : public GamepadProvider {
+    WTF_MAKE_NONCOPYABLE(HIDGamepadProvider);
+    friend class NeverDestroyed<HIDGamepadProvider>;
 public:
-    virtual ~HIDGamepadListenerClient() { }
+    static HIDGamepadProvider& shared();
 
-    virtual void gamepadConnected(unsigned index) = 0;
-    virtual void gamepadDisconnected(unsigned index) = 0;
-};
-
-class HIDGamepadListener {
-    WTF_MAKE_NONCOPYABLE(HIDGamepadListener);
-    friend class NeverDestroyed<HIDGamepadListener>;
-public:
-    static HIDGamepadListener& shared();
-
-    void setClient(HIDGamepadListenerClient* client) { m_client = client; }
+    virtual void startMonitoringGamepads(GamepadProviderClient*);
+    virtual void stopMonitoringGamepads(GamepadProviderClient*);
+    virtual const Vector<PlatformGamepad*>& platformGamepads() { return m_gamepadVector; }
 
     void deviceAdded(IOHIDDeviceRef);
     void deviceRemoved(IOHIDDeviceRef);
     void valuesChanged(IOHIDValueRef);
 
-    const Vector<PlatformGamepad*>& platformGamepads() const { return m_gamepadVector; }
-
-    void setShouldDispatchCallbacks(bool shouldDispatchCallbacks) { m_shouldDispatchCallbacks = shouldDispatchCallbacks; }
-
 private:
-    HIDGamepadListener();
+    HIDGamepadProvider();
 
     std::pair<std::unique_ptr<HIDGamepad>, unsigned> removeGamepadForDevice(IOHIDDeviceRef);
+
+    void openAndScheduleManager();
+    void closeAndUnscheduleManager();
+
+    void connectionDelayTimerFired(Timer<HIDGamepadProvider>&);
+    void inputNotificationTimerFired(Timer<HIDGamepadProvider>&);
 
     unsigned indexForNewlyConnectedDevice();
 
@@ -73,11 +74,14 @@ private:
 
     RetainPtr<IOHIDManagerRef> m_manager;
 
-    HIDGamepadListenerClient* m_client;
+    HashSet<GamepadProviderClient*> m_clients;
     bool m_shouldDispatchCallbacks;
+
+    Timer<HIDGamepadProvider> m_connectionDelayTimer;
+    Timer<HIDGamepadProvider> m_inputNotificationTimer;
 };
 
 } // namespace WebCore
 
 #endif // ENABLE(GAMEPAD)
-#endif // HIDGamepadListener_h
+#endif // HIDGamepadProvider_h

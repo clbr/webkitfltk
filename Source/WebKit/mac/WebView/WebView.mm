@@ -282,6 +282,10 @@
 #import <WebCore/DiskImageCacheIOS.h>
 #endif
 
+#if ENABLE(GAMEPAD)
+#import <WebCore/HIDGamepadProvider.h>
+#endif
+
 #if !PLATFORM(IOS)
 @interface NSSpellChecker (WebNSSpellCheckerDetails)
 - (void)_preflightChosenSpellServer;
@@ -838,6 +842,18 @@ static bool shouldUseLegacyBackgroundSizeShorthandBehavior()
     return shouldUseLegacyBackgroundSizeShorthandBehavior;
 }
 
+#if ENABLE(GAMEPAD)
+static void WebKitInitializeGamepadProviderIfNecessary()
+{
+    static bool initialized = false;
+    if (initialized)
+        return;
+
+    GamepadProvider::shared().setSharedProvider(HIDGamepadProvider::shared());
+    initialized = true;
+}
+#endif
+
 - (void)_commonInitializationWithFrameName:(NSString *)frameName groupName:(NSString *)groupName
 {
     WebCoreThreadViolationCheckRoundTwo();
@@ -895,6 +911,9 @@ static bool shouldUseLegacyBackgroundSizeShorthandBehavior()
         WebKitInitializeApplicationCachePathIfNecessary();
 #if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
         WebKitInitializeWebDiskImageCache();
+#endif
+#if ENABLE(GAMEPAD)
+        WebKitInitializeGamepadProviderIfNecessary();
 #endif
         
         Settings::setDefaultMinDOMTimerInterval(0.004);
@@ -1189,14 +1208,7 @@ static bool shouldUseLegacyBackgroundSizeShorthandBehavior()
     [self setGroupName:groupName];
 
 #if ENABLE(REMOTE_INSPECTOR)
-    // Production installs always disallow debugging simple HTML documents.
-    // Internal installs allow debugging simple HTML documents (TextFields) if the Internal Setting is enabled.
-    if (!isInternalInstall())
-        _private->page->setRemoteInspectionAllowed(false);
-    else {
-        static BOOL textFieldInspectionEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:WebKitTextFieldRemoteInspectionEnabledPreferenceKey];
-        _private->page->setRemoteInspectionAllowed(textFieldInspectionEnabled);
-    }
+    _private->page->setRemoteInspectionAllowed(isInternalInstall());
 #endif
     
     [self _updateScreenScaleFromWindow];

@@ -1,3 +1,100 @@
+2014-06-29  Yoav Weiss  <yoav@yoav.ws>
+
+        Add support for HTMLImageElement's sizes attribute
+        https://bugs.webkit.org/show_bug.cgi?id=133620
+
+        Reviewed by Dean Jackson.
+
+        Added an ENABLE_PICTURE_SIZES compile flag.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-06-27  Filip Pizlo  <fpizlo@apple.com>
+
+        Don't fold a UInt32ToNumber with DoOverflow to Identity since that would result in an Identity that takes an Int32 and returns a DoubleRep
+        https://bugs.webkit.org/show_bug.cgi?id=134412
+
+        Reviewed by Mark Hahnenberg.
+
+        * dfg/DFGCSEPhase.cpp:
+        (JSC::DFG::CSEPhase::setReplacement):
+        * dfg/DFGStrengthReductionPhase.cpp:
+        (JSC::DFG::StrengthReductionPhase::handleNode):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::validate):
+        * tests/stress/uint32-to-number-fold-constant-with-do-overflow.js: Added.
+        (foo):
+        (bar):
+        (baz):
+
+2014-06-27  Peyton Randolph  <prandolph@apple.com>
+
+         Add feature flag for link long-press gesture.                                                                   
+         https://bugs.webkit.org/show_bug.cgi?id=134262                                                                  
+                                                                                                                         
+         Reviewed by Enrica Casucci.                                                                                     
+                                                                                                                         
+         * Configurations/FeatureDefines.xcconfig:                                                                       
+         Add ENABLE_LINK_LONG_PRESS. 
+
+2014-06-27  László Langó  <llango.u-szeged@partner.samsung.com>
+
+        [JavaScriptCore] FTL buildfix for EFL platform.
+        https://bugs.webkit.org/show_bug.cgi?id=133546
+
+        Reviewed by Darin Adler.
+
+        * ftl/FTLAbstractHeap.cpp:
+        (JSC::FTL::IndexedAbstractHeap::IndexedAbstractHeap):
+        * ftl/FTLLocation.cpp:
+        (JSC::FTL::Location::forStackmaps):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::opposite):
+        * ftl/FTLOSRExitCompiler.cpp:
+        (JSC::FTL::compileStub):
+        * ftl/FTLStackMaps.cpp:
+        (JSC::FTL::StackMaps::Constant::dump):
+        * llvm/InitializeLLVMPOSIX.cpp:
+        (JSC::initializeLLVMPOSIX):
+
+2014-06-26  Benjamin Poulain  <benjamin@webkit.org>
+
+        iOS 8 beta 2 ES6 'Set' clear() broken
+        https://bugs.webkit.org/show_bug.cgi?id=134346
+
+        Reviewed by Oliver Hunt.
+
+        The object map was not cleared :(.
+
+        Kudos to Ashley Gullen for tracking this and making a regression test.
+        Credit to Oliver for finding the missing code.
+
+        * runtime/MapData.h:
+        (JSC::MapData::clear):
+
+2014-06-25  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Expose Cache Information to WinLauncher
+        https://bugs.webkit.org/show_bug.cgi?id=134318
+
+        Reviewed by Dean Jackson.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj: Add missing
+        MemoryStatistics files to the WIndows build.
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+
+2014-06-26  David Kilzer  <ddkilzer@apple.com>
+
+        DFG::FunctionWhitelist::parseFunctionNamesInFile does not close file
+        <http://webkit.org/b/134343>
+        <rdar://problem/17459487>
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGFunctionWhitelist.cpp:
+        (JSC::DFG::FunctionWhitelist::parseFunctionNamesInFile):
+        Close the file handle, and log an error on failure.
+
 2014-06-25  Dana Burkart  <dburkart@apple.com>
 
         Add support for 5-tuple versioning.

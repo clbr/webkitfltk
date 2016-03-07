@@ -23,35 +23,19 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebHIDGamepadController_h
-#define WebHIDGamepadController_h
-
-#if ENABLE(GAMEPAD)
-
-#include <WebCore/HIDGamepadListener.h>
-#include <wtf/HashSet.h>
+#ifndef LayerFlushThrottleState_h
+#define LayerFlushThrottleState_h
 
 namespace WebCore {
-class GamepadStrategyClient;
-}
 
-class WebHIDGamepadController : public WebCore::HIDGamepadListenerClient {
-public:
-    static WebHIDGamepadController& shared();
-
-    virtual void gamepadConnected(unsigned index) override final;
-    virtual void gamepadDisconnected(unsigned index) override final;
-
-    void registerGamepadStrategyClient(WebCore::GamepadStrategyClient*);
-    void unregisterGamepadStrategyClient(WebCore::GamepadStrategyClient*);
-
-private:
-    friend NeverDestroyed<WebHIDGamepadController>;
-
-    WebHIDGamepadController();
-
-    HashSet<WebCore::GamepadStrategyClient*> m_clients;
+struct LayerFlushThrottleState {
+    enum {
+        MainLoadProgressing = 1 << 0,
+        UserIsInteracting = 1 << 1
+    };
+    typedef unsigned Flags;
 };
 
-#endif // ENABLE(GAMEPAD)
-#endif // WebHIDGamepadController_h
+} // namespace WebCore
+
+#endif // LayerFlushThrottleState_h

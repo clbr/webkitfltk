@@ -23,45 +23,41 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if ENABLE(GAMEPAD)
+#ifndef CDMSessionAVFoundationCF_h
+#define CDMSessionAVFoundationCF_h
 
-#import "WebHIDGamepadController.h"
-#import <WebCore/GamepadStrategyClient.h>
-#import <WebCore/HIDGamepadListener.h>
+#include "CDMSession.h"
+#include <wtf/PassOwnPtr.h>
+#include <wtf/RetainPtr.h>
 
-using namespace WebCore;
+#if ENABLE(ENCRYPTED_MEDIA_V2) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
 
-WebHIDGamepadController& WebHIDGamepadController::shared()
-{
-    static NeverDestroyed<WebHIDGamepadController> sharedClient;
-    return sharedClient;
+typedef struct OpaqueAVCFAssetResourceLoadingRequest* AVCFAssetResourceLoadingRequestRef;
+
+namespace WebCore {
+
+class MediaPlayerPrivateAVFoundationCF;
+
+class CDMSessionAVFoundationCF : public CDMSession {
+public:
+    CDMSessionAVFoundationCF(MediaPlayerPrivateAVFoundationCF* parent);
+    virtual ~CDMSessionAVFoundationCF() { }
+
+    virtual void setClient(CDMSessionClient* client) override { m_client = client; }
+    virtual const String& sessionId() const override { return m_sessionId; }
+    virtual PassRefPtr<Uint8Array> generateKeyRequest(const String& mimeType, Uint8Array* initData, String& destinationURL, unsigned short& errorCode, unsigned long& systemCode) override;
+    virtual void releaseKeys() override;
+    virtual bool update(Uint8Array*, RefPtr<Uint8Array>& nextMessage, unsigned short& errorCode, unsigned long& systemCode) override;
+
+protected:
+    MediaPlayerPrivateAVFoundationCF* m_parent;
+    CDMSessionClient* m_client;
+    String m_sessionId;
+    RetainPtr<AVCFAssetResourceLoadingRequestRef> m_request;
+};
+
 }
 
-WebHIDGamepadController::WebHIDGamepadController()
-{
-    HIDGamepadListener::shared().setClient(this);
-}
+#endif
 
-void WebHIDGamepadController::gamepadConnected(unsigned index)
-{
-    for (auto& client : m_clients)
-        client->platformGamepadConnected(index);
-}
-
-void WebHIDGamepadController::gamepadDisconnected(unsigned index)
-{
-    for (auto& client : m_clients)
-        client->platformGamepadDisconnected(index);
-}
-
-void WebHIDGamepadController::registerGamepadStrategyClient(GamepadStrategyClient* client)
-{
-    m_clients.add(client);
-}
-
-void WebHIDGamepadController::unregisterGamepadStrategyClient(GamepadStrategyClient* client)
-{
-    m_clients.remove(client);
-}
-
-#endif // ENABLE(GAMEPAD)
+#endif // CDMSessionAVFoundationCF_h

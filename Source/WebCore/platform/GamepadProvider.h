@@ -23,29 +23,31 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GamepadStrategy_h
-#define GamepadStrategy_h
+#ifndef GamepadProvider_h
+#define GamepadProvider_h
 
 #if ENABLE(GAMEPAD)
 
+#include <wtf/Vector.h>
+
 namespace WebCore {
 
+class GamepadProviderClient;
 class PlatformGamepad;
-class GamepadStrategyClient;
 
-class GamepadStrategy {
+class GamepadProvider {
 public:
-    virtual void startMonitoringGamepads(GamepadStrategyClient*) = 0;
-    virtual void stopMonitoringGamepads(GamepadStrategyClient*) = 0;
-    virtual const Vector<PlatformGamepad*>& platformGamepads() = 0;
+    virtual ~GamepadProvider() { }
 
-protected:
-    virtual ~GamepadStrategy()
-    {
-    }
+    static GamepadProvider& shared();
+    static void setSharedProvider(GamepadProvider&);
+
+    virtual void startMonitoringGamepads(GamepadProviderClient*);
+    virtual void stopMonitoringGamepads(GamepadProviderClient*);
+    virtual const Vector<PlatformGamepad*>& platformGamepads();
 };
 
 } // namespace WebCore
 
 #endif // ENABLE(GAMEPAD)
-#endif // GamepadStrategy_h
+#endif // GamepadProvider_h

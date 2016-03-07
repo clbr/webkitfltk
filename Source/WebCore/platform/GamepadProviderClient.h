@@ -23,13 +23,23 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TextUndoInsertionMarkup_h
-#define TextUndoInsertionMarkup_h
+#ifndef GamepadProviderClient_h
+#define GamepadProviderClient_h
 
-#if !PLATFORM(IOS)
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
-#define WTF_USE_INSERTION_UNDO_GROUPING 1
-#endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 10100
-#endif
+#if ENABLE(GAMEPAD)
 
-#endif
+namespace WebCore {
+
+class GamepadProviderClient {
+public:
+    virtual ~GamepadProviderClient() { }
+
+    virtual void platformGamepadConnected(unsigned index) = 0;
+    virtual void platformGamepadDisconnected(unsigned index) = 0;
+    virtual void platformGamepadInputActivity() = 0;
+};
+
+} // namespace WebCore
+
+#endif // ENABLE(GAMEPAD)
+#endif // GamepadProviderClient_h
