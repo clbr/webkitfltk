@@ -450,6 +450,7 @@ public:
     virtual bool isHeading() const { return false; }
     virtual bool isLink() const { return false; }
     virtual bool isImage() const { return false; }
+    virtual bool isImageMap() const { return roleValue() == ImageMapRole; }
     virtual bool isNativeImage() const { return false; }
     virtual bool isImageButton() const { return false; }
     virtual bool isPasswordField() const { return false; }
@@ -832,7 +833,8 @@ public:
     virtual AccessibilityRole roleValueForMSAA() const { return roleValue(); }
 
     virtual String passwordFieldValue() const { return String(); }
-
+    bool isValueAutofilled() const;
+    
     // Used by an ARIA tree to get all its rows.
     void ariaTreeRows(AccessibilityChildrenVector&);
     // Used by an ARIA tree item to get all of its direct rows that it can disclose.

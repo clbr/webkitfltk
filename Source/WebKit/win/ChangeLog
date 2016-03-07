@@ -1,3 +1,68 @@
+2014-11-24  Anders Carlsson  <andersca@apple.com>
+
+        Stub out user content WebView member functions on Windows
+        https://bugs.webkit.org/show_bug.cgi?id=139033
+
+        Reviewed by Sam Weinig.
+
+        These functions aren't used by any clients and hinder getting rid of PageGroup.
+        If it turns out they're still needed we can copy the user content controller code from Mac Legacy WebKit.
+
+        * WebView.cpp:
+        (WebView::addUserScriptToGroup):
+        (WebView::addUserStyleSheetToGroup):
+        (WebView::removeUserScriptFromGroup):
+        (WebView::removeUserStyleSheetFromGroup):
+        (WebView::removeUserScriptsFromGroup):
+        (WebView::removeUserStyleSheetsFromGroup):
+        (WebView::removeAllUserContentFromGroup):
+        (toStringVector): Deleted.
+
+2014-11-21  Jer Noble  <jer.noble@apple.com>
+
+        Support multiple signatures of diagnostic logging.
+        https://bugs.webkit.org/show_bug.cgi?id=138690
+
+        Reviewed by Anders Carlsson.
+
+        Page::PageClients has been renamed PageConfiguration.
+
+        * WebView.cpp:
+        (WebView::initWithFrame):
+
+2014-11-21  Anders Carlsson  <andersca@apple.com>
+
+        Another Windows build fix.
+
+        * FullscreenVideoController.cpp:
+        (FullscreenVideoController::FullscreenVideoController):
+
+2014-11-21  Anders Carlsson  <andersca@apple.com>
+
+        Remove the Timer parameters from timer callbacks
+        https://bugs.webkit.org/show_bug.cgi?id=138974
+
+        Reviewed by Antti Koivisto.
+
+        * FullscreenVideoController.cpp:
+        (FullscreenVideoController::timerFired):
+        * FullscreenVideoController.h:
+
+2014-11-21  Anders Carlsson  <andersca@apple.com>
+
+        Make memoryCache() return a reference
+        https://bugs.webkit.org/show_bug.cgi?id=138939
+
+        Reviewed by Antti Koivisto.
+
+        * WebCache.cpp:
+        (WebCache::statistics):
+        (WebCache::empty):
+        (WebCache::setDisabled):
+        (WebCache::disabled):
+        * WebView.cpp:
+        (WebView::setCacheModel):
+
 2014-11-16  Zan Dobersek  <zdobersek@igalia.com>
 
         [TexMap] Add typecasting support for GraphicsLayerTextureMapper

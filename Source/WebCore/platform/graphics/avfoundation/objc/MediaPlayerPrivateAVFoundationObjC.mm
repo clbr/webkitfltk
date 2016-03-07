@@ -496,7 +496,11 @@ void MediaPlayerPrivateAVFoundationObjC::cancelLoad()
 #if ENABLE(IOS_AIRPLAY)
         [m_avPlayer.get() removeObserver:m_objcObserver.get() forKeyPath:@"externalPlaybackActive"];
 #endif
-        m_avPlayer = nil;
+        
+        RetainPtr<AVPlayerType> strongPlayer = WTF::move(m_avPlayer);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), [strongPlayer] () mutable {
+            strongPlayer.clear();
+        });
     }
 
     // Reset cached properties
@@ -2154,7 +2158,7 @@ void MediaPlayerPrivateAVFoundationObjC::updateLastImage()
 
 void MediaPlayerPrivateAVFoundationObjC::paintWithVideoOutput(GraphicsContext* context, const IntRect& outputRect)
 {
-    if (m_videoOutput && !m_lastImage)
+    if (m_videoOutput && !m_lastImage && !videoOutputHasAvailableFrame())
         waitForVideoOutputMediaDataWillChange();
 
     updateLastImage();

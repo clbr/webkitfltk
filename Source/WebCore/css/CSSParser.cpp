@@ -6448,7 +6448,7 @@ bool CSSParser::parseFontWeight(bool important)
         return true;
     }
     if (validUnit(value, FInteger | FNonNeg, CSSQuirksMode)) {
-        int weight = static_cast<int>(value->fValue);
+        int weight = static_cast<int>(parsedDouble(value, ReleaseParsedCalcValue));
         if (!(weight % 100) && weight >= 100 && weight <= 900) {
             addProperty(CSSPropertyFontWeight, cssValuePool().createIdentifierValue(createFontWeightValueKeyword(weight)), important);
             return true;
@@ -10711,14 +10711,12 @@ inline bool CSSParser::detectFunctionTypeToken(int length)
 #endif
         return false;
 
-#if ENABLE(CSS_SELECTORS_LEVEL4)
     case 7:
         if (isEqualToCSSIdentifier(name, "matches")) {
             m_token = MATCHESFUNCTION;
             return true;
         }
         return false;
-#endif
 
     case 9:
         if (isEqualToCSSIdentifier(name, "nth-child")) {

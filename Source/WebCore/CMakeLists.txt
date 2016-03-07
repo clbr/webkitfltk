@@ -1901,7 +1901,6 @@ set(WebCore_SOURCES
     page/FrameSnapshotting.cpp
     page/FrameTree.cpp
     page/FrameView.cpp
-    page/GestureTapHighlighter.cpp
     page/GroupSettings.cpp
     page/History.cpp
     page/Location.cpp
@@ -1912,6 +1911,7 @@ set(WebCore_SOURCES
     page/OriginAccessEntry.cpp
     page/Page.cpp
     page/PageActivityAssertionToken.cpp
+    page/PageConfiguration.cpp
     page/PageConsoleClient.cpp
     page/PageGroup.cpp
     page/PageGroupLoadDeferrer.cpp
@@ -1934,6 +1934,7 @@ set(WebCore_SOURCES
     page/Settings.cpp
     page/SpatialNavigation.cpp
     page/SuspendableTimer.cpp
+    page/TextIndicator.cpp
     page/UserContentController.cpp
     page/UserContentURLPattern.cpp
     page/VisitedLinkStore.cpp

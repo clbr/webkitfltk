@@ -34,6 +34,7 @@ lang(
 last-child
 last-of-type
 link
+matches(
 no-button
 not(
 nth-child(
@@ -44,10 +45,7 @@ only-child
 only-of-type
 optional
 out-of-range
-#if ENABLE(CSS_SELECTORS_LEVEL4)
 placeholder-shown
-matches(
-#endif
 read-only
 read-write
 required

@@ -55,6 +55,7 @@ SOFT_LINK(DataDetectorsCore, DDScanQueryCreateFromString, DDScanQueryRef, (CFAll
 SOFT_LINK(DataDetectorsCore, DDScannerScanQuery, DDScanQueryRef, (DDScannerRef scanner, DDScanQueryRef query), (scanner, query))
 SOFT_LINK(DataDetectorsCore, DDScannerCopyResultsWithOptions, CFArrayRef, (DDScannerRef scanner, DDScannerCopyResultsOptions options), (scanner, options))
 SOFT_LINK(DataDetectorsCore, DDResultGetRange, CFRange, (DDResultRef result), (result))
+SOFT_LINK(DataDetectorsCore, DDResultGetType, CFStringRef, (DDResultRef result), (result))
 
 }
 
@@ -66,7 +67,7 @@ SOFT_LINK_CLASS(DataDetectors, DDActionContext)
 @property NSRect highlightFrame;
 @property (retain) NSArray *allResults;
 @property (retain) __attribute__((NSObject)) DDResultRef mainResult;
-@property (assign) BOOL forActionMenuContent;
+@property (assign) BOOL altMode;
 
 - (DDActionContext *)contextForView:(NSView *)view altMode:(BOOL)altMode interactionStartedHandler:(void (^)(void))interactionStartedHandler interactionChangedHandler:(void (^)(void))interactionChangedHandler interactionStoppedHandler:(void (^)(void))interactionStoppedHandler;
 
@@ -85,5 +86,6 @@ SOFT_LINK_CLASS(DataDetectors, DDActionsManager)
 + (BOOL)shouldUseActionsWithContext:(DDActionContext *)context;
 + (void)didUseActions;
 
+- (BOOL)hasActionsForResult:(DDResultRef)result actionContext:(DDActionContext *)actionContext;
 
 @end

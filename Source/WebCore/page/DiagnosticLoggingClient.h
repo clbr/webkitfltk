@@ -23,27 +23,29 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
+#ifndef DiagnosticLoggingClient_h
+#define DiagnosticLoggingClient_h
 
-#if USE(APPLE_INTERNAL_SDK)
+#include <wtf/Forward.h>
 
-#import <MediaPlayer/MPAVRoutingController.h>
+namespace WebCore {
 
-#else
+class DiagnosticLoggingClient {
+public:
+    virtual void logDiagnosticMessage(const String& message, const String& description) { UNUSED_PARAM(message); UNUSED_PARAM(description); }
 
-enum {
-    MPRouteDiscoveryModeDisabled = 0,
-    MPRouteDiscoveryModePresence = 1,
-    MPRouteDiscoveryModeDetailed = 2,
+    enum LogResultType {
+        Pass,
+        Fail,
+        Noop,
+    };
+    virtual void logDiagnosticMessageWithResult(const String& message, const String& description, LogResultType) { UNUSED_PARAM(message); UNUSED_PARAM(description); }
+    virtual void logDiagnosticMessageWithValue(const String& message, const String& description, const String& value) { UNUSED_PARAM(message); UNUSED_PARAM(description); UNUSED_PARAM(value); }
+
+protected:
+    virtual ~DiagnosticLoggingClient() { }
 };
-typedef NSInteger MPRouteDiscoveryMode;
 
-@interface MPAVRoutingController : NSObject
-@end
-
-@interface MPAVRoutingController (Details)
-- (instancetype)initWithName:(NSString *)name;
-@property (nonatomic, assign) MPRouteDiscoveryMode discoveryMode;
-@end
+}
 
 #endif

@@ -1,3 +1,107 @@
+2014-11-21  Jer Noble  <jer.noble@apple.com>
+
+        Support multiple signatures of diagnostic logging.
+        https://bugs.webkit.org/show_bug.cgi?id=138690
+
+        Reviewed by Anders Carlsson.
+
+        Page::PageClients has been renamed PageConfiguration.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        (-[WebView initSimpleHTMLDocumentWithStyle:frame:preferences:groupName:]):
+
+2014-11-21  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Add "show simple line layout debug borders" setting to MiniBrowser.
+        https://bugs.webkit.org/show_bug.cgi?id=138981
+
+        Reviewed by Simon Fraser.
+
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.mm:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences simpleLineLayoutDebugBordersEnabled]):
+        (-[WebPreferences setSimpleLineLayoutDebugBordersEnabled:]):
+        * WebView/WebPreferencesPrivate.h:
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]):
+
+2014-11-21  Tim Horton  <timothy_horton@apple.com>
+
+        REGRESSION (r176351): Parts of apple.com/contact aren't Lookup-able
+        ​https://bugs.webkit.org/show_bug.cgi?id=138960
+        <rdar://problem/19056715>
+
+        Reviewed by Anders Carlsson.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController _defaultMenuItemsForMailtoLink]):
+        (-[WebActionMenuController _defaultMenuItemsForDataDetectedText]):
+        Use DataDetectors SPI instead of an explicit blacklist.
+
+2014-11-21  Tim Horton  <timothy_horton@apple.com>
+
+        REGRESSION (r176351): Parts of apple.com/contact aren't Lookup-able
+        https://bugs.webkit.org/show_bug.cgi?id=138960
+        <rdar://problem/19056715>
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController _defaultMenuItemsForDataDetectedText]):
+        Blacklist contact results, because they don't have useful menus. If we
+        bail before setting up _currentActionContext, we'll still allow fallthrough
+        to ordinary text actions, avoiding mysterious failure when a contact is detected.
+
+        This doesn't break the case that r176351 was intended to fix,
+        because in that case we were detecting e.g. addresses.
+
+2014-11-21  Anders Carlsson  <andersca@apple.com>
+
+        Remove the Timer parameters from timer callbacks
+        https://bugs.webkit.org/show_bug.cgi?id=138974
+
+        Reviewed by Antti Koivisto.
+
+        * Plugins/Hosted/NetscapePluginInstanceProxy.h:
+        * Plugins/Hosted/NetscapePluginInstanceProxy.mm:
+        (WebKit::NetscapePluginInstanceProxy::NetscapePluginInstanceProxy):
+        (WebKit::NetscapePluginInstanceProxy::requestTimerFired):
+        * Plugins/WebNetscapePluginStream.h:
+        * Plugins/WebNetscapePluginStream.mm:
+        (WebNetscapePluginStream::WebNetscapePluginStream):
+        (WebNetscapePluginStream::deliverDataTimerFired):
+
+2014-11-21  Anders Carlsson  <andersca@apple.com>
+
+        Make memoryCache() return a reference
+        https://bugs.webkit.org/show_bug.cgi?id=138939
+
+        Reviewed by Antti Koivisto.
+
+        * Misc/WebCache.mm:
+        (+[WebCache statistics]):
+        (+[WebCache emptyInMemoryResources]):
+        (+[WebCache sizeOfDeadResources:]):
+        (+[WebCache addImageToCache:forURL:forFrame:]):
+        (+[WebCache removeImageFromCacheForURL:forFrame:]):
+        (+[WebCache imageForURL:]):
+        (+[WebCache setDisabled:]):
+        (+[WebCache isDisabled]):
+        * WebView/WebView.mm:
+        (+[WebView _setCacheModel:]):
+
+2014-11-20  Benjamin Poulain  <bpoulain@apple.com>
+
+        Remove the remaining vestiges of minimal-ui
+        https://bugs.webkit.org/show_bug.cgi?id=138890
+
+        Reviewed by Sam Weinig.
+
+        * History/WebHistoryItem.mm:
+        * History/WebHistoryItemPrivate.h:
+
 2014-11-20  Tim Horton  <timothy_horton@apple.com>
 
         Cancel DataDetectors menu earlier if we know it can't be presented

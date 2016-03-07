@@ -100,6 +100,11 @@ EXTERN_C void CFURLConnectionInvalidateConnectionCache();
 enum : NSUInteger {
     NSHTTPCookieAcceptPolicyExclusivelyFromMainDocumentDomain = 3,
 };
+
+@interface NSCachedURLResponse (Details)
+-(id)_initWithCFCachedURLResponse:(CFCachedURLResponseRef)cachedResponse;
+-(CFCachedURLResponseRef)_CFCachedURLResponse;
+@end
 #endif
 
 #endif // CFNetworkSPI_h
