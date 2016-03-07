@@ -174,7 +174,7 @@ MediaPlayer::ReadyState MediaPlayerPrivateMediaFoundation::readyState() const
 std::unique_ptr<PlatformTimeRanges> MediaPlayerPrivateMediaFoundation::buffered() const
 { 
     notImplemented();
-    return PlatformTimeRanges::create();
+    return std::make_unique<PlatformTimeRanges>();
 }
 
 bool MediaPlayerPrivateMediaFoundation::didLoadingProgress() const
@@ -241,7 +241,6 @@ bool MediaPlayerPrivateMediaFoundation::endSession()
 {
     if (m_mediaSession) {
         m_mediaSession->Shutdown();
-        m_mediaSession->Release();
         m_mediaSession = nullptr;
     }
 

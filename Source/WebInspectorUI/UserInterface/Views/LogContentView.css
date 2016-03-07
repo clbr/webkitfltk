@@ -41,8 +41,7 @@
 }
 
 .console-user-command,
-.console-user-command-result,
-.console-formatted-object {
+.console-user-command-result {
     font-family: Menlo, monospace;
     font-size: 11px;
 }
@@ -287,76 +286,6 @@
 
 .console-group-messages .add-attribute {
     display: none;
-}
-
-.console-object-preview {
-    font-style: italic;
-}
-
-.console-object-preview-lossless,
-.console-formatted-array .console-object-preview,
-.expanded .console-object-preview {
-    font-style: normal;
-}
-
-.console-object-preview .name {
- /* Match ObjectPropertiesSection name styles */
-    color: rgb(136, 19, 145);
-}
-
-.expanded .console-object-preview > .console-object-preview-body {
-    display: none;
-}
-
-.console-object-preview > .console-object-preview-name.console-object-preview-name-Object {
-    display: none;
-}
-
-.console-object-preview-body .console-object-preview-name.console-object-preview-name-Object { 
-    display: none;
-}
-
-.expanded .console-object-preview > .console-object-preview-name.console-object-preview-name-Object {
-    display: inline;
-}
-
-.console-formatted-object, .console-formatted-node, .console-formatted-error, .console-formatted-map, .console-formatted-set, .console-formatted-weakmap {
-    position: relative;
-    display: inline-block;
-    vertical-align: baseline;
-    color: black;
-}
-
-:matches(.console-formatted-object, .console-formatted-node, .console-formatted-error, .console-formatted-map, .console-formatted-set, .console-formatted-weakmap) .section {
-    position: static;
-}
-
-:matches(.console-formatted-object, .console-formatted-node, .console-formatted-error, .console-formatted-map, .console-formatted-set, .console-formatted-weakmap) .properties {
-    padding-left: 0 !important;
-}
-
-.console-formatted-number {
-    color: rgb(28, 0, 207);
-}
-
-.console-formatted-string, .console-formatted-regexp {
-    white-space: pre;
-}
-
-.console-formatted-string {
-    color: rgb(196, 26, 22);
-}
-
-.console-formatted-regexp {
-    color: rgb(255, 88, 0);
-}
-
-.console-formatted-symbol {
-    color: rgb(63, 169, 156);
-}
-
-.console-formatted-null, .console-formatted-undefined {
-    color: rgb(128, 128, 128);
 }
 
 .error-message {
