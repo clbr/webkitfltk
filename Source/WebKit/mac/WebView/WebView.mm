@@ -35,6 +35,7 @@
 #import "DOMDocumentInternal.h"
 #import "DOMNodeInternal.h"
 #import "DOMRangeInternal.h"
+#import "DictionaryPopupInfo.h"
 #import "WebAlternativeTextClient.h"
 #import "WebApplicationCache.h"
 #import "WebBackForwardListInternal.h"
@@ -212,7 +213,9 @@
 #import "WebNSPasteboardExtras.h"
 #import "WebNSPrintOperationExtras.h"
 #import "WebPDFView.h"
+#import <WebCore/LookupSPI.h>
 #import <WebCore/NSViewSPI.h>
+#import <WebCore/SoftLinking.h>
 #import <WebCore/TextIndicator.h>
 #import <WebCore/TextIndicatorWindow.h>
 #import <WebCore/WebVideoFullscreenController.h>
@@ -283,6 +286,11 @@
 
 #if ENABLE(GAMEPAD)
 #import <WebCore/HIDGamepadProvider.h>
+#endif
+
+#if PLATFORM(MAC)
+SOFT_LINK_CONSTANT_MAY_FAIL(Lookup, LUNotificationPopoverWillClose, NSString *)
+SOFT_LINK_CONSTANT_MAY_FAIL(Lookup, LUTermOptionDisableSearchTermIndicator, NSString *)
 #endif
 
 #if !PLATFORM(IOS)
@@ -1181,6 +1189,7 @@ static void WebKitInitializeGamepadProviderIfNecessary()
     pageConfiguration.loaderClientForMainFrame = new WebFrameLoaderClient;
     pageConfiguration.progressTrackerClient = new WebProgressTrackerClient(self);
     pageConfiguration.userContentController = &_private->group->userContentController();
+    pageConfiguration.visitedLinkStore = &_private->group->visitedLinkStore();
 
     _private->page = new Page(pageConfiguration);
     
@@ -7005,28 +7014,12 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
     WebVisitedLinkStore& visitedLinkStore = _private->group->visitedLinkStore();
     for (NSString *urlString in visitedLinks)
         visitedLinkStore.addVisitedLink(urlString);
-
-    PageGroup& group = core(self)->group();
-
-    NSEnumerator *enumerator = [visitedLinks objectEnumerator];
-    while (NSString *url = [enumerator nextObject]) {
-        size_t length = [url length];
-        const UChar* characters = CFStringGetCharactersPtr(reinterpret_cast<CFStringRef>(url));
-        if (characters)
-            group.addVisitedLink(characters, length);
-        else {
-            Vector<UChar, 512> buffer(length);
-            [url getCharacters:buffer.data()];
-            group.addVisitedLink(buffer.data(), length);
-        }
-    }
 }
 
 #if PLATFORM(IOS)
 - (void)removeVisitedLink:(NSURL *)url
 {
     _private->group->visitedLinkStore().removeVisitedLink(URL(url).string());
-    core(self)->group().removeVisitedLink(url);
 }
 #endif
 
@@ -8566,7 +8559,8 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
     return NSMakeRect(rect.origin.x, [self bounds].size.height - rect.origin.y - rect.size.height, rect.size.width, rect.size.height);
 }
 
-#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+#if PLATFORM(MAC)
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 - (void)prepareForMenu:(NSMenu *)menu withEvent:(NSEvent *)event
 {
     if (menu != self.actionMenu)
@@ -8591,6 +8585,12 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
     [_private->actionMenuController didCloseMenu:menu withEvent:event];
 }
 
+- (WebActionMenuController *)_actionMenuController
+{
+    return _private->actionMenuController;
+}
+#endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+
 - (void)_setTextIndicator:(TextIndicator *)textIndicator fadeOut:(BOOL)fadeOut animationCompletionHandler:(std::function<void ()>)completionHandler
 {
     if (!textIndicator) {
@@ -8609,11 +8609,38 @@ static void glibContextIterationCallback(CFRunLoopObserverRef, CFRunLoopActivity
     [self _setTextIndicator:nullptr fadeOut:NO animationCompletionHandler:^ { }];
 }
 
-- (WebActionMenuController *)_actionMenuController
+- (void)_showDictionaryLookupPopup:(const DictionaryPopupInfo&)dictionaryPopupInfo
 {
-    return _private->actionMenuController;
+    if (!dictionaryPopupInfo.attributedString)
+        return;
+
+    NSPoint textBaselineOrigin = dictionaryPopupInfo.origin;
+
+    // Convert to screen coordinates.
+    textBaselineOrigin = [self.window convertRectToScreen:NSMakeRect(textBaselineOrigin.x, textBaselineOrigin.y, 0, 0)].origin;
+
+    if (canLoadLUTermOptionDisableSearchTermIndicator() && canLoadLUNotificationPopoverWillClose()) {
+        if (!_private->hasInitializedLookupObserver) {
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_dictionaryLookupPopoverWillClose:) name:getLUNotificationPopoverWillClose() object:nil];
+            _private->hasInitializedLookupObserver = YES;
+        }
+
+        RetainPtr<NSMutableDictionary> mutableOptions = adoptNS([dictionaryPopupInfo.options mutableCopy]);
+        if (!mutableOptions)
+            mutableOptions = adoptNS([[NSMutableDictionary alloc] init]);
+        [mutableOptions setObject:@YES forKey:getLUTermOptionDisableSearchTermIndicator()];
+        [self _setTextIndicator:dictionaryPopupInfo.textIndicator.get() fadeOut:NO animationCompletionHandler:[dictionaryPopupInfo, textBaselineOrigin, mutableOptions] {
+            [getLULookupDefinitionModuleClass() showDefinitionForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:mutableOptions.get()];
+        }];
+    } else
+        [getLULookupDefinitionModuleClass() showDefinitionForTerm:dictionaryPopupInfo.attributedString.get() atLocation:textBaselineOrigin options:dictionaryPopupInfo.options.get()];
 }
-#endif // PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+
+- (void)_dictionaryLookupPopoverWillClose:(NSNotification *)notification
+{
+    [self _setTextIndicator:nullptr fadeOut:NO animationCompletionHandler:[] { }];
+}
+#endif // PLATFORM(MAC)
 
 @end
 

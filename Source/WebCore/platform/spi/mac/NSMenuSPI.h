@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,26 +23,10 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PageActivityAssertionToken_h
-#define PageActivityAssertionToken_h
+#import "QuickLookMacSPI.h"
 
-#include <wtf/Noncopyable.h>
-#include <wtf/WeakPtr.h>
+// FIXME: We should just include the appropriate internal headers.
 
-namespace WebCore {
-
-class PageThrottler;
-
-class PageActivityAssertionToken {
-    WTF_MAKE_NONCOPYABLE(PageActivityAssertionToken);
-public:
-    PageActivityAssertionToken(PageThrottler&);
-    ~PageActivityAssertionToken();
-
-private:
-    WeakPtr<PageThrottler> m_throttler;
-};
-
-} // namespace WebCore
-
-#endif // PageActivityAssertionToken_h
+@interface NSMenuItem (Private)
++ (QLPreviewMenuItem *)standardQuickLookMenuItem;
+@end

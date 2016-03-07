@@ -80,7 +80,6 @@ class InspectorClient;
 class InspectorController;
 class MainFrame;
 class MediaCanStartListener;
-class PageActivityAssertionToken;
 class PageConfiguration;
 class PageConsoleClient;
 class PageDebuggable;
@@ -101,12 +100,14 @@ class ScrollableArea;
 class ScrollingCoordinator;
 class Settings;
 class StorageNamespace;
+class StorageNamespaceProvider;
 class UserContentController;
 class ValidationMessageClient;
 class ViewStateChangeObserver;
 class VisitedLinkStore;
 
 typedef uint64_t LinkHash;
+class SharedBuffer;
 
 enum FindDirection { FindDirectionForward, FindDirectionBackward };
 
@@ -124,6 +125,8 @@ public:
     WEBCORE_EXPORT ~Page();
 
     WEBCORE_EXPORT uint64_t renderTreeSize() const;
+    
+    static std::unique_ptr<Page> createPageFromBuffer(PageConfiguration&, const SharedBuffer*, const String& mimeType, bool canHaveScrollbars, bool transparent);
 
     void setNeedsRecalcStyleInAllFrames();
 
@@ -316,8 +319,6 @@ public:
     void setDebugger(JSC::Debugger*);
     JSC::Debugger* debugger() const { return m_debugger; }
 
-    static void removeAllVisitedLinks();
-
     WEBCORE_EXPORT void invalidateStylesForAllLinks();
     WEBCORE_EXPORT void invalidateStylesForLink(LinkHash);
 
@@ -401,6 +402,9 @@ public:
     bool isAnyFrameHandlingBeforeUnloadEvent();
     void setLastSpatialNavigationCandidateCount(unsigned count) { m_lastSpatialNavigationCandidatesCount = count; }
     unsigned lastSpatialNavigationCandidateCount() const { return m_lastSpatialNavigationCandidatesCount; }
+
+    StorageNamespaceProvider* storageNamespaceProvider() { return m_storageNamespaceProvider.get(); }
+    void setStorageNamespaceProvider(PassRef<StorageNamespaceProvider>);
 
     UserContentController* userContentController() { return m_userContentController.get(); }
     void setUserContentController(UserContentController*);
@@ -571,8 +575,9 @@ private:
     unsigned m_lastSpatialNavigationCandidatesCount;
     unsigned m_framesHandlingBeforeUnloadEvent;
 
+    RefPtr<StorageNamespaceProvider> m_storageNamespaceProvider;
     RefPtr<UserContentController> m_userContentController;
-    RefPtr<VisitedLinkStore> m_visitedLinkStore;
+    Ref<VisitedLinkStore> m_visitedLinkStore;
 
     HashSet<ViewStateChangeObserver*> m_viewStateChangeObservers;
 

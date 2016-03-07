@@ -23,16 +23,51 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QuickLookMac_h
-#define QuickLookMac_h
+#include "config.h"
+#include "StorageNamespaceProvider.h"
+
+#include "StorageNamespace.h"
 
 namespace WebCore {
 
-class QuickLookMac {
-public:
-    WEBCORE_EXPORT static bool computeNeedsQuickLookResourceCachingQuirks();
-};
+StorageNamespaceProvider::StorageNamespaceProvider()
+{
+}
 
-} // namespace WebCore
+StorageNamespaceProvider::~StorageNamespaceProvider()
+{
+    ASSERT(m_pages.isEmpty());
+}
 
-#endif // QuickLookMac_h
+void StorageNamespaceProvider::addPage(Page& page)
+{
+    ASSERT(!m_pages.contains(&page));
+
+    m_pages.add(&page);
+}
+
+void StorageNamespaceProvider::removePage(Page& page)
+{
+    ASSERT(m_pages.contains(&page));
+
+    m_pages.remove(&page);
+}
+
+StorageNamespace& StorageNamespaceProvider::localStorageNamespace()
+{
+    if (!m_localStorageNamespace)
+        m_localStorageNamespace = createLocalStorageNamespace();
+
+    return *m_localStorageNamespace;
+}
+
+StorageNamespace& StorageNamespaceProvider::transientLocalStorageNamespace(SecurityOrigin& securityOrigin)
+{
+    auto& slot = m_transientLocalStorageMap.add(&securityOrigin, nullptr).iterator->value;
+    if (!slot)
+        slot = createTransientLocalStorageNamespace(securityOrigin);
+
+    return *slot;
+}
+
+}

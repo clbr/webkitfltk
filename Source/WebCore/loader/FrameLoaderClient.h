@@ -184,8 +184,6 @@ namespace WebCore {
 
         virtual void dispatchUnableToImplementPolicy(const ResourceError&) = 0;
 
-        virtual void dispatchWillRequestResource(CachedResourceRequest*) { }
-
         virtual void dispatchWillSendSubmitEvent(PassRefPtr<FormState>) = 0;
         virtual void dispatchWillSubmitForm(PassRefPtr<FormState>, FramePolicyFunction) = 0;
 
@@ -282,10 +280,6 @@ namespace WebCore {
         virtual void dispatchDidClearWindowObjectInWorld(DOMWrapperWorld&) = 0;
 
         virtual void registerForIconNotification(bool listen = true) = 0;
-
-#if PLATFORM(MAC)
-        virtual bool needsQuickLookResourceCachingQuirks() const = 0;
-#endif
 
 #if PLATFORM(COCOA)
         // Allow an accessibility object to retrieve a Frame parent if there's no PlatformWidget.

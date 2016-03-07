@@ -23,25 +23,50 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DefaultVisitedLinkStore_h
-#define DefaultVisitedLinkStore_h
+#include "config.h"
+#include "RefCounter.h"
 
-#include "VisitedLinkStore.h"
+namespace WTF {
 
-namespace WebCore {
+void RefCounter::Count::ref()
+{
+    ++m_value;
 
-class DefaultVisitedLinkStore : public VisitedLinkStore {
-public:
-    static PassRefPtr<DefaultVisitedLinkStore> create();
-    virtual ~DefaultVisitedLinkStore();
+    if (m_refCounter)
+        m_refCounter->m_valueDidChange();
+}
 
-private:
-    DefaultVisitedLinkStore();
+void RefCounter::Count::deref()
+{
+    ASSERT(m_value);
+    --m_value;
 
-    virtual bool isLinkVisited(Page&, LinkHash, const URL& baseURL, const AtomicString& attributeURL) override;
-    virtual void addVisitedLink(Page&, LinkHash) override;
-};
+    // The Count object is kept alive so long as either the RefCounter that created it remains
+    // allocated, or so long as its reference count is non-zero.
+    // If the RefCounter has already been deallocted then delete the Count when its reference
+    // count reaches zero.
+    if (m_refCounter)
+        m_refCounter->m_valueDidChange();
+    else if (!m_value)
+        delete this;
+}
+
+RefCounter::RefCounter(std::function<void()> valueDidChange)
+    : m_valueDidChange(valueDidChange)
+    , m_count(new Count(*this))
+{
+}
+
+RefCounter::~RefCounter()
+{
+    // The Count object is kept alive so long as either the RefCounter that created it remains
+    // allocated, or so long as its reference count is non-zero.
+    // If the reference count of the Count is already zero then delete it now, otherwise
+    // clear its m_refCounter pointer.
+    if (m_count->m_value)
+        m_count->m_refCounter = nullptr;
+    else
+        delete m_count;
+}
 
 } // namespace WebCore
-
-#endif // DefaultVisitedLinkStore_h

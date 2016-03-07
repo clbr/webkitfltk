@@ -23,35 +23,23 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "DefaultVisitedLinkStore.h"
+#if PLATFORM(MAC)
 
-#include "Page.h"
-#include "PageGroup.h"
+#import <WebCore/FloatPoint.h>
+#import <wtf/RetainPtr.h>
+
+@class NSAttributedString;
+@class NSDictionary;
 
 namespace WebCore {
+class TextIndicator;
+};
 
-PassRefPtr<DefaultVisitedLinkStore> DefaultVisitedLinkStore::create()
-{
-    return adoptRef(new DefaultVisitedLinkStore);
-}
+struct DictionaryPopupInfo {
+    NSPoint origin;
+    RetainPtr<NSDictionary> options;
+    RetainPtr<NSAttributedString> attributedString;
+    RefPtr<WebCore::TextIndicator> textIndicator;
+};
 
-DefaultVisitedLinkStore::DefaultVisitedLinkStore()
-{
-}
-
-DefaultVisitedLinkStore::~DefaultVisitedLinkStore()
-{
-}
-
-bool DefaultVisitedLinkStore::isLinkVisited(Page& page, LinkHash linkHash, const URL&, const AtomicString&)
-{
-    return page.group().isLinkVisited(linkHash);
-}
-
-void DefaultVisitedLinkStore::addVisitedLink(Page& page, LinkHash linkHash)
-{
-    page.group().addVisitedLinkHash(linkHash);
-}
-
-} // namespace WebCore
+#endif // PLATFORM(MAC)

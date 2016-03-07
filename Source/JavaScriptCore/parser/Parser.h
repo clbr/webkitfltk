@@ -130,8 +130,11 @@ struct Scope {
     {
         if (rhs.m_labels) {
             m_labels = adoptPtr(new LabelStack);
-            for (auto label : *rhs.m_labels)
-                m_labels->append(ScopeLabelInfo(label.m_ident, label.m_isLoop));
+
+            typedef LabelStack::const_iterator iterator;
+            iterator end = rhs.m_labels->end();
+            for (iterator it = rhs.m_labels->begin(); it != end; ++it)
+                m_labels->append(ScopeLabelInfo(it->m_ident, it->m_isLoop));
         }
     }
 
@@ -812,7 +815,7 @@ private:
 
     VM* m_vm;
     const SourceCode* m_source;
-    ParserArena* m_arena;
+    ParserArena m_parserArena;
     OwnPtr<LexerType> m_lexer;
     
     bool m_hasStackOverflow;
@@ -896,7 +899,7 @@ PassRefPtr<ParsedNode> Parser<LexerType>::parse(ParserError& error, bool needRep
         endLocation.lineStartOffset = m_lexer->currentLineStartOffset();
         endLocation.startOffset = m_lexer->currentOffset();
         unsigned endColumn = endLocation.startOffset - endLocation.lineStartOffset;
-        result = ParsedNode::create(m_vm,
+        result = ParsedNode::create(m_parserArena,
                                     startLocation,
                                     endLocation,
                                     startColumn,
@@ -932,8 +935,6 @@ PassRefPtr<ParsedNode> Parser<LexerType>::parse(ParserError& error, bool needRep
                 error = ParserError(ParserError::SyntaxError, errorType, m_token, errMsg, errLine);
         }
     }
-
-    m_arena->reset();
 
     return result.release();
 }

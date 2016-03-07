@@ -29,6 +29,7 @@
 #include "ClientRectList.h"
 #include "ContextMenuClient.h"
 #include "ContextMenuController.h"
+#include "DocumentLoader.h"
 #include "DocumentMarkerController.h"
 #include "DocumentStyleSheetCollection.h"
 #include "DragController.h"
@@ -55,7 +56,6 @@
 #include "MediaCanStartListener.h"
 #include "Navigator.h"
 #include "NetworkStateNotifier.h"
-#include "PageActivityAssertionToken.h"
 #include "PageCache.h"
 #include "PageConfiguration.h"
 #include "PageConsoleClient.h"
@@ -80,6 +80,7 @@
 #include "SharedBuffer.h"
 #include "StorageArea.h"
 #include "StorageNamespace.h"
+#include "StorageNamespaceProvider.h"
 #include "StyleResolver.h"
 #include "SubframeLoader.h"
 #include "TextResourceDecoder.h"
@@ -196,15 +197,16 @@ Page::Page(PageConfiguration& pageConfiguration)
 #endif
     , m_alternativeTextClient(pageConfiguration.alternativeTextClient)
     , m_scriptedAnimationsSuspended(false)
-    , m_pageThrottler(*this, m_viewState)
+    , m_pageThrottler(m_viewState)
     , m_consoleClient(std::make_unique<PageConsoleClient>(*this))
 #if ENABLE(REMOTE_INSPECTOR)
     , m_inspectorDebuggable(std::make_unique<PageDebuggable>(*this))
 #endif
     , m_lastSpatialNavigationCandidatesCount(0) // NOTE: Only called from Internals for Spatial Navigation testing.
     , m_framesHandlingBeforeUnloadEvent(0)
+    , m_storageNamespaceProvider(WTF::move(pageConfiguration.storageNamespaceProvider))
     , m_userContentController(WTF::move(pageConfiguration.userContentController))
-    , m_visitedLinkStore(WTF::move(pageConfiguration.visitedLinkStore))
+    , m_visitedLinkStore(*WTF::move(pageConfiguration.visitedLinkStore))
     , m_sessionID(SessionID::defaultSessionID())
     , m_isClosing(false)
     , m_isPlayingAudio(false)
@@ -213,11 +215,12 @@ Page::Page(PageConfiguration& pageConfiguration)
     
     setTimerThrottlingEnabled(m_viewState & ViewState::IsVisuallyIdle);
 
+    if (m_storageNamespaceProvider)
+        m_storageNamespaceProvider->addPage(*this);
     if (m_userContentController)
         m_userContentController->addPage(*this);
 
-    if (m_visitedLinkStore)
-        m_visitedLinkStore->addPage(*this);
+    m_visitedLinkStore->addPage(*this);
 
     if (!allPages) {
         allPages = new HashSet<Page*>;
@@ -271,8 +274,34 @@ Page::~Page()
 
     if (m_userContentController)
         m_userContentController->removePage(*this);
-    if (m_visitedLinkStore)
-        m_visitedLinkStore->removePage(*this);
+    m_visitedLinkStore->removePage(*this);
+}
+
+std::unique_ptr<Page> Page::createPageFromBuffer(PageConfiguration& pageConfiguration, const SharedBuffer* buffer, const String& mimeType, bool canHaveScrollbars, bool transparent)
+{
+    ASSERT(buffer);
+    
+    std::unique_ptr<Page> newPage = std::make_unique<Page>(pageConfiguration);
+    newPage->settings().setMediaEnabled(false);
+    newPage->settings().setScriptEnabled(false);
+    newPage->settings().setPluginsEnabled(false);
+    
+    Frame& frame = newPage->mainFrame();
+    frame.setView(FrameView::create(frame));
+    frame.init();
+    FrameLoader& loader = frame.loader();
+    loader.forceSandboxFlags(SandboxAll);
+    
+    frame.view()->setCanHaveScrollbars(canHaveScrollbars);
+    frame.view()->setTransparent(transparent);
+    
+    ASSERT(loader.activeDocumentLoader()); // DocumentLoader should have been created by frame->init().
+    loader.activeDocumentLoader()->writer().setMIMEType(mimeType);
+    loader.activeDocumentLoader()->writer().begin(URL()); // create the empty document
+    loader.activeDocumentLoader()->writer().addData(buffer->data(), buffer->size());
+    loader.activeDocumentLoader()->writer().end();
+    
+    return newPage;
 }
 
 void Page::clearPreviousItemFromAllPages(HistoryItem* item)
@@ -1035,21 +1064,6 @@ const String& Page::userStyleSheet() const
     return m_userStyleSheet;
 }
 
-void Page::removeAllVisitedLinks()
-{
-    if (!allPages)
-        return;
-    HashSet<PageGroup*> groups;
-    HashSet<Page*>::iterator pagesEnd = allPages->end();
-    for (HashSet<Page*>::iterator it = allPages->begin(); it != pagesEnd; ++it) {
-        if (PageGroup* group = (*it)->groupPtr())
-            groups.add(group);
-    }
-    HashSet<PageGroup*>::iterator groupsEnd = groups.end();
-    for (HashSet<PageGroup*>::iterator it = groups.begin(); it != groupsEnd; ++it)
-        (*it)->removeVisitedLinks();
-}
-
 void Page::invalidateStylesForAllLinks()
 {
     for (Frame* frame = m_mainFrame.get(); frame; frame = frame->tree().traverseNext())
@@ -1630,19 +1644,25 @@ void Page::setUserContentController(UserContentController* userContentController
     }
 }
 
+void Page::setStorageNamespaceProvider(PassRef<StorageNamespaceProvider> storageNamespaceProvider)
+{
+    if (m_storageNamespaceProvider)
+        m_storageNamespaceProvider->removePage(*this);
+
+    m_storageNamespaceProvider = WTF::move(storageNamespaceProvider);
+    m_storageNamespaceProvider->addPage(*this);
+
+    // This needs to reset all the local storage namespaces of all the pages.
+}
+
 VisitedLinkStore& Page::visitedLinkStore()
 {
-    if (m_visitedLinkStore)
-        return *m_visitedLinkStore;
-
-    return group().visitedLinkStore();
+    return m_visitedLinkStore;
 }
 
 void Page::setVisitedLinkStore(PassRef<VisitedLinkStore> visitedLinkStore)
 {
-    if (m_visitedLinkStore)
-        m_visitedLinkStore->removePage(*this);
-
+    m_visitedLinkStore->removePage(*this);
     m_visitedLinkStore = WTF::move(visitedLinkStore);
     m_visitedLinkStore->addPage(*this);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Brent Fulgham <bfulgham@webkit.org>. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,15 +23,43 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "ProxyServer.h"
+#ifndef StorageNamespaceProvider_h
+#define StorageNamespaceProvider_h
+
+#include "SecurityOriginHash.h"
+#include <wtf/Forward.h>
+#include <wtf/HashMap.h>
+#include <wtf/HashSet.h>
+#include <wtf/RefCounted.h>
 
 namespace WebCore {
 
-Vector<ProxyServer> proxyServersForURL(const URL&, const NetworkingContext*)
-{
-    // FIXME: Implement.
-    return Vector<ProxyServer>();
+class Page;
+class SecurityOrigin;
+class StorageNamespace;
+
+class StorageNamespaceProvider : public RefCounted<StorageNamespaceProvider> {
+public:
+    StorageNamespaceProvider();
+    virtual ~StorageNamespaceProvider();
+
+    StorageNamespace& localStorageNamespace();
+    StorageNamespace& transientLocalStorageNamespace(SecurityOrigin&);
+    virtual RefPtr<StorageNamespace> createSessionStorageNamespace(Page&) = 0;
+
+    void addPage(Page&);
+    void removePage(Page&);
+
+private:
+    virtual RefPtr<StorageNamespace> createLocalStorageNamespace() = 0;
+    virtual RefPtr<StorageNamespace> createTransientLocalStorageNamespace(SecurityOrigin&) = 0;
+
+    HashSet<Page*> m_pages;
+
+    RefPtr<StorageNamespace> m_localStorageNamespace;
+    HashMap<RefPtr<SecurityOrigin>, RefPtr<StorageNamespace>> m_transientLocalStorageMap;
+};
+
 }
 
-} // namespace WebCore
+#endif // StorageNamespaceProvider_h
