@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2015 Apple, Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,63 +20,41 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSArgumentsIterator_h
-#define JSArgumentsIterator_h
+#ifndef JSDollarVM_h
+#define JSDollarVM_h
 
 #include "JSObject.h"
 
 namespace JSC {
-
-class JSArgumentsIterator : public JSNonFinalObject {
+    
+class JSDollarVM : public JSNonFinalObject {
 public:
     typedef JSNonFinalObject Base;
-    static const unsigned StructureFlags = Base::StructureFlags;
-
+    
     DECLARE_EXPORT_INFO;
-
+    
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
     {
         return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info());
     }
-
-    static JSArgumentsIterator* create(VM& vm, Structure* structure, JSObject* arguments)
+    
+    static JSDollarVM* create(VM& vm, Structure* structure)
     {
-        JSArgumentsIterator* instance = new (NotNull, allocateCell<JSArgumentsIterator>(vm.heap)) JSArgumentsIterator(vm, structure);
-        instance->finishCreation(vm, arguments);
+        JSDollarVM* instance = new (NotNull, allocateCell<JSDollarVM>(vm.heap)) JSDollarVM(vm, structure);
+        instance->finishCreation(vm);
         return instance;
     }
-
-    bool next(CallFrame* callFrame, JSValue& value)
-    {
-        unsigned length =
-            m_arguments->get(callFrame, callFrame->propertyNames().length).toUInt32(callFrame);
-        if (m_nextIndex >= length)
-            return false;
-        value = m_arguments->getIndex(callFrame, m_nextIndex++);
-        return true;
-    }
-
-    JSValue iteratedValue() const { return m_arguments.get(); }
-    JSArgumentsIterator* clone(ExecState*);
-
-private:
-    JSArgumentsIterator(VM& vm, Structure* structure)
-        : Base(vm, structure)
-        , m_nextIndex(0)
-    {
-    }
-
-    void finishCreation(VM&, JSObject*);
     
-    WriteBarrier<JSObject> m_arguments;
-    size_t m_nextIndex;
+private:
+    JSDollarVM(VM& vm, Structure* structure)
+        : Base(vm, structure)
+    {
+    }
 };
 
-EncodedJSValue JSC_HOST_CALL argumentsFuncIterator(ExecState*);
+} // namespace JSC
 
-}
-
-#endif // !defined(JSArgumentsIterator_h)
+#endif // JSDollarVM_h

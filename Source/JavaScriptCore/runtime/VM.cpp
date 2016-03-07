@@ -87,13 +87,14 @@
 #include "UnlinkedCodeBlock.h"
 #include "WeakGCMapInlines.h"
 #include "WeakMapData.h"
+#include <wtf/CurrentTime.h>
 #include <wtf/ProcessID.h>
 #include <wtf/RetainPtr.h>
 #include <wtf/StringPrintStream.h>
 #include <wtf/Threading.h>
 #include <wtf/WTFThreadData.h>
 #include <wtf/text/AtomicStringTable.h>
-#include <wtf/CurrentTime.h>
+#include <wtf/text/SymbolRegistry.h>
 
 #if ENABLE(DFG_JIT)
 #include "ConservativeRoots.h"
@@ -231,6 +232,7 @@ VM::VM(VMType vmType, HeapType heapType)
     propertyTableStructure.set(*this, PropertyTable::createStructure(*this, 0, jsNull()));
     weakMapDataStructure.set(*this, WeakMapData::createStructure(*this, 0, jsNull()));
     inferredValueStructure.set(*this, InferredValue::createStructure(*this, 0, jsNull()));
+    functionRareDataStructure.set(*this, FunctionRareData::createStructure(*this, 0, jsNull()));
 #if ENABLE(PROMISES)
     promiseDeferredStructure.set(*this, JSPromiseDeferred::createStructure(*this, 0, jsNull()));
     promiseReactionStructure.set(*this, JSPromiseReaction::createStructure(*this, 0, jsNull()));

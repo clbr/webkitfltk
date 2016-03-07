@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple, Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,27 +20,17 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
-#include "ArgumentsIteratorConstructor.h"
+#include "JSDollarVM.h"
 
-#include "ArgumentsIteratorPrototype.h"
-#include "JSArgumentsIterator.h"
 #include "JSCJSValueInlines.h"
-#include "JSCellInlines.h"
-#include "JSGlobalObject.h"
 #include "StructureInlines.h"
 
 namespace JSC {
 
-const ClassInfo ArgumentsIteratorConstructor::s_info = { "ArgumentsIterator", &Base::s_info, 0, CREATE_METHOD_TABLE(ArgumentsIteratorConstructor) };
+const ClassInfo JSDollarVM::s_info = { "DollarVM", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDollarVM) };
 
-void ArgumentsIteratorConstructor::finishCreation(VM& vm, ArgumentsIteratorPrototype* prototype)
-{
-    Base::finishCreation(vm);
-    putDirectWithoutTransition(vm, vm.propertyNames->prototype, prototype, DontEnum | DontDelete | ReadOnly);
-}
-
-}
+} // namespace JSC

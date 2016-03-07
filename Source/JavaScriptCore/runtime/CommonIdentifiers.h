@@ -27,7 +27,6 @@
 // MarkedArgumentBuffer of property names, passed to a macro so we can do set them up various
 // ways without repeating the list.
 #define JSC_COMMON_IDENTIFIERS_EACH_PROPERTY_NAME(macro) \
-    macro(ArgumentsIterator) \
     macro(Array) \
     macro(ArrayBuffer) \
     macro(ArrayIterator) \
@@ -143,6 +142,7 @@
     macro(osrExitSites) \
     macro(osrExits) \
     macro(parse) \
+    macro(parseInt) \
     macro(postMessage) \
     macro(profiledBytecodes) \
     macro(propertyIsEnumerable) \

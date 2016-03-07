@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple, Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,44 +20,44 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ArgumentsIteratorConstructor_h
-#define ArgumentsIteratorConstructor_h
+#ifndef JSDollarVMPrototype_h
+#define JSDollarVMPrototype_h
 
-#include "InternalFunction.h"
+#include "JSObject.h"
 
 namespace JSC {
 
-class ArgumentsIteratorPrototype;
-
-class ArgumentsIteratorConstructor : public JSNonFinalObject {
+class JSDollarVMPrototype : public JSNonFinalObject {
 public:
     typedef JSNonFinalObject Base;
 
-    static ArgumentsIteratorConstructor* create(VM& vm, Structure* structure, ArgumentsIteratorPrototype* prototype)
-    {
-        ArgumentsIteratorConstructor* constructor = new (NotNull, allocateCell<ArgumentsIteratorConstructor>(vm.heap)) ArgumentsIteratorConstructor(vm, structure);
-        constructor->finishCreation(vm, prototype);
-        return constructor;
-    }
-
     DECLARE_INFO;
 
+    static JSDollarVMPrototype* create(VM& vm, JSGlobalObject* globalObject, Structure* structure)
+    {
+        JSDollarVMPrototype* prototype = new (NotNull, allocateCell<JSDollarVMPrototype>(vm.heap)) JSDollarVMPrototype(vm, structure);
+        prototype->finishCreation(vm, globalObject);
+        return prototype;
+    }
+    
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
     {
         return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info());
     }
 
 private:
-    ArgumentsIteratorConstructor(VM& vm, Structure* structure)
+    JSDollarVMPrototype(VM& vm, Structure* structure)
         : Base(vm, structure)
     {
     }
-    void finishCreation(VM&, ArgumentsIteratorPrototype*);
+
+    void finishCreation(VM&, JSGlobalObject*);
+    void addFunction(VM&, JSGlobalObject*, const char* name, NativeFunction, unsigned arguments);
 };
 
-}
+} // namespace JSC
 
-#endif // !defined(ArgumentsIteratorConstructor_h)
+#endif // JSDollarVMPrototype_h

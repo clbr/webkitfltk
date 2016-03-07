@@ -1,3 +1,750 @@
+2015-04-18  Jon Lee  <jonlee@apple.com>
+
+        [Mac] Time elapsed should be right-aligned
+        https://bugs.webkit.org/show_bug.cgi?id=143927
+
+        Reviewed by Eric Carlson.
+
+        Current time is left-aligned, which is visually jarring when going from < 1 hour to > 1 hour.
+
+        * Modules/mediacontrols/mediaControlsApple.css:
+        (audio::-webkit-media-controls-current-time-display): Set justify-content to flex-end.
+        (audio::-webkit-media-controls-time-remaining-display): Explicitly set justify-content to flex-start.
+
+2015-04-18  Simon Fraser  <simon.fraser@apple.com>
+
+        REGRESSION (r181656): Animated tiled layers are missing content
+        https://bugs.webkit.org/show_bug.cgi?id=143911
+        rdar://problem/20596328
+
+        Reviewed by Darin Adler.
+
+        After r181656, all requestAnimationFrame was falling back to timers, and not
+        using the platform's DisplayRefreshMonitor, because of a Nullopt vs nullptr
+        fumble. As a result, GraphicsLayerUpdater (which updates tiled layers during
+        animations) was failing to do any updates.
+        
+        Replace this confusing Optional<> code with simpler code that just forces the
+        clients to make a DisplayRefreshMonitor if they can, first asking
+        ChromeClient, and then falling back to createDefaultDisplayRefreshMonitor().
+        
+        Make lots of things into references, and use C++11 initialization in some places.
+        
+        Add Internals API to allow a test to get the number of layer flushes that have
+        occurred.
+        
+        * dom/ScriptedAnimationController.cpp:
+        (WebCore::ScriptedAnimationController::ScriptedAnimationController):
+        (WebCore::ScriptedAnimationController::windowScreenDidChange):
+        (WebCore::ScriptedAnimationController::scheduleAnimation):
+        (WebCore::ScriptedAnimationController::createDisplayRefreshMonitor):
+        * dom/ScriptedAnimationController.h:
+        * page/ChromeClient.h:
+        * platform/graphics/DisplayRefreshMonitor.cpp:
+        (WebCore::DisplayRefreshMonitor::createDefaultDisplayRefreshMonitor):
+        (WebCore::DisplayRefreshMonitor::create):
+        (WebCore::DisplayRefreshMonitor::addClient):
+        (WebCore::DisplayRefreshMonitor::removeClient):
+        (WebCore::DisplayRefreshMonitor::displayDidRefresh):
+        * platform/graphics/DisplayRefreshMonitor.h:
+        * platform/graphics/DisplayRefreshMonitorClient.cpp:
+        (WebCore::DisplayRefreshMonitorClient::~DisplayRefreshMonitorClient):
+        * platform/graphics/DisplayRefreshMonitorClient.h:
+        * platform/graphics/DisplayRefreshMonitorManager.cpp:
+        (WebCore::DisplayRefreshMonitorManager::createMonitorForClient):
+        (WebCore::DisplayRefreshMonitorManager::registerClient):
+        (WebCore::DisplayRefreshMonitorManager::unregisterClient):
+        (WebCore::DisplayRefreshMonitorManager::scheduleAnimation):
+        (WebCore::DisplayRefreshMonitorManager::displayDidRefresh):
+        (WebCore::DisplayRefreshMonitorManager::windowScreenDidChange):
+        * platform/graphics/DisplayRefreshMonitorManager.h:
+        * platform/graphics/GraphicsLayerUpdater.cpp:
+        (WebCore::GraphicsLayerUpdater::GraphicsLayerUpdater):
+        (WebCore::GraphicsLayerUpdater::scheduleUpdate):
+        (WebCore::GraphicsLayerUpdater::screenDidChange):
+        (WebCore::GraphicsLayerUpdater::displayRefreshFired):
+        (WebCore::GraphicsLayerUpdater::createDisplayRefreshMonitor):
+        * platform/graphics/GraphicsLayerUpdater.h:
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::RenderLayerCompositor):
+        (WebCore::RenderLayerCompositor::flushPendingLayerChanges):
+        (WebCore::RenderLayerCompositor::notifyFlushBeforeDisplayRefresh):
+        (WebCore::RenderLayerCompositor::flushLayersSoon):
+        (WebCore::RenderLayerCompositor::createDisplayRefreshMonitor):
+        (WebCore::RenderLayerCompositor::startTrackingLayerFlushes):
+        (WebCore::RenderLayerCompositor::layerFlushCount):
+        * rendering/RenderLayerCompositor.h:
+        * testing/Internals.cpp:
+        (WebCore::Internals::startTrackingLayerFlushes):
+        (WebCore::Internals::layerFlushCount):
+        * testing/Internals.h:
+        * testing/Internals.idl:
+
+2015-04-17  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Large values for line-height cause integer overflow in RenderStyle::computedLineHeight
+        https://bugs.webkit.org/show_bug.cgi?id=143863
+
+        Reviewed by Rob Buis.
+
+        When we compute huge values for line-height through percentage or CSS
+        calc, we'll overflow the integer and later on
+        ShapeOutsideInfo::computeDeltasForContainingBlockLine will ASSERT
+        because it expects non-negative line height.  So for the computed
+        line-height, clamp to an integer range to avoid overflow. Note that
+        the code path for percentages here is safe because LayoutUnit clamps
+        to an int on conversion.
+
+        This is based on a Blink patch by Rob Buis.
+
+        Test: fast/shapes/shape-outside-floats/shape-outside-negative-line-height-crash.html
+
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::computedLineHeight): Clamp line-height to an
+            int to avoid overflow.
+
+2015-04-17  Beth Dakin  <bdakin@apple.com>
+
+        Force mouse events should go through normal mouse event handling code paths
+        https://bugs.webkit.org/show_bug.cgi?id=143749
+        -and corresponding-
+        rdar://problem/20472895
+
+        Reviewed by Dean Jackson.
+
+        This patch moves all of the code to dispatch mouseforcedown, mouseforceup, and 
+        mouseforcechanged into normal mouse event dispatching code. This patch leaves 
+        behind the cancel and click events because we plan to remove those, and it also 
+        leaves mouseforcewillbegin because that is necessarily a very different event more 
+        tied to the NSImmediateActionGestureRecognizer than these other events which are 
+        tied to NSResponder’s pressureChangeWithEvent.
+
+        New helper functions.
+        * dom/Document.cpp:
+        (WebCore::Document::hasListenerTypeForEventType):
+        * dom/Document.h:
+        * dom/Element.cpp:
+        (WebCore::isForceEvent):
+
+        Move the code to ensure the force events have listeners in order to fire to 
+        dispatchMouseEvent, and delete the old implementations.
+        (WebCore::Element::dispatchMouseEvent):
+        (WebCore::Element::dispatchMouseForceChanged): Deleted.
+        (WebCore::Element::dispatchMouseForceDown): Deleted.
+        (WebCore::Element::dispatchMouseForceUp): Deleted.
+        * dom/Element.h:
+
+        Perform a hit test and pipe the events through dispatchMouseEvent(). 
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::handleMouseForceEvent):
+        * page/EventHandler.h:
+
+        New types for the new events.
+        * platform/PlatformEvent.h:
+
+        Forward to EventHandler. 
+        * replay/UserInputBridge.cpp:
+        (WebCore::UserInputBridge::handleMouseForceEvent):
+        * replay/UserInputBridge.h:
+
+2015-04-17  Zalan Bujtas  <zalan@apple.com>
+
+        RenderTableCell::computeCollapsed*Border() should check if the cell is still attached to the render tree.
+        https://bugs.webkit.org/show_bug.cgi?id=143887
+        rdar://problem/20568989
+
+        Reviewed by Simon Fraser.
+
+        Detached table cell has no access to its parent table. This is a speculative fix to
+        avoid dereferencing the invalid table pointer.
+
+        * rendering/RenderTableCell.cpp:
+        (WebCore::RenderTableCell::computeCollapsedStartBorder):
+        (WebCore::RenderTableCell::computeCollapsedEndBorder):
+        (WebCore::RenderTableCell::computeCollapsedBeforeBorder):
+        (WebCore::RenderTableCell::computeCollapsedAfterBorder):
+
+2015-04-16  Roger Fong  <roger_fong@apple.com>
+
+        Update fullscreen button visibility on fullscreen change.
+        https://bugs.webkit.org/show_bug.cgi?id=143861.
+        <rdar://problem/20143218>
+
+        Reviewed by Eric Carlson.
+
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller): There is no need for hasVisualMedia to be a class variable.
+        (Controller.prototype.handleReadyStateChange):
+        (Controller.prototype.handleFullscreenChange):
+        (Controller.prototype.updateFullscreenButtons):
+
+2015-04-17  Daniel Bates  <dabates@apple.com>
+
+        REGRESSION: SVG does not support link dragging
+        https://bugs.webkit.org/show_bug.cgi?id=141597
+
+        Reviewed by Darin Adler.
+
+        Fixes an issue where a SVG hyperlink cannot be dragged. We should support
+        dragging an SVG A element just as we support dragging an HTML A element.
+
+        Test: fast/events/drag-and-drop-link.html
+
+        * page/DragController.cpp: Removed explicit include of header Element.h as it will
+        be ultimately included by HTMLAnchorElement.h, among other headers.
+        (WebCore::isDraggableLink): Added. Extracted code from HitTestResult::isLiveLink().
+        (WebCore::DragController::draggableElement): Call WebCore::isDraggableLink() to
+        determine whether a element is a hyperlink that can be dragged.
+        * page/DragController.h:
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::selectClosestWordOrLinkFromMouseEvent): Write code in terms of
+         WebCore::isDraggableLink().
+        * rendering/HitTestResult.cpp:
+        (WebCore::HitTestResult::isLiveLink): Deleted.
+        * rendering/HitTestResult.h:
+
+2015-04-17  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r182912 and r182920.
+        https://bugs.webkit.org/show_bug.cgi?id=143881
+
+        Build breakage in some configurations (Requested by ap on
+        #webkit).
+
+        Reverted changesets:
+
+        "Force mouse events should go through normal mouse event
+        handling code paths"
+        https://bugs.webkit.org/show_bug.cgi?id=143749
+        http://trac.webkit.org/changeset/182912
+
+        http://trac.webkit.org/changeset/182920
+
+2015-04-17  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        Fix review comments for https://bugs.webkit.org/show_bug.cgi?id=143590
+        following http://trac.webkit.org/changeset/182876.
+
+        Reviewed by Daniel Bates.
+
+        * ChangeLog:
+        Fixed typo.
+        
+        * style/StyleFontSizeFunctions.cpp:
+        (WebCore::Style::computedFontSizeFromSpecifiedSize):
+        Fixed a typo in an enum definition and changed the name of an argument.
+
+2015-04-17  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] Silent WebAudio buffers support
+        https://bugs.webkit.org/show_bug.cgi?id=143869
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.cpp:
+        (webKitWebAudioSrcLoop): Set gap flag on silent buffers. The audio
+        sink can then drop them and avoid un-necessary buffer processing.
+
+2015-04-17  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [SOUP] Redirect to non HTTP destination is broken
+        https://bugs.webkit.org/show_bug.cgi?id=143866
+
+        Reviewed by Sergio Villar Senin.
+
+        This is because we are passing true unconditionally as
+        isHTTPFamilyRequest parameter of
+        createSoupRequestAndMessageForHandle in continueAfterWillSendRequest.
+        We don't actually need to pass isHTTPFamilyRequest parameter to
+        createSoupRequestAndMessageForHandle, since it can simply check
+        that from the given request.
+
+        Covered by unit tets and also cache/disk-cache/disk-cache-redirect-to-data.html.
+
+        * platform/network/soup/ResourceHandleSoup.cpp:
+        (WebCore::continueAfterWillSendRequest):
+        (WebCore::createSoupRequestAndMessageForHandle):
+        (WebCore::ResourceHandle::start):
+
+2015-04-16  Alex Christensen  <achristensen@webkit.org>
+
+        Use less memory when compiling content extensions
+        https://bugs.webkit.org/show_bug.cgi?id=143857
+
+        Reviewed by Benjamin Poulain.
+
+        When compiling a content extension, we convert the rule list into several intermediate forms:
+
+        1) A String.
+        2) A JSValue from JSONParse in loadEncodedRules.
+        3) A Vector of ContentExtensionRules.
+        4) A CombinedURLFilters object representing the pieces of the regular expressions from the triggers.
+        5) A Vector of NFAs.
+        6) A DFA for each NFA.
+        7) A Vector of DFABytecode.
+        
+        Each one of these contains all the information contained in the content extension,
+        so we do not need to keep them all in memory at the same time like we are doing now.
+        When we are done with one, we can free that memory to greatly reduce the maximum memory usage while compiling.
+        The next step will be to reduce the copies of the original JSON String and to generate NFAs one at a time.
+
+        * contentextensions/CombinedURLFilters.cpp:
+        (WebCore::ContentExtensions::CombinedURLFilters::clear):
+        * contentextensions/CombinedURLFilters.h:
+        * contentextensions/ContentExtensionCompiler.cpp:
+        (WebCore::ContentExtensions::compileRuleList):
+        Clear structures when finished using them.
+
+2015-04-16  Brady Eidson  <beidson@apple.com>
+
+        Compiling a content extension fails when user's home directory is on a different volume from /var/tmp.
+        https://bugs.webkit.org/show_bug.cgi?id=143834
+
+        Reviewed by Anders Carlsson.
+
+        - Add moveFile() for a WK2 call site to use.
+        - Remove renameFile() as it is now dead code.
+
+        * platform/FileSystem.h:
+
+        * platform/gtk/FileSystemGtk.cpp:
+        (WebCore::renameFile): Deleted.
+
+        * platform/mac/FileSystemMac.mm:
+        (WebCore::moveFile):
+
+        * platform/posix/FileSystemPOSIX.cpp:
+        (WebCore::renameFile): Deleted.
+
+        * platform/win/FileSystemWin.cpp:
+        (WebCore::renameFile): Deleted.
+
+2015-04-16  Roger Fong  <roger_fong@apple.com>
+
+        Media element time displays shouldn't wrap.
+        https://bugs.webkit.org/show_bug.cgi?id=143854.
+        <rdar://problem/20284766>
+
+        Reviewed by Brent Fulgham.
+
+        * Modules/mediacontrols/mediaControlsApple.css:
+        (::-webkit-media-controls): Don't wrap any text.
+        (audio::-webkit-media-controls-time-remaining-display): Also increase remaining time display width by 1.
+        (audio::-webkit-media-controls-time-remaining-display.five-digit-time): Ditto.
+        (audio::-webkit-media-controls-time-remaining-display.six-digit-time): Ditto.
+
+2015-04-16  Chris Dumez  <cdumez@apple.com>
+
+        Add assertions to make sure ActiveDOMObject::suspend() / resume() / stop() overrides don't fire events
+        https://bugs.webkit.org/show_bug.cgi?id=143850
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add assertions to make sure ActiveDOMObject::suspend() / resume() / stop()
+        overrides don't fire events as this is not allowed. This would cause
+        arbitrary JS execution which would be very dangerous in these stages.
+
+        Firing JS events from these functions is a common source of crashes.
+
+        * Modules/websockets/WebSocket.cpp:
+        (WebCore::WebSocket::suspend):
+        (WebCore::WebSocket::resume):
+        * dom/ScriptExecutionContext.cpp:
+        (WebCore::ScriptExecutionContext::suspendActiveDOMObjects):
+        (WebCore::ScriptExecutionContext::resumeActiveDOMObjects):
+        (WebCore::ScriptExecutionContext::stopActiveDOMObjects):
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::suspend):
+        (WebCore::XMLHttpRequest::resume):
+        (WebCore::XMLHttpRequest::stop):
+
+2015-04-16  Brady Eidson  <beidson@apple.com>
+
+        Media element can manipulate DOM during Document destruction.
+        rdar://problem/20553898 and https://bugs.webkit.org/show_bug.cgi?id=143780
+
+        Reviewed by Jer Noble.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::configureMediaControls): Bail if the element has no active document.
+
+2015-04-13  Jer Noble  <jer.noble@apple.com>
+
+        [iOS] When simultaneously exiting-and-entering fullscreen, WebVideoFullscreenManager/Proxy becomes confused about what video element it represents.
+        https://bugs.webkit.org/show_bug.cgi?id=143680
+
+        Reviewed by Simon Fraser.
+
+        Add getters for the video's fullscreen layer, and be more tolerant about the order in which setVideoElement() and 
+        setWebVideoFullscreenInterface are called.
+
+        * html/HTMLMediaElement.h:
+        (WebCore::HTMLMediaElement::videoFullscreenLayer): Added simple getter.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h:
+        * platform/ios/WebVideoFullscreenModelVideoElement.h:
+        (WebCore::WebVideoFullscreenModelVideoElement::videoElement): Added simple getter.
+        (WebCore::WebVideoFullscreenModelVideoElement::setWebVideoFullscreenInterface): Deleted. Moved to .mm file.
+        * platform/ios/WebVideoFullscreenModelVideoElement.mm:
+        (WebVideoFullscreenModelVideoElement::WebVideoFullscreenModelVideoElement): Initialize ivars in the .h file.
+        (WebVideoFullscreenModelVideoElement::setWebVideoFullscreenInterface): Call those methods skipped in setVideoElement()
+            if m_videoFullscreenInterface had not yet been set.
+        (WebVideoFullscreenModelVideoElement::setVideoElement): Null-check m_videoFullscreenInterface.
+
+2015-04-16  Beth Dakin  <bdakin@apple.com>
+
+        Force mouse events should go through normal mouse event handling code paths
+        https://bugs.webkit.org/show_bug.cgi?id=143749
+        -and corresponding-
+        rdar://problem/20472895
+
+        Reviewed by Dean Jackson.
+
+        This patch moves all of the code to dispatch mouseforcedown, mouseforceup, and 
+        mouseforcechanged into normal mouse event dispatching code. This patch leaves 
+        behind the cancel and click events because we plan to remove those, and it also 
+        leaves mouseforcewillbegin because that is necessarily a very different event more 
+        tied to the NSImmediateActionGestureRecognizer than these other events which are 
+        tied to NSResponder’s pressureChangeWithEvent.
+
+        New helper functions.
+        * dom/Document.cpp:
+        (WebCore::Document::hasListenerTypeForEventType):
+        * dom/Document.h:
+        * dom/Element.cpp:
+        (WebCore::isForceEvent):
+
+        Move the code to ensure the force events have listeners in order to fire to 
+        dispatchMouseEvent, and delete the old implementations.
+        (WebCore::Element::dispatchMouseEvent):
+        (WebCore::Element::dispatchMouseForceChanged): Deleted.
+        (WebCore::Element::dispatchMouseForceDown): Deleted.
+        (WebCore::Element::dispatchMouseForceUp): Deleted.
+        * dom/Element.h:
+
+        Perform a hit test and pipe the events through dispatchMouseEvent(). 
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::handleMouseForceEvent):
+        * page/EventHandler.h:
+
+        New types for the new events.
+        * platform/PlatformEvent.h:
+
+        Forward to EventHandler. 
+        * replay/UserInputBridge.cpp:
+        (WebCore::UserInputBridge::handleMouseForceEvent):
+        * replay/UserInputBridge.h:
+
+2015-04-16  Tim Horton  <timothy_horton@apple.com>
+
+        Sites with both width=device-width and height=device-height load zoomed out
+        https://bugs.webkit.org/show_bug.cgi?id=143795
+        <rdar://problem/20369671>
+
+        Reviewed by Ben Poulain.
+
+        * page/ViewportConfiguration.cpp:
+        (WebCore::ViewportConfiguration::shouldIgnoreVerticalScalingConstraints):
+        Some sites specify both width=device-width and height=device-height, and
+        then lay out to device width but with a large amount of vertically scrollable content
+        (so, height=device-height was a lie).
+
+        In all other cases where we use device-width and device-height, we prefer
+        width=device-width over height=device-height, but in the code to ignore scaling constraints,
+        the two paths were completely separate. On sites that specify both, this
+        resulted in us attempting to zoom out to fit the entire height of the very tall page,
+        which isn't at all what we wanted. So, ignore height=device-height if a width is specified.
+
+2015-04-16  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r182517): WebSocket::suspend() causes error event to be fired
+        https://bugs.webkit.org/show_bug.cgi?id=143806
+        <rdar://problem/20559812>
+
+        Reviewed by Alexey Proskuryakov.
+
+        WebSocket::suspend() causes an error event to be fired after r182517.
+        This is not allowed as firing the event could trigger arbitrary JS
+        execution, which is no longer allowed at this point.
+
+        This patch delays the error event firing until after
+        WebSocket::resume() is called, similarly to what we already do for
+        the close event.
+
+        Also add assertions in WebSocket::suspend() / WebSocket::resume()
+        that will be hit if JS events are fired from within these functions.
+        The pre-existing closed-when-entering-page-cache.html test is hitting
+        one of these assertions without the fix above.
+
+        Tests:
+          - http/tests/websocket/tests/hybi/closed-when-entering-page-cache.html
+          - http/tests/websocket/tests/hybi/stop-on-resume-in-error-handler.html
+
+        * Modules/websockets/WebSocket.cpp:
+        (WebCore::WebSocket::suspend):
+        (WebCore::WebSocket::resume):
+        (WebCore::WebSocket::resumeTimerFired):
+        (WebCore::WebSocket::stop):
+        (WebCore::WebSocket::didReceiveMessageError):
+        (WebCore::WebSocket::didClose):
+        (WebCore::WebSocket::dispatchOrQueueEvent):
+        * Modules/websockets/WebSocket.h:
+
+2015-04-15  Roger Fong  <roger_fong@apple.com>
+
+        Adjustments to button graphics for media controls.
+        https://bugs.webkit.org/show_bug.cgi?id=143797.
+        <rdar://problem/20083708>
+
+        Reviewed by Dean Jackson.
+
+        These changes are visual in nature and mainly affect the buttons.
+        I've gotten rid of the text-shadow for all the buttons,
+        used plus-lighter blending mode and changed the button opacity to reflect the specs,
+        and made all the buttons turn opaque white when active.
+
+        * Modules/mediacontrols/mediaControlsApple.css:
+        (audio::-webkit-media-controls-panel button):
+        (audio::-webkit-media-controls-rewind-button):
+        (audio::-webkit-media-controls-play-button):
+        (audio::-webkit-media-controls-play-button.paused):
+        (video::-webkit-media-controls-volume-max-button):
+        (video::-webkit-media-controls-volume-slider):
+        (video::-webkit-media-controls-volume-min-button):
+        (audio::-webkit-media-controls-wireless-playback-picker-button):
+        (audio::-webkit-media-controls-toggle-closed-captions-button):
+        (audio::-webkit-media-controls-closed-captions-container li.selected:hover::before):
+        (audio::-webkit-media-controls-fullscreen-button):
+        (audio::-webkit-media-controls-fullscreen-button.exit):
+        (audio::-webkit-media-controls-status-display):
+        (audio::-webkit-media-controls-timeline):
+        (audio::-webkit-media-controls-time-remaining-display):
+        (video:-webkit-full-screen::-webkit-media-controls-volume-max-button):
+        (video:-webkit-full-screen::-webkit-media-controls-volume-min-button):
+        (video:-webkit-full-screen::-webkit-media-controls-play-button):
+        (video:-webkit-full-screen::-webkit-media-controls-play-button.paused):
+        (video:-webkit-full-screen::-webkit-media-controls-seek-back-button):
+        (video:-webkit-full-screen::-webkit-media-controls-seek-forward-button):
+        (video::-webkit-media-controls-volume-max-button:active):
+        (video::-webkit-media-controls-volume-min-button:active):
+        (audio::-webkit-media-controls-toggle-closed-captions-button:active):
+        (audio::-webkit-media-controls-rewind-button:active):
+        (audio::-webkit-media-controls-play-button:active):
+        (video:-webkit-full-screen::-webkit-media-controls-volume-max-button:active):
+        (video:-webkit-full-screen::-webkit-media-controls-volume-min-button:active):
+        (video:-webkit-full-screen::-webkit-media-controls-play-button:active):
+        (video:-webkit-full-screen::-webkit-media-controls-seek-back-button:active):
+        (video:-webkit-full-screen::-webkit-media-controls-seek-forward-button:active):
+        (audio::-webkit-media-controls-fullscreen-button:active):
+
+        Using the pseudo id itself here currently does not work, which is why we rely on the button.* selector for these.
+        (video:-webkit-full-screen::-webkit-media-controls-panel button.paused:active):
+        (audio::-webkit-media-controls-panel button.paused:active):
+        (audio::-webkit-media-controls-panel button.exit:active):
+ 
+        Draw volume slider knob as opaque white when active.
+        Adjust colors of timeline and volume sliders now that we are using plus-lighter blending.
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller):
+        (Controller.prototype.createControls):
+        (Controller.prototype.handleVolumeSliderMouseDown):
+        (Controller.prototype.handleVolumeSliderMouseUp):
+        (Controller.prototype.drawTimelineBackground):
+        (Controller.prototype.drawVolumeBackground):
+
+2015-04-15  Simon Fraser  <simon.fraser@apple.com>
+
+        Pull emoji-position adjustment code into its own function
+        https://bugs.webkit.org/show_bug.cgi?id=143592
+
+        Reviewed by Myles C. Maxfield.
+
+        First step to cleaning up FontCascade::drawGlyphs(). Pull iOS-only code related to
+        emoji positioning into its own function.
+
+        * platform/graphics/cocoa/FontCascadeCocoa.mm:
+        (WebCore::pointAdjustedForEmoji):
+        (WebCore::FontCascade::drawGlyphs):
+
+2015-04-16  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [iOS] Delete hardcoded font fallback tables
+        https://bugs.webkit.org/show_bug.cgi?id=143583
+
+        Reviewed by Darin Adler
+
+        Instead of hardcoding which font to use for a particular character, use
+        CTFontCreatePhysicalFontDescriptorForCharactersWithLanguage().
+
+        Updated test expected results:
+            editing/selection/vertical-rl-rtl-extend-line-backward-br.html
+            editing/selection/vertical-rl-rtl-extend-line-backward-p.html
+            editing/selection/vertical-rl-rtl-extend-line-forward-br.html
+            editing/selection/vertical-rl-rtl-extend-line-forward-p.html
+            fast/text/international/danda-space.html
+            fast/text/international/thai-baht-space.html
+
+        * platform/graphics/ios/FontCacheIOS.mm:
+        (WebCore::FontCache::getSystemFontFallbackForCharacters):
+        (WebCore::FontCache::systemFallbackForCharacters):
+        * platform/spi/cocoa/CoreTextSPI.h:
+
+2015-04-16  Per Arne Vollan  <peavo@outlook.com>
+
+        [WinCairo] Compile error when environment variable WEBKITLIBRARIESDIR is not defined.
+        https://bugs.webkit.org/show_bug.cgi?id=143828
+
+        Reviewed by Brent Fulgham.
+
+        Python throws an exception when calling os.environ['WEBKITLIBRARIESDIR'] and
+        WEBKITLIBRARIESDIR is not defined. WEBKITLIBRARIESDIR is obsolete, we can remove it.
+
+        * AVFoundationSupport.py:
+        (lookFor):
+
+2015-04-16  Alexey Proskuryakov  <ap@apple.com>
+
+        Minor AudioContext cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=143816
+
+        Reviewed by Jer Noble.
+
+        * Modules/webaudio/AudioContext.cpp:
+        (WebCore::AudioContext::~AudioContext):
+        (WebCore::AudioContext::lazyInitialize):
+        (WebCore::AudioContext::stop):
+        (WebCore::AudioContext::derefNode):
+        (WebCore::AudioContext::scheduleNodeDeletion):
+        (WebCore::AudioContext::deleteMarkedNodes):
+        (WebCore::AudioContext::stopDispatch): Deleted.
+        (WebCore::AudioContext::deleteMarkedNodesDispatch): Deleted.
+        * Modules/webaudio/AudioContext.h:
+
+        * Modules/webaudio/AudioNode.cpp: (WebCore::AudioNode::~AudioNode):
+
+2015-04-16  Chris Dumez  <cdumez@apple.com>
+
+        Unreviewed attempt to fix Windows build after r182881.
+
+        Add missing header include.
+
+        * page/PageConsoleClient.h:
+
+2015-04-16  Chris Dumez  <cdumez@apple.com>
+
+        Tests introduced in r182877 are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=143784
+
+        Reviewed by Alexey Proskuryakov.
+
+        Tests introduced in r182877 are flaky as the line number sometimes
+        appears in the console messages. This patch updates the console
+        logging code so that no Document is provided when logging. Therefore,
+        no line number will ever be displayed. In this case, I don't think
+        having the line number is terribly useful anyway.
+
+        * css/StyleSheetContents.cpp:
+        (WebCore::StyleSheetContents::parseAuthorStyleSheet):
+
+2015-04-15  Simon Fraser  <simon.fraser@apple.com>
+
+        We should dump GraphicsLayer's anchorPoint z component
+        https://bugs.webkit.org/show_bug.cgi?id=143815
+
+        Reviewed by Tim Horton.
+
+        We didn't include the z component of a layer's anchor point when dumping.
+        Dump if it's non-zero (to avoid having to change lots of test output).
+        No test with non-zero z appears to dump layers.
+
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::dumpProperties):
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::requireTransformOrigin): Remove a FIXME which, on further consideration,
+        is wrong.
+
+2015-04-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Mac] Disable "Save to Downloads" option for local files
+        https://bugs.webkit.org/show_bug.cgi?id=143794
+
+        Reviewed by Tim Horton.
+
+        Disable the Image and Media download options if the download
+        target is a local file. We can only download web resources;
+        anything else is actually a no-op.
+
+        * page/ContextMenuController.cpp:
+        (WebCore::ContextMenuController::checkOrEnableIfNeeded): Disable
+        menu item if appropriate.
+
+2015-04-15  Chris Dumez  <cdumez@apple.com>
+
+        Add a console message when a stylesheet is not parsed due to invalid MIME type
+        https://bugs.webkit.org/show_bug.cgi?id=143784
+
+        Reviewed by Joseph Pecoraro.
+
+        After r180020, we no longer have a quirks mode exception for CSS MIME
+        types. This means that we'll start rejecting stylesheets that were
+        previously accepted due to this quirk. In this case we log a console
+        message to help Web developers understand why their stylesheet is being
+        rejected.
+
+        * css/StyleRuleImport.cpp:
+        (WebCore::StyleRuleImport::setCSSStyleSheet):
+
+        * css/StyleSheetContents.cpp:
+        (WebCore::StyleSheetContents::parseAuthorStyleSheet):
+        - Initialize hasValidMIMEType to true so that it ends up being false
+          only when canUseSheet(hasValidMIMEType) is called and we've determined
+          the MIME type is indeed invalid. Otherwise, hasValidMIMEType would
+          also be false when m_data is null or empty in
+          CachedCSSStyleSheet::sheetText() and we don't want to display the MIME
+          type error in this case.
+        - If hasValidMIMEType is false, display the console message and abort
+          early. We don't need to execute the rest of the function in this case
+          as sheetText is a null String and there is no point in trying to parse
+          it.
+        - Drop handling of !hasValidMIMEType && !hasSyntacticallyValidCSSHeader()
+          as this can no longer be reached. This handling no longer makes sense
+          after r180020 as sheetText() will now always return a null String if
+          the MIME type is invalid (as we no longer support the CSS MIME type
+          quirks mode).
+
+        * css/StyleSheetContents.h:
+        * html/HTMLLinkElement.cpp:
+        (WebCore::HTMLLinkElement::setCSSStyleSheet):
+
+2015-04-15  Said Abou-Hallawa  <said@apple.com>
+
+        Minimum font size pref breaks SVG text very badly.
+        https://bugs.webkit.org/show_bug.cgi?id=143590.
+
+        Reviewed by Simon Fraser.
+
+        When enabling the minimum font size perf, the computed font size is set
+        to the minimum font size if the computed value is smaller than the minimum.
+        The bug happens because the SVG text element applies its scaling on the
+        computed value after applying the minimum font size rule. This means the
+        final computed value for the font size will be the scaling of the minimum
+        font size and not minimum font size itself. What we need is to postpone
+        applying the minimum font size rules, till the SVG scaling is applied.
+
+        Tests: svg/text/font-small-enlarged-minimum-larger.svg
+               svg/text/font-small-enlarged-minimum-smaller.svg
+
+        * rendering/svg/RenderSVGInlineText.cpp:
+        (WebCore::RenderSVGInlineText::computeNewScaledFontForStyle): Call
+        computedFontSizeFromSpecifiedSizeForSVGInlineText() even if scalingFactor
+        is 1. We need to make sure the minimum font size rules are applied. This
+        function was assuming the mininum font size rule was applied when resolving
+        the style. This is not true anymore for the SVG text.
+
+        * style/StyleFontSizeFunctions.cpp:
+        (WebCore::Style::computedFontSizeFromSpecifiedSize): Do not apply the
+        minimum size rules for the SVG element until it applies its scaling to
+        the font size.
+
 2015-04-15  Mark Lam  <mark.lam@apple.com>
 
         Remove obsolete VMInspector debugging tool.

@@ -953,6 +953,8 @@
 		5DBB151B131D0B310056AD36 /* testapi.js in Copy Support Script */ = {isa = PBXBuildFile; fileRef = 14D857740A4696C80032146C /* testapi.js */; };
 		5DBB1525131D0BD70056AD36 /* minidom.js in Copy Support Script */ = {isa = PBXBuildFile; fileRef = 1412110D0A48788700480255 /* minidom.js */; };
 		5DE6E5B30E1728EC00180407 /* create_hash_table in Headers */ = {isa = PBXBuildFile; fileRef = F692A8540255597D01FF60F7 /* create_hash_table */; settings = {ATTRIBUTES = (); }; };
+		62D2D38F1ADF103F000206C1 /* FunctionRareData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62D2D38D1ADF103F000206C1 /* FunctionRareData.cpp */; };
+		62D2D3901ADF103F000206C1 /* FunctionRareData.h in Headers */ = {isa = PBXBuildFile; fileRef = 62D2D38E1ADF103F000206C1 /* FunctionRareData.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		6507D29E0E871E5E00D7D896 /* JSTypeInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 6507D2970E871E4A00D7D896 /* JSTypeInfo.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		651122FD14046A4C002B101D /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 932F5BD90822A1C700736975 /* JavaScriptCore.framework */; };
 		651122FE14046A4C002B101D /* libedit.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D5D8AD00E0D0EBE00F9C692 /* libedit.dylib */; };
@@ -1339,12 +1341,6 @@
 		A74DEF96182D991400522C22 /* JSMapIterator.h in Headers */ = {isa = PBXBuildFile; fileRef = A74DEF90182D991400522C22 /* JSMapIterator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A75706DE118A2BCF0057F88F /* JITArithmetic32_64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A75706DD118A2BCF0057F88F /* JITArithmetic32_64.cpp */; };
 		A75EE9B218AAB7E200AAD043 /* BuiltinNames.h in Headers */ = {isa = PBXBuildFile; fileRef = A75EE9B018AAB7E200AAD043 /* BuiltinNames.h */; };
-		A76140CD182982CB00750624 /* ArgumentsIteratorConstructor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A76140C7182982CB00750624 /* ArgumentsIteratorConstructor.cpp */; };
-		A76140CE182982CB00750624 /* ArgumentsIteratorConstructor.h in Headers */ = {isa = PBXBuildFile; fileRef = A76140C8182982CB00750624 /* ArgumentsIteratorConstructor.h */; };
-		A76140CF182982CB00750624 /* ArgumentsIteratorPrototype.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A76140C9182982CB00750624 /* ArgumentsIteratorPrototype.cpp */; };
-		A76140D0182982CB00750624 /* ArgumentsIteratorPrototype.h in Headers */ = {isa = PBXBuildFile; fileRef = A76140CA182982CB00750624 /* ArgumentsIteratorPrototype.h */; };
-		A76140D1182982CB00750624 /* JSArgumentsIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A76140CB182982CB00750624 /* JSArgumentsIterator.cpp */; };
-		A76140D2182982CB00750624 /* JSArgumentsIterator.h in Headers */ = {isa = PBXBuildFile; fileRef = A76140CC182982CB00750624 /* JSArgumentsIterator.h */; };
 		A766B44F0EE8DCD1009518CA /* ExecutableAllocator.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B48DB50EE74CFC00DCBDB6 /* ExecutableAllocator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A767B5B517A0B9650063D940 /* DFGLoopPreHeaderCreationPhase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A767B5B317A0B9650063D940 /* DFGLoopPreHeaderCreationPhase.cpp */; };
 		A767B5B617A0B9650063D940 /* DFGLoopPreHeaderCreationPhase.h in Headers */ = {isa = PBXBuildFile; fileRef = A767B5B417A0B9650063D940 /* DFGLoopPreHeaderCreationPhase.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -1646,6 +1642,12 @@
 		FE0D4A091ABA2437002F54BF /* GlobalContextWithFinalizerTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE0D4A071ABA2437002F54BF /* GlobalContextWithFinalizerTest.cpp */; };
 		FE20CE9D15F04A9500DF3430 /* LLIntCLoop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE20CE9B15F04A9500DF3430 /* LLIntCLoop.cpp */; };
 		FE20CE9E15F04A9500DF3430 /* LLIntCLoop.h in Headers */ = {isa = PBXBuildFile; fileRef = FE20CE9C15F04A9500DF3430 /* LLIntCLoop.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		FE4BFF2B1AD476E700088F87 /* FunctionOverrides.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE4BFF291AD476E700088F87 /* FunctionOverrides.cpp */; };
+		FE4BFF2C1AD476E700088F87 /* FunctionOverrides.h in Headers */ = {isa = PBXBuildFile; fileRef = FE4BFF2A1AD476E700088F87 /* FunctionOverrides.h */; };
+		FE384EE51ADDB7AD0055DE2C /* JSDollarVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE384EE11ADDB7AD0055DE2C /* JSDollarVM.cpp */; };
+		FE384EE61ADDB7AD0055DE2C /* JSDollarVM.h in Headers */ = {isa = PBXBuildFile; fileRef = FE384EE21ADDB7AD0055DE2C /* JSDollarVM.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		FE384EE71ADDB7AD0055DE2C /* JSDollarVMPrototype.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE384EE31ADDB7AD0055DE2C /* JSDollarVMPrototype.cpp */; };
+		FE384EE81ADDB7AD0055DE2C /* JSDollarVMPrototype.h in Headers */ = {isa = PBXBuildFile; fileRef = FE384EE41ADDB7AD0055DE2C /* JSDollarVMPrototype.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		FE5932A7183C5A2600A1ECCC /* VMEntryScope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5932A5183C5A2600A1ECCC /* VMEntryScope.cpp */; };
 		FE5932A8183C5A2600A1ECCC /* VMEntryScope.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5932A6183C5A2600A1ECCC /* VMEntryScope.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		FE7BA60F1A1A7CEC00F1F7B4 /* HeapVerifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE7BA60D1A1A7CEC00F1F7B4 /* HeapVerifier.cpp */; };
@@ -2644,6 +2646,8 @@
 		5DAFD6CB146B686300FBEFB4 /* JSC.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = JSC.xcconfig; sourceTree = "<group>"; };
 		5DDDF44614FEE72200B4FB4D /* LLIntDesiredOffsets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LLIntDesiredOffsets.h; path = LLIntOffsets/LLIntDesiredOffsets.h; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DE3D0F40DD8DDFB00468714 /* WebKitAvailability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebKitAvailability.h; sourceTree = "<group>"; };
+		62D2D38D1ADF103F000206C1 /* FunctionRareData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FunctionRareData.cpp; sourceTree = "<group>"; };
+		62D2D38E1ADF103F000206C1 /* FunctionRareData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunctionRareData.h; sourceTree = "<group>"; };
 		6507D2970E871E4A00D7D896 /* JSTypeInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSTypeInfo.h; sourceTree = "<group>"; };
 		651122E5140469BA002B101D /* testRegExp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = testRegExp.cpp; sourceTree = "<group>"; };
 		6511230514046A4C002B101D /* testRegExp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testRegExp; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3082,12 +3086,6 @@
 		A74DEF90182D991400522C22 /* JSMapIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSMapIterator.h; sourceTree = "<group>"; };
 		A75706DD118A2BCF0057F88F /* JITArithmetic32_64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JITArithmetic32_64.cpp; sourceTree = "<group>"; };
 		A75EE9B018AAB7E200AAD043 /* BuiltinNames.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BuiltinNames.h; sourceTree = "<group>"; };
-		A76140C7182982CB00750624 /* ArgumentsIteratorConstructor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ArgumentsIteratorConstructor.cpp; sourceTree = "<group>"; };
-		A76140C8182982CB00750624 /* ArgumentsIteratorConstructor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArgumentsIteratorConstructor.h; sourceTree = "<group>"; };
-		A76140C9182982CB00750624 /* ArgumentsIteratorPrototype.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = ArgumentsIteratorPrototype.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		A76140CA182982CB00750624 /* ArgumentsIteratorPrototype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArgumentsIteratorPrototype.h; sourceTree = "<group>"; };
-		A76140CB182982CB00750624 /* JSArgumentsIterator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSArgumentsIterator.cpp; sourceTree = "<group>"; };
-		A76140CC182982CB00750624 /* JSArgumentsIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSArgumentsIterator.h; sourceTree = "<group>"; };
 		A767B5B317A0B9650063D940 /* DFGLoopPreHeaderCreationPhase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DFGLoopPreHeaderCreationPhase.cpp; path = dfg/DFGLoopPreHeaderCreationPhase.cpp; sourceTree = "<group>"; };
 		A767B5B417A0B9650063D940 /* DFGLoopPreHeaderCreationPhase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DFGLoopPreHeaderCreationPhase.h; path = dfg/DFGLoopPreHeaderCreationPhase.h; sourceTree = "<group>"; };
 		A76C51741182748D00715B05 /* JSInterfaceJIT.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSInterfaceJIT.h; sourceTree = "<group>"; };
@@ -3424,6 +3422,12 @@
 		FE0D4A081ABA2437002F54BF /* GlobalContextWithFinalizerTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GlobalContextWithFinalizerTest.h; path = API/tests/GlobalContextWithFinalizerTest.h; sourceTree = "<group>"; };
 		FE20CE9B15F04A9500DF3430 /* LLIntCLoop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LLIntCLoop.cpp; path = llint/LLIntCLoop.cpp; sourceTree = "<group>"; };
 		FE20CE9C15F04A9500DF3430 /* LLIntCLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LLIntCLoop.h; path = llint/LLIntCLoop.h; sourceTree = "<group>"; };
+		FE4BFF291AD476E700088F87 /* FunctionOverrides.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FunctionOverrides.cpp; sourceTree = "<group>"; };
+		FE4BFF2A1AD476E700088F87 /* FunctionOverrides.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunctionOverrides.h; sourceTree = "<group>"; };
+		FE384EE11ADDB7AD0055DE2C /* JSDollarVM.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSDollarVM.cpp; sourceTree = "<group>"; };
+		FE384EE21ADDB7AD0055DE2C /* JSDollarVM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSDollarVM.h; sourceTree = "<group>"; };
+		FE384EE31ADDB7AD0055DE2C /* JSDollarVMPrototype.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSDollarVMPrototype.cpp; sourceTree = "<group>"; };
+		FE384EE41ADDB7AD0055DE2C /* JSDollarVMPrototype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSDollarVMPrototype.h; sourceTree = "<group>"; };
 		FE5932A5183C5A2600A1ECCC /* VMEntryScope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VMEntryScope.cpp; sourceTree = "<group>"; };
 		FE5932A6183C5A2600A1ECCC /* VMEntryScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VMEntryScope.h; sourceTree = "<group>"; };
 		FE7BA60D1A1A7CEC00F1F7B4 /* HeapVerifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HeapVerifier.cpp; sourceTree = "<group>"; };
@@ -4284,10 +4288,6 @@
 			children = (
 				BCF605110E203EF800B9A64D /* ArgList.cpp */,
 				BCF605120E203EF800B9A64D /* ArgList.h */,
-				A76140C7182982CB00750624 /* ArgumentsIteratorConstructor.cpp */,
-				A76140C8182982CB00750624 /* ArgumentsIteratorConstructor.h */,
-				A76140C9182982CB00750624 /* ArgumentsIteratorPrototype.cpp */,
-				A76140CA182982CB00750624 /* ArgumentsIteratorPrototype.h */,
 				0FE0500C1AA9091100D33B33 /* ArgumentsMode.h */,
 				0F6B1CB71861244C00845D97 /* ArityCheckMode.h */,
 				A7A8AF2517ADB5F2005AB174 /* ArrayBuffer.cpp */,
@@ -4397,6 +4397,8 @@
 				52B310FA1974AE610080857C /* FunctionHasExecutedCache.h */,
 				F692A85C0255597D01FF60F7 /* FunctionPrototype.cpp */,
 				F692A85D0255597D01FF60F7 /* FunctionPrototype.h */,
+				62D2D38D1ADF103F000206C1 /* FunctionRareData.cpp */,
+				62D2D38E1ADF103F000206C1 /* FunctionRareData.h */,
 				0FE050111AA9091100D33B33 /* GenericArguments.h */,
 				0FE050121AA9091100D33B33 /* GenericArgumentsInlines.h */,
 				0FE050131AA9091100D33B33 /* GenericOffset.h */,
@@ -4425,8 +4427,6 @@
 				86BF642A148DB2B5004DE36A /* Intrinsic.h */,
 				70113D491A8DB093003848C4 /* IteratorOperations.cpp */,
 				70113D4A1A8DB093003848C4 /* IteratorOperations.h */,
-				A76140CB182982CB00750624 /* JSArgumentsIterator.cpp */,
-				A76140CC182982CB00750624 /* JSArgumentsIterator.h */,
 				93ADFCE60CCBD7AC00D30B08 /* JSArray.cpp */,
 				938772E5038BFE19008635CE /* JSArray.h */,
 				0F2B66B417B6B5AB00A7AE3F /* JSArrayBuffer.cpp */,
@@ -4752,6 +4752,12 @@
 				86B5822F14D2373B00A9C306 /* CodeProfile.h */,
 				8603CEF214C7546400AE59E3 /* CodeProfiling.cpp */,
 				8603CEF314C7546400AE59E3 /* CodeProfiling.h */,
+				FE4BFF291AD476E700088F87 /* FunctionOverrides.cpp */,
+				FE4BFF2A1AD476E700088F87 /* FunctionOverrides.h */,
+				FE384EE11ADDB7AD0055DE2C /* JSDollarVM.cpp */,
+				FE384EE21ADDB7AD0055DE2C /* JSDollarVM.h */,
+				FE384EE31ADDB7AD0055DE2C /* JSDollarVMPrototype.cpp */,
+				FE384EE41ADDB7AD0055DE2C /* JSDollarVMPrototype.h */,
 				86B5822C14D22F5F00A9C306 /* ProfileTreeNode.h */,
 				86B5826A14D35D5100A9C306 /* TieredMMapArray.h */,
 			);
@@ -5540,8 +5546,6 @@
 				BC18C3E50E16F5CD00B34460 /* APICast.h in Headers */,
 				BCF605140E203EF800B9A64D /* ArgList.h in Headers */,
 				2A88067919107D5500CB0BBB /* DFGFunctionWhitelist.h in Headers */,
-				A76140CE182982CB00750624 /* ArgumentsIteratorConstructor.h in Headers */,
-				A76140D0182982CB00750624 /* ArgumentsIteratorPrototype.h in Headers */,
 				0F6B1CCA18641DF800845D97 /* ArityCheckFailReturnThunks.h in Headers */,
 				0F6B1CB91861244C00845D97 /* ArityCheckMode.h in Headers */,
 				A1A009C11831A26E00CF8711 /* ARM64Assembler.h in Headers */,
@@ -5555,6 +5559,8 @@
 				A5EA70EC19F5B3EA0098F5EC /* generate_cpp_alternate_backend_dispatcher_header.py in Headers */,
 				C4F4B6F31A05C944005CAB76 /* cpp_generator_templates.py in Headers */,
 				A5EF9B151A1D43FA00702E90 /* generate_cpp_backend_dispatcher_implementation.py in Headers */,
+				FE384EE81ADDB7AD0055DE2C /* JSDollarVMPrototype.h in Headers */,
+				FE384EE61ADDB7AD0055DE2C /* JSDollarVM.h in Headers */,
 				6AD2CB4D19B9140100065719 /* DebuggerEvalEnabler.h in Headers */,
 				658D3A5619638268003C45D6 /* VMEntryRecord.h in Headers */,
 				A5EF9B161A1D440000702E90 /* generate_cpp_frontend_dispatcher_header.py in Headers */,
@@ -5624,6 +5630,7 @@
 				0F2B9CF719D0BAC100B1D1B5 /* FTLExitTimeObjectMaterialization.h in Headers */,
 				0FB7F39715ED8E4600F167B2 /* Butterfly.h in Headers */,
 				0FB7F39815ED8E4600F167B2 /* ButterflyInlines.h in Headers */,
+				62D2D3901ADF103F000206C1 /* FunctionRareData.h in Headers */,
 				C2FCAE1117A9C24E0034C735 /* BytecodeBasicBlock.h in Headers */,
 				0F21C27F14BEAA8200ADC64B /* BytecodeConventions.h in Headers */,
 				969A07230ED1CE3300F1F681 /* BytecodeGenerator.h in Headers */,
@@ -6032,7 +6039,6 @@
 				BC18C4160E16F5CD00B34460 /* JSLexicalEnvironment.h in Headers */,
 				840480131021A1D9008E7F01 /* JSAPIValueWrapper.h in Headers */,
 				C2CF39C216E15A8100DD69BE /* JSAPIWrapperObject.h in Headers */,
-				A76140D2182982CB00750624 /* JSArgumentsIterator.h in Headers */,
 				BC18C4170E16F5CD00B34460 /* JSArray.h in Headers */,
 				0F2B66E317B6B5AB00A7AE3F /* JSArrayBuffer.h in Headers */,
 				0F2B66E517B6B5AB00A7AE3F /* JSArrayBufferConstructor.h in Headers */,
@@ -6210,6 +6216,7 @@
 				A78507D717CBC6FD0011F6E7 /* MapData.h in Headers */,
 				0A6441519420A6C61AD1882E /* MapDataInlines.h in Headers */,
 				A74DEF92182D991400522C22 /* MapIteratorConstructor.h in Headers */,
+				FE4BFF2C1AD476E700088F87 /* FunctionOverrides.h in Headers */,
 				A74DEF94182D991400522C22 /* MapIteratorPrototype.h in Headers */,
 				A700873E17CBE8D300C3E643 /* MapPrototype.h in Headers */,
 				C2B916C214DA014E00CBAC86 /* MarkedAllocator.h in Headers */,
@@ -6927,8 +6934,6 @@
 				0FE050151AA9091100D33B33 /* DirectArgumentsOffset.cpp in Sources */,
 				0F55F0F414D1063900AC7649 /* AbstractPC.cpp in Sources */,
 				147F39BD107EC37600427A48 /* ArgList.cpp in Sources */,
-				A76140CD182982CB00750624 /* ArgumentsIteratorConstructor.cpp in Sources */,
-				A76140CF182982CB00750624 /* ArgumentsIteratorPrototype.cpp in Sources */,
 				0F6B1CC918641DF800845D97 /* ArityCheckFailReturnThunks.cpp in Sources */,
 				0F743BAA16B88249009F9277 /* ARM64Disassembler.cpp in Sources */,
 				86D3B2C310156BDE002865E7 /* ARMAssembler.cpp in Sources */,
@@ -7023,6 +7028,7 @@
 				0F3B3A1A153E68F2003ED0FF /* DFGConstantFoldingPhase.cpp in Sources */,
 				0FBE0F7216C1DB030082C5E8 /* DFGCPSRethreadingPhase.cpp in Sources */,
 				A7D89CF517A0B8CC00773AD8 /* DFGCriticalEdgeBreakingPhase.cpp in Sources */,
+				FE384EE71ADDB7AD0055DE2C /* JSDollarVMPrototype.cpp in Sources */,
 				0FFFC95914EF90A600C72532 /* DFGCSEPhase.cpp in Sources */,
 				0F2FC77216E12F710038D976 /* DFGDCEPhase.cpp in Sources */,
 				0F8F2B99172F04FF007DBDA5 /* DFGDesiredIdentifiers.cpp in Sources */,
@@ -7248,13 +7254,13 @@
 				A7C1E8E4112E72EF00A37F98 /* JITPropertyAccess32_64.cpp in Sources */,
 				0F766D2815A8CC1E008F363E /* JITStubRoutine.cpp in Sources */,
 				0F766D2B15A8CC38008F363E /* JITStubRoutineSet.cpp in Sources */,
+				FE4BFF2B1AD476E700088F87 /* FunctionOverrides.cpp in Sources */,
 				14A23D750F4E1ABB0023CDAD /* JITStubs.cpp in Sources */,
 				0F5EF91E16878F7A003E5C25 /* JITThunks.cpp in Sources */,
 				0FC712E217CD8791008CC93C /* JITToDFGDeferredCompilationCallback.cpp in Sources */,
 				140B7D1D0DC69AF7009C42B8 /* JSLexicalEnvironment.cpp in Sources */,
 				140566C4107EC255005DBC8D /* JSAPIValueWrapper.cpp in Sources */,
 				C2CF39C116E15A8100DD69BE /* JSAPIWrapperObject.mm in Sources */,
-				A76140D1182982CB00750624 /* JSArgumentsIterator.cpp in Sources */,
 				147F39D0107EC37600427A48 /* JSArray.cpp in Sources */,
 				0F2B66E217B6B5AB00A7AE3F /* JSArrayBuffer.cpp in Sources */,
 				0F2B66E417B6B5AB00A7AE3F /* JSArrayBufferConstructor.cpp in Sources */,
@@ -7278,6 +7284,7 @@
 				0F2B66EB17B6B5AB00A7AE3F /* JSDataView.cpp in Sources */,
 				0F2B66ED17B6B5AB00A7AE3F /* JSDataViewPrototype.cpp in Sources */,
 				0F2D4DE819832DAC007D4B19 /* ToThisStatus.cpp in Sources */,
+				FE384EE51ADDB7AD0055DE2C /* JSDollarVM.cpp in Sources */,
 				978801401471AD920041B016 /* JSDateMath.cpp in Sources */,
 				0FE050171AA9091100D33B33 /* DirectArguments.cpp in Sources */,
 				140566D6107EC271005DBC8D /* JSFunction.cpp in Sources */,
@@ -7445,6 +7452,7 @@
 				A5BA15EC182340B400A82E69 /* RemoteInspectorDebuggableConnection.mm in Sources */,
 				A5BA15EE182340B400A82E69 /* RemoteInspectorXPCConnection.mm in Sources */,
 				0F24E55017EE274900ABB217 /* Repatch.cpp in Sources */,
+				62D2D38F1ADF103F000206C1 /* FunctionRareData.cpp in Sources */,
 				0F7700921402FF3C0078EB39 /* SamplingCounter.cpp in Sources */,
 				1429D8850ED21C3D00B89619 /* SamplingTool.cpp in Sources */,
 				70EC0EC61AA0D7DA00B6AAFA /* StringIteratorPrototype.cpp in Sources */,

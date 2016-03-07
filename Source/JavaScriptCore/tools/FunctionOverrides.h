@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple, Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,42 +20,45 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ArgumentsIteratorPrototype_h
-#define ArgumentsIteratorPrototype_h
+#ifndef FunctionOverrides_h
+#define FunctionOverrides_h
 
-#include "JSObject.h"
+#include "Options.h"
+#include "SourceCode.h"
+#include <wtf/HashMap.h>
+#include <wtf/text/WTFString.h>
 
 namespace JSC {
 
-class ArgumentsIteratorPrototype : public JSNonFinalObject {
+class ScriptExecutable;
+
+class FunctionOverrides {
 public:
-    typedef JSNonFinalObject Base;
+    struct OverrideInfo {
+        SourceCode sourceCode;
+        unsigned firstLine;
+        unsigned lineCount;
+        unsigned startColumn;
+        unsigned endColumn;
+        unsigned parametersStartOffset;
+        unsigned typeProfilingStartOffset;
+        unsigned typeProfilingEndOffset;
+    };
 
-    static ArgumentsIteratorPrototype* create(VM& vm, JSGlobalObject* globalObject, Structure* structure)
-    {
-        ArgumentsIteratorPrototype* prototype = new (NotNull, allocateCell<ArgumentsIteratorPrototype>(vm.heap)) ArgumentsIteratorPrototype(vm, structure);
-        prototype->finishCreation(vm, globalObject);
-        return prototype;
-    }
+    static FunctionOverrides& overrides();
+    FunctionOverrides(const char* functionOverridesFileName);
 
-    DECLARE_INFO;
-
-    static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
-    {
-        return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info());
-    }
+    static bool initializeOverrideFor(const SourceCode& origCode, OverrideInfo& result);
 
 private:
-    ArgumentsIteratorPrototype(VM& vm, Structure* structure)
-        : Base(vm, structure)
-    {
-    }
-    void finishCreation(VM&, JSGlobalObject*);
+    void parseOverridesInFile(const char* fileName);
+
+    HashMap<String, String> m_entries;
 };
 
-}
+} // namespace JSC
 
-#endif // !defined(ArgumentsIteratorPrototype_h)
+#endif // FunctionOverrides_h

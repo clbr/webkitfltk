@@ -1,3 +1,216 @@
+2015-04-17  Jono Wells  <jonowells@apple.com>
+
+        Web Inspector: All sans-serif font family rules should be set the same way.
+        https://bugs.webkit.org/show_bug.cgi?id=143909
+
+        Reviewed by Timothy Hatcher.
+
+        Update styles so that all uses of sans-serif font use -webkit-system-font consistently.
+
+        * UserInterface/Views/DefaultDashboardView.css:
+        (body.mac-platform.legacy .toolbar .dashboard.default > .item):
+        * UserInterface/Views/ObjectTreePropertyTreeElement.css:
+        (.object-tree-property .prototype-name):
+        * UserInterface/Views/ObjectTreeView.css:
+        (.object-tree-outline li .empty-message):
+        * UserInterface/Views/RenderingFrameTimelineOverviewGraph.css:
+        (.timeline-overview-graph.rendering-frame > .divider > .label):
+
+2015-04-17  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Have better inactive window color for pixel borders
+        https://bugs.webkit.org/show_bug.cgi?id=143888
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/FindBanner.css:
+        (body.window-inactive .find-banner):
+        * UserInterface/Views/Main.css:
+        (body.window-inactive.docked.bottom):
+        (body.window-inactive.docked.right):
+        (body.window-inactive #split-content-browser):
+        * UserInterface/Views/NavigationBar.css:
+        (body.window-inactive .navigation-bar):
+        * UserInterface/Views/QuickConsole.css:
+        (body.window-inactive .quick-console):
+        (.quick-console.showing-log):
+        * UserInterface/Views/Sidebar.css:
+        (body.window-inactive .sidebar.left):
+        (body.window-inactive .sidebar.right):
+
+2015-04-17  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Unexpected background at top of console when rubber-banding with selection
+        https://bugs.webkit.org/show_bug.cgi?id=140710
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Views/LogContentView.css:
+        (.console-messages):
+        Remove the focus ring on the console's log view, only visible when rubber-banding.
+
+2015-04-16  Jono Wells  <jonowells@apple.com>
+
+        Web Inspector: Breakpoint icons should not get pushed off of debugger sidebar due to long resource names
+        https://bugs.webkit.org/show_bug.cgi?id=142714
+
+        Reviewed by Timothy Hatcher.
+
+        Modify the styles for content and group containers inside the debugger sidebar panel's detail sections
+        such that the rules "display: table" and "display: table-row-group" no longer apply. This will make
+        the file names which use the rule "text-overflow: ellipsis" truncate as expected.
+
+        * UserInterface/Views/DebuggerSidebarPanel.css:
+        (.sidebar > .panel.navigation.debugger .details-section > .content):
+        (.sidebar > .panel.navigation.debugger .details-section.collapsed > .content):
+        (.sidebar > .panel.navigation.debugger .details-section > .content > .group):
+        (.sidebar > .panel.navigation.debugger .details-section.scripts):
+        (.sidebar > .panel.navigation.debugger .details-section.scripts .header):
+        (.sidebar > .panel.navigation.debugger .details-section.scripts.collapsed > .content):
+
+2015-04-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Should include "Log Value" context menu item in Preview and Collapsed ObjectTree
+        https://bugs.webkit.org/show_bug.cgi?id=143845
+
+        Reviewed by Timothy Hatcher.
+
+        Give previews the same "Log Value" context menu so that if you just log
+        a bunch of objects to the console you can quickly turn that entire object
+        into a $n reference in the console to interact with.
+
+        * UserInterface/Views/ObjectPreviewView.js:
+        (WebInspector.ObjectPreviewView.prototype.setOriginatingObjectInfo):
+        (WebInspector.ObjectPreviewView.prototype._contextMenuHandler):
+        Provide API to refer to a RemoteObject and optional PropertyPath
+        that can be used to give the preview a "Log Value" context menu.
+
+        * UserInterface/Views/ConsoleMessageView.js:
+        (WebInspector.ConsoleMessageView.prototype._appendFormattedArguments):
+        Include the RemoteObject without a path for a preview context menu.
+
+        * UserInterface/Views/ObjectTreeView.js:
+        (WebInspector.ObjectTreeView):
+        Include the RemoteObject with a path if we knew it for a preview context menu.
+
+        * UserInterface/Views/ObjectTreeBaseTreeElement.js:
+        (WebInspector.ObjectTreeBaseTreeElement.prototype.createGetterElement):
+        The context menu can never be empty, since we always added at least one item above.
+
+
+2015-04-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: "Log Value" of a value inside of an array, does not log the innermost value
+        https://bugs.webkit.org/show_bug.cgi?id=143793
+
+        Reviewed by Brian Burg.
+
+        Context menu handlers were being handled in the capturing event phase, so
+        the outer most handler, instead of the inner most handler, was getting
+        first access. Change this so the events happen in the bubbling phase.
+
+        DOM Nodes may appear inside of Object Trees, for instance when shown
+        in a collection like an array or set. In an effort to standardize on
+        "inner most" behavior, change the DOMTreeOutline context handler
+        to also be in bubbling.
+
+        In the rare instances where a node object is in the console but
+        not displayed in an outline (console.dir(node)), then include a
+        Copy as HTML context menu like you would expect in a DOM tree.
+
+        * UserInterface/Views/DOMTreeOutline.js:
+        (WebInspector.DOMTreeOutline):
+        * UserInterface/Views/GeneralTreeElement.js:
+        (WebInspector.GeneralTreeElement.prototype.onattach):
+        (WebInspector.GeneralTreeElement.prototype.ondetach):
+        * UserInterface/Views/ObjectTreeBaseTreeElement.js:
+        (WebInspector.ObjectTreeBaseTreeElement.prototype._appendMenusItemsForObject):
+        (WebInspector.ObjectTreeBaseTreeElement):
+
+2015-04-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Allow toggling the edibility of a DOMTreeOutline
+        https://bugs.webkit.org/show_bug.cgi?id=143814
+
+        Reviewed by Brian Burg.
+
+        By default a DOMTreeOutline will not be editable, but it will
+        provide a setter to enable editability for DOMTreeContentViews.
+
+        * UserInterface/Views/DOMTreeContentView.js:
+        (WebInspector.DOMTreeContentView):
+        Content Views always have editable DOM trees.
+
+        * UserInterface/Views/DOMTreeElement.js:
+        (WebInspector.DOMTreeElement.prototype.get editable):
+        (WebInspector.DOMTreeElement.prototype.onattach):
+        (WebInspector.DOMTreeElement.prototype.ondelete):
+        (WebInspector.DOMTreeElement.prototype.onenter):
+        (WebInspector.DOMTreeElement.prototype.ondblclick):
+        (WebInspector.DOMTreeElement.prototype._populateTagContextMenu):
+        (WebInspector.DOMTreeElement.prototype._populateTextContextMenu):
+        (WebInspector.DOMTreeElement.prototype._populateNodeContextMenu):
+        (WebInspector.DOMTreeElement.prototype._startEditing):
+        Do not provide editability options for shadow DOM or non-editable DOM tree.
+
+        * UserInterface/Views/DOMTreeOutline.js:
+        (WebInspector.DOMTreeOutline):
+        (WebInspector.DOMTreeOutline.prototype.get editable):
+        (WebInspector.DOMTreeOutline.prototype.set editable):
+        New state.
+
+        * UserInterface/Views/FormattedValue.css:
+        (.formatted-node > .dom-tree-outline li):
+        Nodes inside object trees were showing text selection when you right
+        clicked them. Normal selection is not possible. So force no selection.
+
+2015-04-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Give DOM Nodes a Context Menu to Log Element to the console
+        https://bugs.webkit.org/show_bug.cgi?id=143813
+
+        Reviewed by Brian Burg.
+
+        Always give DOM Nodes a "Log Element" context menu to log it to the console.
+        This will give a $n reference, and is a convenient alternative to $0 or
+        the now removed $1-$9.
+
+        * Localizations/en.lproj/localizedStrings.js:
+        New "Log Element" and "Selected Element" strings.
+
+        * UserInterface/Views/DOMTreeOutline.js:
+        (WebInspector.DOMTreeOutline):
+        (WebInspector.DOMTreeOutline.prototype._contextMenuEventFired):
+        (WebInspector.DOMTreeOutline.prototype._updateModifiedNodes):
+        (WebInspector.DOMTreeOutline.prototype._populateContextMenu.revealElement):
+        (WebInspector.DOMTreeOutline.prototype._populateContextMenu.logElement):
+        (WebInspector.DOMTreeOutline.prototype._populateContextMenu):
+        Always include the "Log Element" context menu/
+
+        * UserInterface/Views/FormattedValue.js:
+        (WebInspector.FormattedValue.createElementForNode):
+        This uses all the defaults.
+
+        * UserInterface/Views/DOMTreeContentView.js:
+        (WebInspector.DOMTreeContentView):
+        This enables all the extra behavior.
+
+2015-04-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Remove unnecessary intermediate object from DOMTreeOutline
+        https://bugs.webkit.org/show_bug.cgi?id=143811
+
+        Reviewed by Brian Burg.
+
+        * UserInterface/Views/DOMTreeOutline.js:
+        (WebInspector.DOMTreeOutline):
+        (WebInspector.DOMTreeOutline.prototype._selectedNodeChanged):
+        (WebInspector.DOMTreeOutline.prototype.addEventListener): Deleted.
+        (WebInspector.DOMTreeOutline.prototype.removeEventListener): Deleted.
+        This object used to be used to handle event dispatching, but
+        TreeOutlines themselves are now WebInspector.Objects so we
+        can remove the intermediary.
+
 2015-04-15  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: InspectorTest frontend console methods redirected to the frontend are wrong

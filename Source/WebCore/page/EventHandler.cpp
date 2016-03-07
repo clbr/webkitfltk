@@ -598,17 +598,17 @@ void EventHandler::selectClosestWordFromMouseEvent(const MouseEventWithHitTestRe
 
 void EventHandler::selectClosestWordOrLinkFromMouseEvent(const MouseEventWithHitTestResults& result)
 {
-    if (!result.hitTestResult().isLiveLink())
+    Element* urlElement = result.hitTestResult().URLElement();
+    if (!urlElement || !isDraggableLink(*urlElement))
         return selectClosestWordFromMouseEvent(result);
 
     Node* targetNode = result.targetNode();
 
     if (targetNode && targetNode->renderer() && m_mouseDownMayStartSelect) {
         VisibleSelection newSelection;
-        Element* URLElement = result.hitTestResult().URLElement();
         VisiblePosition pos(targetNode->renderer()->positionForPoint(result.localPoint(), nullptr));
-        if (pos.isNotNull() && pos.deepEquivalent().deprecatedNode()->isDescendantOf(URLElement))
-            newSelection = VisibleSelection::selectionFromContentsOfNode(URLElement);
+        if (pos.isNotNull() && pos.deepEquivalent().deprecatedNode()->isDescendantOf(urlElement))
+            newSelection = VisibleSelection::selectionFromContentsOfNode(urlElement);
 
         updateSelectionForMouseDownDispatchingSelectStart(targetNode, expandSelectionToRespectSelectOnMouseDown(*targetNode, newSelection), WordGranularity);
     }
@@ -2106,6 +2106,33 @@ bool EventHandler::handleMouseReleaseEvent(const PlatformMouseEvent& platformMou
 
     return swallowMouseUpEvent || swallowClickEvent || swallowMouseReleaseEvent;
 }
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+bool EventHandler::handleMouseForceEvent(const PlatformMouseEvent& event)
+{
+    RefPtr<FrameView> protector(m_frame.view());
+
+    setLastKnownMousePosition(event);
+
+    HitTestRequest::HitTestRequestType hitType = HitTestRequest::DisallowShadowContent | HitTestRequest::Active;
+
+    HitTestRequest request(hitType);
+    MouseEventWithHitTestResults mouseEvent = prepareMouseEvent(request, event);
+
+    bool swallowedEvent = !dispatchMouseEvent(eventNames().webkitmouseforcechangedEvent, mouseEvent.targetNode(), false, 0, event, false);
+    if (event.type() == PlatformEvent::MouseForceDown)
+        swallowedEvent |= !dispatchMouseEvent(eventNames().webkitmouseforcedownEvent, mouseEvent.targetNode(), false, 0, event, false);
+    if (event.type() == PlatformEvent::MouseForceUp)
+        swallowedEvent |= !dispatchMouseEvent(eventNames().webkitmouseforceupEvent, mouseEvent.targetNode(), false, 0, event, false);
+
+    return swallowedEvent;
+}
+#else
+bool EventHandler::handleMouseForceEvent(const PlatformMouseEvent& )
+{
+    return false;
+}
+#endif // #if ENABLE(MOUSE_FORCE_EVENTS)
 
 bool EventHandler::handlePasteGlobalSelection(const PlatformMouseEvent& platformMouseEvent)
 {
