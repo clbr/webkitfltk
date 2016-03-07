@@ -72,13 +72,16 @@ public:
     virtual void setPrivateAndOpen(PassRef<MediaSourcePrivate>) override;
     virtual double duration() const override;
     virtual std::unique_ptr<PlatformTimeRanges> buffered() const override;
+    virtual void seekToTime(const MediaTime&) override;
 
     bool attachToElement(HTMLMediaElement*);
     void close();
     bool isClosed() const;
     void monitorSourceBuffers();
+    void completeSeek();
 
     void setDuration(double, ExceptionCode&);
+    void setDurationInternal(double);
     double currentTime() const;
     const AtomicString& readyState() const { return m_readyState; }
     void setReadyState(const AtomicString&);
@@ -126,6 +129,8 @@ protected:
     RefPtr<SourceBufferList> m_sourceBuffers;
     RefPtr<SourceBufferList> m_activeSourceBuffers;
     HTMLMediaElement* m_mediaElement;
+    double m_duration;
+    MediaTime m_pendingSeekTime;
     AtomicString m_readyState;
     GenericEventQueue m_asyncEventQueue;
 };

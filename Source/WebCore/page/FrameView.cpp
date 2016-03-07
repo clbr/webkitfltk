@@ -2523,7 +2523,18 @@ bool FrameView::isTransparent() const
 
 void FrameView::setTransparent(bool isTransparent)
 {
+    if (m_isTransparent == isTransparent)
+        return;
+
     m_isTransparent = isTransparent;
+
+    RenderView* renderView = this->renderView();
+    if (!renderView)
+        return;
+
+    RenderLayerCompositor& compositor = renderView->compositor();
+    compositor.setCompositingLayersNeedRebuild();
+    compositor.scheduleCompositingLayerUpdate();
 }
 
 bool FrameView::hasOpaqueBackground() const
@@ -3139,6 +3150,12 @@ bool FrameView::updatesScrollLayerPositionOnMainThread() const
     }
 
     return true;
+}
+
+bool FrameView::forceUpdateScrollbarsOnMainThreadForPerformanceTesting() const
+{
+    Page* page = frame().page();
+    return page && page->settings().forceUpdateScrollbarsOnMainThreadForPerformanceTesting();
 }
 
 void FrameView::scrollTo(const IntSize& newOffset)
@@ -4243,7 +4260,7 @@ void FrameView::setScrollVelocity(double horizontalVelocity, double verticalVelo
 FloatRect FrameView::computeCoverageRect(double horizontalMargin, double verticalMargin) const
 {
     FloatRect exposedContentRect = this->exposedContentRect();
-    if (!m_speculativeTilingEnabled)
+    if (!m_speculativeTilingEnabled || memoryPressureHandler().isUnderMemoryPressure())
         return exposedContentRect;
 
     double currentTime = monotonicallyIncreasingTime();

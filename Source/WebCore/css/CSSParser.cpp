@@ -503,6 +503,13 @@ static inline bool isColorPropertyID(CSSPropertyID propertyId)
     }
 }
 
+static bool validPrimitiveValueColor(CSSValueID valueID, bool strict = false)
+{
+    return (valueID == CSSValueWebkitText || valueID == CSSValueCurrentcolor || valueID == CSSValueMenu
+        || (valueID >= CSSValueAlpha && valueID <= CSSValueWindowtext)
+        || (valueID >= CSSValueWebkitFocusRingColor && valueID < CSSValueWebkitText && !strict));
+}
+
 static bool parseColorValue(MutableStyleProperties* declaration, CSSPropertyID propertyId, const String& string, bool important, CSSParserMode cssParserMode)
 {
     ASSERT(!string.isEmpty());
@@ -512,17 +519,7 @@ static bool parseColorValue(MutableStyleProperties* declaration, CSSPropertyID p
     CSSParserString cssString;
     cssString.init(string);
     CSSValueID valueID = cssValueKeywordID(cssString);
-    bool validPrimitive = false;
-    if (valueID == CSSValueWebkitText)
-        validPrimitive = true;
-    else if (valueID == CSSValueCurrentcolor)
-        validPrimitive = true;
-    else if ((valueID >= CSSValueAqua && valueID <= CSSValueWindowtext) || valueID == CSSValueMenu
-             || (valueID >= CSSValueWebkitFocusRingColor && valueID < CSSValueWebkitText && !strict)) {
-        validPrimitive = true;
-    }
-
-    if (validPrimitive) {
+    if (validPrimitiveValueColor(valueID, strict)) {
         RefPtr<CSSValue> value = cssValuePool().createIdentifierValue(valueID);
         declaration->addParsedProperty(CSSProperty(propertyId, value.release(), important));
         return true;
@@ -853,14 +850,17 @@ static inline bool isValidKeywordPropertyAndValue(CSSPropertyID propertyId, int 
             return true;
         break;
     case CSSPropertyWebkitAlignContent:
-         if (valueID == CSSValueFlexStart || valueID == CSSValueFlexEnd || valueID == CSSValueCenter || valueID == CSSValueSpaceBetween || valueID == CSSValueSpaceAround || valueID == CSSValueStretch)
-             return true;
-         break;
+        // FIXME: Per CSS alignment, this property should accept an optional <overflow-position>. We should share this parsing code with 'justify-self'.
+        if (valueID == CSSValueFlexStart || valueID == CSSValueFlexEnd || valueID == CSSValueCenter || valueID == CSSValueSpaceBetween || valueID == CSSValueSpaceAround || valueID == CSSValueStretch)
+            return true;
+        break;
     case CSSPropertyWebkitAlignItems:
+        // FIXME: Per CSS alignment, this property should accept the same arguments as 'justify-self' so we should share its parsing code.
         if (valueID == CSSValueFlexStart || valueID == CSSValueFlexEnd || valueID == CSSValueCenter || valueID == CSSValueBaseline || valueID == CSSValueStretch)
             return true;
         break;
     case CSSPropertyWebkitAlignSelf:
+        // FIXME: Per CSS alignment, this property should accept the same arguments as 'justify-self' so we should share its parsing code.
         if (valueID == CSSValueAuto || valueID == CSSValueFlexStart || valueID == CSSValueFlexEnd || valueID == CSSValueCenter || valueID == CSSValueBaseline || valueID == CSSValueStretch)
             return true;
         break;
@@ -873,7 +873,12 @@ static inline bool isValidKeywordPropertyAndValue(CSSPropertyID propertyId, int 
              return true;
         break;
     case CSSPropertyWebkitJustifyContent:
+        // FIXME: Per CSS alignment, this property should accept an optional <overflow-position>. We should share this parsing code with 'justify-self'.
         if (valueID == CSSValueFlexStart || valueID == CSSValueFlexEnd || valueID == CSSValueCenter || valueID == CSSValueSpaceBetween || valueID == CSSValueSpaceAround)
+            return true;
+        break;
+    case CSSPropertyWebkitJustifySelf:
+        if (valueID == CSSValueAuto || valueID == CSSValueFlexStart || valueID == CSSValueFlexEnd || valueID == CSSValueCenter || valueID == CSSValueBaseline || valueID == CSSValueStretch)
             return true;
         break;
     case CSSPropertyWebkitFontKerning:
@@ -888,12 +893,6 @@ static inline bool isValidKeywordPropertyAndValue(CSSPropertyID propertyId, int 
         if (valueID == CSSValueNone || valueID == CSSValueManual || valueID == CSSValueAuto)
             return true;
         break;
-#if ENABLE(CSS_GRID_LAYOUT)
-    case CSSPropertyWebkitGridAutoFlow:
-        if (valueID == CSSValueNone || valueID == CSSValueRow || valueID == CSSValueColumn)
-            return true;
-        break;
-#endif
     case CSSPropertyWebkitLineAlign:
         if (valueID == CSSValueNone || valueID == CSSValueEdges)
             return true;
@@ -1101,9 +1100,6 @@ static inline bool isKeywordPropertyID(CSSPropertyID propertyId)
     case CSSPropertyWebkitFontKerning:
     case CSSPropertyWebkitFontSmoothing:
     case CSSPropertyWebkitHyphens:
-#if ENABLE(CSS_GRID_LAYOUT)
-    case CSSPropertyWebkitGridAutoFlow:
-#endif
     case CSSPropertyWebkitLineAlign:
     case CSSPropertyWebkitLineBreak:
     case CSSPropertyWebkitLineSnap:
@@ -1357,10 +1353,14 @@ bool CSSParser::parseSystemColor(RGBA32& color, const String& string, Document* 
     CSSParserString cssColor;
     cssColor.init(string);
     CSSValueID id = cssValueKeywordID(cssColor);
-    if (id <= 0)
+    if (!validPrimitiveValueColor(id))
         return false;
 
-    color = document->page()->theme().systemColor(id).rgb();
+    Color parsedColor = document->page()->theme().systemColor(id);
+    if (!parsedColor.isValid())
+        return false;
+
+    color = parsedColor.rgb();
     return true;
 }
 
@@ -2576,6 +2576,8 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
         }
         return false;
     }
+    case CSSPropertyWebkitJustifySelf:
+        return parseJustifySelf(propId, important);
 #if ENABLE(CSS_GRID_LAYOUT)
     case CSSPropertyWebkitGridAutoColumns:
     case CSSPropertyWebkitGridAutoRows:
@@ -2610,6 +2612,9 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
 
     case CSSPropertyWebkitGridTemplateAreas:
         parsedValue = parseGridTemplateAreas();
+        break;
+    case CSSPropertyWebkitGridAutoFlow:
+        parsedValue = parseGridAutoFlow(*m_valueList);
         break;
 #endif /* ENABLE(CSS_GRID_LAYOUT) */
     case CSSPropertyWebkitMarginCollapse: {
@@ -2989,9 +2994,6 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
     case CSSPropertyWebkitFontKerning:
     case CSSPropertyWebkitFontSmoothing:
     case CSSPropertyWebkitHyphens:
-#if ENABLE(CSS_GRID_LAYOUT)
-    case CSSPropertyWebkitGridAutoFlow:
-#endif
     case CSSPropertyWebkitLineAlign:
     case CSSPropertyWebkitLineBreak:
     case CSSPropertyWebkitLineSnap:
@@ -3077,6 +3079,63 @@ void CSSParser::addFillValue(RefPtr<CSSValue>& lval, PassRefPtr<CSSValue> rval)
     }
     else
         lval = rval;
+}
+
+static bool isItemPositionKeyword(CSSValueID id)
+{
+    return id == CSSValueStart || id == CSSValueEnd || id == CSSValueCenter
+        || id == CSSValueSelfStart || id == CSSValueSelfEnd || id == CSSValueFlexStart
+        || id == CSSValueFlexEnd || id == CSSValueLeft || id == CSSValueRight;
+}
+
+bool CSSParser::parseJustifySelf(CSSPropertyID propId, bool important)
+{
+    // auto | baseline | stretch | [<item-position> && <overflow-position>? ]
+    // <item-position> = center | start | end | self-start | self-end | flex-start | flex-end | left | right;
+    // <overflow-position> = true | safe
+
+    CSSParserValue* value = m_valueList->current();
+
+    if (value->id == CSSValueAuto || value->id == CSSValueBaseline || value->id == CSSValueStretch) {
+        if (m_valueList->next())
+            return false;
+
+        addProperty(propId, cssValuePool().createIdentifierValue(value->id), important);
+        return true;
+    }
+
+    RefPtr<CSSPrimitiveValue> position = 0;
+    RefPtr<CSSPrimitiveValue> overflowAlignmentKeyword = 0;
+    if (isItemPositionKeyword(value->id)) {
+        position = cssValuePool().createIdentifierValue(value->id);
+        value = m_valueList->next();
+        if (value) {
+            if (value->id != CSSValueTrue && value->id != CSSValueSafe)
+                return false;
+            overflowAlignmentKeyword = cssValuePool().createIdentifierValue(value->id);
+        }
+    } else if (value->id != CSSValueTrue && value->id != CSSValueSafe)
+        return false;
+    else {
+        overflowAlignmentKeyword = cssValuePool().createIdentifierValue(value->id);
+        value = m_valueList->next();
+        if (value) {
+            if (!isItemPositionKeyword(value->id))
+                return false;
+            position = cssValuePool().createIdentifierValue(value->id);
+        }
+    }
+
+    if (m_valueList->next())
+        return false;
+
+    ASSERT(position);
+    if (overflowAlignmentKeyword)
+        addProperty(propId, createPrimitiveValuePair(position.release(), overflowAlignmentKeyword.release()), important);
+    else
+        addProperty(propId, position.release(), important);
+
+    return true;
 }
 
 static bool parseBackgroundClip(CSSParserValue* parserValue, RefPtr<CSSValue>& cssValue)
@@ -4926,15 +4985,13 @@ bool CSSParser::parseGridShorthand(bool important)
     m_valueList->setCurrentIndex(0);
 
     // 2- <grid-auto-flow> [ <grid-auto-columns> [ / <grid-auto-rows> ]? ]
-    CSSValueID id = m_valueList->current()->id;
-    if (id != CSSValueRow && id != CSSValueColumn && id != CSSValueNone)
+    if (!parseValue(CSSPropertyWebkitGridAutoFlow, important))
         return false;
 
-    RefPtr<CSSValue> autoFlowValue = cssValuePool().createIdentifierValue(id);
     RefPtr<CSSValue> autoColumnsValue;
     RefPtr<CSSValue> autoRowsValue;
 
-    if (m_valueList->next()) {
+    if (m_valueList->current()) {
         autoColumnsValue = parseGridTrackSize(*m_valueList);
         if (!autoColumnsValue)
             return false;
@@ -4957,7 +5014,6 @@ bool CSSParser::parseGridShorthand(bool important)
     if (!autoRowsValue)
         autoRowsValue = autoColumnsValue;
 
-    addProperty(CSSPropertyWebkitGridAutoFlow, autoFlowValue.release(), important);
     addProperty(CSSPropertyWebkitGridAutoColumns, autoColumnsValue.release(), important);
     addProperty(CSSPropertyWebkitGridAutoRows, autoRowsValue.release(), important);
 
@@ -5181,6 +5237,64 @@ PassRefPtr<CSSPrimitiveValue> CSSParser::parseGridBreadth(CSSParserValue* curren
         return 0;
 
     return createPrimitiveNumericValue(currentValue);
+}
+
+static inline bool isValidGridAutoFlowId(CSSValueID id)
+{
+    return (id == CSSValueRow || id == CSSValueColumn || id == CSSValueDense || id == CSSValueStack);
+}
+
+PassRefPtr<CSSValue> CSSParser::parseGridAutoFlow(CSSParserValueList& inputList)
+{
+    // [ row | column ] && dense? | stack && [ row | column ]?
+    CSSParserValue* value = inputList.current();
+    if (!value)
+        return nullptr;
+
+    RefPtr<CSSValueList> parsedValues = CSSValueList::createSpaceSeparated();
+
+    // First parameter.
+    CSSValueID firstId = value->id;
+    if (!isValidGridAutoFlowId(firstId))
+        return nullptr;
+
+    // Second parameter, if any.
+    // If second parameter is not valid we should process anyway the first one as we can be inside the "grid" shorthand.
+    value = inputList.next();
+    if (!value || !isValidGridAutoFlowId(value->id)) {
+        if (firstId == CSSValueDense)
+            return nullptr;
+
+        if (firstId == CSSValueStack)
+            parsedValues->append(cssValuePool().createIdentifierValue(CSSValueRow));
+
+        parsedValues->append(cssValuePool().createIdentifierValue(firstId));
+        return parsedValues;
+    }
+
+    switch (firstId) {
+    case CSSValueRow:
+    case CSSValueColumn:
+        parsedValues->append(cssValuePool().createIdentifierValue(firstId));
+        if (value->id == CSSValueDense || value->id == CSSValueStack) {
+            parsedValues->append(cssValuePool().createIdentifierValue(value->id));
+            inputList.next();
+        }
+        break;
+    case CSSValueDense:
+    case CSSValueStack:
+        if (value->id == CSSValueRow || value->id == CSSValueColumn) {
+            parsedValues->append(cssValuePool().createIdentifierValue(value->id));
+            inputList.next();
+        }
+        parsedValues->append(cssValuePool().createIdentifierValue(firstId));
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+        break;
+    }
+
+    return parsedValues;
 }
 #endif /* ENABLE(CSS_GRID_LAYOUT) */
 

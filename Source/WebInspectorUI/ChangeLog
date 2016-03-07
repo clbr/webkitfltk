@@ -1,3 +1,98 @@
+2014-07-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Debugger Pause button does not work
+        https://bugs.webkit.org/show_bug.cgi?id=134785
+
+        Reviewed by Timothy Hatcher.
+
+        Previously we were automatically resuming if we had no recognized
+        call frames in the call stack we get when paused. However, we
+        were accidentally skipping over anonymous scripts instead of
+        just Web Inspector originated call frames.
+
+        Now that we allow anonymous scripts we can step into anonymous
+        scripts (e.g. evals, new Function(...)) as expected.
+
+        Also, remove the condition of automatically resuming if the
+        call stack was empty. The UI handles this with "No Call Frames".
+
+        * UserInterface/Controllers/DebuggerManager.js:
+        (WebInspector.DebuggerManager.prototype.debuggerDidPause):
+
+2014-07-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: CSS Autocompletion: "background" only has colors, should support others
+        https://bugs.webkit.org/show_bug.cgi?id=134839
+
+        Reviewed by Timothy Hatcher.
+
+        Update and consolidate the background related CSS properties
+        and include sub-property completions in the shorthand property.
+
+        Also take the opportunity to add or update other properties
+        (-webkit-alt, -webkit-text-decoration-skip, -webkit-aspect-ratio)
+        and remove unnecessary newlines / commas in the list.
+
+        * UserInterface/Models/CSSKeywordCompletions.js:
+
+2014-07-10  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Debugger Continue button is incorrectly sized
+        https://bugs.webkit.org/show_bug.cgi?id=134786
+
+        Reviewed by Timothy Hatcher.
+
+        Before this patch everything in the DebuggerDashboardView was flexing.
+        Normally, if the contents were not too wide, this would just behave
+        as expected and be centered. If the content was too wide, then each
+        element would flex uniformly and overlap uniformly. That was not expected.
+
+        This patch changes makes everything but the link have a non-flexible
+        size. If the link (at the end) flexs it will have a nice ellipsis
+        text truncation, and the rest of the content will be left justified.
+
+        This also fixes a few other minor issues seen in the view.
+
+        * UserInterface/Views/DebuggerDashboardView.css:
+        (.dashboard.debugger .navigation-bar):
+        Reduce the complexity, give the nav bar (the resume button) some simple padding.
+
+        (.dashboard.debugger > div):
+        Make everything non-flex by default.
+
+        (.dashboard.debugger > .location):
+        The location will have an inner element flex, so make it flex.
+
+        (.dashboard.debugger > .location > *):
+        Make everything in .location non-flex by default.
+
+        (.dashboard.debugger > .location .go-to-link):
+        Make the link flex and truncate cleanly.
+
+        (.dashboard.debugger > .location .function-name):
+        Fix vertical alignment when the toolbar has small icons.
+
+        * UserInterface/Views/DebuggerDashboardView.js:
+        (WebInspector.DebuggerDashboardView.prototype._rebuildLocation):
+        Fix class name spelling.
+
+2014-07-09  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Remove uses of 'bash' in build system
+        https://bugs.webkit.org/show_bug.cgi?id=134782
+        <rdar://problem/17615533>
+
+        Reviewed by Dean Jackson.
+
+        Remove uses of 'bash' by replacing Windows-specific bash scripts
+        with Perl equivalents.
+
+        * WebInspectorUI.vcxproj/WebInspectorUI.make:
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj:
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj.filters:
+        * WebInspectorUI.vcxproj/build-webinspectorui.pl: Copied from Source/WebInspectorUI/WebInspectorUI.vcxproj/build-webinspectorui.sh.
+        * WebInspectorUI.vcxproj/build-webinspectorui.sh: Removed.
+
 2014-07-08  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Debugger popovers should not dismiss when mousing over them

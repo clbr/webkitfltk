@@ -168,7 +168,7 @@ RenderLayer::RenderLayer(RenderLayerModelObject& rendererLayerModelObject)
     , m_hasCompositingDescendant(false)
     , m_hasTransformedAncestor(false)
     , m_has3DTransformedAncestor(false)
-    , m_indirectCompositingReason(NoIndirectCompositingReason)
+    , m_indirectCompositingReason(static_cast<unsigned>(IndirectCompositingReason::None))
     , m_viewportConstrainedNotCompositedReason(NoNotCompositedReason)
 #if PLATFORM(IOS)
     , m_adjustForIOSCaretWhenScrolling(false)
@@ -1361,6 +1361,12 @@ IntRect RenderLayer::scrollableAreaBoundingBox() const
     return renderer().absoluteBoundingBoxRect();
 }
 
+bool RenderLayer::forceUpdateScrollbarsOnMainThreadForPerformanceTesting() const
+{
+    Page* page = renderer().frame().page();
+    return page && page->settings().forceUpdateScrollbarsOnMainThreadForPerformanceTesting();
+}
+
 RenderLayer* RenderLayer::enclosingTransformedAncestor() const
 {
     RenderLayer* curr = parent();
@@ -1649,19 +1655,21 @@ static LayoutRect paintingExtent(const RenderLayer& currentLayer, const RenderLa
     return intersection(transparencyClipBox(currentLayer, rootLayer, PaintingTransparencyClipBox, RootOfTransparencyClipBox, paintBehavior), paintDirtyRect);
 }
 
-void RenderLayer::beginTransparencyLayers(GraphicsContext* context, const RenderLayer* rootLayer, const LayoutRect& paintDirtyRect, PaintBehavior paintBehavior)
+void RenderLayer::beginTransparencyLayers(GraphicsContext* context, const LayerPaintingInfo& paintingInfo, const LayoutRect& dirtyRect)
 {
-    if (context->paintingDisabled() || (paintsWithTransparency(paintBehavior) && m_usedTransparency))
+    if (context->paintingDisabled() || (paintsWithTransparency(paintingInfo.paintBehavior) && m_usedTransparency))
         return;
-    
+
     RenderLayer* ancestor = transparentPaintingAncestor();
     if (ancestor)
-        ancestor->beginTransparencyLayers(context, rootLayer, paintDirtyRect, paintBehavior);
+        ancestor->beginTransparencyLayers(context, paintingInfo, dirtyRect);
     
-    if (paintsWithTransparency(paintBehavior)) {
+    if (paintsWithTransparency(paintingInfo.paintBehavior)) {
         m_usedTransparency = true;
         context->save();
-        FloatRect pixelSnappedClipRect = pixelSnappedForPainting(paintingExtent(*this, rootLayer, paintDirtyRect, paintBehavior), renderer().document().deviceScaleFactor());
+        LayoutRect adjustedClipRect = paintingExtent(*this, paintingInfo.rootLayer, dirtyRect, paintingInfo.paintBehavior);
+        adjustedClipRect.move(paintingInfo.subPixelAccumulation);
+        FloatRect pixelSnappedClipRect = pixelSnappedForPainting(adjustedClipRect, renderer().document().deviceScaleFactor());
         context->clip(pixelSnappedClipRect);
 
 #if ENABLE(CSS_COMPOSITING)
@@ -3687,9 +3695,9 @@ void RenderLayer::paintLayer(GraphicsContext* context, const LayerPaintingInfo& 
         // layer from the parent now, assuming there is a parent
         if (paintFlags & PaintLayerHaveTransparency) {
             if (parent())
-                parent()->beginTransparencyLayers(context, paintingInfo.rootLayer, paintingInfo.paintDirtyRect, paintingInfo.paintBehavior);
+                parent()->beginTransparencyLayers(context, paintingInfo, paintingInfo.paintDirtyRect);
             else
-                beginTransparencyLayers(context, paintingInfo.rootLayer, paintingInfo.paintDirtyRect, paintingInfo.paintBehavior);
+                beginTransparencyLayers(context, paintingInfo, paintingInfo.paintDirtyRect);
         }
 
         if (enclosingPaginationLayer(ExcludeCompositedPaginatedLayers)) {
@@ -3755,7 +3763,10 @@ bool RenderLayer::setupFontSubpixelQuantization(GraphicsContext* context, bool& 
     // FIXME: We shouldn't have to disable subpixel quantization for overflow clips or subframes once we scroll those
     // things on the scrolling thread.
     bool contentsScrollByPainting = (renderer().hasOverflowClip() && !usesCompositedScrolling()) || (renderer().frame().ownerElement());
-    if (scrollingOnMainThread || contentsScrollByPainting) {
+    bool isZooming = false;
+    if (Page* page = renderer().frame().page())
+        isZooming = !page->chrome().client().hasStablePageScaleFactor();
+    if (scrollingOnMainThread || contentsScrollByPainting || isZooming) {
         didQuantizeFonts = context->shouldSubpixelQuantizeFonts();
         context->setShouldSubpixelQuantizeFonts(false);
         return true;
@@ -3994,7 +4005,7 @@ void RenderLayer::paintLayerContents(GraphicsContext* context, const LayerPainti
         context = filterPainter->filterContext();
         if (context != transparencyLayerContext && haveTransparency) {
             // If we have a filter and transparency, we have to eagerly start a transparency layer here, rather than risk a child layer lazily starts one with the wrong context.
-            beginTransparencyLayers(transparencyLayerContext, localPaintingInfo.rootLayer, paintingInfo.paintDirtyRect, localPaintingInfo.paintBehavior);
+            beginTransparencyLayers(transparencyLayerContext, localPaintingInfo, paintingInfo.paintDirtyRect);
         }
     }
 #endif
@@ -4371,7 +4382,7 @@ void RenderLayer::paintBackgroundForFragments(const LayerFragments& layerFragmen
 
         // Begin transparency layers lazily now that we know we have to paint something.
         if (haveTransparency)
-            beginTransparencyLayers(transparencyLayerContext, localPaintingInfo.rootLayer, transparencyPaintDirtyRect, localPaintingInfo.paintBehavior);
+            beginTransparencyLayers(transparencyLayerContext, localPaintingInfo, transparencyPaintDirtyRect);
     
         if (localPaintingInfo.clipToDirtyRect) {
             // Paint our background first, before painting any child layers.
@@ -4398,7 +4409,7 @@ void RenderLayer::paintForegroundForFragments(const LayerFragments& layerFragmen
         for (size_t i = 0; i < layerFragments.size(); ++i) {
             const LayerFragment& fragment = layerFragments.at(i);
             if (fragment.shouldPaintContent && !fragment.foregroundRect.isEmpty()) {
-                beginTransparencyLayers(transparencyLayerContext, localPaintingInfo.rootLayer, transparencyPaintDirtyRect, localPaintingInfo.paintBehavior);
+                beginTransparencyLayers(transparencyLayerContext, localPaintingInfo, transparencyPaintDirtyRect);
                 break;
             }
         }

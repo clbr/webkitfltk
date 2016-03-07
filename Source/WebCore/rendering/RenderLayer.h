@@ -377,8 +377,6 @@ public:
     bool cannotBlitToWindow() const;
 
     bool isTransparent() const { return renderer().isTransparent() || renderer().hasMask(); }
-    RenderLayer* transparentPaintingAncestor();
-    void beginTransparencyLayers(GraphicsContext*, const RenderLayer* rootLayer, const LayoutRect& paintDirtyRect, PaintBehavior);
 
     bool hasReflection() const { return renderer().hasReflection(); }
     bool isReflection() const { return renderer().isReplica(); }
@@ -1012,6 +1010,9 @@ private:
     void paintMaskForFragments(const LayerFragments&, GraphicsContext*, const LayerPaintingInfo&, RenderObject* paintingRootForRenderer);
     void paintTransformedLayerIntoFragments(GraphicsContext*, const LayerPaintingInfo&, PaintLayerFlags);
 
+    RenderLayer* transparentPaintingAncestor();
+    void beginTransparencyLayers(GraphicsContext*, const LayerPaintingInfo&, const LayoutRect& dirtyRect);
+
     RenderLayer* hitTestLayer(RenderLayer* rootLayer, RenderLayer* containerLayer, const HitTestRequest& request, HitTestResult& result,
         const LayoutRect& hitTestRect, const HitTestLocation&, bool appliedTransform,
         const HitTestingTransformState* = nullptr, double* zOffset = nullptr);
@@ -1082,6 +1083,7 @@ private:
     virtual bool shouldSuspendScrollAnimations() const override;
     virtual IntRect scrollableAreaBoundingBox() const override;
     virtual bool updatesScrollLayerPositionOnMainThread() const override { return true; }
+    virtual bool forceUpdateScrollbarsOnMainThreadForPerformanceTesting() const override;
 
 #if PLATFORM(IOS)
     void registerAsTouchEventListenerForScrolling();
@@ -1149,17 +1151,17 @@ private:
 
     void setHasCompositingDescendant(bool b)  { m_hasCompositingDescendant = b; }
     
-    enum IndirectCompositingReason {
-        NoIndirectCompositingReason,
-        IndirectCompositingForStacking,
-        IndirectCompositingForOverlap,
-        IndirectCompositingForBackgroundLayer,
-        IndirectCompositingForGraphicalEffect, // opacity, mask, filter, transform etc.
-        IndirectCompositingForPerspective,
-        IndirectCompositingForPreserve3D
+    enum class IndirectCompositingReason {
+        None,
+        Stacking,
+        Overlap,
+        BackgroundLayer,
+        GraphicalEffect, // opacity, mask, filter, transform etc.
+        Perspective,
+        Preserve3D
     };
     
-    void setIndirectCompositingReason(IndirectCompositingReason reason) { m_indirectCompositingReason = reason; }
+    void setIndirectCompositingReason(IndirectCompositingReason reason) { m_indirectCompositingReason = static_cast<unsigned>(reason); }
     IndirectCompositingReason indirectCompositingReason() const { return static_cast<IndirectCompositingReason>(m_indirectCompositingReason); }
     bool mustCompositeForIndirectReasons() const { return m_indirectCompositingReason; }
 

@@ -1,3 +1,85 @@
+2014-07-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Debugger Pause button does not work
+        https://bugs.webkit.org/show_bug.cgi?id=134785
+
+        Reviewed by Timothy Hatcher.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        Minification strips the sourceURL command. Add it back with minification.
+
+2014-07-11  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] Enable DFG JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=123615
+
+        Reviewed by Mark Lam.
+
+        When the return type of a JIT generated function call is larger than 64-bit (e.g. SlowPathReturnType),
+        the normal call() implementation cannot be used on 64-bit Windows, because the 64-bit Windows ABI is different in this case.
+        Also, when generating calls with double arguments, we need to make sure the arguments are put in the correct registers,
+        since the register allocation differs on 64-bit Windows.
+
+        * assembler/MacroAssemblerX86_64.h:
+        (JSC::MacroAssemblerX86_64::callWithSlowPathReturnType): Added method to handle function calls where the return value type size is larger than 64-bit.
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState): Move arguments to correct registers when there are floating point arguments.
+        (JSC::CCallHelpers::setupArgumentsWithExecStateForCallWithSlowPathReturnType): Added method.
+        * jit/JIT.h:
+        (JSC::JIT::appendCallWithSlowPathReturnType): Added method.
+        * jit/JITInlines.h:
+        (JSC::JIT::appendCallWithExceptionCheckAndSlowPathReturnType): Added method.
+        (JSC::JIT::callOperation): Call new method.
+
+2014-07-09  Benjamin Poulain  <benjamin@webkit.org>
+
+        Use 16bits instructions for push/pop on ARMv7 when possible
+        https://bugs.webkit.org/show_bug.cgi?id=134753
+
+        Reviewed by Geoffrey Garen.
+
+        The patch r170839 mixed the code for push/pop pair and single push/pop.
+        That part was reverted in r170909.
+
+        This patch puts the code back but specialized for single push/pop.
+
+        * assembler/ARMv7Assembler.h:
+        (JSC::ARMv7Assembler::pop):
+        (JSC::ARMv7Assembler::push):
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::pop):
+        (JSC::MacroAssemblerARMv7::push):
+
+2014-07-09  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Remove uses of 'bash' in build system
+        https://bugs.webkit.org/show_bug.cgi?id=134782
+        <rdar://problem/17615533>
+
+        Reviewed by Dean Jackson.
+
+        Remove uses of 'bash' by replacing Windows-specific bash scripts
+        with Perl equivalents.
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.vcxproj.filters:
+        * JavaScriptCore.vcxproj/JavaScriptCorePreBuild.cmd:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.pl: Copied from Source/JavaScriptCore/JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.sh.
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.sh: Removed.
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.pl: Copied from Source/JavaScriptCore/JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.sh.
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.sh: Removed.
+        * JavaScriptCore.vcxproj/build-generated-files.pl: Copied from Source/JavaScriptCore/JavaScriptCore.vcxproj/build-generated-files.sh.
+        * JavaScriptCore.vcxproj/build-generated-files.sh: Removed.
+        * JavaScriptCore.vcxproj/jsc/jscPreBuild.cmd:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpPreBuild.cmd:
+        * JavaScriptCore.vcxproj/testapi/testapiPreBuild.cmd:
+
 2014-07-09  Brent Fulgham  <bfulgham@apple.com>
 
         [Win] Remove use of 'grep' in build steps
