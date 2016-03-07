@@ -40,13 +40,13 @@
 #include "CSSValueList.h"
 #include "CachedResourceLoader.h"
 #include "Document.h"
+#include "Font.h"
 #include "FontCache.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "SVGFontFaceElement.h"
 #include "SVGNames.h"
 #include "Settings.h"
-#include "SimpleFontData.h"
 #include "StyleProperties.h"
 #include "StyleResolver.h"
 #include "StyleRule.h"
@@ -58,12 +58,11 @@ namespace WebCore {
 
 static unsigned fontSelectorId;
 
-CSSFontSelector::CSSFontSelector(Document* document)
-    : m_document(document)
+CSSFontSelector::CSSFontSelector(Document& document)
+    : m_document(&document)
     , m_beginLoadingTimer(*this, &CSSFontSelector::beginLoadTimerFired)
     , m_uniqueId(++fontSelectorId)
     , m_version(0)
-    
 {
     // FIXME: An old comment used to say there was no need to hold a reference to m_document
     // because "we are guaranteed to be destroyed before the document". But there does not
@@ -612,7 +611,7 @@ bool CSSFontSelector::resolvesFamilyFor(const FontDescription& description) cons
     return false;
 }
 
-size_t CSSFontSelector::fallbackFontDataCount()
+size_t CSSFontSelector::fallbackFontCount()
 {
     if (!m_document)
         return 0;
@@ -623,7 +622,7 @@ size_t CSSFontSelector::fallbackFontDataCount()
     return 0;
 }
 
-PassRefPtr<SimpleFontData> CSSFontSelector::fallbackFontDataAt(const FontDescription& fontDescription, size_t index)
+PassRefPtr<Font> CSSFontSelector::fallbackFontAt(const FontDescription& fontDescription, size_t index)
 {
     ASSERT_UNUSED(index, !index);
 

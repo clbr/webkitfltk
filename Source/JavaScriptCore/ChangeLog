@@ -1,3 +1,310 @@
+2015-01-23  Michael Saboff  <msaboff@apple.com>
+
+        Immediate crash when setting JS breakpoint
+        https://bugs.webkit.org/show_bug.cgi?id=140811
+
+        Reviewed by Mark Lam.
+
+        When the DFG stack layout phase doesn't allocate a register for the scope register,
+        it incorrectly sets the scope register in the code block to a bad value, one with
+        an offset of 0.  Changed it so that we set the code block's scope register to the 
+        invalid VirtualRegister instead.
+
+        No tests needed as adding the ASSERT in setScopeRegister() was used to find the bug.
+        We crash with that ASSERT in testapi and likely many other tests as well.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::setScopeRegister):
+        (JSC::CodeBlock::scopeRegister):
+        Added ASSERTs to catch any future improper setting of the code block's scope register.
+
+        * dfg/DFGStackLayoutPhase.cpp:
+        (JSC::DFG::StackLayoutPhase::run):
+
+2015-01-22  Mark Hahnenberg  <mhahnenb@gmail.com>
+
+        EdenCollections unnecessarily visit SmallStrings
+        https://bugs.webkit.org/show_bug.cgi?id=140762
+
+        Reviewed by Geoffrey Garen.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::copyBackingStores): Also added a GCPhase for copying
+        backing stores, which is a significant portion of garbage collection.
+        (JSC::Heap::visitSmallStrings): Check to see if we need to visit
+        SmallStrings based on the collection type.
+        * runtime/SmallStrings.cpp:
+        (JSC::SmallStrings::SmallStrings):
+        (JSC::SmallStrings::visitStrongReferences): Set the fact that we have
+        visited the SmallStrings since the last modification.
+        * runtime/SmallStrings.h:
+        (JSC::SmallStrings::needsToBeVisited): If we're doing a
+        FullCollection, we need to visit. Otherwise, it depends on whether
+        we've been visited since the last modification/allocation.
+
+2015-01-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add a build flag for ES6 class syntax
+        https://bugs.webkit.org/show_bug.cgi?id=140760
+
+        Reviewed by Michael Saboff.
+
+        Added ES6_CLASS_SYNTAX build flag and used it in tokenizer to recognize
+        "class", "extends", "static" and "super" keywords.
+
+        * Configurations/FeatureDefines.xcconfig:
+        * parser/Keywords.table:
+        * parser/ParserTokens.h:
+
+2015-01-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178894.
+        https://bugs.webkit.org/show_bug.cgi?id=140775
+
+        Broke JSC and bindings tests (Requested by ap_ on #webkit).
+
+        Reverted changeset:
+
+        "put_by_val_direct need to check the property is index or not
+        for using putDirect / putDirectIndex"
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+        http://trac.webkit.org/changeset/178894
+
+2015-01-22  Mark Lam  <mark.lam@apple.com>
+
+        BytecodeGenerator::initializeCapturedVariable() sets a misleading value for the 5th operand of op_put_to_scope.
+        <https://webkit.org/b/140743>
+
+        Reviewed by Oliver Hunt.
+
+        BytecodeGenerator::initializeCapturedVariable() was setting the 5th operand to
+        op_put_to_scope to an inappropriate value (i.e. 0).  As a result, the execution
+        of put_to_scope could store a wrong inferred value into the VariableWatchpointSet
+        for which ever captured variable is at local index 0.  In practice, this turns
+        out to be the local for the Arguments object.  In this reproduction case in the
+        bug, the wrong inferred value written there is the boolean true.
+
+        Subsequently, DFG compilation occurs and CreateArguments is emitted to first do
+        a check of the local for the Arguments object.  But because that local has a
+        wrong inferred value, the check always discovers a non-null value and we never
+        actually create the Arguments object.  Immediately after this, an OSR exit
+        occurs leaving the Arguments object local uninitialized.  Later on at arguments
+        tear off, we run into a boolean true where we had expected to find an Arguments
+        object, which in turn, leads to the crash.
+
+        The fix is to:
+        1. In the case where the resolveModeType is LocalClosureVar, change the
+           5th operand of op_put_to_scope to be a boolean.  True means that the
+           local var is watchable.  False means it is not watchable.  We no longer
+           pass the local index (instead of true) and UINT_MAX (instead of false).
+
+           This allows us to express more clearer in the code what that value means,
+           as well as remove the redundant way of getting the local's identifier.
+           The identifier is always the one passed in the 2nd operand. 
+
+        2. Previously, though intuitively, we know that the watchable variable
+           identifier should be the same as the one that is passed in operand 2, this
+           relationship was not clear in the code.  By code analysis, I confirmed that 
+           the callers of BytecodeGenerator::emitPutToScope() always use the same
+           identifier for operand 2 and for filling out the ResolveScopeInfo from
+           which we get the watchable variable identifier later.  I've changed the
+           code to make this clear now by always using the identifier passed in
+           operand 2.
+
+        3. In the case where the resolveModeType is LocalClosureVar,
+           initializeCapturedVariable() and emitPutToScope() will now query
+           hasWatchableVariable() to determine if the local is watchable or not.
+           Accordingly, we pass the boolean result of hasWatchableVariable() as
+           operand 5 of op_put_to_scope.
+
+        Also added some assertions.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::initializeCapturedVariable):
+        (JSC::BytecodeGenerator::hasConstant):
+        (JSC::BytecodeGenerator::emitPutToScope):
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::hasWatchableVariable):
+        (JSC::BytecodeGenerator::watchableVariableIdentifier):
+        (JSC::BytecodeGenerator::watchableVariable): Deleted.
+
+2015-01-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        PropertyListNode::emitNode duplicates the code to put a constant property
+        https://bugs.webkit.org/show_bug.cgi?id=140761
+
+        Reviewed by Geoffrey Garen.
+
+        Extracted PropertyListNode::emitPutConstantProperty to share the code.
+
+        Also made PropertyListNode::emitBytecode private since nobody is calling this function directly.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::PropertyListNode::emitBytecode):
+        (JSC::PropertyListNode::emitPutConstantProperty): Added.
+        * parser/Nodes.h:
+
+2015-01-22  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        put_by_val_direct need to check the property is index or not for using putDirect / putDirectIndex
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+
+        Reviewed by Geoffrey Garen.
+
+        In the put_by_val_direct operation, we use JSObject::putDirect.
+        However, it only accepts non-index property. For index property, we need to use JSObject::putDirectIndex.
+        This patch changes Identifier::asIndex() to return Optional<uint32_t>.
+        It forces callers to check the value is index or not explicitly.
+        Additionally, it checks toString-ed Identifier is index or not to choose putDirect / putDirectIndex.
+
+        * bytecode/GetByIdStatus.cpp:
+        (JSC::GetByIdStatus::computeFor):
+        * bytecode/PutByIdStatus.cpp:
+        (JSC::PutByIdStatus::computeFor):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitDirectPutById):
+        * dfg/DFGOperations.cpp:
+        (JSC::DFG::operationPutByValInternal):
+        * jit/JITOperations.cpp:
+        * jit/Repatch.cpp:
+        (JSC::emitPutTransitionStubAndGetOldStructure):
+        * jsc.cpp:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::getOwnPropertySlot):
+        (JSC::Arguments::put):
+        (JSC::Arguments::deleteProperty):
+        (JSC::Arguments::defineOwnProperty):
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncSort):
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::defineOwnProperty):
+        * runtime/JSCJSValue.cpp:
+        (JSC::JSValue::putToPrimitive):
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::JSGenericTypedArrayView<Adaptor>::getOwnPropertySlot):
+        (JSC::JSGenericTypedArrayView<Adaptor>::put):
+        (JSC::JSGenericTypedArrayView<Adaptor>::defineOwnProperty):
+        (JSC::JSGenericTypedArrayView<Adaptor>::deleteProperty):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::put):
+        (JSC::JSObject::putDirectAccessor):
+        (JSC::JSObject::putDirectCustomAccessor):
+        (JSC::JSObject::deleteProperty):
+        (JSC::JSObject::putDirectMayBeIndex):
+        (JSC::JSObject::defineOwnProperty):
+        * runtime/JSObject.h:
+        (JSC::JSObject::getOwnPropertySlot):
+        (JSC::JSObject::getPropertySlot):
+        (JSC::JSObject::putDirectInternal):
+        * runtime/JSString.cpp:
+        (JSC::JSString::getStringPropertyDescriptor):
+        * runtime/JSString.h:
+        (JSC::JSString::getStringPropertySlot):
+        * runtime/LiteralParser.cpp:
+        (JSC::LiteralParser<CharType>::parse):
+        * runtime/PropertyName.h:
+        (JSC::toUInt32FromCharacters):
+        (JSC::toUInt32FromStringImpl):
+        (JSC::PropertyName::asIndex):
+        * runtime/PropertyNameArray.cpp:
+        (JSC::PropertyNameArray::add):
+        * runtime/StringObject.cpp:
+        (JSC::StringObject::deleteProperty):
+        * runtime/Structure.cpp:
+        (JSC::Structure::prototypeChainMayInterceptStoreTo):
+
+2015-01-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Consolidate out arguments of parseFunctionInfo into a struct
+        https://bugs.webkit.org/show_bug.cgi?id=140754
+
+        Reviewed by Oliver Hunt.
+
+        Introduced ParserFunctionInfo for storing out arguments of parseFunctionInfo.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createFunctionExpr):
+        (JSC::ASTBuilder::createGetterOrSetterProperty): This one takes a property name in addition to
+        ParserFunctionInfo since the property name and the function name could differ.
+        (JSC::ASTBuilder::createFuncDeclStatement):
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseFunctionInfo):
+        (JSC::Parser<LexerType>::parseFunctionDeclaration):
+        (JSC::Parser<LexerType>::parseProperty):
+        (JSC::Parser<LexerType>::parseMemberExpression):
+        * parser/Parser.h:
+        * parser/ParserFunctionInfo.h: Added.
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createFunctionExpr):
+        (JSC::SyntaxChecker::createFuncDeclStatement):
+        (JSC::SyntaxChecker::createClassDeclStatement):
+        (JSC::SyntaxChecker::createGetterOrSetterProperty):
+
+2015-01-21  Mark Hahnenberg  <mhahnenb@gmail.com>
+
+        Change Heap::m_compiledCode to use a Vector
+        https://bugs.webkit.org/show_bug.cgi?id=140717
+
+        Reviewed by Andreas Kling.
+
+        Right now it's a DoublyLinkedList, which is iterated during each
+        collection. This contributes to some of the longish Eden pause times.
+        A Vector would be more appropriate and would also allow ExecutableBase
+        to be 2 pointers smaller.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::deleteAllCompiledCode):
+        (JSC::Heap::deleteAllUnlinkedFunctionCode):
+        (JSC::Heap::clearUnmarkedExecutables):
+        * heap/Heap.h:
+        * runtime/Executable.h: No longer need to inherit from DoublyLinkedListNode.
+
+2015-01-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        BytecodeGenerator shouldn't expose all of its member variables
+        https://bugs.webkit.org/show_bug.cgi?id=140752
+
+        Reviewed by Mark Lam.
+
+        Added "private:" and removed unused data members as detected by clang.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::lastOpcodeID): Added. Used in BinaryOpNode::emitBytecode.
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::BinaryOpNode::emitBytecode):
+
+2015-01-21  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: ASSERT expanding objects in console PrimitiveBindingTraits<T>::assertValueHasExpectedType
+        https://bugs.webkit.org/show_bug.cgi?id=140746
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InjectedScriptSource.js:
+        Do not add impure properties to the descriptor object that will
+        eventually be sent to the frontend.
+
+2015-01-21  Matthew Mirman  <mmirman@apple.com>
+
+        Updated split such that it does not include the empty end of input string match.
+        https://bugs.webkit.org/show_bug.cgi?id=138129
+        <rdar://problem/18807403>
+
+        Reviewed by Filip Pizlo.
+
+        * runtime/StringPrototype.cpp:
+        (JSC::stringProtoFuncSplit):
+        * tests/stress/empty_eos_regex_split.js: Added.
+
 2015-01-21  Michael Saboff  <msaboff@apple.com>
 
         Eliminate Scope slot from JavaScript CallFrame

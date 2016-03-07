@@ -1,3 +1,800 @@
+2015-01-23  Chris Dumez  <cdumez@apple.com>
+
+        Leverage CSSValuePool's font family cache in CSSComputedStyleDeclaration
+        https://bugs.webkit.org/show_bug.cgi?id=140829
+
+        Reviewed by Andreas Kling.
+
+        Leverage CSSValuePool's font family cache in CSSComputedStyleDeclaration
+        by calling CSSValuePool::createFontFamilyValue() to create the font
+        family CSSPrimitiveValue instead of cssValuePool().createValue().
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::valueForFamily):
+
+2015-01-23  Timothy Horton  <timothy_horton@apple.com>
+
+        QLPreviewMenuItem popovers don't close when the page scrolls
+        https://bugs.webkit.org/show_bug.cgi?id=140806
+        <rdar://problem/19555618>
+
+        Reviewed by Beth Dakin.
+
+        * platform/spi/mac/QuickLookMacSPI.h:
+        Add some SPI.
+
+2015-01-23  Andreas Kling  <akling@apple.com>
+
+        Hang CSSFontSelector off Document instead of StyleResolver.
+        <https://webkit.org/b/140820>
+
+        Reviewed by Antti Koivisto.
+
+        Move the CSSFontSelector from StyleResolver to Document. This is the first
+        step towards making the CSSFontSelector be able to survive full style recalc.
+
+        Clearing a Document's StyleResolver will still nuke the CSSFontSelector,
+        though that is done in Document::clearStyleResolver() now.
+
+        * css/CSSFontSelector.cpp:
+        (WebCore::CSSFontSelector::CSSFontSelector):
+        * css/CSSFontSelector.h:
+
+            Modernize CSSFontSelector construction a bit by having create() return
+            a Ref and the constructor take a Document& instead of a Document*.
+            Also made the constructor explicit.
+
+        (WebCore::StyleResolver::~StyleResolver):
+        * dom/Document.cpp:
+        (WebCore::Document::clearStyleResolver):
+
+            Nuke the current CSSFontSelector in clearStyleResolver() instead of
+            in ~StyleResolver. It's a minor change, but shows the way forward.
+            Added a FIXME about how CSSFontSelector should eventually survive
+            this operation.
+
+        (WebCore::Document::fontSelector):
+        * css/FontLoader.cpp:
+        (WebCore::FontLoader::loadFont):
+        (WebCore::FontLoader::checkFont):
+        (WebCore::FontLoader::resolveFontStyle):
+        * css/RuleSet.cpp:
+        (WebCore::RuleSet::addChildRules):
+        * css/StyleResolver.h:
+        (WebCore::StyleResolver::fontSelector): Deleted.
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::StyleResolver):
+        (WebCore::StyleResolver::appendAuthorStyleSheets):
+        (WebCore::StyleResolver::styleForElement):
+        (WebCore::StyleResolver::defaultStyleForElement):
+        (WebCore::StyleResolver::updateFont):
+        * dom/Document.h:
+        * html/canvas/CanvasRenderingContext2D.cpp:
+        (WebCore::CanvasRenderingContext2D::setFont):
+        * rendering/RenderListBox.cpp:
+        (WebCore::RenderListBox::updateFromElement):
+        (WebCore::RenderListBox::paintItemForeground):
+        * rendering/RenderMenuList.cpp:
+        (RenderMenuList::fontSelector):
+        * rendering/RenderSearchField.cpp:
+        (WebCore::RenderSearchField::fontSelector):
+        * rendering/TextAutoSizing.cpp:
+        (WebCore::TextAutoSizingValue::adjustNodeSizes):
+        (WebCore::TextAutoSizingValue::reset):
+        * rendering/svg/RenderSVGInlineText.cpp:
+        (WebCore::RenderSVGInlineText::computeNewScaledFontForStyle):
+        * style/StyleResolveForDocument.cpp:
+        (WebCore::Style::resolveForDocument):
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::resolveTree):
+
+            Move CSSFontSelector ownership from StyleResolver to Document.
+
+2015-01-23  Jer Noble  <jer.noble@apple.com>
+
+        Layout Test http/tests/media/track-in-band-hls-metadata.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=140827
+
+        Reviewed by Eric Carlson.
+
+        Create the m_metadataTrack by calling prepareMetadataTrack() before deref-ing it.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::metadataDidArrive):
+
+2015-01-23  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add initial database process support
+        https://bugs.webkit.org/show_bug.cgi?id=139491
+
+        Reviewed by Sergio Villar Senin.
+
+        * platform/sql/SQLiteFileSystem.cpp:
+        (WebCore::SQLiteFileSystem::openDatabase): Use
+        WebCore::fileSystemRepresentation() for the database filename,
+        otherwise sqlite3_open() fails when the filename contains "%2E".
+
+2015-01-23  Byeongha Cho  <byeongha.cho@samsung.com>
+
+        Initialization for some member variable of FontPlatformData
+        https://bugs.webkit.org/show_bug.cgi?id=136327
+
+        Reviewed by Myles C. Maxfield.
+
+        No new tests. There's no functional change.
+
+        * platform/graphics/freetype/FontPlatformDataFreeType.cpp:
+        (WebCore::FontPlatformData::FontPlatformData):
+        (WebCore::FontPlatformData::operator=):
+        (WebCore::FontPlatformData::~FontPlatformData):
+
+2015-01-23  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Rename ChildNodeRemovalNotifier::m_insertionPoint to m_removalPoint
+        https://bugs.webkit.org/show_bug.cgi?id=140766
+
+        Reviewed by Andreas Kling.
+
+        ChildNodeRemovalNotifier::ChildNodeRemovalNotifier(...) should take
+        a node as removal point.
+        It's probably Copy/Paste from ChildNodeInsertionNotifier::m_insertionPoint.
+
+        No new tests. No behavior change.
+
+        * dom/ContainerNodeAlgorithms.h:
+        (WebCore::ChildNodeRemovalNotifier::ChildNodeRemovalNotifier):
+        (WebCore::ChildNodeRemovalNotifier::notifyNodeRemovedFromDocument):
+        (WebCore::ChildNodeRemovalNotifier::notifyNodeRemovedFromTree):
+
+2015-01-23  Hunseop Jeong  <hs85.jeong@samsung.com>
+
+        [GTK] Fix debug build after r178940
+        https://bugs.webkit.org/show_bug.cgi?id=140814
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/graphics/opentype/OpenTypeVerticalData.cpp:
+        (WebCore::OpenTypeVerticalData::substituteWithVerticalGlyphs):
+
+2015-01-22  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Move leading whitespace handling from removeTrailingWhitespace() to initializeNewLine().
+        https://bugs.webkit.org/show_bug.cgi?id=140757
+
+        Reviewed by Antti Koivisto.
+
+        Checking if overflowed pre-wrap whitespace needs to be ignored should not be part of the trailing whitespace handling.
+        Move it to initializeNewLine(). 
+
+        No change in functionality.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::preWrap):
+        (WebCore::SimpleLineLayout::removeTrailingWhitespace):
+        (WebCore::SimpleLineLayout::initializeNewLine):
+        * rendering/SimpleLineLayoutFlowContents.h:
+        (WebCore::SimpleLineLayout::FlowContents::isLineBreak):
+
+2015-01-22  Jer Noble  <jer.noble@apple.com>
+
+        [iOS] Media controls disappear when loading a HLS live stream
+        https://bugs.webkit.org/show_bug.cgi?id=140792
+        rdar://problem/19491658
+
+        Reviewed by Dean Jackson.
+
+        Overload reconnectControls to reconnect the "start playback" button
+        if the control type has been set to "StartPlaybackButton".
+
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.reconnectControls):
+
+2015-01-22  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] No plugin content on some sites.
+        https://bugs.webkit.org/show_bug.cgi?id=140780
+
+        Reviewed by Anders Carlsson.
+
+        Return script instance from ScriptController::createScriptInstanceForWidget(),
+        instead of always returning null.
+
+        * bindings/js/ScriptController.cpp:
+        (WebCore::ScriptController::createScriptInstanceForWidget):
+        * plugins/PluginViewBase.h:
+        (WebCore::PluginViewBase::bindingInstance):
+
+2015-01-22  Jer Noble  <jer.noble@apple.com>
+
+        [Mac][EME] Adopt changes to AVStreamSession class methods
+        https://bugs.webkit.org/show_bug.cgi?id=140778
+        rdar://problem/19458200
+
+        Reviewed by Eric Carlson.
+
+        AVStreamSession class methods have added a "storageDirectoryAtURL:" parameter so as to be able to
+        read and modify records stored at non-default storage locations.
+
+        * Modules/encryptedmedia/MediaKeySession.cpp:
+        (WebCore::MediaKeySession::mediaKeysStorageDirectory): Implement client method by querying document and settings.
+        * Modules/encryptedmedia/MediaKeySession.h:
+        * platform/graphics/CDMSession.h:
+        * platform/graphics/avfoundation/objc/CDMSessionMediaSourceAVFObjC.h:
+        * platform/graphics/avfoundation/objc/CDMSessionMediaSourceAVFObjC.mm:
+        (WebCore::CDMSessionMediaSourceAVFObjC::releaseKeys): Check whether the AVStreamSession class responds to new selector before calling.
+        (WebCore::CDMSessionMediaSourceAVFObjC::update): Ditto.
+        (WebCore::CDMSessionMediaSourceAVFObjC::generateKeyReleaseMessage): Ditto.
+        (WebCore::CDMSessionMediaSourceAVFObjC::storagePath): Fetch the storage path from the client.
+
+2015-01-22  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION (174847): can't view NHK(Japan's national public broadcasting organization)’s news pages
+        https://bugs.webkit.org/show_bug.cgi?id=140794
+
+        Reviewed by Anders Carlsson.
+
+        If a document.open has been set, return it instead of always returning a new,
+        non-cached instance of jsHTMLDocumentPrototypeFunctionOpen.
+
+        Test: js/dom/document-overwrite-open.html
+
+        * bindings/js/JSHTMLDocumentCustom.cpp:
+        (WebCore::JSHTMLDocument::getOwnPropertySlot):
+
+2015-01-22  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Reset LineState when starting a new line.
+        https://bugs.webkit.org/show_bug.cgi?id=140789
+
+        Reviewed by Antti Koivisto.
+
+        Reset LineState when starting a new line to ensure we always
+        start with a clean state.
+
+        No change in functionality.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::updateLineConstrains):
+        (WebCore::SimpleLineLayout::initializeNewLine):
+        (WebCore::SimpleLineLayout::splitFragmentToFitLine):
+        (WebCore::SimpleLineLayout::createTextRuns):
+
+2015-01-22  Roger Fong  <roger_fong@apple.com>
+
+        [WebGL2] Create empty interface files for new WebGL2 objects.
+        https://bugs.webkit.org/show_bug.cgi?id=140779.
+        <rdar://problem/15002288>
+
+        Reviewed by Dean Jackson.
+
+        * CMakeLists.txt:
+        * DerivedSources.cpp:
+        * DerivedSources.make:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * html/canvas/WebGLQuery.cpp: Added.
+        (WebCore::WebGLQuery::create):
+        (WebCore::WebGLQuery::~WebGLQuery):
+        (WebCore::WebGLQuery::WebGLQuery):
+        (WebCore::WebGLQuery::deleteObjectImpl):
+        * html/canvas/WebGLQuery.h: Added.
+        * html/canvas/WebGLQuery.idl: Added.
+        * html/canvas/WebGLSampler.cpp: Added.
+        (WebCore::WebGLSampler::create):
+        (WebCore::WebGLSampler::~WebGLSampler):
+        (WebCore::WebGLSampler::WebGLSampler):
+        (WebCore::WebGLSampler::deleteObjectImpl):
+        * html/canvas/WebGLSampler.h: Added.
+        * html/canvas/WebGLSampler.idl: Added.
+        * html/canvas/WebGLSharedObject.h:
+        (WebCore::WebGLSharedObject::isQuery):
+        (WebCore::WebGLSharedObject::isSampler):
+        (WebCore::WebGLSharedObject::isSync):
+        (WebCore::WebGLSharedObject::isTransformFeedback):
+        (WebCore::WebGLSharedObject::isVertexArrayObject):
+        * html/canvas/WebGLSync.cpp: Added.
+        (WebCore::WebGLSync::create):
+        (WebCore::WebGLSync::~WebGLSync):
+        (WebCore::WebGLSync::WebGLSync):
+        (WebCore::WebGLSync::deleteObjectImpl):
+        * html/canvas/WebGLSync.h: Added.
+        * html/canvas/WebGLSync.idl: Added.
+        * html/canvas/WebGLTransformFeedback.cpp: Added.
+        (WebCore::WebGLTransformFeedback::create):
+        (WebCore::WebGLTransformFeedback::~WebGLTransformFeedback):
+        (WebCore::WebGLTransformFeedback::WebGLTransformFeedback):
+        (WebCore::WebGLTransformFeedback::deleteObjectImpl):
+        * html/canvas/WebGLTransformFeedback.h: Added.
+        * html/canvas/WebGLTransformFeedback.idl: Added.
+        * html/canvas/WebGLVertexArrayObject.cpp: Added.
+        (WebCore::WebGLVertexArrayObject::create):
+        (WebCore::WebGLVertexArrayObject::~WebGLVertexArrayObject):
+        (WebCore::WebGLVertexArrayObject::WebGLVertexArrayObject):
+        (WebCore::WebGLVertexArrayObject::deleteObjectImpl):
+        * html/canvas/WebGLVertexArrayObject.h: Added.
+        * html/canvas/WebGLVertexArrayObject.idl: Added.
+
+2015-01-22  Chris Dumez  <cdumez@apple.com>
+
+        Fix remaining multiple targets per rule issues in DerivedSources.make
+        https://bugs.webkit.org/show_bug.cgi?id=140790
+
+        Reviewed by David Kilzer.
+
+        Fix remaining multiple target per rule issues in DerivedSources.make,
+        similarly to Bug 140784 and Bug 140756.
+
+        This was causing us to run scripts several times to generate the same
+        files and may lead to malformed files in case of concurrency.
+
+        * DerivedSources.make:
+
+2015-01-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add a build flag for ES6 class syntax
+        https://bugs.webkit.org/show_bug.cgi?id=140760
+
+        Reviewed by Michael Saboff.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-01-22  Chris Dumez  <cdumez@apple.com>
+
+        SVGNames.cpp and HTMLNames.cpp are sometimes malformed
+        https://bugs.webkit.org/show_bug.cgi?id=140784
+        <rdar://problem/17701233>
+
+        Reviewed by David Kilzer.
+
+        Due to bad rules in DerivedSources.make, make_names.pl was called
+        several times with the same arguments during build. This is because
+        SVG/HTML/MathML each had several targets associated to the same
+        command. This would cause the command (make_names.pl) to be called
+        once per target. However, make_names.pl only needs to be executed
+        once to generate all of the files currently marked as target.
+
+        Calling make_names.pl several times for the same files is not only
+        wasteful, but it can also lead to malformed generated files if the
+        scripts instances are executed in parallel as they will read / write
+        from / to the same files.
+
+        This patch uses INTERMEDIATE targets instead so that we can still
+        indicate which files are generated by make_names.pl but only run
+        the script once.
+
+        This is a similar fix as for Bug 140756. There may several other
+        similar issues in DerivedSources.make but this patch focuses on
+        make_names.pl. I will take care of other in follow-ups if needed.
+
+        * DerivedSources.make:
+
+2015-01-22  Chris Dumez  <cdumez@apple.com>
+
+        Have Counter::create() return a Ref<Counter>
+        https://bugs.webkit.org/show_bug.cgi?id=140777
+
+        Reviewed by Andreas Kling.
+
+        Have Counter::create() return a Ref<Counter> instead of a PassRefPtr.
+
+        The CSSPrimitiveValue class needed some updates as well to support
+        constructing a CSSPrimitiveValue object from a Ref<>.
+
+        * css/CSSPrimitiveValue.cpp:
+        (WebCore::CSSPrimitiveValue::init):
+        * css/CSSPrimitiveValue.h:
+        (WebCore::CSSPrimitiveValue::create):
+        (WebCore::CSSPrimitiveValue::CSSPrimitiveValue):
+        * css/Counter.h:
+        (WebCore::Counter::create):
+        (WebCore::Counter::cloneForCSSOM):
+
+2015-01-22  Chris Dumez  <cdumez@apple.com>
+
+        Drop the legacy FeatureCounter class
+        https://bugs.webkit.org/show_bug.cgi?id=140749
+
+        Reviewed by Andreas Kling.
+
+        Drop the legacy FeatureCounter class and use DiagnosticLoggingClient
+        instead.
+
+        * CMakeLists.txt:
+        * Configurations/WebCore.xcconfig:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::parseAttribute):
+        * loader/SubresourceLoader.cpp:
+        (WebCore::SubresourceLoader::willSendRequest):
+        (WebCore::SubresourceLoader::didReceiveResponse):
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::mustRevalidateDueToCacheHeaders):
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::logMemoryCacheResourceRequest):
+        (WebCore::CachedResourceLoader::requestResource):
+        (WebCore::CachedResourceLoader::determineRevalidationPolicy):
+        * page/DiagnosticLoggingKeys.cpp:
+        (WebCore::DiagnosticLoggingKeys::mustRevalidateIsExpiredKey):
+        (WebCore::DiagnosticLoggingKeys::playedKey):
+        (WebCore::DiagnosticLoggingKeys::noCacheKey):
+        (WebCore::DiagnosticLoggingKeys::noStoreKey):
+        (WebCore::DiagnosticLoggingKeys::notInMemoryCacheKey):
+        (WebCore::DiagnosticLoggingKeys::mediaKey):
+        (WebCore::DiagnosticLoggingKeys::isExpiredKey):
+        (WebCore::DiagnosticLoggingKeys::loadingKey):
+        (WebCore::DiagnosticLoggingKeys::inMemoryCacheKey):
+        (WebCore::DiagnosticLoggingKeys::reasonKey):
+        (WebCore::DiagnosticLoggingKeys::audioKey):
+        (WebCore::DiagnosticLoggingKeys::cachedResourceRevalidationKey):
+        (WebCore::DiagnosticLoggingKeys::resourceRequestKey):
+        (WebCore::DiagnosticLoggingKeys::revalidatingKey):
+        (WebCore::DiagnosticLoggingKeys::unusedKey):
+        (WebCore::DiagnosticLoggingKeys::unusedReasonCredentialSettingsKey):
+        (WebCore::DiagnosticLoggingKeys::unusedReasonErrorKey):
+        (WebCore::DiagnosticLoggingKeys::unusedReasonMustRevalidateNoValidatorKey):
+        (WebCore::DiagnosticLoggingKeys::unusedReasonNoStoreKey):
+        (WebCore::DiagnosticLoggingKeys::unusedReasonRedirectChainKey):
+        (WebCore::DiagnosticLoggingKeys::unusedReasonReloadKey):
+        (WebCore::DiagnosticLoggingKeys::unusedReasonTypeMismatchKey):
+        (WebCore::DiagnosticLoggingKeys::usedKey):
+        (WebCore::DiagnosticLoggingKeys::userKey):
+        (WebCore::DiagnosticLoggingKeys::videoKey):
+        (WebCore::DiagnosticLoggingKeys::webViewKey):
+        (WebCore::DiagnosticLoggingKeys::zoomedKey):
+        * page/DiagnosticLoggingKeys.h:
+        * page/Settings.in:
+        * platform/FeatureCounter.cpp: Removed.
+        * platform/FeatureCounter.h: Removed.
+        * platform/FeatureCounterKeys.h: Removed.
+        * platform/ios/FeatureCounter.mm: Removed.
+
+2015-01-22  Benjamin Poulain  <benjamin@webkit.org>
+
+        When extending the fallback transitions with their closure, we are modifying the Set while iterating it
+        https://bugs.webkit.org/show_bug.cgi?id=140785
+
+        Reviewed by Andreas Kling.
+
+        * contentextensions/NFAToDFA.cpp:
+        (WebCore::ContentExtensions::populateTransitions):
+        Make that in two steps: accumulate the fallback transitions then add the closure
+        of every element.
+
+2015-01-21  Antti Koivisto  <antti@apple.com>
+
+        Rename SimpleFontData to Font
+        https://bugs.webkit.org/show_bug.cgi?id=140496
+
+        Reviewed by Zalan Bujtas.
+
+        The fallback supporting Font type was renamed FontCascade.
+        We can now rename SimpleFontData to Font matching the usual definition.
+
+2015-01-22  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Make trailing whitespace handling more explicit.
+        https://bugs.webkit.org/show_bug.cgi?id=140776
+
+        Reviewed by Antti Koivisto.
+
+        Differentiate between committed and uncommitted trailing whitespace.
+        This enables further cleanup in removeTrailingWhitespace().
+
+        No change in functionality.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::LineState::commitAndCreateRun):
+        (WebCore::SimpleLineLayout::LineState::addUncommitted):
+        (WebCore::SimpleLineLayout::LineState::hasWhitespaceOnly):
+        (WebCore::SimpleLineLayout::LineState::removeTrailingWhitespace):
+        (WebCore::SimpleLineLayout::removeTrailingWhitespace):
+        (WebCore::SimpleLineLayout::LineState::LineState): Deleted.
+        (WebCore::SimpleLineLayout::LineState::removeCommittedTrailingWhitespace): Deleted.
+        (WebCore::SimpleLineLayout::LineState::resetTrailingWhitespace): Deleted.
+
+2015-01-22  Alexey Proskuryakov  <ap@apple.com>
+
+        Crash in URL::protocol() after appcache load fails
+        https://bugs.webkit.org/show_bug.cgi?id=140755
+        rdar://problem/7881290
+
+        Reviewed by Dan Bates.
+
+        Test: http/tests/appcache/404-resource-with-slow-main-resource.php
+
+        Not every cache that isn't being updated is complete. It could also be in a zombie
+        state after failing to load. We get rid of the cache once the main resource finishes
+        loading, but while it's being loaded, the zombie still looks like a regular
+        candidate application cache.
+
+        * loader/appcache/ApplicationCache.cpp: (WebCore::ApplicationCache::isComplete):
+        * loader/appcache/ApplicationCache.h:
+        Removed const from isComplete(), because otherwise we couldn't use ApplicationCacheGroup::m_caches.contains().
+        Constness doesn't make a lot of sense for these objects anyway.
+
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::failedLoadingMainResource): Toned down an assertion.
+        We can fail a main resource load when the document has a zombie appcache, too.
+
+        * loader/appcache/ApplicationCacheGroup.h:
+        (WebCore::ApplicationCacheGroup::cacheIsComplete):
+        (WebCore::ApplicationCacheGroup::cacheIsBeingUpdated): Deleted.
+        These functions are only used in ApplicationCache::isComplete().
+
+2015-01-22  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Avoid defining always empty Vector<TextCheckingResult>
+        https://bugs.webkit.org/show_bug.cgi?id=140765
+
+        Reviewed by Alexey Proskuryakov.
+
+        Pass an empty vector direclty instead.
+
+        No new tests. No behavior change.
+
+        * editing/SpellChecker.cpp:
+        (WebCore::SpellChecker::didCheckCancel):
+
+2015-01-22  Chris Dumez  <cdumez@apple.com>
+
+        makeprop.pl script is called too many times during build
+        https://bugs.webkit.org/show_bug.cgi?id=140756
+        <rdar://problem/19467942>
+
+        Reviewed by David Kilzer.
+
+        The makeprop.pl script was called 4 times (instead of once) during
+        build due to a bad Makefile rule in DerivedSources.make. makeprop.pl
+        had 4 associated targets and thus was called 4 times (with the same
+        parameter). Calling it once is sufficient to generate all 4 files
+        that were marked as target. This patch uses an INTERMEDIATE target
+        instead so that we can indicate that several files are generated
+        by the same command.
+
+        I believe this may be the reason for the sporatic build failures
+        that look like:
+        """
+        CSSPropertyNames.gperf: No keywords in input file!
+        calling gperf failed: 256 at WebCore/css/makeprop.pl line 1036.
+        """
+        The makeprop.pl script is generating gperf's input file and calling the
+        gperf executable on this file. If the script is executed several times
+        in parallel, it would explain the build failures as several instances
+        of makeprop.pl may be writing / reading from the same
+        CSSPropertyNames.gperf file.
+
+        * DerivedSources.make:
+
+2015-01-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178894.
+        https://bugs.webkit.org/show_bug.cgi?id=140775
+
+        Broke JSC and bindings tests (Requested by ap_ on #webkit).
+
+        Reverted changeset:
+
+        "put_by_val_direct need to check the property is index or not
+        for using putDirect / putDirectIndex"
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+        http://trac.webkit.org/changeset/178894
+
+2015-01-22  David Kilzer  <ddkilzer@apple.com>
+
+        [iOS] Fix iphoneos SDK builds for ios-ews queue
+        <http://webkit.org/b/140748>
+
+        Reviewed by Daniel Bates.
+
+        * WebCore.xcodeproj/project.pbxproj: Add new SPI headers.
+        * platform/graphics/cg/ImageBufferCG.cpp: Switch to using
+        "IOSurfaceSPI.h" from <IOSurface/IOSurface.h>.
+        * platform/graphics/cg/ImageBufferDataCG.cpp: Ditto.
+        * platform/graphics/cocoa/IOSurface.mm: Ditto.  Move definitions
+        in <IOSurface/IOSurfacePrivate.h> into "IOSurfaceSPI.h".
+        * platform/spi/cg/CoreGraphicsSPI.h: Switch to
+        WTF_EXTERN_C_{BEGIN,END}.  Add
+        CGContextGetFontAntialiasingStyle() and
+        CGContextSetFontAntialiasingStyle().
+        * platform/spi/cocoa/IOPMLibSPI.h: Switch to use IOReturnSPI.h.
+        * platform/spi/cocoa/IOReturnSPI.h: Add.
+        * platform/spi/cocoa/IOSurfaceSPI.h: Add.
+        * platform/spi/cocoa/IOTypesSPI.h: Add.
+
+2015-01-21  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Skip items spanning flex tracks when sizing content based tracks
+        https://bugs.webkit.org/show_bug.cgi?id=140720
+
+        Reviewed by David Hyatt.
+
+        Section "11.5. Resolve Intrinsic Track Sizes" of the specs forces
+        us to ignore items spanning tracks with flex sizing functions when
+        resolving the content-based track sizing functions. Items with
+        span < 2 are not affected by this rule (as they will belong to a
+        single track). This way the algorithm ensures that min-content and
+        max-content restrictions are fulfilled before distributing the
+        extra space.
+
+        Test: fast/css-grid-layout/flex-and-content-sized-resolution-columns.html
+
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::spanningItemCrossesFlexibleSizedTracks):
+        (WebCore::integerSpanForDirection):
+        (WebCore::RenderGrid::resolveContentBasedTrackSizingFunctions):
+        * rendering/RenderGrid.h:
+
+2015-01-22  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        put_by_val_direct need to check the property is index or not for using putDirect / putDirectIndex
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+
+        Reviewed by Geoffrey Garen.
+
+        Test: js/dfg-put-by-val-direct-with-edge-numbers.html
+
+        * bindings/js/JSDOMWindowCustom.cpp:
+        (WebCore::JSDOMWindow::getOwnPropertySlot):
+        * bindings/js/JSHTMLAllCollectionCustom.cpp:
+        (WebCore::callHTMLAllCollection):
+        (WebCore::JSHTMLAllCollection::item):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateGetOwnPropertySlotBody):
+        (GenerateImplementation):
+        * bindings/scripts/test/JS/JSFloat64Array.cpp:
+        (WebCore::JSFloat64Array::getOwnPropertySlot):
+        (WebCore::JSFloat64Array::getOwnPropertyDescriptor):
+        (WebCore::JSFloat64Array::put):
+        * bindings/scripts/test/JS/JSTestEventTarget.cpp:
+        (WebCore::JSTestEventTarget::getOwnPropertySlot):
+        * bridge/runtime_array.cpp:
+        (JSC::RuntimeArray::getOwnPropertySlot):
+        (JSC::RuntimeArray::put):
+
+2015-01-19  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Size tracks using a list of all items sorted by span
+        https://bugs.webkit.org/show_bug.cgi?id=140615
+
+        Reviewed by Andreas Kling.
+
+        In r173620 we fixed
+        RenderGrid::resolveContentBasedTrackSizingFunctions() so that it
+        now collects all items spanning content-sized tracks and process
+        them one by one after sorting them by ascending span.
+
+        The problem is that it was incorrectly implemented, it has two
+        important bugs. First one is that the hash table that collects
+        items is regenerated after processing each track, so it's actually
+        doing nothing. Secondly we're only sorting the items on each
+        track, instead of all the items in the grid.
+
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::resolveContentBasedTrackSizingFunctions):
+
+2015-01-21  Daniel Bates  <dabates@apple.com>
+
+        Fix the iOS release build after <http://trac.webkit.org/changeset/178868>
+        (https://bugs.webkit.org/show_bug.cgi?id=140742)
+
+        Substitute ASSERT_UNUSED() for ASSERT() since the parameter layer is used only in the assertion expression.
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::needsIOSDumpRenderTreeMainFrameRenderViewLayerIsAlwaysOpaqueHack):
+
+2015-01-21  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Many compositing tests fail in DumpRenderTree due to contentsOpaque difference
+        https://bugs.webkit.org/show_bug.cgi?id=140742
+
+        Reviewed by Simon Fraser.
+
+        Make RenderLayerBacking::layerTreeAsText() (including internals.layerTreeAsText()) always
+        report that the main frame's RenderView layer is opaque when running iOS DumpRenderTree to
+        avoid test failures and the need to maintain for iOS WebKit1 an almost identical copy of the
+        platform-independent compositing test results.
+
+        The main frame's RenderView layer is always transparent in iOS WebKit1 since it does
+        not make use of a tiled cache layer and defers to UIKit to handle the final compositing
+        of the web view, including applying the page scale factor.
+
+        * platform/RuntimeApplicationChecksIOS.mm:
+        (WebCore::applicationIsDumpRenderTree): The app bundle identifier of DumpRenderTree has
+        the form org.webkit.DumpRenderTreeX where X is some non-negative integer.
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::dumpProperties): Modified to report that a layer is opaque when
+        GraphicsLayerClient::needsIOSDumpRenderTreeMainFrameRenderViewLayerIsAlwaysOpaqueHack() returns true.
+        * platform/graphics/GraphicsLayerClient.h:
+        (WebCore::GraphicsLayerClient::needsIOSDumpRenderTreeMainFrameRenderViewLayerIsAlwaysOpaqueHack): Added
+        default implementation (returns false).
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::needsIOSDumpRenderTreeMainFrameRenderViewLayerIsAlwaysOpaqueHack): Added;
+        returns true when running in DumpRenderTree and the passed GraphicsLayer corresponds to the main frame's
+        RenderView layer.
+        * rendering/RenderLayerBacking.h:
+
+2015-01-21  Roger Fong  <roger_fong@apple.com>
+
+        WebGL2 (spec section 3.1): Add new types to WebGL2 API.
+        https://bugs.webkit.org/show_bug.cgi?id=140741.
+        <rdar://problem/19552962>
+
+        Reviewed by Dean Jackson.
+
+        * html/canvas/WebGL2RenderingContext.idl:
+
+2015-01-21  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Move nextTextFragment() to FlowContents class.
+        https://bugs.webkit.org/show_bug.cgi?id=140738
+
+        Reviewed by Antti Koivisto.
+
+        This is in preparation to make FlowContents an iterator class.
+        
+        No change in functionality.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::LineState::addUncommitted):
+        (WebCore::SimpleLineLayout::LineState::addUncommittedWhitespace):
+        (WebCore::SimpleLineLayout::removeTrailingWhitespace):
+        (WebCore::SimpleLineLayout::initializeNewLine):
+        (WebCore::SimpleLineLayout::splitFragmentToFitLine):
+        (WebCore::SimpleLineLayout::createLineRuns):
+        (WebCore::SimpleLineLayout::TextFragment::TextFragment): Deleted.
+        (WebCore::SimpleLineLayout::TextFragment::isEmpty): Deleted.
+        (WebCore::SimpleLineLayout::nextFragment): Deleted.
+        * rendering/SimpleLineLayoutFlowContents.cpp:
+        (WebCore::SimpleLineLayout::FlowContents::nextTextFragment):
+        * rendering/SimpleLineLayoutFlowContents.h:
+        (WebCore::SimpleLineLayout::FlowContents::TextFragment::TextFragment):
+        (WebCore::SimpleLineLayout::FlowContents::TextFragment::isEmpty):
+
+2015-01-21  Andreas Kling  <akling@apple.com>
+
+        DocumentLoader::timing() should return a reference.
+        <https://webkit.org/b/128272>
+
+        Reviewed by Antti Koivisto.
+
+        There is always a DocumentLoadTiming object, so return it by
+        reference since it can never be null.
+
+        * Modules/gamepad/NavigatorGamepad.cpp:
+        (WebCore::NavigatorGamepad::from):
+        * dom/ScriptedAnimationController.cpp:
+        (WebCore::ScriptedAnimationController::serviceScriptedAnimations):
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::parseAttribute):
+        * inspector/InspectorResourceAgent.cpp:
+        (WebCore::buildObjectForTiming):
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::finishedLoading):
+        (WebCore::DocumentLoader::willSendRequest):
+        (WebCore::DocumentLoader::continueAfterNavigationPolicy):
+        (WebCore::DocumentLoader::startLoadingMainResource):
+        * loader/DocumentLoader.h:
+        (WebCore::DocumentLoader::timing):
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::stopLoading):
+        (WebCore::FrameLoader::commitProvisionalLoad):
+        (WebCore::FrameLoader::loadProvisionalItemFromCachedPage):
+        * page/DOMWindow.cpp:
+        (WebCore::DOMWindow::dispatchLoadEvent):
+        * page/Performance.cpp:
+        (WebCore::Performance::now):
+        * page/PerformanceNavigation.cpp:
+        (WebCore::PerformanceNavigation::redirectCount):
+        * page/PerformanceResourceTiming.cpp:
+        (WebCore::monotonicTimeToDocumentMilliseconds):
+        (WebCore::PerformanceResourceTiming::resourceTimeToDocumentMilliseconds):
+        * page/PerformanceTiming.cpp:
+        (WebCore::PerformanceTiming::documentLoadTiming):
+
 2015-01-21  Benjamin Poulain  <benjamin@webkit.org>
 
         Handle the transition on any character as a separate type of transition

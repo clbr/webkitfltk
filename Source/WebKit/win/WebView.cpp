@@ -96,6 +96,7 @@
 #include <WebCore/FileSystem.h>
 #include <WebCore/FloatQuad.h>
 #include <WebCore/FocusController.h>
+#include <WebCore/Font.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameSelection.h>
 #include <WebCore/FrameTree.h>
@@ -148,7 +149,6 @@
 #include <WebCore/SecurityOrigin.h>
 #include <WebCore/SecurityPolicy.h>
 #include <WebCore/Settings.h>
-#include <WebCore/SimpleFontData.h>
 #include <WebCore/SystemInfo.h>
 #include <WebCore/WindowMessageBroadcaster.h>
 #include <WebCore/WindowsTouch.h>
@@ -4177,8 +4177,7 @@ HRESULT STDMETHODCALLTYPE WebView::setSelectedDOMRange(
     return E_NOTIMPL;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::selectedDOMRange( 
-        /* [retval][out] */ IDOMRange** /*range*/)
+HRESULT WebView::selectedDOMRange(IDOMRange** range)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
@@ -4191,18 +4190,34 @@ HRESULT STDMETHODCALLTYPE WebView::selectionAffinity(
     return E_NOTIMPL;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::setEditable( 
-        /* [in] */ BOOL /*flag*/)
+HRESULT WebView::setEditable(BOOL flag)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_page)
+        return S_OK;
+
+    if (m_page->isEditable() == flag)
+        return S_OK;
+
+    m_page->setEditable(flag);
+    if (!m_page->tabKeyCyclesThroughElements())
+        m_page->setTabKeyCyclesThroughElements(!flag);
+
+    return S_OK;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::isEditable( 
-        /* [retval][out] */ BOOL* /*isEditable*/)
+HRESULT WebView::isEditable(BOOL* isEditable)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!isEditable)
+        return E_POINTER;
+
+    if (!m_page) {
+        *isEditable = FALSE;
+        return S_OK;
+    }
+
+    *isEditable = m_page->isEditable();
+
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setTypingStyle( 
@@ -4340,10 +4355,39 @@ HRESULT STDMETHODCALLTYPE WebView::undoManager(
     return E_NOTIMPL;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::setEditingDelegate( 
-        /* [in] */ IWebEditingDelegate* d)
+HRESULT WebView::setEditingDelegate(IWebEditingDelegate* d)
 {
+    if (m_editingDelegate == d)
+        return S_OK;
+
+    static BSTR webViewDidBeginEditingNotificationName = SysAllocString(WebViewDidBeginEditingNotification);
+    static BSTR webViewDidChangeSelectionNotificationName = SysAllocString(WebViewDidChangeSelectionNotification);
+    static BSTR webViewDidEndEditingNotificationName = SysAllocString(WebViewDidEndEditingNotification);
+    static BSTR webViewDidChangeTypingStyleNotificationName = SysAllocString(WebViewDidChangeTypingStyleNotification);
+    static BSTR webViewDidChangeNotificationName = SysAllocString(WebViewDidChangeNotification);
+
+    IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
+
+    COMPtr<IWebNotificationObserver> wasObserver(Query, m_editingDelegate);
+    if (wasObserver) {
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidBeginEditingNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidChangeSelectionNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidEndEditingNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidChangeTypingStyleNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidChangeNotificationName, nullptr);
+    }
+
     m_editingDelegate = d;
+
+    COMPtr<IWebNotificationObserver> isObserver(Query, m_editingDelegate);
+    if (isObserver) {
+        notifyCenter->addObserver(isObserver.get(), webViewDidBeginEditingNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidChangeSelectionNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidEndEditingNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidChangeTypingStyleNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidChangeNotificationName, nullptr);
+    }
+
     return S_OK;
 }
     
@@ -5505,7 +5549,7 @@ HRESULT WebView::setProhibitsMainFrameScrolling(BOOL b)
 
 HRESULT WebView::setShouldApplyMacFontAscentHack(BOOL b)
 {
-    SimpleFontData::setShouldApplyMacAscentHack(b);
+    Font::setShouldApplyMacAscentHack(b);
     return S_OK;
 }
 

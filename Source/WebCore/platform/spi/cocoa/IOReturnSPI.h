@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,29 +23,19 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EmojiFallbackFontSelector_h
-#define EmojiFallbackFontSelector_h
+#ifndef IOReturnSPI_h
+#define IOReturnSPI_h
 
-#include <WebCore/FontSelector.h>
-#include <wtf/PassRefPtr.h>
+#if PLATFORM(MAC) || USE(APPLE_INTERNAL_SDK)
 
-class EmojiFallbackFontSelector : public WebCore::FontSelector {
-public:
-    static PassRefPtr<EmojiFallbackFontSelector> create() { return adoptRef(new EmojiFallbackFontSelector()); }
-    virtual ~EmojiFallbackFontSelector() override { }
-    virtual WebCore::FontRanges fontRangesForFamily(const WebCore::FontDescription&, const AtomicString&) override { ASSERT_NOT_REACHED(); return WebCore::FontRanges(); }
-    virtual bool resolvesFamilyFor(const WebCore::FontDescription&) const override { ASSERT_NOT_REACHED(); return false; }
-    virtual size_t fallbackFontDataCount() override { return 1; };
-    virtual PassRefPtr<WebCore::SimpleFontData> fallbackFontDataAt(const WebCore::FontDescription&, size_t) override;
+#include <IOKit/IOReturn.h>
 
-    virtual void registerForInvalidationCallbacks(WebCore::FontSelectorClient*) override { }
-    virtual void unregisterForInvalidationCallbacks(WebCore::FontSelectorClient*) override { }
+#else
 
-    virtual unsigned version() const override { return 0; }
-    virtual unsigned uniqueId() const override { return 0; }
+#include <mach/kern_return.h>
 
-private:
-    EmojiFallbackFontSelector() { }
-};
+typedef kern_return_t IOReturn;
 
-#endif // EmojiFallbackFontSelector_h
+#endif
+
+#endif // IOReturnSPI_h

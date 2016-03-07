@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,27 +23,23 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if PLATFORM(IOS)
+#ifndef ParserFunctionInfo_h
+#define ParserFunctionInfo_h
 
-#include "EmojiFallbackFontSelector.h"
+namespace JSC {
 
-#include <WebCore/FontCache.h>
-#include <WebCore/SimpleFontData.h>
-#include <wtf/Assertions.h>
-#include <wtf/text/AtomicString.h>
+template <class TreeBuilder>
+struct ParserFunctionInfo {
+    const Identifier* name = 0;
+    typename TreeBuilder::FormalParameterList parameters = 0;
+    typename TreeBuilder::FunctionBody body = 0;
+    unsigned openBraceOffset = 0;
+    unsigned closeBraceOffset = 0;
+    int bodyStartLine = 0;
+    int bodyEndLine = 0;
+    unsigned bodyStartColumn = 0;
+};
 
-using namespace WebCore;
-
-PassRefPtr<SimpleFontData> EmojiFallbackFontSelector::fallbackFontDataAt(const FontDescription& fontDescription, size_t)
-{
-    DEPRECATED_DEFINE_STATIC_LOCAL(AtomicString, appleColorEmoji, ("Apple Color Emoji"));
-    RefPtr<SimpleFontData> fontData = fontCache().fontForFamily(fontDescription, appleColorEmoji);
-    if (!fontData) {
-        LOG_ERROR("Failed to get \"Apple Color Emoji\" from the font cache. Using the last resort fallback font instead.");
-        fontData = fontCache().lastResortFallbackFont(fontDescription);
-    }
-
-    return fontData.release();
 }
 
-#endif // PLATFORM(IOS)
+#endif
