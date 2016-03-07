@@ -168,12 +168,6 @@ void ResourceHandle::platformSetDefersLoading(bool defers)
     }
 }
 
-bool ResourceHandle::loadsBlocked()
-{
-    notImplemented();
-    return false;
-}
-
 bool ResourceHandle::shouldUseCredentialStorage()
 {
     return (!client() || client()->shouldUseCredentialStorage(this)) && firstRequest().url().protocolIsInHTTPFamily();

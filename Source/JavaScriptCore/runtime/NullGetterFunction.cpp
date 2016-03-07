@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,53 +20,38 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
-#include "Watchdog.h"
+#include "NullGetterFunction.h"
+
+#include "JSCJSValueInlines.h"
 
 namespace JSC {
 
-void Watchdog::initTimer()
+const ClassInfo NullGetterFunction::s_info = { "Function", &Base::s_info, 0, CREATE_METHOD_TABLE(NullGetterFunction) };
+
+static EncodedJSValue JSC_HOST_CALL callReturnUndefined(ExecState*)
 {
-    m_queue = 0;
-    m_timer = 0;
+    return JSValue::encode(jsUndefined());
 }
 
-void Watchdog::destroyTimer()
+static EncodedJSValue JSC_HOST_CALL constructReturnUndefined(ExecState*)
 {
-    ASSERT(!m_timer);
-    if (m_queue)
-        dispatch_release(m_queue);
+    return JSValue::encode(jsUndefined());
 }
 
-void Watchdog::startTimer(std::chrono::microseconds limit)
+CallType NullGetterFunction::getCallData(JSCell*, CallData& callData)
 {
-    ASSERT(!m_timer);
-    if (!m_queue)
-        m_queue = dispatch_queue_create("jsc.watchdog.queue", 0);
-    m_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, m_queue);
-
-    dispatch_source_set_timer(m_timer,
-        dispatch_time(DISPATCH_TIME_NOW, std::chrono::nanoseconds(limit).count()),
-        DISPATCH_TIME_FOREVER, 0);
-
-    dispatch_source_set_event_handler(m_timer, ^{
-        m_timerDidFire = true;
-    });
-
-    dispatch_resume(m_timer);
+    callData.native.function = callReturnUndefined;
+    return CallTypeHost;
 }
 
-void Watchdog::stopTimer()
+ConstructType NullGetterFunction::getConstructData(JSCell*, ConstructData& constructData)
 {
-    ASSERT(m_queue);
-    dispatch_sync(m_queue, ^{
-        dispatch_source_cancel(m_timer);
-    });
-    dispatch_release(m_timer);
-    m_timer = 0;
+    constructData.native.function = constructReturnUndefined;
+    return ConstructTypeHost;
 }
 
-} // namespace JSC
+}

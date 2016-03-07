@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,53 +20,43 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "Watchdog.h"
+#ifndef NullGetterFunction_h
+#define  NullGetterFunction_h
+
+#include "InternalFunction.h"
 
 namespace JSC {
 
-void Watchdog::initTimer()
-{
-    m_queue = 0;
-    m_timer = 0;
+class NullGetterFunction : public InternalFunction {
+public:
+    typedef InternalFunction Base;
+
+    static NullGetterFunction* create(VM& vm, Structure* structure)
+    {
+        NullGetterFunction* function = new (NotNull, allocateCell< NullGetterFunction>(vm.heap))  NullGetterFunction(vm, structure);
+        function->finishCreation(vm, String());
+        return function;
+    }
+
+    DECLARE_EXPORT_INFO;
+
+    static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
+    {
+        return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info());
+    }
+
+private:
+    NullGetterFunction(VM& vm, Structure* structure)
+        : Base(vm, structure)
+    {
+    }
+    static ConstructType getConstructData(JSCell*, ConstructData&);
+    static CallType getCallData(JSCell*, CallData&);
+};
+
 }
 
-void Watchdog::destroyTimer()
-{
-    ASSERT(!m_timer);
-    if (m_queue)
-        dispatch_release(m_queue);
-}
-
-void Watchdog::startTimer(std::chrono::microseconds limit)
-{
-    ASSERT(!m_timer);
-    if (!m_queue)
-        m_queue = dispatch_queue_create("jsc.watchdog.queue", 0);
-    m_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, m_queue);
-
-    dispatch_source_set_timer(m_timer,
-        dispatch_time(DISPATCH_TIME_NOW, std::chrono::nanoseconds(limit).count()),
-        DISPATCH_TIME_FOREVER, 0);
-
-    dispatch_source_set_event_handler(m_timer, ^{
-        m_timerDidFire = true;
-    });
-
-    dispatch_resume(m_timer);
-}
-
-void Watchdog::stopTimer()
-{
-    ASSERT(m_queue);
-    dispatch_sync(m_queue, ^{
-        dispatch_source_cancel(m_timer);
-    });
-    dispatch_release(m_timer);
-    m_timer = 0;
-}
-
-} // namespace JSC
+#endif // NullGetterFunction_h

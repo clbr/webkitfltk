@@ -1,3 +1,361 @@
+2014-12-09  Michael Saboff  <msaboff@apple.com>
+
+        DFG Tries using an inner object's getter/setter when one hasn't been defined
+        https://bugs.webkit.org/show_bug.cgi?id=139229
+
+        Reviewed by Filip Pizlo.
+
+        Added a new NullGetterFunction singleton class to use for getters and setters that
+        haven't been set to a user defined value.  The NullGetterFunction callReturnUndefined()
+        and createReturnUndefined() methods return undefined.  Changed all null checks of the
+        getter and setter pointers to the newly added isGetterNull() and isSetterNull()
+        helper methods.  
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        Added NullGetterFunction.cpp & .h to build files.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * runtime/ObjectPrototype.cpp:
+        (JSC::objectProtoFuncLookupGetter):
+        (JSC::objectProtoFuncLookupSetter):
+        * runtime/PropertyDescriptor.cpp:
+        (JSC::PropertyDescriptor::setDescriptor):
+        (JSC::PropertyDescriptor::setAccessorDescriptor):
+        Changed checking getter and setter to null to use new isGetterNull() and isSetterNull()
+        helpers.
+
+        * inspector/JSInjectedScriptHostPrototype.cpp:
+        (Inspector::JSInjectedScriptHostPrototype::finishCreation):
+        * inspector/JSJavaScriptCallFramePrototype.cpp:
+        * jit/JITOperations.cpp:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::putIndexedDescriptor):
+        (JSC::putDescriptor):
+        (JSC::JSObject::defineOwnNonIndexProperty):
+        * runtime/MapPrototype.cpp:
+        (JSC::MapPrototype::finishCreation):
+        * runtime/SetPrototype.cpp:
+        (JSC::SetPrototype::finishCreation):
+        Updated calls to GetterSetter::create(), setGetter(), setSetter(), withGetter()
+        and withSetter() to provide a global object.
+
+        * runtime/GetterSetter.cpp:
+        (JSC::GetterSetter::withGetter):
+        (JSC::GetterSetter::withSetter):
+        (JSC::callGetter):
+        (JSC::callSetter):
+        * runtime/GetterSetter.h:
+        (JSC::GetterSetter::GetterSetter):
+        (JSC::GetterSetter::create):
+        (JSC::GetterSetter::isGetterNull):
+        (JSC::GetterSetter::isSetterNull):
+        (JSC::GetterSetter::setGetter):
+        (JSC::GetterSetter::setSetter):
+        Changed to use NullGetterFunction for unspecified getters / setters.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        (JSC::JSGlobalObject::createThrowTypeError):
+        (JSC::JSGlobalObject::visitChildren):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::nullGetterFunction):
+        (JSC::JSGlobalObject::evalFunction):
+        Added m_nullGetterFunction singleton.  Updated calls to GetterSetter::create(),
+        setGetter() and setSetter() to provide a global object.
+
+        * runtime/NullGetterFunction.cpp: Added.
+        (JSC::callReturnUndefined):
+        (JSC::constructReturnUndefined):
+        (JSC::NullGetterFunction::getCallData):
+        (JSC::NullGetterFunction::getConstructData):
+        * runtime/NullGetterFunction.h: Added.
+        (JSC::NullGetterFunction::create):
+        (JSC::NullGetterFunction::createStructure):
+        (JSC::NullGetterFunction::NullGetterFunction):
+        New singleton class that returns undefined when called.
+
+2014-12-09  Geoffrey Garen  <ggaren@apple.com>
+
+        Re-enable function.arguments
+        https://bugs.webkit.org/show_bug.cgi?id=139452
+        <rdar://problem/18848149>
+
+        Reviewed by Sam Weinig.
+
+        Disabling function.arguments broke a few websites, and we don't have
+        time right now to work through the details.
+
+        I'm re-enabling function.arguments but leaving in the infrastructure
+        to re-disable it, so we can try this experiment again in the future.
+
+        * runtime/Options.h:
+
+2014-12-09  David Kilzer  <ddkilzer@apple.com>
+
+        Switch from using PLATFORM_NAME to SDK selectors in ANGLE, bmalloc, gtest, JavaScriptCore, WTF
+        <http://webkit.org/b/139212>
+
+        Reviewed by Joseph Pecoraro.
+
+        * Configurations/Base.xcconfig:
+        - Only set GCC_ENABLE_OBJC_GC, GCC_MODEL_TUNING and TOOLCHAINS
+          on OS X.
+        - Only set LLVM_LOCAL_HEADER_PATH and LLVM_SYSTEM_HEADER_PATH on
+          OS X.
+        - Set JAVASCRIPTCORE_CONTENTS_DIR and
+          JAVASCRIPTCORE_FRAMEWORKS_DIR separately for iOS and OS X.
+
+        * Configurations/DebugRelease.xcconfig:
+        - Only set MACOSX_DEPLOYMENT_TARGET and SDKROOT on OS X.
+
+        * Configurations/JSC.xcconfig:
+        - Only set CODE_SIGN_ENTITLEMENTS for iOS hardware builds.
+
+        * Configurations/JavaScriptCore.xcconfig:
+        - Set OTHER_LDFLAGS separately for iOS and OS X.
+        - Set SECTORDER_FLAGS separately for iOS and OS X, but only for
+          Production builds.
+        - Only set EXCLUDED_SOURCE_FILE_NAMES for iOS.
+
+        * Configurations/LLVMForJSC.xcconfig:
+        - Rename LLVM_LIBS_iphoneos to LLVM_LIBS_ios.
+        - Set LLVM_LIBRARY_PATHS and OTHER_LDFLAGS_LLVM_ENABLE_FTL_JIT
+          separately for iOS hardware and OS X.
+        - Fix curly braces in LIBRARY_SEARCH_PATHS.
+        - Merge OTHER_LDFLAGS_BASE into OTHER_LDFLAGS. (Could have been
+          done before this patch.)
+
+        * Configurations/ToolExecutable.xcconfig:
+        - Only set CODE_SIGN_ENTITLEMENTS for iOS, per target.
+        - Only set CLANG_ENABLE_OBJC_ARC for i386 on the iOS Simulator.
+        - Add missing newline.
+
+        * Configurations/Version.xcconfig:
+        - Set SYSTEM_VERSION_PREFIX separately for iOS and OS X.
+
+2014-12-08  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Fix EFL build fix since r177001
+        https://bugs.webkit.org/show_bug.cgi?id=139428
+
+        Unreviewed, EFL build fix.
+
+        Do not inherit duplicated class. ExpressionNode is already
+        child of ParserArenaFreeable class.
+
+        * parser/Nodes.h:
+
+2014-12-08  Shivakumar JM  <shiva.jm@samsung.com>
+
+        Fix Build Warning in JavaScriptCore ControlFlowProfiler::dumpData() api.
+        https://bugs.webkit.org/show_bug.cgi?id=139384
+
+        Reviewed by Mark Lam.
+
+        Fix Build Warning by using dataLog() function instead of dataLogF() function.
+
+        * runtime/ControlFlowProfiler.cpp:
+        (JSC::ControlFlowProfiler::dumpData):
+
+2014-12-08  Saam Barati  <saambarati1@gmail.com>
+
+        Web Inspector: Enable runtime API for JSC's control flow profiler
+        https://bugs.webkit.org/show_bug.cgi?id=139346
+
+        Reviewed by Joseph Pecoraro.
+
+        This patch creates an API that the Web Inspector can use
+        to get information about which basic blocks have exectued
+        from JSC's control flow profiler.
+
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::getBasicBlocks):
+        * inspector/agents/InspectorRuntimeAgent.h:
+        * inspector/protocol/Runtime.json:
+
+2014-12-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed some allocation and cruft from the parser
+        https://bugs.webkit.org/show_bug.cgi?id=139416
+
+        Reviewed by Mark Lam.
+
+        Now, the only AST nodes that require a destructor are the ones that
+        relate to pickling a function's arguments -- which will required some
+        deeper thinking to resolve.
+
+        This is a < 1% parser speedup.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj: Removed NodeInfo because it
+        was unused.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::CommaNode::emitBytecode):
+        (JSC::SourceElements::lastStatement):
+        (JSC::SourceElements::emitBytecode): Updated for interface change to linked list.
+
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::ASTBuilder):
+        (JSC::ASTBuilder::varDeclarations):
+        (JSC::ASTBuilder::funcDeclarations):
+        (JSC::ASTBuilder::createFuncDeclStatement):
+        (JSC::ASTBuilder::addVar): Removed the ParserArenaData abstraction because
+        it wasn't buying us anything. We can just use Vector directly.
+
+        (JSC::ASTBuilder::createCommaExpr):
+        (JSC::ASTBuilder::appendToCommaExpr): Changed to use a linked list instead
+        of a vector, to avoid allocating a vector with inline capacity in the
+        common case in which an expression is not followed by a vector.
+
+        (JSC::ASTBuilder::Scope::Scope): Use Vector directly to avoid new'ing
+        up a Vector*.
+
+        (JSC::ASTBuilder::appendToComma): Deleted.
+        (JSC::ASTBuilder::combineCommaNodes): Deleted.
+
+        * parser/Lexer.cpp:
+
+        * parser/NodeConstructors.h:
+        (JSC::StatementNode::StatementNode):
+        (JSC::CommaNode::CommaNode):
+        (JSC::SourceElements::SourceElements): Updated for interface change to linked list.
+
+        * parser/NodeInfo.h: Removed.
+
+        * parser/Nodes.cpp:
+        (JSC::SourceElements::append):
+        (JSC::SourceElements::singleStatement): Use a linked list instead of a
+        vector to track the statements in a list. This removes some allocation
+        and it means that we don't need a destructor anymore.
+
+        (JSC::ScopeNode::ScopeNode):
+        (JSC::ProgramNode::ProgramNode):
+        (JSC::EvalNode::EvalNode):
+        (JSC::FunctionNode::FunctionNode): Updated for interface change to reference,
+        since these values are never null.
+
+        * parser/Nodes.h:
+        (JSC::StatementNode::next):
+        (JSC::StatementNode::setNext):
+        (JSC::CommaNode::append): Deleted. Updated for interface change to linked list.
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::didFinishParsing): Updated for interface change to reference.
+
+        (JSC::Parser<LexerType>::parseVarDeclarationList):
+        (JSC::Parser<LexerType>::parseExpression): Track comma expressions as
+        an explicit list of CommaNodes, removing a use of vector and a destructor.
+
+        * parser/Parser.h:
+        (JSC::Parser<LexerType>::parse):
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createCommaExpr):
+        (JSC::SyntaxChecker::appendToCommaExpr):
+        (JSC::SyntaxChecker::appendToComma): Deleted. Updated for interface changes.
+
+2014-12-08  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r176979.
+        https://bugs.webkit.org/show_bug.cgi?id=139424
+
+        "New JSC test in this patch is failing" (Requested by mlam on
+        #webkit).
+
+        Reverted changeset:
+
+        "Fixes operationPutByIds such that they check that the put
+        didn't"
+        https://bugs.webkit.org/show_bug.cgi?id=139196
+        http://trac.webkit.org/changeset/176979
+
+2014-12-08  Matthew Mirman  <mmirman@apple.com>
+
+        Fixes operationPutByIds such that they check that the put didn't
+        change the structure of the object who's property access is being
+        cached.
+        https://bugs.webkit.org/show_bug.cgi?id=139196
+
+        Reviewed by Filip Pizlo.
+
+        * jit/JITOperations.cpp:
+        (JSC::operationGetByIdOptimize): changed get to getPropertySlot
+        (JSC::operationPutByIdStrictBuildList): saved the structure before the put.
+        (JSC::operationPutByIdNonStrictBuildList): ditto.
+        (JSC::operationPutByIdDirectStrictBuildList): ditto.
+        (JSC::operationPutByIdDirectNonStrictBuildList): ditto.
+        * jit/Repatch.cpp:
+        (JSC::tryCachePutByID): fixed structure() to use the existant vm. 
+        (JSC::tryBuildPutByIdList): Added a check that the old structure's id 
+        is the same as the new.
+        (JSC::buildPutByIdList): Added an argument
+        * jit/Repatch.h: 
+        (JSC::buildPutByIdList): Added an argument
+        * tests/stress/put-by-id-build-list-order-recurse.js: Test that failed before the change
+        * tests/stress/put-by-id-strict-build-list-order.js: Added.
+
+ 
+2014-12-08  Anders Carlsson  <andersca@apple.com>
+
+        Change WTF::currentCPUTime to return std::chrono::microseconds and get rid of currentCPUTimeMS
+        https://bugs.webkit.org/show_bug.cgi?id=139410
+
+        Reviewed by Andreas Kling.
+
+        * API/JSContextRef.cpp:
+        (JSContextGroupSetExecutionTimeLimit):
+        (JSContextGroupClearExecutionTimeLimit):
+        * runtime/Watchdog.cpp:
+        (JSC::Watchdog::setTimeLimit):
+        (JSC::Watchdog::didFire):
+        (JSC::Watchdog::startCountdownIfNeeded):
+        (JSC::Watchdog::startCountdown):
+        * runtime/Watchdog.h:
+        * runtime/WatchdogMac.cpp:
+        (JSC::Watchdog::startTimer):
+
+2014-12-08  Mark Lam  <mark.lam@apple.com>
+
+        CFA wrongly assumes that a speculation for SlowPutArrayStorageShape disallows ArrayStorageShape arrays.
+        <https://webkit.org/b/139327>
+
+        Reviewed by Michael Saboff.
+
+        The code generator and runtime slow paths expects otherwise.  This patch fixes
+        CFA to match the code generator's expectation.
+
+        * dfg/DFGArrayMode.h:
+        (JSC::DFG::ArrayMode::arrayModesThatPassFiltering):
+        (JSC::DFG::ArrayMode::arrayModesWithIndexingShapes):
+
+2014-12-08  Chris Dumez  <cdumez@apple.com>
+
+        Revert r176293 & r176275
+
+        Unreviewed, revert r176293 & r176275 changing the Vector API to use unsigned type
+        instead of size_t. There is some disagreement regarding the long-term direction
+        of the API and we shouldn’t leave the API partly transitioned to unsigned type
+        while making a decision.
+
+        * bytecode/PreciseJumpTargets.cpp:
+        * replay/EncodedValue.h:
+
+2014-12-07  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove the unused WTF_USE_GCC_COMPUTED_GOTO_WORKAROUND after r129453.
+        https://bugs.webkit.org/show_bug.cgi?id=139373
+
+        Reviewed by Sam Weinig.
+
+        * interpreter/Interpreter.cpp:
+
 2014-12-06  Anders Carlsson  <andersca@apple.com>
 
         Fix build with newer versions of clang.

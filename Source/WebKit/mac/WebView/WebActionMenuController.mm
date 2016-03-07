@@ -262,7 +262,7 @@ static IntRect elementBoundingBoxInWindowCoordinatesFromNode(Node* node)
     if (!view)
         return IntRect();
 
-    return view->contentsToWindow(node->pixelSnappedBoundingBox());
+    return view->contentsToWindow(rendererBoundingBox(*node));
 }
 
 - (NSArray *)_defaultMenuItemsForLink
@@ -763,13 +763,14 @@ static DictionaryPopupInfo performDictionaryLookupForRange(Frame* frame, Range& 
         selector = @selector(_copySelection:);
         title = WEB_UI_STRING_KEY("Copy", "Copy (text action menu item)", "text action menu item");
         image = [NSImage imageNamed:@"NSActionMenuCopy"];
+        enabled = _hitTestResult.allowsCopy();
         break;
 
     case WebActionMenuItemTagLookupText:
         selector = @selector(_lookupText:);
         title = WEB_UI_STRING_KEY("Look Up", "Look Up (action menu item)", "action menu item");
         image = [NSImage imageNamed:@"NSActionMenuLookup"];
-        enabled = getLULookupDefinitionModuleClass();
+        enabled = getLULookupDefinitionModuleClass() && _hitTestResult.allowsCopy();
         break;
 
     case WebActionMenuItemTagPaste:

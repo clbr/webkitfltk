@@ -854,7 +854,6 @@ std::unique_ptr<PlatformTimeRanges> MediaPlayerPrivateGStreamer::buffered() cons
     if (m_errorOccured || isLiveStream())
         return timeRanges;
 
-#if GST_CHECK_VERSION(0, 10, 31)
     float mediaDuration(duration());
     if (!mediaDuration || std::isinf(mediaDuration))
         return timeRanges;
@@ -881,11 +880,7 @@ std::unique_ptr<PlatformTimeRanges> MediaPlayerPrivateGStreamer::buffered() cons
             timeRanges->add(MediaTime::zeroTime(), MediaTime::createWithDouble(loaded));
 
     gst_query_unref(query);
-#else
-    float loaded = maxTimeLoaded();
-    if (!m_errorOccured && !isLiveStream() && loaded > 0)
-        timeRanges->add(MediaTime::zeroTime(), MediaTime::createWithDouble(loaded));
-#endif
+
     return timeRanges;
 }
 
@@ -992,6 +987,27 @@ gboolean MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
                 loadingFailed(MediaPlayer::Empty);
         }
         break;
+    case GST_MESSAGE_CLOCK_LOST:
+        // This can only happen in PLAYING state and we should just
+        // get a new clock by moving back to PAUSED and then to
+        // PLAYING again.
+        // This can happen if the stream that ends in a sink that
+        // provides the current clock disappears, for example if
+        // the audio sink provides the clock and the audio stream
+        // is disabled. It also happens relatively often with
+        // HTTP adaptive streams when switching between different
+        // variants of a stream.
+        gst_element_set_state(m_playBin.get(), GST_STATE_PAUSED);
+        gst_element_set_state(m_playBin.get(), GST_STATE_PLAYING);
+        break;
+    case GST_MESSAGE_LATENCY:
+        // Recalculate the latency, we don't need any special handling
+        // here other than the GStreamer default.
+        // This can happen if the latency of live elements changes, or
+        // for one reason or another a new live element is added or
+        // removed from the pipeline.
+        gst_bin_recalculate_latency(GST_BIN(m_playBin.get()));
+        break;
     case GST_MESSAGE_ELEMENT:
         if (gst_is_missing_plugin_message(message)) {
             gchar* detail = gst_missing_plugin_message_get_installer_detail(message);
@@ -1035,8 +1051,7 @@ void MediaPlayerPrivateGStreamer::handlePluginInstallerResult(GstInstallPluginsR
 void MediaPlayerPrivateGStreamer::processBufferingStats(GstMessage* message)
 {
     m_buffering = true;
-    const GstStructure *structure = gst_message_get_structure(message);
-    gst_structure_get_int(structure, "buffer-percent", &m_bufferingPercentage);
+    gst_message_parse_buffering(message, &m_bufferingPercentage);
 
     LOG_MEDIA_MESSAGE("[Buffering] Buffering: %d%%.", m_bufferingPercentage);
 
@@ -1676,6 +1691,7 @@ static HashSet<String> mimeTypeCache()
         "application/vnd.rn-realmedia",
         "application/x-3gp",
         "application/x-pn-realaudio",
+        "application/x-mpegurl",
         "audio/3gpp",
         "audio/aac",
         "audio/flac",
@@ -1734,7 +1750,9 @@ static HashSet<String> mimeTypeCache()
         "audio/x-wavpack",
         "audio/x-wavpack-correction",
         "video/3gpp",
+        "video/flv",
         "video/mj2",
+        "video/mp2t",
         "video/mp4",
         "video/mpeg",
         "video/mpegts",
@@ -1831,6 +1849,10 @@ GstElement* MediaPlayerPrivateGStreamer::createAudioSink()
     if (!m_preservesPitch)
         return m_autoAudioSink.get();
 
+    // On 1.4.2 and newer we use the audio-filter property instead.
+    if (webkitGstCheckVersion(1, 4, 2))
+        return m_autoAudioSink.get();
+
     GstElement* scale = gst_element_factory_make("scaletempo", 0);
     if (!scale) {
         GST_WARNING("Failed to create scaletempo");
@@ -1901,6 +1923,18 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin()
 #endif
 
     g_object_set(m_playBin.get(), "video-sink", createVideoSink(), "audio-sink", createAudioSink(), nullptr);
+
+    // On 1.4.2 and newer we use the audio-filter property instead.
+    // See https://bugzilla.gnome.org/show_bug.cgi?id=735748 for
+    // the reason for using >= 1.4.2 instead of >= 1.4.0.
+    if (m_preservesPitch && webkitGstCheckVersion(1, 4, 2)) {
+        GstElement* scale = gst_element_factory_make("scaletempo", 0);
+
+        if (!scale)
+            GST_WARNING("Failed to create scaletempo");
+        else
+            g_object_set(m_playBin.get(), "audio-filter", scale, nullptr);
+    }
 
     GRefPtr<GstPad> videoSinkPad = adoptGRef(gst_element_get_static_pad(m_webkitVideoSink.get(), "sink"));
     if (videoSinkPad)

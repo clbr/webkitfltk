@@ -758,6 +758,7 @@ public:
 #else
     virtual void detachFromParent() { }
 #endif
+    virtual bool isDetachedFromParent() { return false; }
 
     virtual void selectedChildren(AccessibilityChildrenVector&) { }
     virtual void visibleChildren(AccessibilityChildrenVector&) { }
@@ -895,6 +896,7 @@ public:
     virtual bool isMathTableRow() const { return false; }
     virtual bool isMathTableCell() const { return false; }
     virtual bool isMathMultiscript() const { return false; }
+    virtual bool isMathToken() const { return false; }
 
     // Root components.
     virtual AccessibilityObject* mathRadicandObject() { return nullptr; }

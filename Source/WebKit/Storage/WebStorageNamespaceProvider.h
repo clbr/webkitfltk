@@ -30,15 +30,16 @@
 
 class WebStorageNamespaceProvider final : public WebCore::StorageNamespaceProvider {
 public:
-    static RefPtr<WebStorageNamespaceProvider> create();
+    static RefPtr<WebStorageNamespaceProvider> create(const String& localStorageDatabasePath);
     virtual ~WebStorageNamespaceProvider();
 
 private:
-    WebStorageNamespaceProvider();
+    explicit WebStorageNamespaceProvider(const String& localStorageDatabasePath);
 
-    virtual RefPtr<WebCore::StorageNamespace> createSessionStorageNamespace(WebCore::Page&) override;
-    virtual RefPtr<WebCore::StorageNamespace> createLocalStorageNamespace() override;
-    virtual RefPtr<WebCore::StorageNamespace> createTransientLocalStorageNamespace(WebCore::SecurityOrigin&) override;
+    virtual RefPtr<WebCore::StorageNamespace> createLocalStorageNamespace(unsigned quota) override;
+    virtual RefPtr<WebCore::StorageNamespace> createTransientLocalStorageNamespace(WebCore::SecurityOrigin&, unsigned quota) override;
+
+    const String m_localStorageDatabasePath;
 };
 
 #endif // WebStorageNamespaceProvider_h
