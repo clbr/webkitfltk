@@ -114,7 +114,7 @@ void WebMediaSessionManager::removeAllPlaybackTargetPickerClients(WebMediaSessio
     }
 }
 
-void WebMediaSessionManager::showPlaybackTargetPicker(WebMediaSessionManagerClient& client, uint64_t contextId, const IntRect& rect, bool isVideo)
+void WebMediaSessionManager::showPlaybackTargetPicker(WebMediaSessionManagerClient& client, uint64_t contextId, const IntRect& rect, bool)
 {
     size_t index = find(&client, contextId);
     ASSERT(index != notFound);
@@ -124,7 +124,8 @@ void WebMediaSessionManager::showPlaybackTargetPicker(WebMediaSessionManagerClie
     for (auto& state : m_clientState)
         state->requestedPicker = (state->contextId == contextId && state->client == &client);
 
-    targetPicker().showPlaybackTargetPicker(FloatRect(rect), isVideo);
+    bool hasActiveRoute = flagsAreSet(m_clientState[index]->flags, MediaProducer::IsPlayingToExternalDevice);
+    targetPicker().showPlaybackTargetPicker(FloatRect(rect), hasActiveRoute);
 }
 
 void WebMediaSessionManager::clientStateDidChange(WebMediaSessionManagerClient& client, uint64_t contextId, MediaProducer::MediaStateFlags newFlags)
@@ -196,9 +197,6 @@ void WebMediaSessionManager::setPlaybackTarget(Ref<MediaPlaybackTarget>&& target
 
 void WebMediaSessionManager::externalOutputDeviceAvailableDidChange(bool available)
 {
-    if (m_externalOutputDeviceAvailable == available)
-        return;
-
     m_externalOutputDeviceAvailable = available;
     for (auto& state : m_clientState)
         state->client->externalOutputDeviceAvailableDidChange(state->contextId, available);

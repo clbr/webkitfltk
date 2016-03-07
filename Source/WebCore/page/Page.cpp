@@ -779,7 +779,7 @@ void Page::setPageScaleFactor(float scale, const IntPoint& origin, bool inStable
 
             if (!view->delegatesScrolling())
                 view->setScrollPosition(origin);
-#if USE(TILED_BACKING_STORE)
+#if USE(COORDINATED_GRAPHICS)
             else
                 view->requestScrollPositionUpdate(origin);
 #endif
@@ -816,7 +816,7 @@ void Page::setPageScaleFactor(float scale, const IntPoint& origin, bool inStable
 
         if (!view->delegatesScrolling())
             view->setScrollPosition(origin);
-#if USE(TILED_BACKING_STORE)
+#if USE(COORDINATED_GRAPHICS)
         else
             view->requestScrollPositionUpdate(origin);
 #endif

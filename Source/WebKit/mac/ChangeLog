@@ -1,3 +1,106 @@
+2015-04-29  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [OS X] Use CTFontCreateForCSS instead of doing font search ourselves
+        https://bugs.webkit.org/show_bug.cgi?id=132159
+
+        Reviewed by Darin Adler.
+
+        Add SPI to set the font whitelist.
+
+        * WebView/WebView.mm:
+        (+[WebView _setFontWhitelist:]):
+        * WebView/WebViewPrivate.h:
+
+2015-04-28  Timothy Horton  <timothy_horton@apple.com>
+
+        [TextIndicator] Yellow highlight takes too long to fade out on scroll
+        https://bugs.webkit.org/show_bug.cgi?id=144358
+        <rdar://problem/19451011>
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebActionMenuController.mm:
+        (-[WebActionMenuController _showTextIndicator]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView quickLookWithEvent:]):
+        * WebView/WebImmediateActionController.mm:
+        (-[WebImmediateActionController _defaultAnimationController]):
+        (-[WebImmediateActionController _animationControllerForDataDetectedText]):
+        (-[WebImmediateActionController _animationControllerForDataDetectedLink]):
+        Pull _clearTextIndicatorWithAnimation out, make it avoid using a dismissal animation
+        if we're called from didHandleScrollWheel.
+
+        * WebView/WebView.mm:
+        (-[WebView _animationControllerForDictionaryLookupPopupInfo:]):
+        (-[WebView _setTextIndicator:]):
+        (-[WebView _setTextIndicator:withLifetime:]):
+        (-[WebView _clearTextIndicator]):
+        (-[WebView _showDictionaryLookupPopup:]):
+        (-[WebView _dictionaryLookupPopoverWillClose:]):
+        (-[WebView _setTextIndicator:fadeOut:]): Deleted.
+        * WebView/WebViewInternal.h:
+        Make _setTextIndicator take a reference.
+        Add a variant of _setTextIndicator that takes a Lifetime.
+        Make _clearTextIndicatorWithAnimation take a DismissalAnimation.
+
+2015-04-28  Michael Catanzaro  <mcatanzaro@igalia.com>
+
+        Fully replace ENABLE_LLINT_C_LOOP with ENABLE_JIT
+        https://bugs.webkit.org/show_bug.cgi?id=144304
+
+        Reviewed by Geoffrey Garen.
+
+        Define ENABLE_JIT, enabled by default, instead of ENABLE_LLINT_C_LOOP, disabled by default.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-04-28  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183514.
+        https://bugs.webkit.org/show_bug.cgi?id=144359
+
+        It broke cloop test bots (Requested by mcatanzaro on #webkit).
+
+        Reverted changeset:
+
+        "Fully replace ENABLE_LLINT_C_LOOP with ENABLE_JIT"
+        https://bugs.webkit.org/show_bug.cgi?id=144304
+        http://trac.webkit.org/changeset/183514
+
+2015-04-28  Michael Catanzaro  <mcatanzaro@igalia.com>
+
+        Fully replace ENABLE_LLINT_C_LOOP with ENABLE_JIT
+        https://bugs.webkit.org/show_bug.cgi?id=144304
+
+        Reviewed by Geoffrey Garen.
+
+        Define ENABLE_JIT, enabled by default, instead of ENABLE_LLINT_C_LOOP, disabled by default.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-04-28  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Fix common typo "targetting" => "targeting"
+        https://bugs.webkit.org/show_bug.cgi?id=144349
+
+        Reviewed by Daniel Bates.
+
+        * Plugins/Hosted/NetscapePluginInstanceProxy.mm:
+        (WebKit::NetscapePluginInstanceProxy::loadRequest):
+        * Plugins/WebNetscapePluginView.mm:
+        (-[WebNetscapePluginView loadRequest:inTarget:withNotifyData:sendNotification:]):
+        * WebView/WebPolicyDelegate.h:
+
+2015-04-28  Brady Eidson  <beidson@apple.com>
+
+        Consolidate most "frame load" arguments into FrameLoadRequest.
+        https://bugs.webkit.org/show_bug.cgi?id=144276
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView PDFViewWillClickOnLink:withURL:]):
+
 2015-04-27  Dan Bernstein  <mitz@apple.com>
 
         <rdar://problem/20721931> REGRESSION (r178753): All legacy framework headers are missing availability annotations

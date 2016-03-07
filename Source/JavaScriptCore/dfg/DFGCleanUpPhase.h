@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,28 +23,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGResurrectionForValidationPhase_h
-#define DFGResurrectionForValidationPhase_h
+#ifndef DFGCleanUpPhase_h
+#define DFGCleanUpPhase_h
 
 #if ENABLE(DFG_JIT)
-
-#include "DFGCommon.h"
 
 namespace JSC { namespace DFG {
 
 class Graph;
 
-// Places a Phantom after every value-producing node, thereby disabling DCE from killing it.
-// This is useful for validating our OSR exit machinery by instituting the requirement that
-// any live-in-bytecode variable should be OSR-available. Without this phase, it's impossible
-// to make such an assertion because our DCE is more aggressive than the bytecode liveness
-// analysis.
+// Cleans up unneeded nodes, like empty Checks and Phantoms.
 
-bool performResurrectionForValidation(Graph&);
+bool performCleanUp(Graph&);
 
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
 
-#endif // DFGResurrectionForValidationPhase_h
-
+#endif // DFGCleanUpPhase_h

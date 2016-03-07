@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,25 +23,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGPhantomRemovalPhase_h
-#define DFGPhantomRemovalPhase_h
+#include "config.h"
+#include "GenericTaskQueue.h"
 
-#if ENABLE(DFG_JIT)
+#include "ScriptExecutionContext.h"
 
-namespace JSC { namespace DFG {
+namespace WebCore {
 
-class Graph;
+GenericTaskQueue::GenericTaskQueue(ScriptExecutionContext& context)
+    : m_context(context)
+    , m_weakPtrFactory(this)
+{
+}
 
-// Cleans up unnecessary Phantoms and Phanton children. This reduces live ranges, but also, it
-// eliminates many Phantoms entirely. This invalidates liveness analysis.
-//
-// This should work over all IR forms; however, in SSA form it's better to run
-// PhantomCanonicalizationPhase since it's more powerful.
+void GenericTaskQueue::enqueueTask(std::function<void()> task)
+{
+    ASSERT(!m_isClosed);
+    ++m_pendingTasks;
+    auto weakThis = m_weakPtrFactory.createWeakPtr();
+    m_context.postTask([weakThis, task] (ScriptExecutionContext&) {
+        if (!weakThis)
+            return;
+        --weakThis->m_pendingTasks;
+        task();
+    });
+}
 
-bool performPhantomRemoval(Graph&);
+void GenericTaskQueue::close()
+{
+    cancelAllTasks();
+    m_isClosed = true;
+}
 
-} } // namespace JSC::DFG
+void GenericTaskQueue::cancelAllTasks()
+{
+    m_weakPtrFactory.revokeAll();
+    m_pendingTasks = 0;
+}
 
-#endif // ENABLE(DFG_JIT)
-
-#endif // DFGPhantomRemovalPhase_h
+}

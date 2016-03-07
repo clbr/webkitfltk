@@ -1,3 +1,5 @@
+set(WebCore_OUTPUT_NAME WebCoreGTK)
+
 list(APPEND WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/accessibility/atk"
     "${WEBCORE_DIR}/editing/atk"
@@ -398,13 +400,13 @@ if (ENABLE_THREADED_COMPOSITOR)
         page/scrolling/ScrollingThread.cpp
         page/scrolling/ScrollingTreeNode.cpp
         page/scrolling/ScrollingTreeScrollingNode.cpp
-        platform/graphics/TiledBackingStore.cpp
         platform/graphics/texmap/coordinated/AreaAllocator.cpp
         platform/graphics/texmap/coordinated/CompositingCoordinator.cpp
         platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp
         platform/graphics/texmap/coordinated/CoordinatedImageBacking.cpp
         platform/graphics/texmap/coordinated/CoordinatedSurface.cpp
         platform/graphics/texmap/coordinated/CoordinatedTile.cpp
+        platform/graphics/texmap/coordinated/TiledBackingStore.cpp
         platform/graphics/texmap/coordinated/UpdateAtlas.cpp
     )
 endif ()

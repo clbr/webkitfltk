@@ -767,12 +767,6 @@
 #define ENABLE_CONCURRENT_JIT 1
 #endif
 
-/* Disable the JIT if we force the LLInt C Loop */
-#if defined(ENABLE_LLINT_C_LOOP) && ENABLE_LLINT_C_LOOP
-#undef ENABLE_JIT
-#define ENABLE_JIT 0
-#endif
-
 /* If the baseline jit is not available, then disable upper tiers as well: */
 #if !ENABLE(JIT)
 #undef ENABLE_DFG_JIT      /* Undef so that we can redefine it. */
@@ -1105,6 +1099,10 @@
 
 #if PLATFORM(COCOA)
 #define ENABLE_CSS3_TEXT_DECORATION_SKIP_INK 1
+#endif
+
+#if PLATFORM(IOS) || (PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED > 101000)
+#define ENABLE_PLATFORM_FONT_LOOKUP 1
 #endif
 
 #if COMPILER(MSVC)
