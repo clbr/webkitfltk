@@ -1,3 +1,467 @@
+2014-08-07  Timothy Hatcher  <timothy@apple.com>
+
+        Fix regression where tree outline keyboard navigation is broken.
+
+        https://bugs.webkit.org/show_bug.cgi?id=135718
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/TreeOutline.js:
+        (TreeElement.prototype.revealed): Fix the check for currentAncestor.hidden.
+
+2014-08-07  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Filter bar text and icon are positioned too low and tight
+        https://bugs.webkit.org/show_bug.cgi?id=135723
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Views/FilterBar.css:
+        (.filter-bar > input[type="search"]):
+        (.filter-bar > input[type="search"]::-webkit-search-decoration):
+        * UserInterface/Views/SearchBar.css:
+        (.search-bar > input[type="search"]):
+
+2014-08-07  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Dashboard error and warning icons should be filled when enabled
+        https://bugs.webkit.org/show_bug.cgi?id=135725
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Images/ErrorsEnabled.svg:
+        * UserInterface/Images/IssuesEnabled.svg:
+
+2014-08-07  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Dashboard contents shift when window changes active state
+        https://bugs.webkit.org/show_bug.cgi?id=135724
+
+        Reviewed by Timothy Hatcher.
+
+        The container was getting a 1px border when inactive and none when active.
+        Give it a transparent border when active so contents don't change size.
+
+        * UserInterface/Views/DashboardContainerView.css:
+        (.toolbar .dashboard-container):
+
+2014-08-07  Timothy Hatcher  <timothy@apple.com>
+
+        Fix reference to missing CloseTimeline.svg image.
+
+        Rubber-stamped by Joseph Pecoraro.
+
+        * UserInterface/Views/TimelineSidebarPanel.js:
+        (WebInspector.TimelineSidebarPanel.createTimelineTreeElement): Use CloseLarge.svg instead.
+
+2014-08-07  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed build fix.
+
+        Add a WebInspectorUI.proj file for use with MSBuild utility.
+
+        * WebInspectorUI.vcxproj/WebInspectorUI.proj: Added.
+
+2014-08-07  Benjamin Poulain  <bpoulain@apple.com>
+
+        Get rid of INPUT_SPEECH
+        https://bugs.webkit.org/show_bug.cgi?id=135672
+
+        Reviewed by Andreas Kling.
+
+        * UserInterface/Models/CSSKeywordCompletions.js:
+
+2014-08-07  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Dragging selection window when mouse goes out of window bounds does not behave as expected
+        https://bugs.webkit.org/show_bug.cgi?id=135372
+
+        Reviewed by Timothy Hatcher.
+
+        Constrain move selection window dragging to the ruler bounds
+        based on the mouse down position on the drag window.
+
+        * UserInterface/Views/TimelineRuler.js:
+        (WebInspector.TimelineRuler.prototype._handleMouseDown):
+        (WebInspector.TimelineRuler.prototype._handleMouseMove):
+        (WebInspector.TimelineRuler.prototype._handleMouseUp):
+
+2014-08-07  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Update glyphs to be more like Xcode 6
+        https://bugs.webkit.org/show_bug.cgi?id=135705
+
+        Reviewed by Joseph Pecoraro.
+
+        * Localizations/en.lproj/localizedStrings.js: Updated.
+
+        * UserInterface/Base/ImageUtilities.js:
+        (platformImagePath): Added.
+        (generateEmbossedImages.generateImage):
+        Bump the base image version. Helper function. Use isLegacyMacOS.
+
+        * UserInterface/Base/Main.js:
+        (WebInspector.contentLoaded):
+        (WebInspector._updateDockNavigationItems):
+        (WebInspector._generateDisclosureTriangleImages):
+        Use new images and add legacy path. Remove the shadow.
+
+        * UserInterface/Images: Updated images.
+        * UserInterface/Images/Legacy: Added. Moved legacy images here.
+
+        * UserInterface/Views/CSSStyleDeclarationSection.css:
+        (.style-declaration-section):
+        (body.mac-platform.legacy .style-declaration-section + .style-declaration-section):
+        (.style-declaration-section.last-in-group):
+        (.style-declaration-section.last-in-group + .style-declaration-section):
+        Use a consistent gray for borders.
+
+        * UserInterface/Views/CSSStyleDetailsSidebarPanel.css:
+        (.sidebar > .panel.details.css-style > .content > .pseudo-classes):
+        Use a consistent gray for borders.
+
+        * UserInterface/Views/ContentBrowser.js:
+        (WebInspector.ContentBrowser):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/ControlToolbarItem.css:
+        (.toolbar .item.control):
+        (body.mac-platform.legacy .toolbar .item.control):
+        (.toolbar .item.control:hover):
+        (body.mac-platform.legacy .toolbar .item.control:hover):
+        Adjust the opacity for controls.
+
+        * UserInterface/Views/DOMTreeContentView.js:
+        (WebInspector.DOMTreeContentView):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/DataGrid.css:
+        (.data-grid tr.selected):
+        Use a consistent gray for borders.
+
+        * UserInterface/Views/DataGrid.js:
+        (WebInspector.DataGrid.prototype.get _generateSortIndicatorImagesIfNeeded):
+        Use new images and add legacy path. Remove the shadow.
+
+        * UserInterface/Views/DebuggerSidebarPanel.js:
+        (WebInspector.DebuggerSidebarPanel):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/DefaultDashboardView.css:
+        (.toolbar .dashboard.default > .item):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .item):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .resourcesCount > img):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .time > img):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .logs > img):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .resourcesSize > img):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .errors > img):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .errors.enabled > img):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .issues > img):
+        (body.mac-platform.legacy .toolbar .dashboard.default > .issues.enabled > img):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/DetailsSection.css:
+        (.details-section):
+        (.details-section .details-section:first-child):
+        (body.mac-platform.legacy .details-section > .header):
+        (.details-section > .content > .group):
+        (.details-section > .content > .group:nth-child(even) > .row.simple:first-child > *):
+        (body.mac-platform.legacy .details-section > .content > .group:last-child > .row.simple:last-child > *):
+        Use a consistent gray for borders.
+
+        * UserInterface/Views/FilterBar.css:
+        (body.mac-platform.legacy .filter-bar > input[type="search"]::-webkit-search-decoration):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/FindBanner.css:
+        (.find-banner):
+        Use a consistent gray for borders.
+
+        * UserInterface/Views/FindBanner.js:
+        (WebInspector.FindBanner.prototype._generateButtonsGlyphsIfNeeded):
+        Add legacy path.
+
+        * UserInterface/Views/FrameTreeElement.js:
+        (WebInspector.FrameTreeElement.prototype.updateStatusForMainFrame):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/LogContentView.js:
+        (WebInspector.LogContentView):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/Main.css:
+        (#split-content-browser):
+        Use a consistent gray for borders.
+
+        * UserInterface/Views/NavigationSidebarPanel.css:
+        (.sidebar > .panel.navigation > .overflow-shadow):
+        (body.mac-platform.legacy .sidebar > .panel.navigation > .overflow-shadow):
+        (.sidebar > .panel.navigation > .overflow-shadow.top):
+        (body.mac-platform.legacy .sidebar > .panel.navigation > .overflow-shadow.top):
+        (.sidebar > .panel.navigation > .empty-content-placeholder):
+        (body.mac-platform.legacy .sidebar > .panel.navigation > .empty-content-placeholder):
+        (.navigation-sidebar-panel-content-tree-outline:focus .item.selected .disclosure-button):
+        (.navigation-sidebar-panel-content-tree-outline:focus .item.selected.expanded .disclosure-button):
+        (.navigation-sidebar-panel-content-tree-outline .item.selected):
+        (.navigation-sidebar-panel-content-tree-outline:focus .item.selected):
+        Adjust the styles to make the selected item use white text and icons only when focused.
+
+        * UserInterface/Views/NavigationSidebarPanel.js:
+        (WebInspector.NavigationSidebarPanel.prototype._updateContentOverflowShadowVisibility):
+        (WebInspector.NavigationSidebarPanel.prototype._generateDisclosureTrianglesIfNeeded):
+        Remove the shadow from the disclosure triangles. Make the overflow shadow not fade.
+
+        * UserInterface/Views/ProbeDetailsSidebarPanel.css:
+        (.details-section.probe-set .options > .probe-clear-samples):
+        (.details-section.probe-set .options > .probe-remove):
+        (.details-section.probe-set .options > .probe-add):
+        (body.mac-platform.legacy .details-section.probe-set .options > .probe-clear-samples):
+        (body.mac-platform.legacy .details-section.probe-set .options > .probe-remove):
+        (body.mac-platform.legacy .details-section.probe-set .options > .probe-add):
+        Tweak size and position of icons and use legacy paths.
+
+        * UserInterface/Views/QuickConsole.css:
+        (.quick-console):
+        Adjust padding to match filter bar height.
+
+        * UserInterface/Views/ResourceSidebarPanel.css:
+        (.sidebar > .panel.navigation.resource > .search-bar):
+        Adjust height.
+
+        * UserInterface/Views/RulesStyleDetailsPanel.css:
+        (.sidebar > .panel.details.css-style .rules .label + .style-declaration-section):
+        (.sidebar > .panel.details.css-style .rules .new-rule + .style-declaration-section):
+        (body.mac-platform.legacy .sidebar > .panel.details.css-style .rules .new-rule img):
+        Use a consistent gray for borders. Don't bold the New Rule label.
+
+        * UserInterface/Views/ScriptContentView.js:
+        (WebInspector.ScriptContentView):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/Sidebar.css:
+        (.sidebar.left):
+        (.sidebar.right):
+        Use a consistent gray for borders.
+
+        * UserInterface/Views/TextContentView.js:
+        (WebInspector.TextContentView):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/TextResourceContentView.js:
+        (WebInspector.TextResourceContentView):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/TimelineContentView.js:
+        (WebInspector.TimelineContentView):
+        Use new images and add legacy path.
+
+        * UserInterface/Views/TimelineDataGrid.css:
+        (.data-grid.timeline th):
+        (.data-grid.timeline th.sortable:active):
+        (.data-grid.timeline th.sort-descending):
+        Fix a regression with the gradient background showing in legacy mode.
+
+        * UserInterface/Views/TimelineIcons.css:
+        (body.mac-platform.legacy .network-icon .icon):
+        (body.mac-platform.legacy .network-icon.large .icon):
+        (body.mac-platform.legacy .colors-icon .icon):
+        (body.mac-platform.legacy .colors-icon.large .icon):
+        Added legacy versions of these icons.
+
+        * UserInterface/Views/TimelineSidebarPanel.css:
+        (.sidebar > .panel.navigation.timeline > .status-bar > .record-glyph):
+        (.sidebar > .panel.navigation.timeline > .status-bar > .record-glyph:hover):
+        (.sidebar > .panel.navigation.timeline > .status-bar > .record-glyph:active):
+        (.sidebar > .panel.navigation.timeline > .status-bar > .record-glyph.recording):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-glyph):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-glyph.recording):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-glyph:hover):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-glyph.recording:hover):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-glyph.forced):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .status-bar > .record-glyph.recording.forced):
+        (.sidebar > .panel.navigation.timeline > .timelines-content .close-button):
+        (.sidebar > .panel.navigation.timeline > .timelines-content li.item.selected + li.item):
+        (body.mac-platform.legacy .sidebar > .panel.navigation.timeline > .timelines-content :focus li.item.selected + li.item):
+        Update the styles for the recording button and close button.
+
+        * UserInterface/Views/TimelineSidebarPanel.js:
+        (WebInspector.TimelineSidebarPanel.createTimelineTreeElement):
+        Use TreeElementStatusButton instead of a styled image.
+
+        * UserInterface/Views/TreeElementStatusButton.css:
+        (.item > .status > .status-button > svg path.filled):
+        (body.mac-platform.legacy .item > .status > .status-button > svg path.filled):
+        (:focus .item.selected > .status > .status-button > svg path.filled):
+        (.item > .status > .status-button > svg path.stroked):
+        (body.mac-platform.legacy .item > .status > .status-button > svg path.stroked):
+        (:focus .item.selected > .status > .status-button > svg path.stroked):
+        (.item.selected > .status > .status-button:active):
+        (.item > .status > .status-button.disabled):
+        Updated selectors and styles to work with stroke or fill.
+
+2014-08-07  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: DebuggerManager sends spurious setBreakpointsActive commands when setting a breakpoint
+        https://bugs.webkit.org/show_bug.cgi?id=135674
+
+        Reviewed by David Kilzer.
+
+        * UserInterface/Controllers/DebuggerManager.js:
+        (WebInspector.DebuggerManager.prototype.set breakpointsEnabled): Fix a typo.
+
+2014-08-06  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: breakpoint resolved state should not depend on all breakpoints being enabled
+        https://bugs.webkit.org/show_bug.cgi?id=135517
+
+        Reviewed by Joseph Pecoraro.
+
+        Previously, Breakpoint.resolved returned false if all breakpoints were disabled, even if
+        the breakpoint had an associated SourceCode. This was a weird hack to make it easier to
+        style breakpoint widgets. This made it hard for other code to deal with resolved
+        breakpoints that were also disabled, or SourceCodeLocations that resolve and unresolve.
+        This patch removes that consideration and fixes style update code to manually check if all
+        breakpoints are being suppressed.
+
+        The code now enforces that a Breakpoint must have a SourceCode before it can be resolved.
+        (As a performance optimization when loading the initial frame tree, we sometimes we give
+        Breakpoints a SourceCode before the debugger officially says that the breakpoint has been
+        resolved. Thus, it's possible to be unresolved with a SourceCode, but not vice-versa.)
+
+        This patch also adds a few guards where we assumed a SourceCodeLocation had a SourceCode.
+
+        * UserInterface/Controllers/DebuggerManager.js:
+        (WebInspector.DebuggerManager.prototype.set breakpointsEnabled): Remove spurious
+        ResolvedStateDidChange events.
+
+        (WebInspector.DebuggerManager.prototype.breakpointResolved): Set the breakpoint's SourceCode
+        if it has not been set already by DebuggerManager.associateBreakpointsWithSourceCode.
+
+        * UserInterface/Models/Breakpoint.js:
+        (WebInspector.Breakpoint.prototype.get resolved):
+        (WebInspector.Breakpoint.prototype.set resolved.isSpecialBreakpoint):
+        (WebInspector.Breakpoint.prototype.set resolved): Add an assertion.
+        * UserInterface/Models/SourceCodeLocation.js: Add guards for !SourceCode.
+        (WebInspector.SourceCodeLocation.prototype.populateLiveDisplayLocationTooltip):
+        * UserInterface/Views/BreakpointTreeElement.js: Account for DebuggerManager.breakpointsEnabled.
+        (WebInspector.BreakpointTreeElement):
+        (WebInspector.BreakpointTreeElement.prototype._updateStatus):
+        * UserInterface/Views/ProbeSetDetailsSection.js:
+        (WebInspector.ProbeSetDetailsSection.prototype._updateLinkElement): Loosen the assertion.
+        * UserInterface/Views/SourceCodeTextEditor.js: Account for DebuggerManager.breakpointsEnabled.
+        (WebInspector.SourceCodeTextEditor):
+        (WebInspector.SourceCodeTextEditor.prototype.close):
+        (WebInspector.SourceCodeTextEditor.prototype._breakpointStatusDidChange):
+        (WebInspector.SourceCodeTextEditor.prototype._breakpointsEnabledDidChange):
+        (WebInspector.SourceCodeTextEditor.prototype._updateBreakpointStatus):
+        * UserInterface/Views/TextEditor.js: Account for DebuggerManager.breakpointsEnabled.
+
+2014-08-06  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: ReplayManager should unpause and suppress breakpoints before capturing/replaying
+        https://bugs.webkit.org/show_bug.cgi?id=135608
+
+        Reviewed by Timothy Hatcher.
+
+        It is jarring when the debugger pauses during capturing or replaying. For now, we should suppress
+        all breakpoints during capturing or replaying, and restore breakpoint enabled state when
+        capturing finishes, when replaying finishes, or during temporary replay pauses.
+
+        In the future, the debugger will be selectively enabled during playback to seek to specific
+        breakpoint hits. This is tracked in https://bugs.webkit.org/show_bug.cgi?id=135663.
+
+        * UserInterface/Controllers/ReplayManager.js:
+        (WebInspector.ReplayManager.prototype.startCapturing.result):
+        (WebInspector.ReplayManager.prototype.replayToPosition.result):
+        (WebInspector.ReplayManager.prototype.replayToCompletion.result):
+        (WebInspector.ReplayManager.prototype.captureStopped):
+        (WebInspector.ReplayManager.prototype.playbackPaused):
+        (WebInspector.ReplayManager.prototype.playbackFinished):
+        (WebInspector.ReplayManager.prototype._changeSegmentState):
+        (WebInspector.ReplayManager.prototype._suppressBreakpointsAndResumeIfNeeded):
+
+2014-08-06  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Build fix.
+
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj: DebugSuffix target was missing
+        proper path settings for final output.
+
+2014-08-06  Wenson Hsieh  <wenson_hsieh@apple.com>
+
+        Implement parsing for CSS scroll snap points
+        https://bugs.webkit.org/show_bug.cgi?id=134301
+
+        Reviewed by Dean Jackson.
+
+        * UserInterface/Models/CSSKeywordCompletions.js: Added snap point property keywords, such as mandatory, proximity, elements, and repeat.
+
+2014-08-06  Brian J. Burg  <burg@cs.washington.edu>
+
+        REGRESSION(r172094): tests fail because Inspector test harness does not include UIString
+        https://bugs.webkit.org/show_bug.cgi?id=135658
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Base/Test.js:
+        (WebInspector.contentLoaded): Fix brace placement.
+        (WebInspector.UIString): Added. This is the identity function during testing.
+
+2014-08-06  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: convert ReplayManager to a promise-based API
+        https://bugs.webkit.org/show_bug.cgi?id=135249
+
+        Reviewed by Timothy Hatcher.
+
+        Convert replay commands to an asynchronous, promise-based API. This addresses
+        two problems with a synchronous replay API: clients can only use the synchronous
+        API if session and segment state are exactly correct, and trying to change state
+        to match this requirement requires chaining multiple commands and events.
+
+        The asynchronous API allows clients to issue replay commands with impunity,
+        as long as they can be unambiguously handled. For example, issuing
+        pausePlayback() while capturing is not allowed, but issuing startCapturing()
+        while replaying is allowed. The API also hides implementation details that
+        are not important, such as steps to unpause or temporarily disable the debugger.
+
+        This patch also cleans up uses of promises, such as adding error re-throwing.
+        It adds return type annotations to public ReplayManager asynchronous methods.
+
+        * UserInterface/Controllers/ReplayManager.js:
+        (WebInspector.ReplayManager.catch):
+        (WebInspector.ReplayManager):
+        (WebInspector.ReplayManager.prototype.createSession):
+        (WebInspector.ReplayManager.prototype.switchSession):
+        (WebInspector.ReplayManager.prototype.startCapturing):
+        (WebInspector.ReplayManager.prototype.stopCapturing):
+        (WebInspector.ReplayManager.prototype.replayToPosition):
+        (WebInspector.ReplayManager.prototype.replayToCompletion):
+        (WebInspector.ReplayManager.prototype.sessionCreated.catch): re-throw.
+        (WebInspector.ReplayManager.prototype.segmentCompleted.catch): re-throw.
+        (WebInspector.ReplayManager.prototype.segmentCompleted.catch): re-throw.
+        (WebInspector.ReplayManager.prototype.segmentUnloaded.catch): re-throw.
+        (WebInspector.ReplayManager.prototype.sessionCreated.catech): re-throw.
+
+2014-08-06  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: protocol command invocations should return a promise if no callback is supplied
+        https://bugs.webkit.org/show_bug.cgi?id=130702
+
+        Reviewed by Timothy Hatcher.
+
+        This allows the trailing Agent.command.promise(args) to be dropped in favor of just
+        Agent.command(args). It should make it a bit easier to convert code to use promises.
+
+        Test: LayoutTests/inspector/protocol-promise-result.html
+
+        * UserInterface/Controllers/ReplayManager.js: Drop use of .promise().
+        * UserInterface/Controllers/TimelineManager.js: Drop use of .promise().
+        (WebInspector.TimelineManager.prototype.startCapturing):
+        * UserInterface/Protocol/InspectorBackend.js:
+        (.callable): Redirect to the promise entry point if the last argument isn't a function.
+        (InspectorBackend.Command.create):
+
 2014-08-05  James Craig  <jcraig@apple.com>
 
         Web Inspector: AXI: Add label string once AccessibilityObject::computedLabel() is available

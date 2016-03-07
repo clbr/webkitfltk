@@ -224,11 +224,7 @@ RenderPtr<RenderElement> TextFieldInputType::createInputRenderer(PassRef<RenderS
 
 bool TextFieldInputType::needsContainer() const
 {
-#if ENABLE(INPUT_SPEECH)
-    return element().isSpeechEnabled();
-#else
     return false;
-#endif
 }
 
 bool TextFieldInputType::shouldHaveSpinButton() const
@@ -265,14 +261,6 @@ void TextFieldInputType::createShadowSubtree()
     m_innerBlock->appendChild(m_innerText, IGNORE_EXCEPTION);
     m_container->appendChild(m_innerBlock, IGNORE_EXCEPTION);
 
-#if ENABLE(INPUT_SPEECH)
-    ASSERT(!m_speechButton);
-    if (element().isSpeechEnabled()) {
-        m_speechButton = InputFieldSpeechButtonElement::create(document);
-        m_container->appendChild(m_speechButton, IGNORE_EXCEPTION);
-    }
-#endif
-
     if (shouldHaveSpinButton) {
         m_innerSpinButton = SpinButtonElement::create(document, *this);
         m_container->appendChild(m_innerSpinButton, IGNORE_EXCEPTION);
@@ -300,13 +288,6 @@ HTMLElement* TextFieldInputType::innerSpinButtonElement() const
     return m_innerSpinButton.get();
 }
 
-#if ENABLE(INPUT_SPEECH)
-HTMLElement* TextFieldInputType::speechButtonElement() const
-{
-    return m_speechButton.get();
-}
-#endif
-
 HTMLElement* TextFieldInputType::placeholderElement() const
 {
     return m_placeholder.get();
@@ -318,9 +299,6 @@ void TextFieldInputType::destroyShadowSubtree()
     m_innerText.clear();
     m_placeholder.clear();
     m_innerBlock.clear();
-#if ENABLE(INPUT_SPEECH)
-    m_speechButton.clear();
-#endif
     if (m_innerSpinButton)
         m_innerSpinButton->removeSpinButtonOwner();
     m_innerSpinButton.clear();

@@ -101,18 +101,12 @@ WebInspector.DebuggerManager.prototype = {
 
     set breakpointsEnabled(enabled)
     {
-        if (this._breakpointsEnabled === enabled)
+        if (this._breakpointsEnabledSetting.value === enabled)
             return;
 
         this._breakpointsEnabledSetting.value = enabled;
 
         this.dispatchEventToListeners(WebInspector.DebuggerManager.Event.BreakpointsEnabledDidChange);
-
-        this._allExceptionsBreakpoint.dispatchEventToListeners(WebInspector.Breakpoint.Event.ResolvedStateDidChange);
-        this._allUncaughtExceptionsBreakpoint.dispatchEventToListeners(WebInspector.Breakpoint.Event.ResolvedStateDidChange);
-
-        for (var i = 0; i < this._breakpoints.length; ++i)
-            this._breakpoints[i].dispatchEventToListeners(WebInspector.Breakpoint.Event.ResolvedStateDidChange);
 
         DebuggerAgent.setBreakpointsActive(enabled);
 
@@ -310,6 +304,11 @@ WebInspector.DebuggerManager.prototype = {
             return;
 
         console.assert(breakpoint.identifier === breakpointIdentifier);
+
+        if (!breakpoint.sourceCodeLocation.sourceCode) {
+            var sourceCodeLocation = this._sourceCodeLocationFromPayload(location);
+            breakpoint.sourceCodeLocation.sourceCode = sourceCodeLocation.sourceCode;
+        }
 
         breakpoint.resolved = true;
     },

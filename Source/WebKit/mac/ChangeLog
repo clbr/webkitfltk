@@ -1,3 +1,65 @@
+2014-08-07  Benjamin Poulain  <bpoulain@apple.com>
+
+        Get rid of SCRIPTED_SPEECH
+        https://bugs.webkit.org/show_bug.cgi?id=135729
+
+        Reviewed by Brent Fulgham.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-08-07  Benjamin Poulain  <bpoulain@apple.com>
+
+        Get rid of INPUT_SPEECH
+        https://bugs.webkit.org/show_bug.cgi?id=135672
+
+        Reviewed by Andreas Kling.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-08-07  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Update glyphs to be more like Xcode 6
+        https://bugs.webkit.org/show_bug.cgi?id=135705
+
+        Reviewed by Joseph Pecoraro.
+
+        * Resources/Dock.pdf: Added.
+        * Resources/DockLegacy.pdf: Copied from Source/WebKit/mac/Resources/Dock.pdf.
+        * WebCoreSupport/WebInspectorClient.mm:
+        (-[WebInspectorWindowController window]): Use new images.
+
+2014-08-06  Dean Jackson  <dino@apple.com>
+
+        ENABLE_CSS_TRANSFORMS_ANIMATIONS_UNPREFIXED is not used anywhere. Remove it.
+        https://bugs.webkit.org/show_bug.cgi?id=135675
+
+        Reviewed by Sam Weinig.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-08-06  Wenson Hsieh  <wenson_hsieh@apple.com>
+
+        Implement parsing for CSS scroll snap points
+        https://bugs.webkit.org/show_bug.cgi?id=134301
+
+        Reviewed by Dean Jackson.
+
+        * Configurations/FeatureDefines.xcconfig: Added ENABLE_CSS_SCROLL_SNAP
+
+2014-08-06  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (WebKit2): iOS Safari default encoding doesn't follow system language
+        https://bugs.webkit.org/show_bug.cgi?id=135667
+        <rdar://problem/17862892>
+
+        Reviewed by Anders Carlsson.
+
+        * WebView/WebPreferences.mm: (+[WebPreferences _setInitialDefaultTextEncodingToSystemEncoding]):
+        Moved implementation to WebCore, so that it can be shared with WebKit2.
+
+        * WebCoreSupport/WebSystemInterface.mm: (InitWebCoreSystemInterface):
+        We now use WKGetWebDefaultCFStringEncoding in WebCore, so it needs to be initialized.
+
 2014-08-05  Peyton Randolph  <prandolph@apple.com>
 
         Rename MAC_LONG_PRESS feature flag to LONG_MOUSE_PRESS.

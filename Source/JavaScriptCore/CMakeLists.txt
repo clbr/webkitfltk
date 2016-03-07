@@ -186,6 +186,7 @@ set(JavaScriptCore_SOURCES
     dfg/DFGOSRExitJumpPlaceholder.cpp
     dfg/DFGOSRExitPreparation.cpp
     dfg/DFGOperations.cpp
+    dfg/DFGPhantomCanonicalizationPhase.cpp
     dfg/DFGPhantomRemovalPhase.cpp
     dfg/DFGPhase.cpp
     dfg/DFGPlan.cpp
@@ -409,6 +410,7 @@ set(JavaScriptCore_SOURCES
     runtime/Executable.cpp
     runtime/FunctionConstructor.cpp
     runtime/FunctionExecutableDump.cpp
+    runtime/FunctionHasExecutedCache.cpp
     runtime/FunctionPrototype.cpp
     runtime/GetterSetter.cpp
     runtime/HighFidelityLog.cpp
@@ -451,8 +453,8 @@ set(JavaScriptCore_SOURCES
     runtime/JSPromiseFunctions.cpp
     runtime/JSPromiseReaction.cpp
     runtime/JSPromisePrototype.cpp
-    runtime/JSPropertyNameIterator.cpp
     runtime/JSProxy.cpp
+    runtime/JSPropertyNameEnumerator.cpp
     runtime/JSScope.cpp
     runtime/JSSegmentedVariableObject.cpp
     runtime/JSSet.cpp
@@ -519,6 +521,7 @@ set(JavaScriptCore_SOURCES
     runtime/StructureRareData.cpp
     runtime/SymbolTable.cpp
     runtime/TestRunnerUtils.cpp
+    runtime/TypeLocationCache.cpp
     runtime/TypeSet.cpp
     runtime/TypedArrayController.cpp
     runtime/TypedArrayType.cpp
