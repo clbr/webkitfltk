@@ -1,3 +1,250 @@
+2014-10-24  Mark Lam  <mark.lam@apple.com>
+
+        Simplified IndexingType's hasAnyArrayStorage().
+        <https://webkit.org/b/138051>
+
+        Reviewed by Michael Saboff.
+
+        IndexingType's hasAnyArrayStorage() currently does subtraction of ArrayStorageShape
+        with the purpose of making non-ArrayStorage types underflow (with that subtraction)
+        and have a result that exceeds SlowPutArrayStorageShape.  What it is doing is
+        basically checking for a shape value that is greater equal to ArrayStorageShape.
+        We can just simplify the code as such.
+
+        Also added a comment to describe the structure of the bits in IndexingType.
+
+        * runtime/IndexingType.h:
+        (JSC::hasAnyArrayStorage):
+
+2014-10-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Provide a way to have alternate inspector agents
+        https://bugs.webkit.org/show_bug.cgi?id=137901
+
+        Reviewed by Brian Burg.
+
+        Provide a way to use alternate inspector agents debugging a JSContext.
+        Expose a very slim private API that a client could use to know when
+        an inspector has connected/disconnected, and a way to register its
+        augmentative agents.
+
+        * Configurations/FeatureDefines.xcconfig:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        New feature guard. New files.
+
+        * API/JSContextRef.cpp:
+        (JSGlobalContextGetAugmentableInspectorController):
+        * API/JSContextRefInspectorSupport.h: Added.
+        Access to the private interface from a JSContext.
+
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::JSGlobalObjectInspectorController):
+        (Inspector::JSGlobalObjectInspectorController::connectFrontend):
+        (Inspector::JSGlobalObjectInspectorController::disconnectFrontend):
+        * inspector/JSGlobalObjectInspectorController.h:
+        * inspector/augmentable/AugmentableInspectorController.h: Added.
+        (Inspector::AugmentableInspectorController::~AugmentableInspectorController):
+        (Inspector::AugmentableInspectorController::connected):
+        * inspector/augmentable/AugmentableInspectorControllerClient.h: Added.
+        (Inspector::AugmentableInspectorControllerClient::~AugmentableInspectorControllerClient):
+        * inspector/augmentable/AlternateDispatchableAgent.h: Added.
+        (Inspector::AlternateDispatchableAgent::AlternateDispatchableAgent):
+        Provide the private APIs a client could use to add alternate agents using alternate backend dispatchers.
+
+        * inspector/scripts/codegen/__init__.py:
+        * inspector/scripts/generate-inspector-protocol-bindings.py:
+        (generate_from_specification):
+        New includes, and use the new generator.
+        
+        * inspector/scripts/codegen/generate_alternate_backend_dispatcher_header.py: Added.
+        (AlternateBackendDispatcherHeaderGenerator):
+        (AlternateBackendDispatcherHeaderGenerator.__init__):
+        (AlternateBackendDispatcherHeaderGenerator.output_filename):
+        (AlternateBackendDispatcherHeaderGenerator.generate_output):
+        (AlternateBackendDispatcherHeaderGenerator._generate_handler_declarations_for_domain):
+        (AlternateBackendDispatcherHeaderGenerator._generate_handler_declaration_for_command):
+        Generate the abstract AlternateInspectorBackendDispatcher interfaces.
+
+        * inspector/scripts/codegen/generate_backend_dispatcher_header.py:
+        (BackendDispatcherHeaderGenerator.generate_output):
+        (BackendDispatcherHeaderGenerator._generate_alternate_handler_forward_declarations_for_domains):
+        (BackendDispatcherHeaderGenerator._generate_alternate_handler_forward_declarations_for_domains.AlternateInspector):
+        Forward declare alternate dispatchers, and allow setting an alternate dispatcher on a domain dispatcher.
+
+        * inspector/scripts/codegen/generate_backend_dispatcher_implementation.py:
+        (BackendDispatcherImplementationGenerator.generate_output):
+        (BackendDispatcherImplementationGenerator._generate_dispatcher_implementation_for_command):
+        Check for and dispatch on an AlternateInspectorBackendDispatcher if there is one for this domain.
+
+        * inspector/scripts/codegen/generator_templates.py:
+        (AlternateInspectorBackendDispatcher):
+        (AlternateInspector):
+        Template boilerplate for prelude and postlude.
+
+        * inspector/scripts/tests/expected/commands-with-async-attribute.json-result:
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+        * inspector/scripts/tests/expected/domains-with-varying-command-sizes.json-result:
+        * inspector/scripts/tests/expected/events-with-optional-parameters.json-result:
+        * inspector/scripts/tests/expected/generate-domains-with-feature-guards.json-result:
+        * inspector/scripts/tests/expected/same-type-id-different-domain.json-result:
+        * inspector/scripts/tests/expected/shadowed-optional-type-setters.json-result:
+        * inspector/scripts/tests/expected/type-declaration-aliased-primitive-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-array-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-enum-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-object-type.json-result:
+        * inspector/scripts/tests/expected/type-requiring-runtime-casts.json-result:
+        Rebaseline tests.
+
+2014-10-23  Michael Saboff  <msaboff@apple.com>
+
+        offsets.rb:183:in `buildOffsetsMap': unhandled exception - is offlineasm dependency tracking broken? (132668)
+        https://bugs.webkit.org/show_bug.cgi?id=138017
+
+        Reviewed by Mark Lam.
+
+        Removed from the nput file $(SRCROOT)/llint/LowLevelAssembler.asm and output file
+        $(BUILT_PRODUCTS_DIR)/LLIntOffsets/LLIntDesiredOffsets.h from the Generate Derived Sources
+        build phase in the LLInt Offset target.  There is no need for Xcode to do any dependency
+        checking with these files as the ruby script offlineasm/generate_offset_extractor.rb will
+        do that for us.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2014-10-23  Michael Saboff  <msaboff@apple.com>
+
+        Change CallFrame::lexicalGlobalObject() to use Callee instead of JSScope
+        https://bugs.webkit.org/show_bug.cgi?id=136901
+
+        Reviewed by Mark Lam.
+
+        Implement ExecState::lexicalGlobalObject() using Callee.
+        
+        * runtime/JSScope.h:
+        (JSC::ExecState::lexicalGlobalObject):
+
+2014-10-22  Milan Crha  <mcrha@redhat.com>
+
+        Prefix isnan() with std::.
+        <https://webkit.org/b/137966>.
+
+        Reviewed by Carlos Garcia Campos.
+
+        * profiler/ProfileNode.h:
+        (JSC::ProfileNode::Call::setStartTime):
+        (JSC::ProfileNode::Call::setElapsedTime):
+
+2014-10-22  Mark Lam  <mark.lam@apple.com>
+
+        Refactoring to simplify some code in DatePrototype.cpp.
+        <https://webkit.org/b/137997>
+
+        Reviewed by Filip Pizlo.
+
+        A bunch of functions in DatePrototype.cpp have the pattern of loading a
+        constant into a local variable only to pass it to a callee function
+        immediately after.  There is no other use for that variable.  This adds
+        additional verbosity with no added benefit.
+
+        This patch refactors those functions to just pass the constant arg directly.
+
+        * runtime/DatePrototype.cpp:
+        (JSC::dateProtoFuncSetMilliSeconds):
+        (JSC::dateProtoFuncSetUTCMilliseconds):
+        (JSC::dateProtoFuncSetSeconds):
+        (JSC::dateProtoFuncSetUTCSeconds):
+        (JSC::dateProtoFuncSetMinutes):
+        (JSC::dateProtoFuncSetUTCMinutes):
+        (JSC::dateProtoFuncSetHours):
+        (JSC::dateProtoFuncSetUTCHours):
+        (JSC::dateProtoFuncSetDate):
+        (JSC::dateProtoFuncSetUTCDate):
+        (JSC::dateProtoFuncSetMonth):
+        (JSC::dateProtoFuncSetUTCMonth):
+        (JSC::dateProtoFuncSetFullYear):
+        (JSC::dateProtoFuncSetUTCFullYear):
+
+2014-10-22  Byungseon Shin  <sun.shin@lge.com>
+
+        String(new Date(Mar 30 2014 01:00:00)) is wrong in CET
+        https://bugs.webkit.org/show_bug.cgi?id=130967
+
+        Reviewed by Mark Lam.
+
+        By definition of calculateLocalTimeOffset, input time should be UTC time.
+        But there are many cases when input time is based on local time.
+        So, it gives erroneous results while calculating offset of DST boundary time.
+        By adding a argument to distinguish UTC and local time, we can get the correct offset.
+
+        * JavaScriptCore.order:
+        * runtime/DateConstructor.cpp:
+        (JSC::constructDate):
+        (JSC::callDate):
+        (JSC::dateUTC):
+        * runtime/DateInstance.cpp:
+        (JSC::DateInstance::calculateGregorianDateTime):
+        (JSC::DateInstance::calculateGregorianDateTimeUTC):
+        * runtime/DatePrototype.cpp:
+        (JSC::setNewValueFromTimeArgs):
+        (JSC::setNewValueFromDateArgs):
+        (JSC::dateProtoFuncSetMilliSeconds):
+        (JSC::dateProtoFuncSetUTCMilliseconds):
+        (JSC::dateProtoFuncSetSeconds):
+        (JSC::dateProtoFuncSetUTCSeconds):
+        (JSC::dateProtoFuncSetMinutes):
+        (JSC::dateProtoFuncSetUTCMinutes):
+        (JSC::dateProtoFuncSetHours):
+        (JSC::dateProtoFuncSetUTCHours):
+        (JSC::dateProtoFuncSetDate):
+        (JSC::dateProtoFuncSetUTCDate):
+        (JSC::dateProtoFuncSetMonth):
+        (JSC::dateProtoFuncSetUTCMonth):
+        (JSC::dateProtoFuncSetFullYear):
+        (JSC::dateProtoFuncSetUTCFullYear):
+        (JSC::dateProtoFuncSetYear):
+        * runtime/JSDateMath.cpp:
+        (JSC::localTimeOffset):
+        (JSC::gregorianDateTimeToMS):
+        (JSC::msToGregorianDateTime):
+        (JSC::parseDateFromNullTerminatedCharacters):
+        * runtime/JSDateMath.h:
+        * runtime/VM.h:
+        (JSC::LocalTimeOffsetCache::LocalTimeOffsetCache):
+        (JSC::LocalTimeOffsetCache::reset):
+        Passing TimeType argument to distingush UTC time and local time.
+
+2014-10-22  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Fix generator importing of protocol type "any", treat as value
+        https://bugs.webkit.org/show_bug.cgi?id=137931
+
+        Reviewed by Timothy Hatcher.
+
+        Treat incoming "any" objects as InspectorValues, which can be any type.
+        Add the necessary boilerplate to import.
+
+        * inspector/InspectorBackendDispatcher.cpp:
+        (Inspector::AsMethodBridges::asValue):
+        (Inspector::InspectorBackendDispatcher::getValue):
+        * inspector/InspectorBackendDispatcher.h:
+        * inspector/scripts/codegen/generator.py:
+        (Generator.keyed_get_method_for_type):
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+
+2014-10-22  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION(r174996): Broke C_LOOP
+        https://bugs.webkit.org/show_bug.cgi?id=137971
+
+        Reviewed by Mark Lam.
+
+        Removed incorrect move to cfr (CallFrameRegister) before we make the call to a native function.
+        After r174996, the source register for the move contained garbage causing the crash.  The move
+        to cfr before making the call to the native function is wrong and should have been removed
+        some time ago.  This brings the ARM64 / C_LOOP code path inline with the other CPU paths.
+        Tested on ARM64 as well as a C_LOOP build.
+
+        * llint/LowLevelInterpreter64.asm:
+
 2014-10-21  Mark Lam  <mark.lam@apple.com>
 
         Remove erroneous canUseJIT() in the intrinsics version of JITThunks::hostFunctionStub().

@@ -717,19 +717,9 @@
 #define ENABLE_DISASSEMBLER 1
 #endif
 
-/* On some of the platforms where we have a JIT, we want to also have the 
-   low-level interpreter. */
-#if !defined(ENABLE_LLINT) \
-    && ENABLE(JIT) \
-    && (OS(DARWIN) || OS(LINUX) || OS(FREEBSD) || OS(WINDOWS)) \
-    && ((OS(DARWIN) && !PLATFORM(EFL)) || PLATFORM(GTK) || PLATFORM(WIN) || OS(LINUX)) \
-    && (CPU(X86) || CPU(X86_64) || CPU(ARM_THUMB2) || CPU(ARM_TRADITIONAL) || CPU(ARM64) || CPU(MIPS) || CPU(SH4))
-#define ENABLE_LLINT 1
-#endif
-
-#if !defined(ENABLE_DFG_JIT) && ENABLE(JIT) && !COMPILER(MSVC)
-/* Enable the DFG JIT on X86 and X86_64.  Only tested on Mac, GNU/Linux and FreeBSD. */
-#if (CPU(X86) || CPU(X86_64)) && (OS(DARWIN) || OS(LINUX) || OS(FREEBSD))
+#if !defined(ENABLE_DFG_JIT) && ENABLE(JIT)
+/* Enable the DFG JIT on X86 and X86_64. */
+#if (CPU(X86) || CPU(X86_64)) && (OS(DARWIN) || OS(LINUX) || OS(FREEBSD) || OS(WINDOWS) || OS(HURD))
 #define ENABLE_DFG_JIT 1
 #endif
 /* Enable the DFG JIT on ARMv7.  Only tested on iOS and Qt/GTK+ Linux. */

@@ -1,3 +1,1323 @@
+2014-10-24  Zalan Bujtas  <zalan@apple.com>
+
+        Replace INT_MIN/MAX / kFixedPointDenominator with intMin/MaxForLayoutUnit.
+        https://bugs.webkit.org/show_bug.cgi?id=138047
+
+        Reviewed by Andreas Kling.
+
+        No change in functionality.
+
+        * css/CSSPrimitiveValue.cpp:
+
+2014-10-24  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION(r174877): WebProcess sends an empty Cookies HTTP header
+        https://bugs.webkit.org/show_bug.cgi?id=138053
+
+        Reviewed by Chris Dumez.
+
+        Fixes existing tests.
+
+        * platform/network/mac/CookieJarMac.mm: (WebCore::cookiesForSession): Restore the 
+        behavior of returning a null string when there are no cookies.
+
+2014-10-24  Chris Dumez  <cdumez@apple.com>
+
+        [Mac] Use NSString API in QuickLookMac::computeNeedsQuickLookResourceCachingQuirks()
+        https://bugs.webkit.org/show_bug.cgi?id=138039
+
+        Reviewed by Darin Adler.
+
+        Use NSString API in QuickLookMac::computeNeedsQuickLookResourceCachingQuirks()
+        for case-insensitive string comparison instead of converting to UTF-8 and then
+        using strcasecmp().
+
+        No new tests, no behavior change.
+
+        * platform/mac/QuickLookMac.mm:
+        (WebCore::QuickLookMac::computeNeedsQuickLookResourceCachingQuirks):
+
+2014-10-24  Chris Dumez  <cdumez@apple.com>
+
+        Avoid unnecessary NSURLRequest copies in ResourceRequest::doUpdatePlatformRequest() / doUpdatePlatformHTTPBody()
+        https://bugs.webkit.org/show_bug.cgi?id=138049
+
+        Reviewed by Alexey Proskuryakov.
+
+        Avoid unnecessary NSURLRequest copies in ResourceRequest::doUpdatePlatformRequest()
+        / doUpdatePlatformHTTPBody(). It turns out that about half the time, the
+        m_nsRequest member is already mutable so it is unnecessary to call
+        [NSURLRequest mutableCopy], we can just cast it to an NSMutableURLRequest* and
+        avoid copying.
+
+        This patch also moves the code to a new ensureMutableNSURLRequest() method to
+        avoid duplicating the logic.
+
+        I see that we spend ~21% less time in these 2 functions when loading
+        http://flickr.com/explore/ (39.6ms -> 31.2ms).
+
+        No new tests, no behavior change.
+
+        * platform/network/cf/ResourceRequest.h:
+        * platform/network/cocoa/ResourceRequestCocoa.mm:
+        (WebCore::ResourceRequest::ensureMutableNSURLRequest):
+        (WebCore::ResourceRequest::doUpdatePlatformRequest):
+        (WebCore::ResourceRequest::doUpdatePlatformHTTPBody):
+
+2014-10-24  Chris Dumez  <cdumez@apple.com>
+
+        Move ComputeLength CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138036
+
+        Reviewed by Andreas Kling.
+
+        Move ComputeLength CSS properties from DeprecatedStyleBuilder to the
+        new StyleBuilder so that they are now generated. 3 Converters are
+        provided for these properties: ComputedLength / LineWidth / Spacing.
+
+        This is inspired by the following Blink revision by
+        <timloh@chromium.org>:
+        https://src.chromium.org/viewvc/blink?view=rev&revision=154012
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyComputeLength::setValue): Deleted.
+        (WebCore::ApplyPropertyComputeLength::applyValue): Deleted.
+        (WebCore::ApplyPropertyComputeLength::createHandler): Deleted.
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertComputedLength):
+        (WebCore::StyleBuilderConverter::convertLineWidth):
+        (WebCore::StyleBuilderConverter::convertSpacing):
+
+2014-10-24  Chris Dumez  <cdumez@apple.com>
+
+        Make ScriptWrappable's destructor protected instead of public
+        https://bugs.webkit.org/show_bug.cgi?id=138037
+
+        Reviewed by Andreas Kling.
+
+        Make ScriptWrappable's destructor protected instead of public as it is
+        not virtual and this class is subclassed a lot.
+
+        No new tests, no behavior change.
+
+        * bindings/js/ScriptWrappable.h:
+        (WebCore::ScriptWrappable::~ScriptWrappable):
+
+2014-10-23  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK][Cairo] Remove GTK dependency of WidgetBackingStoreGtkX11
+        https://bugs.webkit.org/show_bug.cgi?id=138004
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Rename all WidgetBackingStore* classes as
+        BackingStoreBackendCairo* since all of them are actually
+        BackingStore backends based on cairo, and move them from
+        platform/cairo and platform/gtk to platform/graphics/cairo.
+        BackingStoreBackendCairo is the base class that contains common
+        members like the surface and size. BackingStoreBackendCairoImpl is
+        the implementation using only cairo, and BackingStoreBackendCairoX11
+        using xlib. BackingStoreBackendCairoX11 receives all the X11
+        information it needs as constructor parameters, instead of using a
+        GtkWidget and GTK+ X11 API. BackingStoreBackendCairoImpl receives
+        the surface already created as constructor parameter, so that it
+        doesn't have any platform specific code now.
+
+        * PlatformEfl.cmake: Update compilation files.
+        * PlatformGTK.cmake: Ditto.
+        * platform/cairo/WidgetBackingStoreCairo.cpp: Removed.
+        * platform/graphics/cairo/BackingStoreBackendCairo.h: Renamed from Source/WebCore/platform/cairo/WidgetBackingStore.h.
+        (WebCore::BackingStoreBackendCairo::~BackingStoreBackendCairo):
+        (WebCore::BackingStoreBackendCairo::surface):
+        (WebCore::BackingStoreBackendCairo::size):
+        (WebCore::BackingStoreBackendCairo::BackingStoreBackendCairo):
+        * platform/graphics/cairo/BackingStoreBackendCairoImpl.cpp: Added.
+        (WebCore::BackingStoreBackendCairoImpl::BackingStoreBackendCairoImpl):
+        (WebCore::BackingStoreBackendCairoImpl::~BackingStoreBackendCairoImpl):
+        (WebCore::BackingStoreBackendCairoImpl::scroll):
+        * platform/graphics/cairo/BackingStoreBackendCairoImpl.h: Renamed from Source/WebCore/platform/cairo/WidgetBackingStoreCairo.h.
+        * platform/graphics/cairo/BackingStoreBackendCairoX11.cpp: Renamed from Source/WebCore/platform/gtk/WidgetBackingStoreGtkX11.cpp.
+        (WebCore::BackingStoreBackendCairoX11::BackingStoreBackendCairoX11):
+        (WebCore::BackingStoreBackendCairoX11::~BackingStoreBackendCairoX11):
+        (WebCore::BackingStoreBackendCairoX11::scroll):
+        * platform/graphics/cairo/BackingStoreBackendCairoX11.h: Renamed from Source/WebCore/platform/gtk/WidgetBackingStoreGtkX11.h.
+        * platform/graphics/cairo/CairoUtilities.cpp:
+        (WebCore::cairoSurfaceGetDeviceScale):
+        * platform/graphics/cairo/CairoUtilities.h:
+
+2014-10-23  Zalan Bujtas  <zalan@apple.com>
+
+        WebContent crash at WebCore::RenderTextControl::textFormControlElement const.
+        https://bugs.webkit.org/show_bug.cgi?id=138035
+
+        Reviewed by Antti Koivisto.
+
+        NULL-check element().renderer() before using it.
+
+        * html/SearchInputType.cpp:
+        (WebCore::SearchInputType::didSetValueByUserEdit):
+
+2014-10-23  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Remove HarfBuzzRun::create() factory function
+        https://bugs.webkit.org/show_bug.cgi?id=137945
+
+        Reviewed by Ryosuke Niwa.
+
+        As a step to use std::unique_ptr<>, this patch applies std::unique_ptr<> and std::make_unique<>.
+        Thus HarfBuzzRun::create() is needed no longer.
+
+        No new tests, no behavior changes.
+
+        * platform/graphics/harfbuzz/HarfBuzzShaper.cpp:
+        (WebCore::HarfBuzzShaper::collectHarfBuzzRuns):
+        * platform/graphics/harfbuzz/HarfBuzzShaper.h:
+        (WebCore::HarfBuzzShaper::HarfBuzzRun::create): Deleted.
+
+2014-10-23  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Unreviewed iOS build fix
+
+        * editing/FrameSelection.cpp:
+
+2014-10-23  Chris Dumez  <cdumez@apple.com>
+
+        [Mac] Optimize URL::createCFURL() for the common case
+        https://bugs.webkit.org/show_bug.cgi?id=138030
+
+        Reviewed by Alexey Proskuryakov.
+
+        Optimize URL::createCFURL() for the common case by adding a fast path
+        for when the URL String is already 8-bit (common case).
+        When the string is 8-bit, we don't need to copy the bytes into a
+        temporary buffer and we can construct the CFURLRef directly from it.
+
+        This makes URL::createCFURL() ~34% faster on my machine.
+
+        No new tests, no behavior change.
+
+        * platform/mac/URLMac.mm:
+        (WebCore::URL::createCFURL):
+
+2014-10-23  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Carets in GMail and iCloud compositions are the foreground text color
+        https://bugs.webkit.org/show_bug.cgi?id=138029
+
+        Reviewed by Simon Fraser.
+
+        Previously, we were only checking whether the background colors of the foreground and background
+        elements were the same, rather than taking validity and opacity into consideration.
+
+        Test: editing/caret/color-span-inside-editable-background.html
+
+        * editing/FrameSelection.cpp:
+        (WebCore::disappearsIntoBackground):
+        (WebCore::CaretBase::paintCaret):
+
+2014-10-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Provide a way to have alternate inspector agents
+        https://bugs.webkit.org/show_bug.cgi?id=137901
+
+        Reviewed by Brian Burg.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-10-23  Simon Fraser  <simon.fraser@apple.com>
+
+        Don't assume that style.overflowX() == style.overflowY()
+        https://bugs.webkit.org/show_bug.cgi?id=138028
+
+        Reviewed by Zalan Bujtas.
+
+        WebKit doesn't support independent overflow scroll/hidden on different axes,
+        but the RenderStyle does report the correct values. So check both overflowX()
+        and overflowY() in a couple of places where we need to.
+
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::styleHasTouchScrolling):
+        (WebCore::styleChangeRequiresLayerRebuild):
+
+2014-10-23  Chris Dumez  <cdumez@apple.com>
+
+        Get rid of unnecessary vtables in WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=138024
+
+        Reviewed by Benjamin Poulain.
+
+        Get rid of unnecessary vtables in WebKit by de-virtualizing destructors
+        when possible and marking the class as final to make sure people don't
+        subclass it.
+
+        No new tests, no behavior change.
+
+        * WebCore.exp.in:
+        * css/WebKitCSSMatrix.h:
+        * css/WebKitCSSMatrix.idl:
+        * html/canvas/WebGLContextGroup.h:
+        * html/canvas/WebGLGetInfo.h:
+        * html/canvas/WebGLUniformLocation.h:
+        (WebCore::WebGLUniformLocation::~WebGLUniformLocation): Deleted.
+        * html/canvas/WebGLUniformLocation.idl:
+        * inspector/DOMPatchSupport.h:
+        * inspector/InspectorHistory.h:
+        * inspector/InspectorStyleSheet.h:
+        * page/WheelEventDeltaTracker.h:
+        * page/scrolling/ScrollLatchingState.h:
+        * platform/audio/Biquad.h:
+        * platform/graphics/Pattern.h:
+
+2014-10-23  Chris Dumez  <cdumez@apple.com>
+
+        Clean up virtual functions in dom/
+        https://bugs.webkit.org/show_bug.cgi?id=138019
+
+        Reviewed by Benjamin Poulain.
+
+        Clean up virtual functions in dom/ by:
+        - Making virtual functions final when possible
+        - Making classes final when possible
+        - Using 'override' when appropriate
+        - Explicitly marking functions / destructors as virtual when they are
+          inherently virtual
+        - Making isXXX() virtual functions private on XXX classes to avoid
+          unnecessary type checks
+        - Dropping final for virtual functions in classes already marked as
+          final
+
+        No new tests, no behavior change.
+
+        * WebCore.exp.in:
+        * dom/AutocompleteErrorEvent.h:
+        * dom/BeforeLoadEvent.h:
+        (WebCore::BeforeLoadEventInit::BeforeLoadEventInit):
+        * dom/BeforeTextInsertedEvent.h:
+        * dom/ClipboardEvent.h:
+        * dom/CompositionEvent.h:
+        * dom/CustomEvent.h:
+        * dom/DeviceMotionController.h:
+        (WebCore::DeviceMotionController::~DeviceMotionController): Deleted.
+        * dom/DeviceMotionEvent.h:
+        * dom/DeviceOrientationController.h:
+        (WebCore::DeviceOrientationController::~DeviceOrientationController): Deleted.
+        * dom/DeviceOrientationEvent.h:
+        * dom/Document.h:
+        * dom/DocumentFragment.h:
+        * dom/ErrorEvent.h:
+        * dom/FocusEvent.h:
+        * dom/HashChangeEvent.h:
+        * dom/KeyboardEvent.h:
+        * dom/LiveNodeList.h:
+        * dom/MessageEvent.h:
+        * dom/MessagePort.h:
+        * dom/MouseEvent.h:
+        * dom/MouseRelatedEvent.h:
+        * dom/MutationEvent.h:
+        * dom/NamedFlowCollection.h:
+        * dom/OverflowEvent.h:
+        * dom/PageTransitionEvent.h:
+        * dom/PendingScript.h:
+        * dom/PopStateEvent.h:
+        * dom/RawDataDocumentParser.h:
+        (WebCore::RawDataDocumentParser::finish): Deleted.
+        (WebCore::RawDataDocumentParser::flush): Deleted.
+        (WebCore::RawDataDocumentParser::insert): Deleted.
+        (WebCore::RawDataDocumentParser::append): Deleted.
+        * dom/ScriptableDocumentParser.h:
+        * dom/SecurityPolicyViolationEvent.h:
+        * dom/TextEvent.h:
+        * dom/TouchEvent.h:
+        * dom/TransitionEvent.h:
+        * dom/UIEvent.h:
+        * dom/WebKitAnimationEvent.h:
+        * dom/WebKitTransitionEvent.h:
+        * dom/WheelEvent.h:
+        * page/DeviceController.h:
+        (WebCore::DeviceController::~DeviceController):
+
+2014-10-23  Tim Horton  <timothy_horton@apple.com>
+
+        Add some SPI headers for NSExtension and NSSharingService{Picker}
+        https://bugs.webkit.org/show_bug.cgi?id=138027
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/spi/cocoa/NSExtensionSPI.h: Added.
+        * platform/spi/mac/NSSharingServicePickerSPI.h: Added.
+        * platform/spi/mac/NSSharingServiceSPI.h: Added.
+        Add modern SPI headers for NSExtension, and NSSharingService{Picker}.
+
+        * rendering/RenderThemeMac.mm:
+        Replace redefinitions with an SPI header #import.
+
+2014-10-23  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] don't update caption user style sheet during parsing
+        https://bugs.webkit.org/show_bug.cgi?id=137983
+        rdar://problem/18735366
+
+        Reviewed by Jer Noble.
+
+        No new tests, existing tests cover the changes.
+
+        * page/CaptionUserPreferencesMediaAF.cpp:
+        (WebCore::CaptionUserPreferencesMediaAF::CaptionUserPreferencesMediaAF): Initialize m_updateStyleSheetTimer.
+        (WebCore::CaptionUserPreferencesMediaAF::updateTimerFired): Call updateCaptionStyleSheetOveride.
+        (WebCore::CaptionUserPreferencesMediaAF::setInterestedInCaptionPreferenceChanges): Prime a timer to update 
+            the captions style sheet after a slight delay.
+
+2014-10-23  Chris Dumez  <cdumez@apple.com>
+
+        Move remaining Length-type properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=138012
+
+        Reviewed by Antti Koivisto.
+
+        Move remaining Length-type properties from DeprecatedStyleBuilder to
+        the new StyleBuilder so that they are now generated from
+        CSSPropertyNames.in as well. The patch introduces a couple of type
+        converters for those: "LengthSizing / LengthMaxSizing".
+
+        No new tests, no behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/StyleBuilderConverter.h:
+        (WebCore::StyleBuilderConverter::convertLengthSizing):
+        (WebCore::StyleBuilderConverter::convertLengthMaxSizing):
+
+2014-10-23  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Safari cannot play 'audio/amr' content.
+        https://bugs.webkit.org/show_bug.cgi?id=137894
+
+        Reviewed by Eric Carlson.
+
+        Test: media/media-can-play-case-insensitive.html
+
+        Sites are returning 'video/amr' for AMR audio content, but the IANA spec says 'audio/AMR', which is also what
+        AVFoundation claims to support.  However, MIME types are supposed to be case-insensitive. When creating our
+        mime type cache, case-fold to lower all MIME types given to us by our media frameworks.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::mimeTypeCache):
+        * platform/graphics/mac/MediaPlayerPrivateQTKit.mm:
+        (WebCore::addFileTypesToCache):
+
+2014-10-23  Chris Dumez  <cdumez@apple.com>
+
+        Move Length-type CSS properties from DeprecatedStyleBuilder to the new Style Builder
+        https://bugs.webkit.org/show_bug.cgi?id=138000
+
+        Reviewed by Andreas Kling.
+
+        Move most Length-type CSS properties from DeprecatedStyleBuilder to the
+        new Style Builder so that they are now generated. This patch adds
+        support for a "Converter" option in CSSPropertyNames.in that can be
+        used to specify a type converter function in
+        css/StyleBuilderConverter.h. This patch adds support for Length and
+        LengthOrAuto converters so that most Length-type properties can now be
+        generated.
+
+        Another converter (likely called "LengthSizing") will be needed to
+        generate the remaining Length-type properties. This will be taken care
+        of in a follow-up patch.
+
+        This patch is inspired by the following Blink revision by
+        <timloh@chromium.org>:
+        https://src.chromium.org/viewvc/blink?view=rev&revision=150500
+
+        No new tests, no behavior change.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/SVGCSSPropertyNames.in:
+        * css/StyleBuilder.h:
+        * css/StyleBuilderConverter.h: Added.
+        (WebCore::StyleBuilderConverter::convertLength):
+        (WebCore::StyleBuilderConverter::convertLengthOrAuto):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        * css/makeprop.pl:
+
+2014-10-23  Zan Dobersek  <zdobersek@igalia.com>
+
+        Const-ify static s_resourceType members in RenderSVGResource* classes
+        https://bugs.webkit.org/show_bug.cgi?id=137911
+
+        Reviewed by Andreas Kling.
+
+        Make s_resourceType static members in RenderSVGResource* classes const.
+        Also update the resourceType() methods, where necessary, so that they
+        return the s_resourceType constant.
+
+        * rendering/svg/RenderSVGResourceClipper.cpp:
+        * rendering/svg/RenderSVGResourceClipper.h:
+        * rendering/svg/RenderSVGResourceFilter.cpp:
+        * rendering/svg/RenderSVGResourceFilter.h:
+        * rendering/svg/RenderSVGResourceLinearGradient.cpp:
+        * rendering/svg/RenderSVGResourceLinearGradient.h:
+        * rendering/svg/RenderSVGResourceMarker.cpp:
+        * rendering/svg/RenderSVGResourceMarker.h:
+        * rendering/svg/RenderSVGResourceMasker.cpp:
+        * rendering/svg/RenderSVGResourceMasker.h:
+        * rendering/svg/RenderSVGResourcePattern.cpp:
+        * rendering/svg/RenderSVGResourcePattern.h:
+        * rendering/svg/RenderSVGResourceRadialGradient.cpp:
+        * rendering/svg/RenderSVGResourceRadialGradient.h:
+        * rendering/svg/RenderSVGResourceSolidColor.cpp:
+        * rendering/svg/RenderSVGResourceSolidColor.h:
+
+2014-10-23  Zan Dobersek  <zdobersek@igalia.com>
+
+        [TexMap] Clean up virtual method declarations in GraphicsLayerTextureMapper
+        https://bugs.webkit.org/show_bug.cgi?id=137957
+
+        Reviewed by Martin Robinson.
+
+        Added override notation to the GraphicsLayerTextureMapper methods that are
+        overriding the base methods from the GraphicsLayer class and don't have it yet.
+        Also reordered these methods to follow the order of declaration in the
+        GraphicsLayer class.
+
+        Removed ::setName() and ::willBeDestroyed() methods since they just called
+        the base class' methods.
+
+        Also removed the ::solidColor() and ::changeMask() methods. The first one was
+        only called in one place which can reference the m_solidColor member directly,
+        and the second one wasn't used at all.
+
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+        (WebCore::GraphicsLayerTextureMapper::commitLayerChanges):
+        (WebCore::GraphicsLayerTextureMapper::setName): Deleted.
+        (WebCore::GraphicsLayerTextureMapper::willBeDestroyed): Deleted.
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.h:
+        (WebCore::GraphicsLayerTextureMapper::solidColor): Deleted.
+        (WebCore::GraphicsLayerTextureMapper::usesContentsLayer): Deleted.
+        (WebCore::GraphicsLayerTextureMapper::platformLayer): Deleted.
+        (WebCore::GraphicsLayerTextureMapper::changeMask): Deleted.
+
+2014-10-23  Krzysztof Czech  <k.czech@samsung.com>
+
+        AX: Do the early return when role is different than UnknownRole
+        https://bugs.webkit.org/show_bug.cgi?id=137880
+
+        Reviewed by Chris Fleizach.
+
+        We do not need to call ariaRoleAttribute() to check whether m_ariaRole is different than UnknownRole.
+        Just check m_ariaRole instead.
+
+        No new tests, no behavior change, just some cleanup
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::determineAccessibilityRole):
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::determineAccessibilityRole):
+        * accessibility/AccessibilityTableRow.cpp:
+        (WebCore::AccessibilityTableRow::determineAccessibilityRole):
+
+2014-10-23  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        CSS JIT: Implement :matches
+        https://bugs.webkit.org/show_bug.cgi?id=137947
+
+        Reviewed by Benjamin Poulain.
+
+        Initial patch for supporting :matches in CSS JIT.
+        In this patch, we implement :matches
+        by leveraging the generalized nested backtracking implementation.
+
+        Tests: fast/selectors/matches-backtracking.html
+               fast/selectors/matches-complex.html
+
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::addPseudoClassType):
+        (WebCore::SelectorCompiler::hasAnyCombinators):
+        (WebCore::SelectorCompiler::computeBacktrackingMemoryRequirements):
+        (WebCore::SelectorCompiler::computeBacktrackingInformation):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateElementMatching):
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateElementMatchesMatchesPseudoClass):
+
+2014-10-23  Milan Crha  <mcrha@redhat.com>
+
+        RenderThemeGtk::mediaControlsScript() is not defined when VIDEO is disabled.
+        <https://webkit.org/b/137970>.
+
+        Reviewed by Carlos Garcia Campos.
+
+        * rendering/RenderThemeGtk.cpp:
+
+2014-10-22  Milan Crha  <mcrha@redhat.com>
+
+        Do not include GraphicsContext3D.h when 3D_GRAPHICS is not used.
+        <https://webkit.org/b/137969>.
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/graphics/cairo/GraphicsContext3DCairo.cpp:
+
+2014-10-22  Milan Crha  <mcrha@redhat.com>
+
+        Do not build WidgetBackingStoreGtkX11 when not used.
+        <https://webkit.org/b/137972>.
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/gtk/WidgetBackingStoreGtkX11.cpp:
+        * platform/gtk/WidgetBackingStoreGtkX11.h:
+
+2014-10-22  Simon Fraser  <simon.fraser@apple.com>
+
+        [iOS] Toggling overflow:scroll to hidden on element with -webkit-overflow-scrolling:touch can cause children to disappear
+        https://bugs.webkit.org/show_bug.cgi?id=137999
+        rdar://problem/18425550
+
+        Reviewed by Zalan Bujtas.
+        
+        When toggling overflow from scroll to hidden on an element with -webkit-overflow-scrolling:touch,
+        we'd fail to do a compositing layer rebuild, which caused various issues like unparented
+        descendants, and misplaced and unrepainted content.
+        
+        This happened because we'd get to RenderLayerBacking::updateConfiguration() via styleChanged
+        with the view needing layout, so never hit the updateScrollingLayers() code, and the subsequent
+        updateCompositingLayers() would be a no-op.
+        
+        Fix by explicitly triggering a layer rebuild when style changes such that the touch-scrollability
+        of an element changes, as we do for changes in clip.
+
+        Test: compositing/scrolling/touch-scroll-to-clip.html
+
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::isScrollableOverflow):
+        (WebCore::styleHasTouchScrolling):
+        (WebCore::styleChangeRequiresLayerRebuild):
+
+2014-10-22  Chris Dumez  <cdumez@apple.com>
+
+        Clean up virtual functions in rendering/
+        https://bugs.webkit.org/show_bug.cgi?id=137984
+
+        Reviewed by Darin Adler.
+
+        Clean up virtual functions in rendering/ by:
+        - Making virtual functions final when possible
+        - Making classes final when possible
+        - Using 'override' when appropriate
+        - Explicitly marking functions / destructors as virtual when they are
+          inherently virtual
+        - Dropping virtual destructors when the class does not have subclasses
+          and mark the class as final, to get rid of unnecessary vtables
+        - Making isXXX() virtual functions private on XXX classes to avoid
+          unnecessary type checks
+        - De-virtualizing some functions that do not need to be virtual
+        - Dropping final for virtual functions in classes already marked as
+          final
+
+        No new tests, no behavior change.
+
+        * html/shadow/SliderThumbElement.cpp:
+        * rendering/AutoTableLayout.h:
+        * rendering/ClipPathOperation.h:
+        (WebCore::ClipPathOperation::type):
+        (WebCore::ClipPathOperation::isSameType):
+        * rendering/EllipsisBox.h:
+        * rendering/FixedTableLayout.h:
+        * rendering/InlineElementBox.h:
+        * rendering/RenderBlockFlow.h:
+        * rendering/RenderCombineText.h:
+        * rendering/RenderCounter.h:
+        * rendering/RenderDeprecatedFlexibleBox.h:
+        * rendering/RenderFlexibleBox.h:
+        * rendering/RenderFullScreen.h:
+        * rendering/RenderGrid.h:
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerBacking.h:
+        * rendering/RenderLayerCompositor.h:
+        * rendering/RenderLayerFilterInfo.h:
+        * rendering/RenderLineBreak.h:
+        * rendering/RenderMarquee.h:
+        * rendering/RenderMediaControlElements.h:
+        * rendering/RenderMultiColumnFlowThread.h:
+        * rendering/RenderMultiColumnSet.h:
+        * rendering/RenderMultiColumnSpannerPlaceholder.h:
+        * rendering/RenderNamedFlowFragment.h:
+        * rendering/RenderNamedFlowThread.h:
+        * rendering/RenderQuote.h:
+        * rendering/RenderRegion.h:
+        (WebCore::RenderRegion::renderName): Deleted.
+        * rendering/RenderReplica.h:
+        * rendering/RenderRubyBase.h:
+        * rendering/RenderRubyRun.h:
+        * rendering/RenderScrollbar.h:
+        * rendering/RenderScrollbarPart.h:
+        * rendering/RenderScrollbarTheme.h:
+        (WebCore::RenderScrollbarTheme::~RenderScrollbarTheme): Deleted.
+        (WebCore::RenderScrollbarTheme::scrollbarThickness): Deleted.
+        (WebCore::RenderScrollbarTheme::buttonsPlacement): Deleted.
+        (WebCore::RenderScrollbarTheme::supportsControlTints): Deleted.
+        (WebCore::RenderScrollbarTheme::shouldCenterOnThumb): Deleted.
+        (WebCore::RenderScrollbarTheme::initialAutoscrollTimerDelay): Deleted.
+        (WebCore::RenderScrollbarTheme::autoscrollTimerDelay): Deleted.
+        (WebCore::RenderScrollbarTheme::registerScrollbar): Deleted.
+        (WebCore::RenderScrollbarTheme::unregisterScrollbar): Deleted.
+        * rendering/RenderSnapshottedPlugIn.h:
+        * rendering/RenderTextControlMultiLine.h:
+        * rendering/RenderTextFragment.h:
+        * rendering/RenderThemeGtk.h:
+        * rendering/RenderThemeIOS.h:
+        * rendering/RenderThemeWin.h:
+        * rendering/RenderVideo.h:
+        * rendering/TextAutosizer.h:
+        * rendering/TrailingFloatsRootInlineBox.h:
+        * rendering/mathml/RenderMathMLBlock.h:
+        * rendering/mathml/RenderMathMLMenclose.h:
+        * rendering/mathml/RenderMathMLOperator.h:
+        * rendering/mathml/RenderMathMLRadicalOperator.h:
+        * rendering/mathml/RenderMathMLRoot.h:
+        * rendering/mathml/RenderMathMLRow.h:
+        * rendering/mathml/RenderMathMLScripts.h:
+        * rendering/mathml/RenderMathMLToken.h:
+        * rendering/mathml/RenderMathMLUnderOver.h:
+        * rendering/shapes/BoxShape.h:
+        * rendering/shapes/PolygonShape.h:
+        * rendering/shapes/RasterShape.h:
+        * rendering/shapes/RectangleShape.h:
+        * rendering/style/BasicShapes.h:
+        * rendering/style/StylePendingImage.h:
+        (WebCore::StylePendingImage::computeIntrinsicDimensions): Deleted.
+        * rendering/svg/RenderSVGBlock.h:
+        * rendering/svg/RenderSVGContainer.h:
+        * rendering/svg/RenderSVGEllipse.h:
+        * rendering/svg/RenderSVGForeignObject.h:
+        * rendering/svg/RenderSVGImage.h:
+        * rendering/svg/RenderSVGPath.h:
+        * rendering/svg/RenderSVGRect.h:
+        * rendering/svg/RenderSVGResourceClipper.h:
+        * rendering/svg/RenderSVGResourceFilter.h:
+        * rendering/svg/RenderSVGResourceFilterPrimitive.h:
+        * rendering/svg/RenderSVGResourceLinearGradient.h:
+        * rendering/svg/RenderSVGResourceMarker.h:
+        * rendering/svg/RenderSVGResourceMasker.h:
+        * rendering/svg/RenderSVGResourcePattern.h:
+        * rendering/svg/RenderSVGResourceRadialGradient.h:
+        * rendering/svg/RenderSVGRoot.h:
+        * rendering/svg/RenderSVGTSpan.h:
+        * rendering/svg/RenderSVGText.h:
+        * rendering/svg/RenderSVGTransformableContainer.h:
+        * rendering/svg/RenderSVGViewportContainer.h:
+        * rendering/svg/SVGInlineTextBox.h:
+        * rendering/svg/SVGRootInlineBox.h:
+
+2014-10-22  Jer Noble  <jer.noble@apple.com>
+
+        REGRESSION(r175000): Crash in SourceBufferPrivateAVFObjC::destroyParser()
+        https://bugs.webkit.org/show_bug.cgi?id=137990
+
+        Reviewed by Alexey Proskuryakov.
+
+        NULL-check m_mediaSource before using.
+
+        * platform/graphics/avfoundation/objc/SourceBufferPrivateAVFObjC.mm:
+        (WebCore::SourceBufferPrivateAVFObjC::destroyParser):
+
+2014-10-22  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        SVG loaded through html <img> can't request to load any external resources.
+        https://bugs.webkit.org/show_bug.cgi?id=137762.
+
+        Reviewed by Daniel Bates.
+
+        SVG images have unique security rules that prevent them from loading any external
+        resources. This patch enforces these rules in CachedResourceLoader::canRequest for
+        all non-data-uri resources.
+
+        The fix and the tests are ported but modified a little from the chromium fix:
+        http://src.chromium.org/viewvc/blink?view=rev&rev=176084
+
+        Test: http/tests/security/svg-image-with-cached-remote-image.html
+              http/tests/security/svg-image-with-css-cross-domain.html
+
+        For the SVG image, prevent loading any external sub-resource except for data urls.
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::canRequest):
+
+2014-10-21  Ada Chan  <adachan@apple.com>
+
+        MediaPlayerPrivateAVFoundation::hasAudio() returns false even when there is an audible AVMediaSelectionOption selected
+        https://bugs.webkit.org/show_bug.cgi?id=137935
+
+        Reviewed by Eric Carlson.
+
+        Set hasAudio to true if there's a selected audible AVMediaSelectionOption
+        after the call to updateAudioTracks(). Ditto for video.
+
+        Test: http/tests/media/hls/hls-audio-tracks-has-audio.html
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::tracksChanged):
+
+        * testing/Internals.cpp:
+        (WebCore::Internals::mediaElementHasCharacteristic):
+        * testing/Internals.h:
+        * testing/Internals.idl:
+        Add internals.mediaElementHasCharacteristic for the new test.
+
+2014-10-22  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Remove WidgetBackingStoreCairo::create() factory function
+        https://bugs.webkit.org/show_bug.cgi?id=137943
+
+        Reviewed by Darin Adler.
+
+        WidgetBackingStoreCairo::create() can be replaced by std::make_unique<>.
+        Thus this patch removes it, then use std::make_unique<>|std::unique_ptr<>.
+
+        No new tests, no behavior changes.
+
+        * platform/cairo/WidgetBackingStoreCairo.cpp:
+        (WebCore::WidgetBackingStoreCairo::create): Deleted.
+        * platform/cairo/WidgetBackingStoreCairo.h:
+        * platform/gtk/WidgetBackingStoreGtkX11.cpp:
+        (WebCore::WidgetBackingStoreGtkX11::create): Deleted.
+        * platform/gtk/WidgetBackingStoreGtkX11.h:
+
+2014-10-22  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Remove TextCheckerEnchant::create() factory function
+        https://bugs.webkit.org/show_bug.cgi?id=137944
+
+        Reviewed by Darin Adler.
+
+        TextCheckerEnchant::create() can be replaced by std::make_unique<> and std::unique_ptr<>.
+
+        No new tests, no behavior change.
+
+        * platform/text/enchant/TextCheckerEnchant.h:
+        (WebCore::TextCheckerEnchant::create): Deleted.
+
+2014-10-22  Chris Dumez  <cdumez@apple.com>
+
+        Avoid confusion between AccessibilityObject::isTable() / isAccessibilityTable()
+        https://bugs.webkit.org/show_bug.cgi?id=137899
+
+        Reviewed by Darin Adler.
+
+        Avoid confusion between AccessibilityObject::isTable() and
+        isAccessibilityTable(). isTable() is equivalent to
+        is<AccessibilityTable>(), while isAccessibilityTable() is an
+        AccessibilityTable that is exposed as an AccessibilityTable to the
+        platform.
+
+        This patch is renaming isAccessibilityTable() to
+        isExposableThroughAccessibility(), makes it non-virtual and defines it
+        on AccessibilityTable only, for clarity.
+
+        This patch also renames isTableExposableThroughAccessibility() to
+        computeIisTableExposableThroughAccessibility() as it is called only
+        once to initialize the m_isExposableThroughAccessibility data member.
+
+        No new tests, no behavior change.
+
+        * accessibility/AccessibilityARIAGrid.cpp:
+        (WebCore::AccessibilityARIAGrid::addChildren):
+        * accessibility/AccessibilityARIAGrid.h:
+        * accessibility/AccessibilityARIAGridCell.cpp:
+        (WebCore::AccessibilityARIAGridCell::parentTable):
+        (WebCore::AccessibilityARIAGridCell::rowIndexRange):
+        (WebCore::AccessibilityARIAGridCell::columnIndexRange):
+        * accessibility/AccessibilityARIAGridRow.cpp:
+        (WebCore::AccessibilityARIAGridRow::disclosedRows):
+        (WebCore::AccessibilityARIAGridRow::disclosedByRow):
+        (WebCore::AccessibilityARIAGridRow::parentTable):
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::shouldUseAccessiblityObjectInnerText):
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::isAccessibilityObjectSearchMatchAtIndex):
+        (WebCore::appendChildrenToArray):
+        * accessibility/AccessibilityObject.h:
+        (WebCore::AccessibilityObject::isAccessibilityTable): Deleted.
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::ariaSelectedRows):
+        * accessibility/AccessibilityTable.cpp:
+        (WebCore::AccessibilityTable::AccessibilityTable):
+        (WebCore::AccessibilityTable::init):
+        (WebCore::AccessibilityTable::isExposableThroughAccessibility):
+        (WebCore::AccessibilityTable::computeIsTableExposableThroughAccessibility):
+        (WebCore::AccessibilityTable::addChildren):
+        (WebCore::AccessibilityTable::tableLevel):
+        (WebCore::AccessibilityTable::roleValue):
+        (WebCore::AccessibilityTable::computeAccessibilityIsIgnored):
+        (WebCore::AccessibilityTable::title):
+        (WebCore::AccessibilityTable::isAccessibilityTable): Deleted.
+        (WebCore::AccessibilityTable::isTableExposableThroughAccessibility): Deleted.
+        * accessibility/AccessibilityTable.h:
+        * accessibility/AccessibilityTableCell.cpp:
+        (WebCore::AccessibilityTableCell::isTableCell):
+        * accessibility/AccessibilityTableColumn.cpp:
+        (WebCore::AccessibilityTableColumn::headerObject):
+        (WebCore::AccessibilityTableColumn::addChildren):
+        * accessibility/AccessibilityTableHeaderContainer.cpp:
+        (WebCore::AccessibilityTableHeaderContainer::addChildren):
+        * accessibility/AccessibilityTableRow.cpp:
+        (WebCore::AccessibilityTableRow::isTableRow):
+        (WebCore::AccessibilityTableRow::parentTable):
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (webkitAccessibleGetNChildren):
+        (webkitAccessibleRefChild):
+        (webkitAccessibleGetAttributes):
+        * accessibility/mac/AXObjectCacheMac.mm:
+        (WebCore::AXObjectCache::postPlatformNotification):
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (-[WebAccessibilityObjectWrapper additionalAccessibilityAttributeNames]):
+        (-[WebAccessibilityObjectWrapper accessibilityAttributeNames]):
+        (-[WebAccessibilityObjectWrapper accessibilityAttributeValue:]):
+        (-[WebAccessibilityObjectWrapper accessibilityParameterizedAttributeNames]):
+        (-[WebAccessibilityObjectWrapper accessibilitySetValue:forAttribute:]):
+        (-[WebAccessibilityObjectWrapper accessibilityAttributeValue:forParameter:]):
+
+2014-10-22  Chris Dumez  <cdumez@apple.com>
+
+        Avoid repeated is<MutableStyleProperties>() checks in StyleProperties
+        https://bugs.webkit.org/show_bug.cgi?id=137978
+
+        Reviewed by Andreas Kling.
+
+        Reduce the amount of is<MutableStyleProperties>() checks in
+        StyleProperties by:
+        - Removing the checks in each method of StyleProperties::PropertyReference,
+          and replace them by a single check in StyleProperties::propertyAt().
+        - Providing faster propertyCount() / propertyAt() / isEmpty() methods on
+          MutableStyleProperties / ImmutableStyleProperties as a lot of callers use
+          tight typing.
+        - Using tighter typing at call sites whenever possible.
+
+        Ideally, we could be able to use iterators instead of propertyCount() /
+        propertyAt() but this is not trivial to do efficiently as the
+        representation in memory is fundamentally different for MutableStyleProperties
+        / ImmutableStyleProperties. We may be able to do better longer term, but
+        this is already more efficient short term at least.
+
+        No new tests, no behavior change.
+
+        * css/StyleProperties.cpp:
+        (WebCore::MutableStyleProperties::MutableStyleProperties):
+        (WebCore::StyleProperties::PropertyReference::cssText):
+        * css/StyleProperties.h:
+        (WebCore::StyleProperties::PropertyReference::PropertyReference):
+        (WebCore::StyleProperties::PropertyReference::id):
+        (WebCore::StyleProperties::PropertyReference::shorthandID):
+        (WebCore::StyleProperties::PropertyReference::isImportant):
+        (WebCore::StyleProperties::PropertyReference::isInherited):
+        (WebCore::StyleProperties::PropertyReference::isImplicit):
+        (WebCore::StyleProperties::PropertyReference::value):
+        (WebCore::StyleProperties::PropertyReference::toCSSProperty):
+        (WebCore::StyleProperties::isEmpty):
+        (WebCore::ImmutableStyleProperties::isEmpty):
+        (WebCore::MutableStyleProperties::isEmpty):
+        (WebCore::ImmutableStyleProperties::propertyAt):
+        (WebCore::MutableStyleProperties::propertyAt):
+        (WebCore::StyleProperties::propertyAt):
+        (WebCore::StyleProperties::propertyCount):
+        (WebCore::StyleProperties::PropertyReference::propertyMetadata): Deleted.
+        (WebCore::StyleProperties::PropertyReference::propertyValue): Deleted.
+        * editing/EditingStyle.cpp:
+        (WebCore::removePropertiesInStyle):
+        (WebCore::EditingStyle::removePropertiesInElementDefaultStyle):
+
+2014-10-22  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac][MediaStream] clean up bit rot
+        https://bugs.webkit.org/show_bug.cgi?id=137976
+
+        Reviewed by Jer Noble.
+
+        No new tests, this just gets the Mac port compiling again.
+
+        * Modules/mediastream/MediaStream.h: Add a virtual destructor to Observer since it has 
+            a virtual method.
+
+        * WebCore.exp.in: Export RTCPeerConnectionHandler::create and RTCPeerConnectionHandlerMock::create(WebCore::RTCPeerConnectionHandlerClient*),
+            they are both use by Internals for testing.
+
+        * WebCore.xcodeproj/project.pbxproj: Add RTC and MediaStream files.
+
+        * html/HTMLMediaElement.h: Forward declare MediaStream instead of including MediaStream.h.
+
+        * platform/mediastream/RTCPeerConnectionHandler.h: EXPORT the create method.
+
+        * platform/mock/MediaConstraintsMock.cpp:
+        (WebCore::isSupported): Make static.
+        (WebCore::isValid): Ditto.
+
+        * platform/mock/RTCPeerConnectionHandlerMock.h: EXPORT the create method.
+
+2014-10-22  Chris Dumez  <cdumez@apple.com>
+
+        [Mac][WK2] Fix applicationIsSafari() detection
+        https://bugs.webkit.org/show_bug.cgi?id=137893
+
+        Reviewed by Alexey Proskuryakov.
+
+        I noticed when profiling Safari on Mac that we were exercising a code
+        path we shouldn't because it is meant for other applications that
+        Safari.
+
+        The detection relies on the applicationIsSafari() function in
+        RuntimeApplicationChecks.cpp. This was in some cases returning false on
+        my machine even though I was running Safari so I investigated a bit and
+        noticed that the check relies on the main bundle identifier string and
+        is doing:
+        isSafari = mainBundleIsEqualTo("com.apple.Safari")
+            || mainBundleIsEqualTo("com.apple.WebProcess");
+
+        This WebProcess detection is very unreliable because:
+        - It matches other apps than Safari's WebProcesses
+        - The bundle name for the WebProcess is sometimes
+        "com.apple.WebKit.WebContent" or
+        "com.apple.WebKit.WebContent.Development".
+
+        The solution used in this patch is to move the applicationIsSafari()
+        check to the UIProcess so that the check actually succeeds reliably.
+        The call site for applicationIsSafari() was in
+        ResourceRequest::useQuickLookResourceCachingQuirks(). This match
+        removes that logic from ResourceRequest and move it to
+        FrameLoaderClient as only the FrameLoader is interested in this
+        information. The logic to determine if we should use QuickLook
+        resource caching quirks is moved to a new QuickLook class under
+        platform/ as the code needs to be shared between WebKit and WebKit2.
+        On WebKit2, we make use that code on the UIProcess side and pass
+        the flag as a parameter when constructing the WebProcess. The flag
+        is then stored on the WebProcess and queried by WebFrameLoaderClient.
+
+        Previously, we would spend ~1% of the WebProcess cpu time (when loading
+        apple.com) trying to detect if we should use QuickLook resource caching
+        quirks even though that check was supposed to be disabled and return
+        early when running Safari.
+
+        No new tests, not easily testable.
+
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+        * loader/EmptyClients.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::subresourceCachePolicy):
+        * loader/FrameLoaderClient.h:
+        * platform/RuntimeApplicationChecks.cpp:
+        (WebCore::applicationIsSafari):
+        Remove "com.apple.WebProcess" bundle name matching as this causes false
+        positives (matches other applications than Safari's WebProcesses) and
+        it is no longer needed now that applicationIsSafari() is always called
+        from the UIProcess.
+
+        * platform/mac/QuickLookMac.h: Added.
+        * platform/mac/QuickLookMac.mm: Copied from Source/WebCore/platform/network/mac/ResourceRequestMac.mm.
+        (WebCore::QuickLookMac::computeNeedsQuickLookResourceCachingQuirks):
+        * platform/network/cf/ResourceRequest.h:
+        * platform/network/ios/ResourceRequestIOS.mm:
+        (WebCore::ResourceRequest::useQuickLookResourceCachingQuirks): Deleted.
+        * platform/network/mac/ResourceRequestMac.mm:
+        (WebCore::initQuickLookResourceCachingQuirks): Deleted.
+        (WebCore::ResourceRequest::useQuickLookResourceCachingQuirks): Deleted.
+
+2014-10-22  Shivakumar JM  <shiva.jm@samsung.com>
+
+        XMLHttpRequest should support attribute responseURL as per latest XHR spec.
+        https://bugs.webkit.org/show_bug.cgi?id=136938
+
+        Reviewed by Alexey Proskuryakov.
+
+        Tests: http/tests/xmlhttprequest/basic-auth-responseURL.html
+               http/tests/xmlhttprequest/cross-origin-redirect-responseURL.html
+               http/tests/xmlhttprequest/redirect-credentials-responseURL.html
+               http/tests/xmlhttprequest/xmlhttprequest-responseURL.html
+
+        XMLHttpRequest should support attribute responseURL
+
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::responseURL):
+        * xml/XMLHttpRequest.h:
+        * xml/XMLHttpRequest.idl:
+
+2014-10-22  Chris Dumez  <cdumez@apple.com>
+
+        Add initial support for generating the StyleBuilder from CSSPropertyNames.in
+        https://bugs.webkit.org/show_bug.cgi?id=137910
+
+        Reviewed by Andreas Kling.
+
+        Add initial support for generating the StyleBuilder from
+        CSSPropertyNames.in. This is a first step towards getting rid of the
+        legacy DeprecatedStyleBuilder class and having everything defined in one
+        place (CSSPropertyNames.in).
+
+        This patch updates makeprop.pl script to generate a StyleBuilder.cpp
+        file that generate a the StyleBuilder::applyProperty() method
+        implementation using a huge switch statement for all the CSS
+        properties. With this patch, we are now generating the new StyleBuilder
+        code for all the "simple" CSS properties (i.e. those that were using
+        ApplyPropertyDefault<> in DeprecatedStyleBuilder.cpp). I am using a
+        "NewStyleBuilder" option in CSSPropertyNames.in for properties that
+        we generate to help with improving incrementally the generator. Once
+        we are able to generate all properties, this transition option will
+        do away and become the default.
+
+        By default, the generator will make an educated guess for the type
+        name, the getter, the setter and the initial function of each property.
+        For example, for the border-collapse property, it will use:
+        - TypeName: EBorderCollapse (i.e. 'E' + PropertyId)
+        - Getter: borderCollapse() (i.e. PropertyId with first letter lowercased)
+        - Setter: setBorderCollapse() (i.e. 'set' + PropertyId)
+        - Initial: initialBorderCollapse() (i.e. 'initial' + PropertyId)
+
+        This works for most properties. For properties that need
+        special-casing, developers can use the following options in
+        CSSPropertyNames.in:
+        - TypeName: Overrides the type name
+        - Getter: Overrides the getter name
+        - Setter: Overrides the setter name
+        - Initial: Overrides the initial function name
+        - NameForMethods: Overrides the Getter / Setter / Initial function
+          names. For e.g. "NameForMethods=OverflowWrap" will use
+          "overflowWrap() / setOverflowWrap() / initialOverflowWrap()".
+
+        The patch is inspired by the following Blink revision by
+        <timloh@chromium.org>:
+        https://src.chromium.org/viewvc/blink?view=rev&revision=150424
+
+        No new tests, no behavior change.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::ApplyPropertyVerticalAlign::createHandler):
+        (WebCore::ApplyPropertyDisplay::applyInitialValue):
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/StyleBuilder.h: Added.
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::adjustRenderStyle):
+        (WebCore::StyleResolver::applyProperty):
+        * css/makeprop.pl:
+        * rendering/style/RenderStyle.h:
+        Move the initialXXX() methods that were in NonInheritedFlags to
+        RenderStyle class, with the other initialXXX() methods to facilitate
+        code generation.
+
+        * rendering/style/StyleMultiColData.cpp:
+        (WebCore::StyleMultiColData::StyleMultiColData):
+        * rendering/style/StyleRareNonInheritedData.cpp:
+        (WebCore::StyleRareNonInheritedData::StyleRareNonInheritedData):
+
+2014-10-22  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix GStreamer debug build after r175050.
+
+        Explicitly include wtf/MainThread.h.
+
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+
+2014-10-22  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GStreamer] Do not use CachedResourceLoader, SecurityOrigin, ResourceBuffer and other WebCore types
+        https://bugs.webkit.org/show_bug.cgi?id=137064
+
+        Reviewed by Philippe Normand.
+
+        Move the media resource loader to a new class in WebCore/loader
+        that inherits from a PlatformMediaResourceLoader class defined in
+        the platform layer. The platform specific behaviour is implemented
+        using a client also defined in the platform layer, implemented by
+        every media backend, and used by the WebCore MediaResourceLoader.
+
+        * CMakeLists.txt: Add new files to compilation.
+        * WebCore.vcxproj/WebCore.vcxproj: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::mediaPlayerCreateResourceLoader):
+        Create a MediaResourceLoader.
+        (WebCore::HTMLMediaElement::mediaPlayerCORSMode): Deleted. This is
+        no longer used.
+        * html/HTMLMediaElement.h:
+        * loader/MediaResourceLoader.cpp: Added.
+        (WebCore::MediaResourceLoader::MediaResourceLoader):
+        (WebCore::MediaResourceLoader::~MediaResourceLoader):
+        (WebCore::MediaResourceLoader::start): Start a new load for the
+        given request and load options.
+        (WebCore::MediaResourceLoader::stop): Stop the load if needed.
+        (WebCore::MediaResourceLoader::setDefersLoading):
+        (WebCore::MediaResourceLoader::responseReceived): Handle CORS
+        access check and notify the client about the response.
+        (WebCore::MediaResourceLoader::dataReceived): Notify the client.
+        (WebCore::MediaResourceLoader::notifyFinished): Ditto.
+        (WebCore::MediaResourceLoader::getOrCreateReadBuffer): Ask the
+        client to create the read buffer.
+        * loader/MediaResourceLoader.h: Added.
+        * platform/graphics/MediaPlayer.cpp:
+        (WebCore::MediaPlayer::createResourceLoader): Call
+        mediaPlayerCreateResourceLoader() if there's a client.
+        * platform/graphics/MediaPlayer.h:
+        (WebCore::MediaPlayerClient::mediaPlayerCreateResourceLoader):
+        (WebCore::MediaPlayerClient::mediaPlayerCORSMode): Deleted.
+        * platform/graphics/PlatformMediaResourceLoader.h: Added.
+        (WebCore::PlatformMediaResourceLoaderClient::responseReceived):
+        (WebCore::PlatformMediaResourceLoaderClient::dataReceived):
+        (WebCore::PlatformMediaResourceLoaderClient::bufferReceived):
+        (WebCore::PlatformMediaResourceLoaderClient::accessControlCheckFailed):
+        (WebCore::PlatformMediaResourceLoaderClient::loadFailed):
+        (WebCore::PlatformMediaResourceLoaderClient::loadFinished):
+        (WebCore::PlatformMediaResourceLoaderClient::getOrCreateReadBuffer):
+        (WebCore::PlatformMediaResourceLoader::~PlatformMediaResourceLoader):
+        (WebCore::PlatformMediaResourceLoader::stop):
+        (WebCore::PlatformMediaResourceLoader::setDefersLoading):
+        (WebCore::PlatformMediaResourceLoader::didPassAccessControlCheck):
+        (WebCore::PlatformMediaResourceLoader::PlatformMediaResourceLoader):
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+        (webKitWebSrcStop): Also delete the PlatformMediaResourceLoader.
+        (webKitWebSrcStart): Create a new resource loader using
+        MediaPlayer::createResourceLoader() with a new
+        CachedResourceStreamingClient as client.
+        (webKitWebSrcNeedDataMainCb): Call setDefersLoading() for the
+        resource loader if there's one.
+        (webKitWebSrcEnoughDataMainCb): Ditto.
+        (webKitSrcPassedCORSAccessCheck): Return didPassAccessControlCheck.
+        (StreamingClient::handleResponseReceived): Remove the CORS check
+        result parameter since that's now handled by MediaResourceLoader.
+        (CachedResourceStreamingClient::CachedResourceStreamingClient):
+        (CachedResourceStreamingClient::~CachedResourceStreamingClient):
+        (CachedResourceStreamingClient::getOrCreateReadBuffer):
+        (CachedResourceStreamingClient::responseReceived): Update didPassAccessControlCheck.
+        (CachedResourceStreamingClient::dataReceived):
+        (CachedResourceStreamingClient::accessControlCheckFailed): Log the
+        error and stop the load.
+        (CachedResourceStreamingClient::loadFailed): Log the error if it
+        was not a cancellation.
+        (CachedResourceStreamingClient::loadFinished):
+        (ResourceHandleStreamingClient::didReceiveResponse):
+        (CachedResourceStreamingClient::setDefersLoading): Deleted.
+        (CachedResourceStreamingClient::notifyFinished): Deleted.
+
+2014-10-22  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Move GtkInputMethodFilter from Platform to WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=137884
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Remove GtkInputMethodFilter.
+
+        * PlatformGTK.cmake:
+        * platform/gtk/GtkInputMethodFilter.cpp: Removed.
+        * platform/gtk/GtkInputMethodFilter.h: Removed.
+
+2014-10-22  Tibor Meszaros  <tmeszaros.u-szeged@partner.samsung.com>
+
+        Match spec for font-weight: bolder|lighter
+        https://bugs.webkit.org/show_bug.cgi?id=137919
+
+        Reviewed by Andreas Kling.
+
+        This patch is a merge of Blink's
+        https://chromiumcodereview.appspot.com/15994009
+        
+        Currently, bolder and lighter change font-weight in a non-compliant way.
+        The spec (http://www.w3.org/TR/css3-fonts/#bolderlighter) defines
+        exactly what the computed values should be given the inherited weight values,
+        so we should match those.
+        
+        The removed FIXME's for selecting the next lightest/heaviest weight from
+        the used font family seems to refer to behaviour from
+        CSS1 (http://www.w3.org/TR/CSS1/#font-weight), while this is replaced
+        with a simpler procedure for resolving bolder and lighter in font weights
+        in CSS2 (http://www.w3.org/TR/CSS2/fonts.html#propdef-font-weight) and CSS3 (link above).
+        
+        and https://codereview.chromium.org/137813004
+        
+        According to http://dev.w3.org/csswg/css-fonts/#font-weight-prop, the computed
+        weight of 'lighter' and 'bolder' are based on the inherited 'font-weight', so set
+        that inherited weight before calculating 'lighter' and 'bolder'.
+
+        Tests: css3/font-weight-multiple-selectors.html
+               css3/font-weight.html
+
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::ApplyPropertyFontWeight::applyValue):
+        * platform/graphics/FontDescription.cpp:
+        (WebCore::FontDescription::lighterWeight):
+        (WebCore::FontDescription::bolderWeight):
+
+2014-10-22  Rohit Kumar  <kumar.rohit@samsung.com>
+
+        [GTK]: Fix unused parameter build warnings in WebCore/platform module
+        https://bugs.webkit.org/show_bug.cgi?id=137921
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/ScrollAnimatorNone.cpp:
+        (WebCore::ScrollAnimatorNone::PerAxisData::PerAxisData):
+        (WebCore::ScrollAnimatorNone::animationTimerFired):
+
+2014-10-22  Dhi Aurrahman  <diorahman@rockybars.com>
+
+        Add relList to the anchor, area and link elements
+        https://bugs.webkit.org/show_bug.cgi?id=137860
+
+        Reviewed by Darin Adler and Chris Dumez.
+
+        Add relList to reflect the rel content attribute for anchor[1],
+        area[2] and link[3] elements.
+
+        [1] https://html.spec.whatwg.org/multipage/semantics.html#dom-a-rellist 
+        [2] https://html.spec.whatwg.org/multipage/embedded-content.html#dom-area-rellist
+        [3] https://html.spec.whatwg.org/multipage/semantics.html#dom-link-rellist
+
+        Tests: fast/dom/rel-list-gc.html
+               fast/dom/rel-list.html
+               perf/rel-list-remove.html
+
+        * CMakeLists.txt:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/SpaceSplitString.cpp:
+        (WebCore::SpaceSplitString::set):
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::HTMLAnchorElement::parseAttribute):
+        (WebCore::HTMLAnchorElement::relList):
+        (WebCore::HTMLAnchorElement::setRel): Deleted.
+        * html/HTMLAnchorElement.h:
+        * html/HTMLAnchorElement.idl:
+        * html/HTMLAreaElement.idl:
+        * html/HTMLLinkElement.cpp:
+        (WebCore::HTMLLinkElement::parseAttribute):
+        (WebCore::HTMLLinkElement::relList):
+        * html/HTMLLinkElement.h:
+        * html/HTMLLinkElement.idl:
+        * html/RelList.cpp: Added.
+        (WebCore::RelList::RelList):
+        (WebCore::RelList::ref):
+        (WebCore::RelList::deref):
+        (WebCore::RelList::length):
+        (WebCore::RelList::item):
+        (WebCore::RelList::element):
+        (WebCore::RelList::updateRelAttribute):
+        (WebCore::RelList::containsInternal):
+        (WebCore::RelList::value):
+        (WebCore::RelList::setValue):
+        * html/RelList.h: Added.
+
 2014-10-21  Andy Estes  <aestes@apple.com>
 
         One more iOS build fix after r175013.

@@ -45,10 +45,6 @@
 #include "VideoTrack.h"
 #endif
 
-#if ENABLE(MEDIA_STREAM)
-#include "MediaStream.h"
-#endif
-
 #ifndef NDEBUG
 #include <wtf/StringPrintStream.h>
 #endif
@@ -90,6 +86,10 @@ class VideoTrackPrivate;
 typedef PODIntervalTree<MediaTime, TextTrackCue*> CueIntervalTree;
 typedef CueIntervalTree::IntervalType CueInterval;
 typedef Vector<CueInterval> CueList;
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+class MediaStream;
 #endif
 
 class HTMLMediaElement
@@ -552,7 +552,6 @@ private:
 
     virtual String mediaPlayerReferrer() const override;
     virtual String mediaPlayerUserAgent() const override;
-    virtual CORSMode mediaPlayerCORSMode() const override;
 
     virtual bool mediaPlayerNeedsSiteSpecificHacks() const override;
     virtual String mediaPlayerDocumentHost() const override;
@@ -570,6 +569,7 @@ private:
     virtual bool mediaPlayerIsPaused() const override;
     virtual bool mediaPlayerIsLooping() const override;
     virtual CachedResourceLoader* mediaPlayerCachedResourceLoader() override;
+    virtual PassRefPtr<PlatformMediaResourceLoader> mediaPlayerCreateResourceLoader(std::unique_ptr<PlatformMediaResourceLoaderClient>);
 
 #if PLATFORM(WIN) && USE(AVFOUNDATION)
     virtual GraphicsDeviceAdapter* mediaPlayerGraphicsDeviceAdapter(const MediaPlayer*) const override;

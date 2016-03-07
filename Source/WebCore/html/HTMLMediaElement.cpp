@@ -62,6 +62,7 @@
 #include "MediaKeyEvent.h"
 #include "MediaList.h"
 #include "MediaQueryEvaluator.h"
+#include "MediaResourceLoader.h"
 #include "MediaSessionManager.h"
 #include "NetworkingContext.h"
 #include "PageActivityAssertionToken.h"
@@ -5594,15 +5595,6 @@ Vector<RefPtr<PlatformTextTrack>> HTMLMediaElement::outOfBandTrackSources()
 }
 #endif
 
-MediaPlayerClient::CORSMode HTMLMediaElement::mediaPlayerCORSMode() const
-{
-    if (!fastHasAttribute(HTMLNames::crossoriginAttr))
-        return Unspecified;
-    if (equalIgnoringCase(fastGetAttribute(HTMLNames::crossoriginAttr), "use-credentials"))
-        return UseCredentials;
-    return Anonymous;
-}
-
 bool HTMLMediaElement::mediaPlayerNeedsSiteSpecificHacks() const
 {
     Settings* settings = document().settings();
@@ -5680,6 +5672,11 @@ bool HTMLMediaElement::mediaPlayerIsLooping() const
 CachedResourceLoader* HTMLMediaElement::mediaPlayerCachedResourceLoader()
 {
     return document().cachedResourceLoader();
+}
+
+PassRefPtr<PlatformMediaResourceLoader> HTMLMediaElement::mediaPlayerCreateResourceLoader(std::unique_ptr<PlatformMediaResourceLoaderClient> client)
+{
+    return adoptRef(new MediaResourceLoader(document(), fastGetAttribute(HTMLNames::crossoriginAttr), WTF::move(client)));
 }
 
 bool HTMLMediaElement::mediaPlayerShouldWaitForResponseToAuthenticationChallenge(const AuthenticationChallenge& challenge)

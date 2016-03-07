@@ -1,3 +1,52 @@
+2014-10-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Provide a way to have alternate inspector agents
+        https://bugs.webkit.org/show_bug.cgi?id=137901
+
+        Reviewed by Brian Burg.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2014-10-23  Tim Horton  <timothy_horton@apple.com>
+
+        Add some SPI headers for NSExtension and NSSharingService{Picker}
+        https://bugs.webkit.org/show_bug.cgi?id=138027
+
+        Reviewed by Anders Carlsson.
+
+        * Misc/WebSharingServicePickerController.h:
+        * Misc/WebSharingServicePickerController.mm:
+        * WebCoreSupport/WebSelectionServiceController.mm:
+        * WebCoreSupport/WebContextMenuClient.mm:
+        Fix a sorting issue.
+        Replace redefinitions with SPI header #imports.
+
+2014-10-23  Tim Horton  <timothy_horton@apple.com>
+
+        Crashes under WebSelectionServiceController::hasRelevantSelectionServices
+        https://bugs.webkit.org/show_bug.cgi?id=138013
+
+        Reviewed by Dan Bernstein.
+
+        * WebCoreSupport/WebSelectionServiceController.mm:
+        (WebSelectionServiceController::hasRelevantSelectionServices):
+        Don't adopt this autoreleased object.
+
+2014-10-22  Chris Dumez  <cdumez@apple.com>
+
+        [Mac][WK2] Fix applicationIsSafari() detection
+        https://bugs.webkit.org/show_bug.cgi?id=137893
+
+        Reviewed by Alexey Proskuryakov.
+
+        Provide an implementation for FrameLoaderClient's new
+        needsQuickLookResourceCachingQuirks() that returns
+        a static flag initialized using
+        QuickLookMac::computeNeedsQuickLookResourceCachingQuirks().
+
+        * WebCoreSupport/WebFrameLoaderClient.h:
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+
 2014-10-20  Chris Dumez  <cdumez@apple.com>
 
         ResourceRequest deserialization unnecessarily calls partitionName() on encoded cache partition
