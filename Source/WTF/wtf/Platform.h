@@ -702,7 +702,7 @@
 #define ENABLE_DISASSEMBLER 1
 #endif
 
-#if !defined(WTF_USE_ARM64_DISASSEMBLER) && ENABLE(JIT) && (PLATFORM(IOS) || PLATFORM(EFL)) && CPU(ARM64) && !USE(LLVM_DISASSEMBLER)
+#if !defined(WTF_USE_ARM64_DISASSEMBLER) && ENABLE(JIT) && CPU(ARM64) && !USE(LLVM_DISASSEMBLER)
 #define WTF_USE_ARM64_DISASSEMBLER 1
 #endif
 
@@ -745,12 +745,6 @@
    separate sub-values. */
 #if (OS(DARWIN) || PLATFORM(EFL)) && !PLATFORM(GTK) && ENABLE(DFG_JIT) && USE(JSVALUE64)
 #define ENABLE_CONCURRENT_JIT 1
-#endif
-
-/* We do not want to allow LLInt on 32-bit Windows so that we can support some ancient
-   CPUs that do not have SSE2 support */
-#if OS(WINDOWS) && !CPU(X86_64)
-#define ENABLE_LLINT_C_LOOP 1
 #endif
 
 /* Disable the JIT if we force the LLInt C Loop */

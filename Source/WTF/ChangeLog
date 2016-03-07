@@ -1,3 +1,52 @@
+2014-10-09  Akos Kiss  <akiss@inf.u-szeged.hu>
+
+        Enable ARM64 disassembler for all platforms
+        https://bugs.webkit.org/show_bug.cgi?id=137560
+
+        Reviewed by Michael Saboff.
+
+        Remove PLATFORM conditions from around WTF_USE_ARM64_DISASSEMBLER since
+        the ARM64 disassembler has no platform dependencies anymore.
+
+        * wtf/Platform.h:
+
+2014-10-08  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Enable JIT on 32-bit.
+        https://bugs.webkit.org/show_bug.cgi?id=137521
+
+        Reviewed by Mark Lam.
+
+        Enable JIT on Windows 32-bit, but disable it at runtime if SSE2 is not present.
+
+        * wtf/Platform.h:
+
+2014-10-08  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Resolve warnings about missing __has_include macro under MSVC
+        https://bugs.webkit.org/show_bug.cgi?id=137524
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Compiler.h: Provide a dummy implementation of __has_include that
+        avoids the warning without changing compile behavior.
+
+2014-10-07  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Resolve some MSVC static analyzer warnings
+        https://bugs.webkit.org/show_bug.cgi?id=137504
+
+        Reviewed by Dean Jackson.
+
+        * wtf/GregorianDateTime.cpp:
+        (WTF::GregorianDateTime::setToCurrentLocalTime): Properly handle
+        possible timezone error case.
+        * wtf/OSAllocatorWin.cpp:
+        (WTF::OSAllocator::decommit): Silence a spurious warning about using
+        MEM_DECOMMIT instead of MEM_RELEASE.
+        * wtf/ThreadingWin.cpp: Silence a spurious warning about how the
+        tryLock method is implemented.
+
 2014-10-07  Christophe Dumez  <cdumez@apple.com>
 
         [WK2] Use is<>() / downcast<>() for DrawingAreaProxy subclasses

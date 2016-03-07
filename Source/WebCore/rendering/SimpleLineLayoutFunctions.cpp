@@ -83,9 +83,7 @@ void paintFlow(const RenderBlockFlow& flow, const Layout& layout, PaintInfo& pai
     paintRect.moveBy(-paintOffset);
 
     auto resolver = runResolver(flow, layout);
-    auto range = resolver.rangeForRect(paintRect);
-    for (auto it = range.begin(), end = range.end(); it != end; ++it) {
-        const auto& run = *it;
+    for (const auto& run : resolver.rangeForRect(paintRect)) {
         if (!run.rect().intersects(paintRect))
             continue;
         TextRun textRun(run.text());
@@ -142,7 +140,7 @@ void collectFlowOverflow(RenderBlockFlow& flow, const Layout& layout)
 
 IntRect computeTextBoundingBox(const RenderText& textRenderer, const Layout& layout)
 {
-    auto resolver = lineResolver(toRenderBlockFlow(*textRenderer.parent()), layout);
+    auto resolver = lineResolver(downcast<RenderBlockFlow>(*textRenderer.parent()), layout);
     auto it = resolver.begin();
     auto end = resolver.end();
     if (it == end)
@@ -169,7 +167,7 @@ IntRect computeTextBoundingBox(const RenderText& textRenderer, const Layout& lay
 
 IntPoint computeTextFirstRunLocation(const RenderText& textRenderer, const Layout& layout)
 {
-    auto resolver = runResolver(toRenderBlockFlow(*textRenderer.parent()), layout);
+    auto resolver = runResolver(downcast<RenderBlockFlow>(*textRenderer.parent()), layout);
     auto begin = resolver.begin();
     if (begin == resolver.end())
         return IntPoint();
@@ -179,7 +177,7 @@ IntPoint computeTextFirstRunLocation(const RenderText& textRenderer, const Layou
 Vector<IntRect> collectTextAbsoluteRects(const RenderText& textRenderer, const Layout& layout, const LayoutPoint& accumulatedOffset)
 {
     Vector<IntRect> rects;
-    auto resolver = runResolver(toRenderBlockFlow(*textRenderer.parent()), layout);
+    auto resolver = runResolver(downcast<RenderBlockFlow>(*textRenderer.parent()), layout);
     for (auto it = resolver.begin(), end = resolver.end(); it != end; ++it) {
         const auto& run = *it;
         auto rect = run.rect();
@@ -191,7 +189,7 @@ Vector<IntRect> collectTextAbsoluteRects(const RenderText& textRenderer, const L
 Vector<FloatQuad> collectTextAbsoluteQuads(const RenderText& textRenderer, const Layout& layout, bool* wasFixed)
 {
     Vector<FloatQuad> quads;
-    auto resolver = runResolver(toRenderBlockFlow(*textRenderer.parent()), layout);
+    auto resolver = runResolver(downcast<RenderBlockFlow>(*textRenderer.parent()), layout);
     for (auto it = resolver.begin(), end = resolver.end(); it != end; ++it) {
         const auto& run = *it;
         auto rect = run.rect();
@@ -223,7 +221,7 @@ void showLineLayoutForFlow(const RenderBlockFlow& flow, const Layout& layout, in
         LayoutRect r = run.rect();
         printPrefix(printedCharacters, depth);
         fprintf(stderr, "line %u run(%u, %u) (%.2f, %.2f) (%.2f, %.2f) \"%s\"\n", run.lineIndex(), run.start(), run.end(),
-            r.x().toFloat(), r.y().toFloat(), r.width().toFloat(), r.height().toFloat(), run.text().utf8().data());
+            r.x().toFloat(), r.y().toFloat(), r.width().toFloat(), r.height().toFloat(), run.text().toStringWithoutCopying().utf8().data());
     }
 }
 #endif
