@@ -1382,25 +1382,25 @@ static void logNavigationWithFeatureCounter(Page* page, FrameLoadType type)
     const char* key;
     switch (type) {
     case FrameLoadType::Standard:
-        key = FeatureCounterNavigationStandard;
+        key = FeatureCounterNavigationStandardKey;
         break;
     case FrameLoadType::Back:
-        key = FeatureCounterNavigationBack;
+        key = FeatureCounterNavigationBackKey;
         break;
     case FrameLoadType::Forward:
-        key = FeatureCounterNavigationForward;
+        key = FeatureCounterNavigationForwardKey;
         break;
     case FrameLoadType::IndexedBackForward:
-        key = FeatureCounterNavigationIndexedBackForward;
+        key = FeatureCounterNavigationIndexedBackForwardKey;
         break;
     case FrameLoadType::Reload:
-        key = FeatureCounterNavigationReload;
+        key = FeatureCounterNavigationReloadKey;
         break;
     case FrameLoadType::Same:
-        key = FeatureCounterNavigationSame;
+        key = FeatureCounterNavigationSameKey;
         break;
     case FrameLoadType::ReloadFromOrigin:
-        key = FeatureCounterNavigationReloadFromOrigin;
+        key = FeatureCounterNavigationReloadFromOriginKey;
         break;
     case FrameLoadType::Replace:
     case FrameLoadType::RedirectWithLockedBackForwardList:
@@ -1748,7 +1748,7 @@ void FrameLoader::commitProvisionalLoad()
 
     std::unique_ptr<CachedPage> cachedPage;
     if (m_loadingFromCachedPage)
-        cachedPage = pageCache()->take(history().provisionalItem());
+        cachedPage = pageCache()->take(history().provisionalItem(), m_frame.page());
 
     LOG(PageCache, "WebCoreLoading %s: About to commit provisional load from previous URL '%s' to new URL '%s'", m_frame.tree().uniqueName().string().utf8().data(),
         m_frame.document() ? m_frame.document()->url().stringCenterEllipsizedToLength().utf8().data() : "",
@@ -3174,7 +3174,7 @@ void FrameLoader::loadDifferentDocumentItem(HistoryItem* item, FrameLoadType loa
     // Remember this item so we can traverse any child items as child frames load
     history().setProvisionalItem(item);
 
-    if (CachedPage* cachedPage = pageCache()->get(item)) {
+    if (CachedPage* cachedPage = pageCache()->get(item, m_frame.page())) {
         auto documentLoader = cachedPage->documentLoader();
         documentLoader->setTriggeringAction(NavigationAction(documentLoader->request(), loadType, false));
         documentLoader->setLastCheckedRequest(ResourceRequest());

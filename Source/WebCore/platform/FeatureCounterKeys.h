@@ -58,6 +58,7 @@ static const char FeatureCounterPageCacheFailureDeviceProximityKey[] = "com.appl
 static const char FeatureCounterPageCacheFailureReloadKey[] = "com.apple.WebKit.pageCache.failure.reload";
 static const char FeatureCounterPageCacheFailureReloadFromOriginKey[] = "com.apple.WebKit.pageCache.failure.reloadFromOrigin";
 static const char FeatureCounterPageCacheFailureSameLoadKey[] = "com.apple.WebKit.pageCache.failure.sameLoad";
+static const char FeatureCounterPageCacheFailureExpiredKey[] = "com.apple.WebKit.pageCache.failure.expired";
 static const char FeatureCounterPageCacheFailureKey[] = "com.apple.WebKit.pageCache.failure";
 static const char FeatureCounterPageCacheSuccessKey[] = "com.apple.WebKit.pageCache.success";
 
@@ -70,14 +71,34 @@ static const char FeatureCounterCachedResourceRevalidationReasonNoStoreKey[] = "
 static const char FeatureCounterCachedResourceRevalidationReasonMustRevalidateIsExpiredKey[] = "com.apple.WebKit.cachedResourceRevalidation.reason.mustRevalidateIsExpired";
 static const char FeatureCounterCachedResourceRevalidationReasonIsExpiredKey[] = "com.apple.WebKit.cachedResourceRevalidation.reason.isExpired";
 
+// Media playback.
+static const char FeatureCounterMediaVideoElementLoadingKey[] = "com.apple.WebKit.media.video.loading";
+static const char FeatureCounterMediaAudioElementLoadingKey[] = "com.apple.WebKit.media.audio.loading";
+static const char FeatureCounterMediaVideoElementPlayedKey[] = "com.apple.WebKit.media.video.played";
+static const char FeatureCounterMediaAudioElementPlayedKey[] = "com.apple.WebKit.media.audio.played";
+
 // Navigation types.
-static const char FeatureCounterNavigationStandard[] = "com.apple.WebKit.navigation.standard";
-static const char FeatureCounterNavigationBack[] = "com.apple.WebKit.navigation.back";
-static const char FeatureCounterNavigationForward[] = "com.apple.WebKit.navigation.forward";
-static const char FeatureCounterNavigationIndexedBackForward[] = "com.apple.WebKit.navigation.indexedBackForward";
-static const char FeatureCounterNavigationReload[] = "com.apple.WebKit.navigation.reload";
-static const char FeatureCounterNavigationSame[] = "com.apple.WebKit.navigation.same";
-static const char FeatureCounterNavigationReloadFromOrigin[] = "com.apple.WebKit.navigation.reloadFromOrigin";
+static const char FeatureCounterNavigationStandardKey[] = "com.apple.WebKit.navigation.standard";
+static const char FeatureCounterNavigationBackKey[] = "com.apple.WebKit.navigation.back";
+static const char FeatureCounterNavigationForwardKey[] = "com.apple.WebKit.navigation.forward";
+static const char FeatureCounterNavigationIndexedBackForwardKey[] = "com.apple.WebKit.navigation.indexedBackForward";
+static const char FeatureCounterNavigationReloadKey[] = "com.apple.WebKit.navigation.reload";
+static const char FeatureCounterNavigationSameKey[] = "com.apple.WebKit.navigation.same";
+static const char FeatureCounterNavigationReloadFromOriginKey[] = "com.apple.WebKit.navigation.reloadFromOrigin";
+
+// Memory cache.
+static const char FeatureCounterResourceRequestInMemoryCacheKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache";
+static const char FeatureCounterResourceRequestNotInMemoryCacheKey[] = "com.apple.WebKit.resourceRequest.notInMemoryCache";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused";
+static const char FeatureCounterResourceRequestInMemoryCacheUsedKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.used";
+static const char FeatureCounterResourceRequestInMemoryCacheRevalidatingKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.revalidating";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedReasonNoStoreKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused.reason.noStore";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedReasonTypeMismatchKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused.reason.typeMismatch";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedReasonRedirectChainKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused.reason.redirectChain";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedReasonCredentialSettingsKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused.reason.credentialSettings";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedReasonReloadKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused.reason.reload";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedReasonErrorKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused.reason.error";
+static const char FeatureCounterResourceRequestInMemoryCacheUnusedReasonMustRevalidateNoValidatorKey[] = "com.apple.WebKit.resourceRequest.inMemoryCache.unused.reason.mustRevalidateNoValidator";
 
 } // namespace WebCore
 

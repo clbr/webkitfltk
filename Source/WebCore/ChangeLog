@@ -1,3 +1,746 @@
+2014-12-22  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log using FeatureCounter when a PacheCache entry is not reused because it expired
+        https://bugs.webkit.org/show_bug.cgi?id=139869
+        <rdar://problem/19255690>
+
+        Reviewed by Darin Adler.
+
+        Log using FeatureCounter when a PacheCache entry is not reused because
+        it expired.
+
+        * history/PageCache.cpp:
+        (WebCore::PageCache::take):
+        (WebCore::PageCache::get):
+        * history/PageCache.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::commitProvisionalLoad):
+        (WebCore::FrameLoader::loadDifferentDocumentItem):
+        * loader/HistoryController.cpp:
+        (WebCore::HistoryController::invalidateCurrentItemCachedPage):
+        * platform/FeatureCounterKeys.h:
+
+2014-12-22  Antti Koivisto  <antti@apple.com>
+
+        Try to fix the windows build.
+
+        * platform/graphics/win/SimpleFontDataCGWin.cpp:
+
+2014-12-22  Timothy Horton  <timothy_horton@apple.com>
+
+        Adjust TextIndicator shadow parameters
+        https://bugs.webkit.org/show_bug.cgi?id=139871
+        <rdar://problem/19283300>
+
+        Reviewed by Sam Weinig.
+
+        * page/mac/TextIndicatorWindow.mm:
+        (-[WebTextIndicatorView initWithFrame:textIndicator:margin:]):
+        Slightly adjust the shadow and bounce size.
+
+2014-12-22  Chris Dumez  <cdumez@apple.com>
+
+        Consistently use "FeatureCounter*Key" naming for FeatureCounter keys
+        https://bugs.webkit.org/show_bug.cgi?id=139867
+
+        Reviewed by Darin Adler.
+
+        Consistently use "FeatureCounter*Key" naming for FeatureCounter keys.
+
+        * loader/FrameLoader.cpp:
+        (WebCore::logNavigationWithFeatureCounter):
+        * platform/FeatureCounterKeys.h:
+
+2014-12-22  Antti Koivisto  <antti@apple.com>
+
+        Generic font code should not know about SVG font missing glyph
+        https://bugs.webkit.org/show_bug.cgi?id=139864
+
+        Reviewed by Andreas Kling and Myles Maxfield.
+
+        The defined missing glyph is an SVG font concept and should be handled in SVG code.
+
+        * platform/graphics/FontGlyphs.cpp:
+        (WebCore::FontGlyphs::glyphDataForSystemFallback):
+        (WebCore::FontGlyphs::glyphDataForVariant):
+
+            Return null glyph instead of the missing glyph (the missing glyph was already a null glyph in all non-svg-font cases).
+            Use early return style.
+
+        * platform/graphics/FontGlyphs.h:
+        * platform/graphics/SegmentedFontData.cpp:
+        * platform/graphics/SimpleFontData.cpp:
+        (WebCore::SimpleFontData::platformGlyphInit):
+        * platform/graphics/SimpleFontData.h:
+
+            Remove the missingGlyph member.
+
+        * platform/graphics/WidthIterator.cpp:
+        (WebCore::WidthIterator::advanceInternal):
+
+            Explicitly skip over null glyphs. Before they had non-null fontData and would get skipped implicitly.
+
+        * platform/graphics/mac/SimpleFontDataMac.mm:
+        * rendering/svg/SVGTextRunRenderingContext.cpp:
+        (WebCore::missingGlyphForFont):
+
+            Get the missing glyph from the SVG font element.
+
+        (WebCore::SVGTextRunRenderingContext::glyphDataForCharacter):
+
+            Return the missing glyph if the normal lookup didn't produce results.
+
+        * svg/SVGFontData.cpp:
+        (WebCore::SVGFontData::initializeFontData):
+
+2014-12-22  Chris Dumez  <cdumez@apple.com>
+
+        Move "Auto" CSS properties to the new StyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139858
+
+        Reviewed by Antti Koivisto.
+
+        Move "Auto" CSS properties from DeprecatedStyleBuilder to the new
+        StyleBuilder, by adding support in the generator for using hasAutoXXX()
+        / setHasAutoXXX() methods on RenderStyle.
+
+        No new tests, no web-exposed behavior change.
+
+        * css/CSSPropertyNames.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyAuto::setValue): Deleted.
+        (WebCore::ApplyPropertyAuto::value): Deleted.
+        (WebCore::ApplyPropertyAuto::hasAuto): Deleted.
+        (WebCore::ApplyPropertyAuto::setAuto): Deleted.
+        (WebCore::ApplyPropertyAuto::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyAuto::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyAuto::applyValue): Deleted.
+        (WebCore::ApplyPropertyAuto::createHandler): Deleted.
+        * css/StyleBuilderCustom.h:
+        (WebCore::StyleBuilderCustom::applyInitialColumnGap):
+        (WebCore::StyleBuilderCustom::applyInheritColumnGap):
+        (WebCore::StyleBuilderCustom::applyValueColumnGap):
+        * css/makeprop.pl:
+        (getNameForMethods):
+        (getAutoGetter):
+        (getAutoSetter):
+        (generateInitialValueSetter):
+        (generateInheritValueSetter):
+        (generateValueSetter):
+
+2014-12-21  Shivakumar JM  <shiva.jm@samsung.com>
+
+        HTMLSelectElement add() should support adding group of options element (HTMLOptGroupElement).
+        https://bugs.webkit.org/show_bug.cgi?id=139806
+
+        Reviewed by Darin Adler.
+
+        HTMLSelectElement add() should support adding group of options (optgroup) element.
+
+        Test: fast/dom/HTMLSelectElement/select-add-optgroup.html
+
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::add):
+
+2014-12-21  Chris Dumez  <cdumez@apple.com>
+
+        Fix missing assertion in r177623.
+        https://bugs.webkit.org/show_bug.cgi?id=139334
+
+        Reviewed by Darin Adler.
+
+        ValueWithCalculation::setCalculation() was meant to include an
+        "isCalculation()" assertion but I inadvertently omitted the
+        ASSERT() around the statement.
+
+        * css/CSSParser.h:
+        (WebCore::CSSParser::ValueWithCalculation::setCalculation):
+
+2014-12-21  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        AX: Hidden aria table crash
+        https://bugs.webkit.org/show_bug.cgi?id=139856
+
+        Reviewed by Chris Fleizach.
+
+        Change axCaption to pointer and check it's value because
+        AXObjectCache::getOrCreate() can return with nullptr.
+
+        Test: accessibility/aria-hidden-crash.html
+
+        * accessibility/AccessibilityTable.cpp:
+        (WebCore::AccessibilityTable::addChildren):
+
+2014-12-20  Chris Dumez  <cdumez@apple.com>
+
+        Get rid of error-prone ReleaseParsedCalcValueCondition argument in CSSParser
+        https://bugs.webkit.org/show_bug.cgi?id=139334
+
+        Reviewed by Darin Adler.
+
+        Get rid of error-prone ReleaseParsedCalcValueCondition argument in
+        CSSParser that determines the the m_parsedCalculation member should
+        be released.
+
+        Instead, introduce a new ValueWithCalculation type which wraps a
+        CSSParserValue and an optional parsed calculation value. This way,
+        the parsed calculation value is now associated with its CSSParserValue.
+        This makes it very difficult to use a parsed calculation value for the
+        wrong CSSParserValue. The API is also easier to use as developers no
+        longer need to explicitly indicate if the calculation value should be
+        released or not.
+
+        No new tests, no web-behavior change.
+
+2014-12-20  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] add optimized fullscreen API
+        https://bugs.webkit.org/show_bug.cgi?id=139833
+        <rdar://problem/18844486>
+
+        Reviewed by Simon Fraser.
+
+        * Configurations/FeatureDefines.xcconfig: Add ENABLE_VIDEO_PRESENTATION_MODE.
+
+        * Modules/mediacontrols/MediaControlsHost.cpp:
+        (WebCore::MediaControlsHost::optimizedFullscreenSupported): Deleted.
+        (WebCore::MediaControlsHost::fullscreenMode): Deleted.
+        * Modules/mediacontrols/MediaControlsHost.h:
+        * Modules/mediacontrols/MediaControlsHost.idl:
+
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.addVideoListeners): Listen for 'webkitpresentationmodechanged'.
+        (ControllerIOS.prototype.removeVideoListeners): Stop listening for 'webkitpresentationmodechanged'.
+        (ControllerIOS.prototype.configureInlineControls): Call video element instead of using the now 
+            removed host property.
+        (ControllerIOS.prototype.updateControls): Ditto.
+        (ControllerIOS.prototype.presentationMode): New, return webkitPresentationMode when possible.
+        (ControllerIOS.prototype.handleFullscreenButtonClicked): Use webkitSetPresentationMode when possible.
+        (ControllerIOS.prototype.handleOptimizedFullscreenButtonClicked): Use video element instead of 
+            using the now removed host method.
+        (ControllerIOS.prototype.handlePresentationModeChange): New, react to presentation mode changes.
+        (ControllerIOS.prototype.handleFullscreenChange): Call handlePresentationModeChange.
+
+        * dom/EventNames.h: Add webkitpresentationmodechanged.
+
+        * html/HTMLAttributeNames.in: Add onwebkitpresentationmodechanged.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::enterFullscreen): Early return when asked to change to the current 
+            mode. Call fullscreenModeChanged() instead of whacking the instance variable directly.
+        (WebCore::HTMLMediaElement::exitFullscreen): Ditto.
+        * html/HTMLMediaElement.h:
+        (WebCore::HTMLMediaElement::fullscreenModeChanged): Make virtual.
+
+        * html/HTMLVideoElement.cpp:
+        (WebCore::HTMLVideoElement::parseAttribute): Deal with onwebkitpresentationmodechange.
+        (WebCore::presentationModeFullscreen): New.
+        (WebCore::presentationModeOptimized): Ditto.
+        (WebCore::presentationModeInline): Ditto.
+        (WebCore::HTMLVideoElement::webkitSupportsPresentationMode): Ditto.
+        (WebCore::HTMLVideoElement::webkitSetPresentationMode): Ditto.
+        (WebCore::HTMLVideoElement::webkitPresentationMode): Ditto.
+        (WebCore::HTMLVideoElement::fullscreenModeChanged): Ditto.
+        * html/HTMLVideoElement.h:
+        * html/HTMLVideoElement.idl:
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::setIsOptimized): Simplify the logic a bit. Don't report
+            a mode change when 
+
+2014-12-20  David Kilzer  <ddkilzer@apple.com>
+
+        Switch from using PLATFORM_NAME to SDK selectors in WebCore, WebInspectorUI, WebKit, WebKit2
+        <http://webkit.org/b/139463>
+
+        Reviewed by Mark Rowe.
+
+        Also remove all uses of SQLITE3_HEADER_SEARCH_PATHS and
+        WEBCORE_SQLITE3_HEADER_SEARCH_PATHS which were phased out in
+        r132859 and needed for Leopard.
+
+        * Configurations/Base.xcconfig:
+        - Only set GCC_ENABLE_OBJC_GC, GCC_MODEL_TUNING and TOOLCHAINS
+          on OS X.
+        - Set GCC_OPTIMIZATION_LEVEL_normal based on SDK.
+        - Simplify SQLITE3_HEADER_SEARCH_PATHS.
+        * Configurations/DebugRelease.xcconfig:
+        - Only set MACOSX_DEPLOYMENT_TARGET and SDKROOT on OS X.
+        * Configurations/Version.xcconfig:
+        - Set SYSTEM_VERSION_PREFIX separately for iOS and OS X.
+        * Configurations/WebCore.xcconfig:
+        - Set EXPORTED_SYMBOLS_FILE_i386, EXPORTED_SYMBOLS_FILE_x86_64,
+          FRAMEWORK_SEARCH_PATHS, INSTALL_PATH, DYLIB_INSTALL_NAME_BASE,
+          OTHER_LDFLAGS, SECTORDER_FLAGS, NORMAL_WEBCORE_FRAMEWORKS_DIR,
+          WEBCORE_FRAMEWORKS_DIR, NORMAL_PRODUCTION_FRAMEWORKS_DIR,
+          PRODUCTION_FRAMEWORKS_DIR,
+          JAVASCRIPTCORE_PRIVATE_HEADERS_DIR_Production and
+          EXCLUDED_SOURCE_FILE_NAMES based on SDK.
+        - Make sure DYLIB_INSTALL_NAME_BASE and OTHER_LDFLAGS are
+          overrideable by WebCoreTestSupport.xcconfig.
+        * Configurations/WebCoreTestSupport.xcconfig:
+        - Set PRIVATE_HEADERS_FOLDER_PATH_Production and
+          INSTALL_PATH_Production based on SDK.
+        - Override SECT_ORDER_FLAGS from WebCore.xcconfig.
+
+2014-12-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Make placeholders more robust
+        https://bugs.webkit.org/show_bug.cgi?id=139836
+
+        Reviewed by Dan Bernstein.
+
+        This patch creates a Placeholder object which hides the complexity of
+        populating offsets to subtables.
+
+        No new tests because there is no behavior change.
+
+        * svg/SVGToOTFFontConversion.cpp:
+        (WebCore::SVGToOTFFontConverter::Placeholder::Placeholder):
+        (WebCore::SVGToOTFFontConverter::Placeholder::populate):
+        (WebCore::SVGToOTFFontConverter::Placeholder::~Placeholder):
+        (WebCore::SVGToOTFFontConverter::appendArabicReplacementSubtable):
+        (WebCore::SVGToOTFFontConverter::appendGSUBTable):
+
+2014-12-19  Chris Dumez  <cdumez@apple.com>
+
+        Fix initial / inherit support for '-webkit-perspective-origin' CSS property
+        https://bugs.webkit.org/show_bug.cgi?id=139843
+
+        Reviewed by Simon Fraser.
+
+        Fix initial / inherit support for '-webkit-perspective-origin' CSS
+        property. These previously had no effect.
+
+        This patch updates the code to be consistent with
+        '-webkit-transform-origin' and gets rid of the code in
+        DeprecatedStyleBuilder as it isn't used.
+
+        Test: fast/css/perspective-origin-initial-inherit.html
+
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyPerspectiveOrigin::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyPerspectiveOrigin::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyPerspectiveOrigin::applyValue): Deleted.
+        (WebCore::ApplyPropertyPerspectiveOrigin::createHandler): Deleted.
+        * css/StyleProperties.cpp:
+        (WebCore::StyleProperties::getPropertyValue):
+        (WebCore::StyleProperties::asText):
+        * css/StylePropertyShorthand.cpp:
+        (WebCore::webkitPerspectiveOriginShorthand):
+        (WebCore::shorthandForProperty):
+        (WebCore::matchingShorthandsForLonghand):
+        * css/StylePropertyShorthand.h:
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+
+2014-12-19  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177599.
+        https://bugs.webkit.org/show_bug.cgi?id=139846
+
+        this breaks so many things (Requested by thorton_ on #webkit).
+
+        Reverted changeset:
+
+        "TextIndicator's window can be pushed down if it intersects
+        the menu bar"
+        https://bugs.webkit.org/show_bug.cgi?id=139841
+        http://trac.webkit.org/changeset/177599
+
+2014-12-19  Timothy Horton  <timothy_horton@apple.com>
+
+        TextIndicator's window can be pushed down if it intersects the menu bar
+        https://bugs.webkit.org/show_bug.cgi?id=139841
+        <rdar://problem/19311017>
+
+        Reviewed by Anders Carlsson.
+
+        * page/mac/TextIndicatorWindow.mm:
+        (WebCore::TextIndicatorWindow::setTextIndicator):
+        Ensure that the textIndicatorWindow sits above the menubar, and re-set
+        its frame so that it moves under the menubar if required.
+
+2014-12-19  Anders Carlsson  <andersca@apple.com>
+
+        Use WebCore::MachSendRights for the compositing render server port
+        https://bugs.webkit.org/show_bug.cgi?id=139834
+
+        Reviewed by Tim Horton.
+
+        * WebCore.exp.in:
+
+2014-12-19  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log how often media element playback happens using FeatureCounter
+        https://bugs.webkit.org/show_bug.cgi?id=139819
+        <rdar://problem/19309988>
+
+        Reviewed by Eric Carlson.
+
+        Log using FeatureCounter how often we start loading for audio / video
+        elements, and how often they end up being played.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::HTMLMediaElement):
+        Add flag to identify when a media element starts playing for the first
+        time.
+
+        (WebCore::HTMLMediaElement::loadResource):
+        Log when a media element starts loading.
+
+        (WebCore::HTMLMediaElement::updatePlayState):
+        Log when a media element starts playing for the first time.
+
+        * html/HTMLMediaElement.h:
+        Add flag to identify when a media element starts playing for the first
+        time.
+
+        * platform/FeatureCounterKeys.h:
+        Add FeatureCounter keys for HTMLMediaElement loading / playback.
+
+2014-12-19  Andreas Kling  <akling@apple.com>
+
+        Ref-ify TextIterator API.
+        <https://webkit.org/b/139823>
+
+        Reviewed by Antti Koivisto.
+
+        Change TextIterator functions that always return Range objects to return
+        Ref<Range> instead of PassRefPtr<Range>.
+
+        One API (rangeFromLocationAndLength) may return nullptr, so its return type
+        is now RefPtr<Range>.
+
+        * editing/TextIterator.cpp:
+        (WebCore::TextIterator::range):
+        (WebCore::TextIterator::node):
+        (WebCore::SimplifiedBackwardsTextIterator::range):
+        (WebCore::CharacterIterator::range):
+        (WebCore::characterSubrange):
+        (WebCore::BackwardsCharacterIterator::range):
+        (WebCore::TextIterator::subrange):
+        (WebCore::TextIterator::rangeFromLocationAndLength):
+        (WebCore::TextIterator::getLocationAndLengthFromRange):
+        (WebCore::collapsedToBoundary):
+        (WebCore::findPlainText):
+        * editing/TextIterator.h:
+
+2014-12-19  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: CRASH in inspector-protocol/debugger/terminate-dedicated-worker-while-paused.html
+        https://bugs.webkit.org/show_bug.cgi?id=139792
+
+        Reviewed by Timothy Hatcher.
+
+        * bindings/js/WorkerScriptDebugServer.cpp:
+        (WebCore::WorkerScriptDebugServer::removeListener):
+        When removing listeners, we could be during WorkerGlobalObject shutdown
+        and WorkerGlobalObject::script may be null.
+
+        * workers/WorkerMessagingProxy.cpp:
+        (WebCore::WorkerMessagingProxy::WorkerMessagingProxy):
+        (WebCore::WorkerMessagingProxy::postMessageToPageInspector):
+        This postTask may happen after m_pageInspector has been cleared, so
+        only execute it if m_pageInspector is still valid.
+
+2014-12-19  Chris Dumez  <cdumez@apple.com>
+
+        Drop useless HTMLMediaElement::m_previousProgress member
+        https://bugs.webkit.org/show_bug.cgi?id=139822
+
+        Reviewed by Eric Carlson.
+
+        Drop HTMLMediaElement::m_previousProgress member and it is not used or
+        even initialized.
+
+        * html/HTMLMediaElement.h:
+
+2014-12-19  Chris Dumez  <cdumez@apple.com>
+
+        [iOS] Log how successful the memory cache is using FeatureCounter
+        https://bugs.webkit.org/show_bug.cgi?id=139802
+
+        Reviewed by Andreas Kling.
+
+        Log how successful the memory cache is using FeatureCounter and why we
+        choose not to use the resource in the memory cache when it is present.
+
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::requestResource):
+        (WebCore::CachedResourceLoader::determineRevalidationPolicy):
+        * platform/FeatureCounterKeys.h:
+
+2014-12-19  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177574.
+        https://bugs.webkit.org/show_bug.cgi?id=139821
+
+        "Broke Production builds by installing
+        libWebCoreTestSupport.dylib in the wrong directory" (Requested
+        by ddkilzer on #webkit).
+
+        Reverted changeset:
+
+        "Switch from using PLATFORM_NAME to SDK selectors in WebCore,
+        WebInspectorUI, WebKit, WebKit2"
+        https://bugs.webkit.org/show_bug.cgi?id=139463
+        http://trac.webkit.org/changeset/177574
+
+2014-12-19  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        Only when the SVG is inline and only when a shape is referenced before it is defined, this shape will not be drawn.
+        https://bugs.webkit.org/show_bug.cgi?id=139451.
+
+        Reviewed by Antti Koivisto.
+
+        Tests: svg/in-html/defs-after-use.html.
+
+        When parsing the children of an SVG element is finished, we need to notify the
+        other SVG elements which have incomplete shadow trees because of early referencing
+        to this element. The referencing elements need to rebuild their shadow trees and
+        make new copies of the this element and its sub-tree.
+        
+        This is the case where a <use> tag references target elements before these target
+        elements are defined. Updating the shadow DOM tree of a <use> element should update
+        the corresponding shadow render tree as well.
+
+        * svg/SVGElement.cpp:
+        (WebCore::SVGElement::finishParsingChildren):
+        Invalidate all the referencing elements of a target element whose sub-tree has
+        just finished parsing.
+
+2014-12-19  David Kilzer  <ddkilzer@apple.com>
+
+        Switch from using PLATFORM_NAME to SDK selectors in WebCore, WebInspectorUI, WebKit, WebKit2
+        <http://webkit.org/b/139463>
+
+        Reviewed by Mark Rowe.
+
+        Also remove all uses of SQLITE3_HEADER_SEARCH_PATHS and
+        WEBCORE_SQLITE3_HEADER_SEARCH_PATHS which were phased out in
+        r132859 and needed for Leopard.
+
+        * Configurations/Base.xcconfig:
+        - Only set GCC_ENABLE_OBJC_GC, GCC_MODEL_TUNING and TOOLCHAINS
+          on OS X.
+        - Set GCC_OPTIMIZATION_LEVEL_normal based on SDK.
+        - Simplify SQLITE3_HEADER_SEARCH_PATHS.
+        * Configurations/DebugRelease.xcconfig:
+        - Only set MACOSX_DEPLOYMENT_TARGET and SDKROOT on OS X.
+        * Configurations/Version.xcconfig:
+        - Set SYSTEM_VERSION_PREFIX separately for iOS and OS X.
+        * Configurations/WebCore.xcconfig:
+        - Set EXPORTED_SYMBOLS_FILE_i386, EXPORTED_SYMBOLS_FILE_x86_64,
+          FRAMEWORK_SEARCH_PATHS, INSTALL_PATH, DYLIB_INSTALL_NAME_BASE,
+          OTHER_LDFLAGS, SECTORDER_FLAGS, NORMAL_WEBCORE_FRAMEWORKS_DIR,
+          WEBCORE_FRAMEWORKS_DIR, NORMAL_PRODUCTION_FRAMEWORKS_DIR,
+          PRODUCTION_FRAMEWORKS_DIR,
+          JAVASCRIPTCORE_PRIVATE_HEADERS_DIR_Production and
+          EXCLUDED_SOURCE_FILE_NAMES based on SDK.
+        - Make sure DYLIB_INSTALL_NAME_BASE and OTHER_LDFLAGS are
+          overrideable by WebCoreTestSupport.xcconfig.
+        * Configurations/WebCoreTestSupport.xcconfig:
+        - Set PRIVATE_HEADERS_FOLDER_PATH_Production and
+          INSTALL_PATH_Production based on SDK.
+        - Override SECT_ORDER_FLAGS from WebCore.xcconfig.
+
+2014-12-19  Chris Dumez  <cdumez@apple.com>
+
+        Clean up StyleBuilderCustom and DeprecatedStyleBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=139807
+
+        Reviewed by Antti Koivisto.
+
+        Clean up StyleBuilderCustom and DeprecatedStyleBuilder.
+
+        * css/DeprecatedStyleBuilder.cpp:
+
+        - Remove unnecessary header includes.
+
+        (WebCore::ApplyPropertyPerspectiveOrigin::applyInheritValue):
+        (WebCore::ApplyPropertyPerspectiveOrigin::applyInitialValue):
+        (WebCore::ApplyPropertyPerspectiveOrigin::applyValue):
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        (WebCore::ApplyPropertyExpanding::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyExpanding::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyExpanding::applyValue): Deleted.
+        (WebCore::ApplyPropertyExpanding::createHandler): Deleted.
+
+        - Rename ApplyPropertyExpanding to ApplyPropertyPerspectiveOrigin as
+          PerspectiveOrigin is the only remaining user of this class. This also
+          allows us to simplify the implementation a lot.
+
+        (WebCore::ApplyPropertyDefaultBase::setValue): Deleted.
+        (WebCore::ApplyPropertyDefaultBase::value): Deleted.
+        (WebCore::ApplyPropertyDefaultBase::initial): Deleted.
+        (WebCore::ApplyPropertyDefaultBase::applyInheritValue): Deleted.
+        (WebCore::ApplyPropertyDefaultBase::applyInitialValue): Deleted.
+        (WebCore::ApplyPropertyDefaultBase::applyValue): Deleted.
+
+        - There is no longer any user of this templated class.
+
+        * css/StyleBuilderCustom.h:
+
+        - Introduce a macro that declares all 3 handlers (inherit, initial and
+          value) in the StyleBuilderCustom class. This greatly reduces the
+          number of lines in this class.
+        - Also alphabetize the handlers.
+
+2014-12-18  Jeremy Jones  <jeremyj@apple.com>
+
+        dispatch to main thread before accessing playerController() in WebVideoFullscreenInterfaceAVKit::setCanPlayFastReverse
+        https://bugs.webkit.org/show_bug.cgi?id=139809
+
+        Reviewed by Dan Bernstein.
+
+        This prevents a race in playerController().
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::setCanPlayFastReverse):
+
+2014-12-18  Jessie Berlin  <jberlin@webkit.org>
+
+        More speculative build fixing.
+
+        * WebCore.exp.in:
+
+2014-12-18  Andreas Kling  <akling@apple.com>
+
+        Ref-ify various Document-related things.
+        <https://webkit.org/b/139796>
+
+        Reviewed by Anders Carlsson.
+
+        * bindings/objc/DOMHTML.mm:
+        (-[DOMHTMLDocument createDocumentFragmentWithText:]):
+        * dom/CDATASection.cpp:
+        (WebCore::CDATASection::create):
+        (WebCore::CDATASection::virtualCreate):
+        * dom/CDATASection.h:
+        * dom/Comment.cpp:
+        (WebCore::Comment::create):
+        * dom/Comment.h:
+        * dom/Document.cpp:
+        (WebCore::Document::create):
+        (WebCore::Document::createDocumentFragment):
+        (WebCore::Document::createTextNode):
+        (WebCore::Document::createComment):
+        (WebCore::Document::createEditingTextNode):
+        (WebCore::Document::createCSSStyleDeclaration):
+        (WebCore::Document::createElement):
+        (WebCore::Document::createRange):
+        (WebCore::Document::createParser):
+        (WebCore::Document::cloneNodeInternal):
+        (WebCore::Document::cloneDocumentWithoutChildren):
+        * dom/Document.h:
+        (WebCore::Document::create):
+        (WebCore::Document::createXHTML):
+        (WebCore::Document::createNonRenderedPlaceholder):
+        * dom/DocumentFragment.cpp:
+        (WebCore::DocumentFragment::create):
+        * dom/DocumentFragment.h:
+        * dom/DocumentType.h:
+        * dom/EntityReference.cpp:
+        (WebCore::EntityReference::create):
+        * dom/EntityReference.h:
+        * dom/Text.cpp:
+        (WebCore::Text::create):
+        (WebCore::Text::createEditingText):
+        (WebCore::Text::splitText):
+        (WebCore::Text::virtualCreate):
+        (WebCore::Text::createWithLengthLimit):
+        * dom/Text.h:
+        * editing/markup.cpp:
+        (WebCore::replaceChildrenWithText):
+        * html/FTPDirectoryDocument.cpp:
+        (WebCore::FTPDirectoryDocument::createParser):
+        * html/FTPDirectoryDocument.h:
+        * html/HTMLDocument.cpp:
+        (WebCore::HTMLDocument::createParser):
+        (WebCore::HTMLDocument::cloneDocumentWithoutChildren):
+        * html/HTMLDocument.h:
+        (WebCore::HTMLDocument::create):
+        (WebCore::HTMLDocument::createSynthesizedDocument):
+        * html/ImageDocument.cpp:
+        (WebCore::ImageDocument::createParser):
+        * html/ImageDocument.h:
+        * html/MediaDocument.cpp:
+        (WebCore::MediaDocument::createParser):
+        * html/MediaDocument.h:
+        * html/PluginDocument.cpp:
+        (WebCore::PluginDocument::createParser):
+        * html/PluginDocument.h:
+        * html/TextDocument.cpp:
+        (WebCore::TextDocument::createParser):
+        * html/TextDocument.h:
+        * html/parser/HTMLConstructionSite.cpp:
+        (WebCore::HTMLConstructionSite::insertTextNode):
+        * html/parser/HTMLDocumentParser.h:
+        (WebCore::HTMLDocumentParser::create):
+        * loader/SinkDocument.cpp:
+        (WebCore::SinkDocument::createParser):
+        * loader/SinkDocument.h:
+        * svg/SVGDocument.cpp:
+        (WebCore::SVGDocument::cloneDocumentWithoutChildren):
+        * svg/SVGDocument.h:
+        * xml/parser/XMLDocumentParser.h:
+        (WebCore::XMLDocumentParser::create):
+        * xml/parser/XMLDocumentParserLibxml2.cpp:
+        (WebCore::XMLParserContext::createStringParser):
+        (WebCore::XMLParserContext::createMemoryParser):
+
+2014-12-18  Anders Carlsson  <andersca@apple.com>
+
+        Use MachSendRight in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=139800
+
+        Reviewed by Tim Horton.
+
+        * WebCore.exp.in:
+        * platform/cocoa/MachSendRight.h:
+        (WebCore::MachSendRight::MachSendRight):
+        (WebCore::MachSendRight::sendRight):
+        * platform/graphics/cocoa/IOSurface.h:
+        * platform/graphics/cocoa/IOSurface.mm:
+        (IOSurface::createFromSendRight):
+        (IOSurface::createFromMachPort): Deleted.
+
+2014-12-18  Gavin Barraclough  <barraclough@apple.com>
+
+        Add strong typing to RefCounter interface, return value as a bool.
+        https://bugs.webkit.org/show_bug.cgi?id=139776
+
+        Reviewed by Geoff Garen.
+
+        Currently all token vended by a RefCounter have the same type - Ref<RefCounter::Count>.
+        This means there is no compile time type checking to prevent mistakes. Update the count()
+        method to token<>(), templated on type used to identify the token being returned.
+        Calls to token<T>() will return a result of type RefCounter::Token<T>.
+
+        There are a few problems with the fact the counter will return you an exact count of the
+        number of outstanding tokens:
+          - It is desirable to only fire the callback on zero-edge changes; it is more consistent
+            to do so if the value is only readable as a boolean.
+          - It is desirable to provide the value as an argument to the callback, however to make
+            this useful for integer values it is also necessary to indicate the direction of change
+            (0->1 is often interesting where 2->1 is not).
+          - There is a mismatch between the precision of returning a count, and the inherent
+            imprecision of a token based mechanism, where it may be difficult to guarantee
+            absolutely no unnecessary refcount churn, and thus unintentional counter values.
+
+        * page/PageThrottler.cpp:
+        (WebCore::m_mediaActivityCounter):
+        (WebCore::m_pageLoadActivityCounter):
+            - lambdas now passed the value.
+        (WebCore::PageThrottler::mediaActivityToken):
+        (WebCore::PageThrottler::pageLoadActivityToken):
+            - count() -> token<>().
+        * page/PageThrottler.h:
+            - specify tpoken type for PageActivityAssertionToken.
+
 2014-12-18  Benjamin Poulain  <bpoulain@apple.com>
 
         HTMLFormControlElement and HTMLObjectElement need not to look for an ancestor on construction
@@ -1928,7 +2671,7 @@
         with callbacks is limiting a number of ways. The callback names are very ambiguous, the callbacks
         must either be on a separate object (more boilerplate), or the callback must be public for
         HysteresisActivity to call them, or friends get involved. Without the boilerplate of extra
-        delegate objects it's hard to scale use of these objects – a single object can't serve as a
+        delegate objects it's hard to scale use of these objects - a single object can't serve as a
         delegate for multiple HysteresisActivity members.
 
         Instead, make HysteresisActivity take a lambda to callback on state change. To simplify, changed
