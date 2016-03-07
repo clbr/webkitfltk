@@ -273,8 +273,8 @@ static HTMLInputElement* asFileInput(Node* node)
     HTMLInputElement* inputElement = node->toInputElement();
 
     // If this is a button inside of the a file input, move up to the file input.
-    if (inputElement && inputElement->isTextButton() && inputElement->treeScope().rootNode().isShadowRoot())
-        inputElement = toShadowRoot(inputElement->treeScope().rootNode()).hostElement()->toInputElement();
+    if (inputElement && inputElement->isTextButton() && is<ShadowRoot>(inputElement->treeScope().rootNode()))
+        inputElement = downcast<ShadowRoot>(inputElement->treeScope().rootNode()).hostElement()->toInputElement();
 
     return inputElement && inputElement->isFileUpload() ? inputElement : 0;
 }
@@ -397,8 +397,8 @@ DragOperation DragController::operationForLoad(DragData& dragData)
 
     bool pluginDocumentAcceptsDrags = false;
 
-    if (doc && doc->isPluginDocument()) {
-        const Widget* widget = toPluginDocument(doc)->pluginWidget();
+    if (doc && is<PluginDocument>(doc)) {
+        const Widget* widget = downcast<PluginDocument>(*doc).pluginWidget();
         const PluginViewBase* pluginView = (widget && widget->isPluginViewBase()) ? toPluginViewBase(widget) : nullptr;
 
         if (pluginView)
@@ -552,8 +552,8 @@ bool DragController::canProcessDrag(DragData& dragData)
     if (dragData.containsFiles() && asFileInput(result.innerNonSharedNode()))
         return true;
 
-    if (result.innerNonSharedNode()->isPluginElement()) {
-        if (!toHTMLPlugInElement(result.innerNonSharedNode())->canProcessDrag() && !result.innerNonSharedNode()->hasEditableStyle())
+    if (is<HTMLPlugInElement>(result.innerNonSharedNode())) {
+        if (!downcast<HTMLPlugInElement>(result.innerNonSharedNode())->canProcessDrag() && !result.innerNonSharedNode()->hasEditableStyle())
             return false;
     } else if (!result.innerNonSharedNode()->hasEditableStyle())
         return false;
@@ -639,13 +639,13 @@ Element* DragController::draggableElement(const Frame* sourceFrame, Element* sta
         }
         if (dragMode == DRAG_AUTO) {
             if ((m_dragSourceAction & DragSourceActionImage)
-                && isHTMLImageElement(element)
+                && is<HTMLImageElement>(element)
                 && sourceFrame->settings().loadsImagesAutomatically()) {
                 state.type = static_cast<DragSourceAction>(state.type | DragSourceActionImage);
                 return element;
             }
             if ((m_dragSourceAction & DragSourceActionLink)
-                && isHTMLAnchorElement(element)
+                && is<HTMLAnchorElement>(element)
                 && downcast<HTMLAnchorElement>(*element).isLiveLink()) {
                 state.type = static_cast<DragSourceAction>(state.type | DragSourceActionLink);
                 return element;

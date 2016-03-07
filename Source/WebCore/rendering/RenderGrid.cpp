@@ -307,7 +307,8 @@ void RenderGrid::computeUsedBreadthOfGridTracks(GridTrackSizingDirection directi
         track.m_usedBreadth = computeUsedBreadthOfMinLength(direction, minTrackBreadth);
         track.m_maxBreadth = computeUsedBreadthOfMaxLength(direction, maxTrackBreadth, track.m_usedBreadth);
 
-        track.m_maxBreadth = std::max(track.m_maxBreadth, track.m_usedBreadth);
+        if (track.m_maxBreadth != infinity)
+            track.m_maxBreadth = std::max(track.m_maxBreadth, track.m_usedBreadth);
 
         if (trackSize.isContentSized())
             sizingData.contentSizedTracksIndex.append(i);
@@ -465,20 +466,19 @@ double RenderGrid::computeNormalizedFractionBreadth(Vector<GridTrack>& tracks, c
     return availableLogicalSpaceIgnoringFractionTracks / accumulatedFractions;
 }
 
-const GridTrackSize& RenderGrid::gridTrackSize(GridTrackSizingDirection direction, size_t i) const
+GridTrackSize RenderGrid::gridTrackSize(GridTrackSizingDirection direction, size_t i) const
 {
-    const Vector<GridTrackSize>& trackStyles = (direction == ForColumns) ? style().gridColumns() : style().gridRows();
-    if (i >= trackStyles.size())
-        return (direction == ForColumns) ? style().gridAutoColumns() : style().gridAutoRows();
+    bool isForColumns = (direction == ForColumns);
+    auto& trackStyles =  isForColumns ? style().gridColumns() : style().gridRows();
+    auto& trackSize = (i >= trackStyles.size()) ? (isForColumns ? style().gridAutoColumns() : style().gridAutoRows()) : trackStyles[i];
 
-    const GridTrackSize& trackSize = trackStyles[i];
-    // If the logical width/height of the grid container is indefinite, percentage values are treated as <auto>.
-    if (trackSize.isPercentage()) {
-        Length logicalSize = direction == ForColumns ? style().logicalWidth() : style().logicalHeight();
-        if (logicalSize.isIntrinsicOrAuto()) {
-            static NeverDestroyed<GridTrackSize> autoTrackSize(Auto);
-            return autoTrackSize.get();
-        }
+    // If the logical width/height of the grid container is indefinite, percentage values are treated as <auto> (or in
+    // the case of minmax() as min-content for the first position and max-content for the second).
+    Length logicalSize = isForColumns ? style().logicalWidth() : style().logicalHeight();
+    if (logicalSize.isIntrinsicOrAuto()) {
+        const GridLength& oldMinTrackBreadth = trackSize.minTrackBreadth();
+        const GridLength& oldMaxTrackBreadth = trackSize.maxTrackBreadth();
+        return GridTrackSize(oldMinTrackBreadth.isPercentage() ? Length(MinContent) : oldMinTrackBreadth, oldMaxTrackBreadth.isPercentage() ? Length(MaxContent) : oldMaxTrackBreadth);
     }
 
     return trackSize;
@@ -559,8 +559,8 @@ void RenderGrid::resolveContentBasedTrackSizingFunctions(GridTrackSizingDirectio
 {
     // FIXME: Split the grid tracks into groups that doesn't overlap a <flex> grid track.
 
-    for (size_t i = 0; i < sizingData.contentSizedTracksIndex.size(); ++i) {
-        GridIterator iterator(m_grid, direction, sizingData.contentSizedTracksIndex[i]);
+    for (auto trackIndex : sizingData.contentSizedTracksIndex) {
+        GridIterator iterator(m_grid, direction, trackIndex);
         HashSet<RenderBox*> itemsSet;
         Vector<GridItemWithSpan> itemsSortedByIncreasingSpan;
 
@@ -577,7 +577,7 @@ void RenderGrid::resolveContentBasedTrackSizingFunctions(GridTrackSizingDirectio
             resolveContentBasedTrackSizingFunctionsForItems(direction, sizingData, itemWithSpan, &GridTrackSize::hasMaxContentMaxTrackBreadth, &RenderGrid::maxContentForChild, &GridTrack::maxBreadthIfNotInfinite, &GridTrack::growMaxBreadth);
         }
 
-        GridTrack& track = (direction == ForColumns) ? sizingData.columnTracks[i] : sizingData.rowTracks[i];
+        GridTrack& track = (direction == ForColumns) ? sizingData.columnTracks[trackIndex] : sizingData.rowTracks[trackIndex];
         if (track.m_maxBreadth == infinity)
             track.m_maxBreadth = track.m_usedBreadth;
     }
@@ -617,6 +617,14 @@ void RenderGrid::resolveContentBasedTrackSizingFunctionsForItems(GridTrackSizing
 
 static bool sortByGridTrackGrowthPotential(const GridTrack* track1, const GridTrack* track2)
 {
+    // This check ensures that we respect the irreflexivity property of the strict weak ordering required by std::sort
+    // (forall x: NOT x < x).
+    if (track1->m_maxBreadth == infinity && track2->m_maxBreadth == infinity)
+        return false;
+
+    if (track1->m_maxBreadth == infinity || track2->m_maxBreadth == infinity)
+        return track2->m_maxBreadth == infinity;
+
     return (track1->m_maxBreadth - track1->m_usedBreadth) < (track2->m_maxBreadth - track2->m_usedBreadth);
 }
 
@@ -631,11 +639,14 @@ void RenderGrid::distributeSpaceToTracks(Vector<GridTrack*>& tracks, Vector<Grid
     for (size_t i = 0; i < tracksSize; ++i) {
         GridTrack& track = *tracks[i];
         LayoutUnit trackBreadth = (tracks[i]->*trackGetter)();
-        LayoutUnit trackGrowthPotential = track.m_maxBreadth - trackBreadth;
+        bool infiniteGrowthPotential = track.m_maxBreadth == infinity;
+        LayoutUnit trackGrowthPotential = infiniteGrowthPotential ? track.m_maxBreadth : track.m_maxBreadth - trackBreadth;
         sizingData.distributeTrackVector[i] = trackBreadth;
-        if (trackGrowthPotential > 0) {
+        // Let's avoid computing availableLogicalSpaceShare as much as possible as it's a hot spot in performance tests.
+        if (trackGrowthPotential > 0 || infiniteGrowthPotential) {
             LayoutUnit availableLogicalSpaceShare = availableLogicalSpace / (tracksSize - i);
-            LayoutUnit growthShare = std::min(availableLogicalSpaceShare, trackGrowthPotential);
+            LayoutUnit growthShare = infiniteGrowthPotential ? availableLogicalSpaceShare : std::min(availableLogicalSpaceShare, trackGrowthPotential);
+            ASSERT(growthShare > 0);
             // We should never shrink any grid track or else we can't guarantee we abide by our min-sizing function.
             sizingData.distributeTrackVector[i] += growthShare;
             availableLogicalSpace -= growthShare;

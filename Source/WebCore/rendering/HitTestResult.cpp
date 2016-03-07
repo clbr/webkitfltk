@@ -129,18 +129,18 @@ void HitTestResult::setToNonShadowAncestor()
     setInnerNonSharedNode(node);
 }
 
-void HitTestResult::setInnerNode(Node* n)
+void HitTestResult::setInnerNode(Node* node)
 {
-    if (n && n->isPseudoElement())
-        n = toPseudoElement(n)->hostElement();
-    m_innerNode = n;
+    if (node && is<PseudoElement>(node))
+        node = downcast<PseudoElement>(*node).hostElement();
+    m_innerNode = node;
 }
     
-void HitTestResult::setInnerNonSharedNode(Node* n)
+void HitTestResult::setInnerNonSharedNode(Node* node)
 {
-    if (n && n->isPseudoElement())
-        n = toPseudoElement(n)->hostElement();
-    m_innerNonSharedNode = n;
+    if (node && is<PseudoElement>(node))
+        node = downcast<PseudoElement>(*node).hostElement();
+    m_innerNonSharedNode = node;
 }
 
 void HitTestResult::setURLElement(Element* n) 
@@ -273,7 +273,7 @@ String HitTestResult::altDisplayString() const
     if (!m_innerNonSharedNode)
         return String();
     
-    if (isHTMLImageElement(*m_innerNonSharedNode)) {
+    if (is<HTMLImageElement>(*m_innerNonSharedNode)) {
         HTMLImageElement& image = downcast<HTMLImageElement>(*m_innerNonSharedNode);
         return displayString(image.fastGetAttribute(altAttr), m_innerNonSharedNode.get());
     }
@@ -337,7 +337,7 @@ URL HitTestResult::absolutePDFURL() const
     if (!is<HTMLEmbedElement>(*m_innerNonSharedNode) && !is<HTMLObjectElement>(*m_innerNonSharedNode))
         return URL();
 
-    HTMLPlugInImageElement& element = toHTMLPlugInImageElement(*m_innerNonSharedNode);
+    HTMLPlugInImageElement& element = downcast<HTMLPlugInImageElement>(*m_innerNonSharedNode);
     URL url = m_innerNonSharedNode->document().completeURL(stripLeadingAndTrailingHTMLSpaces(element.url()));
     if (!url.isValid())
         return URL();
@@ -362,7 +362,7 @@ bool HitTestResult::mediaSupportsFullscreen() const
 {
 #if ENABLE(VIDEO)
     HTMLMediaElement* mediaElt(mediaElement());
-    return (mediaElt && isHTMLVideoElement(mediaElt) && mediaElt->supportsFullscreen());
+    return (mediaElt && is<HTMLVideoElement>(mediaElt) && mediaElt->supportsFullscreen());
 #else
     return false;
 #endif
@@ -372,14 +372,14 @@ bool HitTestResult::mediaSupportsFullscreen() const
 HTMLMediaElement* HitTestResult::mediaElement() const
 {
     if (!m_innerNonSharedNode)
-        return 0;
+        return nullptr;
 
     if (!(m_innerNonSharedNode->renderer() && m_innerNonSharedNode->renderer()->isMedia()))
-        return 0;
+        return nullptr;
 
-    if (isHTMLVideoElement(m_innerNonSharedNode.get()) || isHTMLAudioElement(m_innerNonSharedNode.get()))
-        return toHTMLMediaElement(m_innerNonSharedNode.get());
-    return 0;
+    if (is<HTMLMediaElement>(*m_innerNonSharedNode))
+        return downcast<HTMLMediaElement>(m_innerNonSharedNode.get());
+    return nullptr;
 }
 #endif
 
@@ -424,7 +424,7 @@ void HitTestResult::enterFullscreenForVideo() const
 {
 #if ENABLE(VIDEO)
     HTMLMediaElement* mediaElement(this->mediaElement());
-    if (mediaElement && isHTMLVideoElement(mediaElement)) {
+    if (mediaElement && is<HTMLVideoElement>(mediaElement)) {
         HTMLVideoElement& videoElement = downcast<HTMLVideoElement>(*mediaElement);
         if (!videoElement.isFullscreen() && mediaElement->supportsFullscreen()) {
             UserGestureIndicator indicator(DefinitelyProcessingUserGesture);
@@ -482,7 +482,7 @@ bool HitTestResult::mediaIsVideo() const
 {
 #if ENABLE(VIDEO)
     if (HTMLMediaElement* mediaElt = mediaElement())
-        return isHTMLVideoElement(mediaElt);
+        return is<HTMLVideoElement>(mediaElt);
 #endif
     return false;
 }
@@ -516,7 +516,7 @@ bool HitTestResult::isLiveLink() const
     if (!m_innerURLElement)
         return false;
 
-    if (isHTMLAnchorElement(*m_innerURLElement))
+    if (is<HTMLAnchorElement>(*m_innerURLElement))
         return downcast<HTMLAnchorElement>(*m_innerURLElement).isLiveLink();
 
     if (is<SVGAElement>(*m_innerURLElement))

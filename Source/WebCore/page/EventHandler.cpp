@@ -759,11 +759,10 @@ bool EventHandler::handleMousePressEvent(const MouseEventWithHitTestResults& eve
     if (event.isOverWidget() && passWidgetMouseDownEventToWidget(event))
         return true;
 
-    if (m_frame.document()->isSVGDocument()
-        && toSVGDocument(*m_frame.document()).zoomAndPanEnabled()) {
+    if (is<SVGDocument>(m_frame.document()) && downcast<SVGDocument>(*m_frame.document()).zoomAndPanEnabled()) {
         if (event.event().shiftKey() && singleClick) {
             m_svgPan = true;
-            toSVGDocument(*m_frame.document()).startPan(m_frame.view()->windowToContents(event.event().position()));
+            downcast<SVGDocument>(*m_frame.document()).startPan(m_frame.view()->windowToContents(event.event().position()));
             return true;
         }
     }
@@ -1439,8 +1438,8 @@ OptionalCursor EventHandler::selectCursor(const HitTestResult& result, bool shif
         && !m_capturingMouseEventsElement)
         return iBeam;
 
-    switch (style ? style->cursor() : CURSOR_AUTO) {
-    case CURSOR_AUTO: {
+    switch (style ? style->cursor() : CursorAuto) {
+    case CursorAuto: {
         bool editable = node->hasEditableStyle();
 
         if (useHandCursor(node, result.isOverLink(), shiftKey))
@@ -1458,75 +1457,75 @@ OptionalCursor EventHandler::selectCursor(const HitTestResult& result, bool shif
             return iBeam;
         return pointerCursor();
     }
-    case CURSOR_CROSS:
+    case CursorCross:
         return crossCursor();
-    case CURSOR_POINTER:
+    case CursorPointer:
         return handCursor();
-    case CURSOR_MOVE:
+    case CursorMove:
         return moveCursor();
-    case CURSOR_ALL_SCROLL:
+    case CursorAllScroll:
         return moveCursor();
-    case CURSOR_E_RESIZE:
+    case CursorEResize:
         return eastResizeCursor();
-    case CURSOR_W_RESIZE:
+    case CursorWResize:
         return westResizeCursor();
-    case CURSOR_N_RESIZE:
+    case CursorNResize:
         return northResizeCursor();
-    case CURSOR_S_RESIZE:
+    case CursorSResize:
         return southResizeCursor();
-    case CURSOR_NE_RESIZE:
+    case CursorNeResize:
         return northEastResizeCursor();
-    case CURSOR_SW_RESIZE:
+    case CursorSwResize:
         return southWestResizeCursor();
-    case CURSOR_NW_RESIZE:
+    case CursorNwResize:
         return northWestResizeCursor();
-    case CURSOR_SE_RESIZE:
+    case CursorSeResize:
         return southEastResizeCursor();
-    case CURSOR_NS_RESIZE:
+    case CursorNsResize:
         return northSouthResizeCursor();
-    case CURSOR_EW_RESIZE:
+    case CursorEwResize:
         return eastWestResizeCursor();
-    case CURSOR_NESW_RESIZE:
+    case CursorNeswResize:
         return northEastSouthWestResizeCursor();
-    case CURSOR_NWSE_RESIZE:
+    case CursorNwseResize:
         return northWestSouthEastResizeCursor();
-    case CURSOR_COL_RESIZE:
+    case CursorColResize:
         return columnResizeCursor();
-    case CURSOR_ROW_RESIZE:
+    case CursorRowResize:
         return rowResizeCursor();
-    case CURSOR_TEXT:
+    case CursorText:
         return iBeamCursor();
-    case CURSOR_WAIT:
+    case CursorWait:
         return waitCursor();
-    case CURSOR_HELP:
+    case CursorHelp:
         return helpCursor();
-    case CURSOR_VERTICAL_TEXT:
+    case CursorVerticalText:
         return verticalTextCursor();
-    case CURSOR_CELL:
+    case CursorCell:
         return cellCursor();
-    case CURSOR_CONTEXT_MENU:
+    case CursorContextMenu:
         return contextMenuCursor();
-    case CURSOR_PROGRESS:
+    case CursorProgress:
         return progressCursor();
-    case CURSOR_NO_DROP:
+    case CursorNoDrop:
         return noDropCursor();
-    case CURSOR_ALIAS:
+    case CursorAlias:
         return aliasCursor();
-    case CURSOR_COPY:
+    case CursorCopy:
         return copyCursor();
-    case CURSOR_NONE:
+    case CursorNone:
         return noneCursor();
-    case CURSOR_NOT_ALLOWED:
+    case CursorNotAllowed:
         return notAllowedCursor();
-    case CURSOR_DEFAULT:
+    case CursorDefault:
         return pointerCursor();
-    case CURSOR_WEBKIT_ZOOM_IN:
+    case CursorZoomIn:
         return zoomInCursor();
-    case CURSOR_WEBKIT_ZOOM_OUT:
+    case CursorZoomOut:
         return zoomOutCursor();
-    case CURSOR_WEBKIT_GRAB:
+    case CursorWebkitGrab:
         return grabCursor();
-    case CURSOR_WEBKIT_GRABBING:
+    case CursorWebkitGrabbing:
         return grabbingCursor();
     }
     return pointerCursor();
@@ -1764,7 +1763,7 @@ bool EventHandler::handleMousePressEvent(const PlatformMouseEvent& platformMouse
         // If a mouse event handler changes the input element type to one that has a widget associated,
         // we'd like to EventHandler::handleMousePressEvent to pass the event to the widget and thus the
         // event target node can't still be the shadow node.
-        if (mouseEvent.targetNode()->isShadowRoot() && is<HTMLInputElement>(toShadowRoot(mouseEvent.targetNode())->hostElement()))
+        if (is<ShadowRoot>(mouseEvent.targetNode()) && is<HTMLInputElement>(downcast<ShadowRoot>(*mouseEvent.targetNode()).hostElement()))
             mouseEvent = m_frame.document()->prepareMouseEvent(HitTestRequest(), documentPoint, platformMouseEvent);
 
         FrameView* view = m_frame.view();
@@ -1896,7 +1895,7 @@ bool EventHandler::handleMouseMoveEvent(const PlatformMouseEvent& platformMouseE
 #endif
 
     if (m_svgPan) {
-        toSVGDocument(m_frame.document())->updatePan(m_frame.view()->windowToContents(m_lastKnownMousePosition));
+        downcast<SVGDocument>(*m_frame.document()).updatePan(m_frame.view()->windowToContents(m_lastKnownMousePosition));
         return true;
     }
 
@@ -2040,7 +2039,7 @@ bool EventHandler::handleMouseReleaseEvent(const PlatformMouseEvent& platformMou
 
     if (m_svgPan) {
         m_svgPan = false;
-        toSVGDocument(m_frame.document())->updatePan(m_frame.view()->windowToContents(m_lastKnownMousePosition));
+        downcast<SVGDocument>(*m_frame.document()).updatePan(m_frame.view()->windowToContents(m_lastKnownMousePosition));
         return true;
     }
 
@@ -2145,14 +2144,10 @@ bool EventHandler::dispatchDragEvent(const AtomicString& eventType, Element& dra
 
 static bool targetIsFrame(Node* target, Frame*& frame)
 {
-    if (!target)
+    if (!target || !is<HTMLFrameElementBase>(target))
         return false;
 
-    if (!target->hasTagName(frameTag) && !target->hasTagName(iframeTag))
-        return false;
-
-    frame = toHTMLFrameElementBase(target)->contentFrame();
-
+    frame = downcast<HTMLFrameElementBase>(*target).contentFrame();
     return true;
 }
 

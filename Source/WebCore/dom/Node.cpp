@@ -253,10 +253,17 @@ void Node::dumpStatistics()
 }
 
 DEFINE_DEBUG_ONLY_GLOBAL(WTF::RefCountedLeakCounter, nodeCounter, ("WebCoreNode"));
-DEFINE_DEBUG_ONLY_GLOBAL(HashSet<Node*>, ignoreSet, );
 
 #ifndef NDEBUG
 static bool shouldIgnoreLeaks = false;
+
+static HashSet<Node*>& ignoreSet()
+{
+    static NeverDestroyed<HashSet<Node*>> ignore;
+
+    return ignore;
+}
+
 #endif
 
 void Node::startIgnoringLeaks()
@@ -277,7 +284,7 @@ void Node::trackForDebugging()
 {
 #ifndef NDEBUG
     if (shouldIgnoreLeaks)
-        ignoreSet.add(this);
+        ignoreSet().add(this);
     else
         nodeCounter.increment();
 #endif
@@ -304,7 +311,7 @@ Node::Node(Document& document, ConstructionType type)
 Node::~Node()
 {
 #ifndef NDEBUG
-    if (!ignoreSet.remove(this))
+    if (!ignoreSet().remove(this))
         nodeCounter.decrement();
 #endif
 
@@ -482,7 +489,7 @@ void Node::normalize()
             continue;
         }
 
-        RefPtr<Text> text = toText(node.get());
+        RefPtr<Text> text = downcast<Text>(node.get());
 
         // Remove empty text nodes.
         if (!text->length()) {
@@ -496,7 +503,7 @@ void Node::normalize()
         while (Node* nextSibling = node->nextSibling()) {
             if (nextSibling->nodeType() != TEXT_NODE)
                 break;
-            RefPtr<Text> nextText = toText(nextSibling);
+            RefPtr<Text> nextText = downcast<Text>(nextSibling);
 
             // Remove empty text nodes.
             if (!nextText->length()) {
@@ -665,7 +672,7 @@ void Node::derefEventTarget()
 
 static inline void markAncestorsWithChildNeedsStyleRecalc(Node& node)
 {
-    if (ContainerNode* ancestor = node.isPseudoElement() ? toPseudoElement(node).hostElement() : node.parentOrShadowHostNode()) {
+    if (ContainerNode* ancestor = is<PseudoElement>(node) ? downcast<PseudoElement>(node).hostElement() : node.parentOrShadowHostNode()) {
         ancestor->setDirectChildNeedsStyleRecalc();
 
         for (; ancestor && !ancestor->childNeedsStyleRecalc(); ancestor = ancestor->parentOrShadowHostNode())
@@ -865,7 +872,7 @@ bool Node::containsIncludingHostElements(const Node* node) const
 
 Node* Node::pseudoAwarePreviousSibling() const
 {
-    Element* parentOrHost = isPseudoElement() ? toPseudoElement(this)->hostElement() : parentElement();
+    Element* parentOrHost = is<PseudoElement>(this) ? downcast<PseudoElement>(*this).hostElement() : parentElement();
     if (parentOrHost && !previousSibling()) {
         if (isAfterPseudoElement() && parentOrHost->lastChild())
             return parentOrHost->lastChild();
@@ -877,7 +884,7 @@ Node* Node::pseudoAwarePreviousSibling() const
 
 Node* Node::pseudoAwareNextSibling() const
 {
-    Element* parentOrHost = isPseudoElement() ? toPseudoElement(this)->hostElement() : parentElement();
+    Element* parentOrHost = is<PseudoElement>(this) ? downcast<PseudoElement>(*this).hostElement() : parentElement();
     if (parentOrHost && !nextSibling()) {
         if (isBeforePseudoElement() && parentOrHost->firstChild())
             return parentOrHost->firstChild();
@@ -967,7 +974,7 @@ Node* Node::deprecatedShadowAncestorNode() const
 ShadowRoot* Node::containingShadowRoot() const
 {
     ContainerNode& root = treeScope().rootNode();
-    return root.isShadowRoot() ? toShadowRoot(&root) : nullptr;
+    return is<ShadowRoot>(root) ? downcast<ShadowRoot>(&root) : nullptr;
 }
 
 Node* Node::nonBoundaryShadowTreeRootNode()
@@ -995,13 +1002,13 @@ Element* Node::parentOrShadowHostElement() const
 {
     ContainerNode* parent = parentOrShadowHostNode();
     if (!parent)
-        return 0;
+        return nullptr;
 
-    if (parent->isShadowRoot())
-        return toShadowRoot(parent)->hostElement();
+    if (is<ShadowRoot>(parent))
+        return downcast<ShadowRoot>(parent)->hostElement();
 
     if (!parent->isElementNode())
-        return 0;
+        return nullptr;
 
     return toElement(parent);
 }
@@ -1390,15 +1397,15 @@ bool Node::offsetInCharacters() const
 
 unsigned short Node::compareDocumentPosition(Node* otherNode)
 {
-    // It is not clear what should be done if |otherNode| is 0.
+    // It is not clear what should be done if |otherNode| is nullptr.
     if (!otherNode)
         return DOCUMENT_POSITION_DISCONNECTED;
 
     if (otherNode == this)
         return DOCUMENT_POSITION_EQUIVALENT;
     
-    Attr* attr1 = isAttributeNode() ? toAttr(this) : nullptr;
-    Attr* attr2 = otherNode->isAttributeNode() ? toAttr(otherNode) : nullptr;
+    Attr* attr1 = is<Attr>(this) ? downcast<Attr>(this) : nullptr;
+    Attr* attr2 = is<Attr>(otherNode) ? downcast<Attr>(otherNode) : nullptr;
     
     Node* start1 = attr1 ? attr1->ownerElement() : this;
     Node* start2 = attr2 ? attr2->ownerElement() : otherNode;
@@ -1565,9 +1572,9 @@ void Node::showNodePathForThis() const
     }
     for (unsigned index = chain.size(); index > 0; --index) {
         const Node* node = chain[index - 1];
-        if (node->isShadowRoot()) {
+        if (is<ShadowRoot>(node)) {
             int count = 0;
-            for (const ShadowRoot* shadowRoot = toShadowRoot(node); shadowRoot && shadowRoot != node; shadowRoot = shadowRoot->shadowRoot())
+            for (const ShadowRoot* shadowRoot = downcast<ShadowRoot>(node); shadowRoot && shadowRoot != node; shadowRoot = shadowRoot->shadowRoot())
                 ++count;
             fprintf(stderr, "/#shadow-root[%d]", count);
             continue;
@@ -1716,7 +1723,7 @@ Element* Node::enclosingLinkEventParentOrSelf()
         // For imagemaps, the enclosing link element is the associated area element not the image itself.
         // So we don't let images be the enclosing link element, even though isLink sometimes returns
         // true for them.
-        if (node->isLink() && !isHTMLImageElement(node))
+        if (node->isLink() && !is<HTMLImageElement>(node))
             return toElement(node);
     }
 

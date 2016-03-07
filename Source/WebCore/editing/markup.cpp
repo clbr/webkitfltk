@@ -263,10 +263,10 @@ void StyledMarkupAccumulator::appendText(StringBuilder& out, const Text& text)
     
 String StyledMarkupAccumulator::renderedText(const Node& node, const Range* range)
 {
-    if (!node.isTextNode())
+    if (!is<Text>(node))
         return String();
 
-    const Text& textNode = toText(node);
+    const Text& textNode = downcast<Text>(node);
     unsigned startOffset = 0;
     unsigned endOffset = textNode.length();
 
@@ -322,12 +322,12 @@ void StyledMarkupAccumulator::appendElement(StringBuilder& out, const Element& e
         } else
             newInlineStyle = EditingStyle::create();
 
-        if (element.isStyledElement() && toStyledElement(element).inlineStyle())
-            newInlineStyle->overrideWithStyle(toStyledElement(element).inlineStyle());
+        if (is<StyledElement>(element) && downcast<StyledElement>(element).inlineStyle())
+            newInlineStyle->overrideWithStyle(downcast<StyledElement>(element).inlineStyle());
 
         if (shouldAnnotateOrForceInline) {
             if (shouldAnnotate())
-                newInlineStyle->mergeStyleFromRulesForSerialization(toHTMLElement(const_cast<Element*>(&element)));
+                newInlineStyle->mergeStyleFromRulesForSerialization(downcast<HTMLElement>(const_cast<Element*>(&element)));
 
             if (addDisplayInline)
                 newInlineStyle->forceInline();
@@ -452,7 +452,7 @@ static Node* ancestorToRetainStructureAndAppearanceForBlock(Node* commonAncestor
 
     if (commonAncestorBlock->hasTagName(tbodyTag) || commonAncestorBlock->hasTagName(trTag)) {
         ContainerNode* table = commonAncestorBlock->parentNode();
-        while (table && !isHTMLTableElement(table))
+        while (table && !is<HTMLTableElement>(table))
             table = table->parentNode();
 
         return table;
@@ -934,7 +934,7 @@ static Vector<Ref<HTMLElement>> collectElementsToRemoveFromFragment(ContainerNod
             collectElementsToRemoveFromFragment(element);
             continue;
         }
-        if (isHTMLHeadElement(element) || isHTMLBodyElement(element))
+        if (is<HTMLHeadElement>(element) || is<HTMLBodyElement>(element))
             toRemove.append(element);
     }
     return toRemove;
@@ -1001,7 +1001,7 @@ void replaceChildrenWithFragment(ContainerNode& container, PassRefPtr<DocumentFr
     }
 
     if (hasOneTextChild(&containerNode.get()) && hasOneTextChild(fragment.get())) {
-        toText(containerNode->firstChild())->setData(toText(fragment->firstChild())->data(), ec);
+        downcast<Text>(*containerNode->firstChild()).setData(downcast<Text>(*fragment->firstChild()).data(), ec);
         return;
     }
 
@@ -1020,7 +1020,7 @@ void replaceChildrenWithText(ContainerNode& container, const String& text, Excep
     ChildListMutationScope mutation(containerNode.get());
 
     if (hasOneTextChild(&containerNode.get())) {
-        toText(containerNode->firstChild())->setData(text, ec);
+        downcast<Text>(*containerNode->firstChild()).setData(text, ec);
         return;
     }
 

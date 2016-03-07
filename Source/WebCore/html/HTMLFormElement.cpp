@@ -110,7 +110,7 @@ bool HTMLFormElement::rendererIsNeeded(const RenderStyle& style)
         return false;
 
     // FIXME: Shouldn't we also check for table caption (see |formIsTablePart| below).
-    bool parentIsTableElementPart = (parentRenderer->isTable() && isHTMLTableElement(parent))
+    bool parentIsTableElementPart = (parentRenderer->isTable() && is<HTMLTableElement>(parent))
         || (parentRenderer->isTableRow() && parent->hasTagName(trTag))
         || (parentRenderer->isTableSection() && parent->hasTagName(tbodyTag))
         || (parentRenderer->isRenderTableCol() && parent->hasTagName(colTag))
@@ -800,7 +800,7 @@ void HTMLFormElement::getNamedElements(const AtomicString& name, Vector<Ref<Elem
 
     HTMLElement* elementFromPast = elementFromPastNamesMap(name);
     if (namedItems.size() == 1 && &namedItems.first().get() != elementFromPast)
-        addToPastNamesMap(toHTMLElement(&namedItems.first().get())->asFormNamedItem(), name);
+        addToPastNamesMap(downcast<HTMLElement>(namedItems.first().get()).asFormNamedItem(), name);
     else if (elementFromPast && namedItems.isEmpty())
         namedItems.append(*elementFromPast);
 }

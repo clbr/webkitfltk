@@ -45,6 +45,7 @@
 #include "HTMLImageElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
+#include "HTMLPlugInElement.h"
 #include "HTMLTextAreaElement.h"
 #include "HitTestResult.h"
 #include "KeyboardEvent.h"
@@ -81,11 +82,11 @@ ContainerNode* FocusNavigationScope::rootNode() const
 Element* FocusNavigationScope::owner() const
 {
     ContainerNode* root = rootNode();
-    if (root->isShadowRoot())
-        return toShadowRoot(root)->hostElement();
+    if (is<ShadowRoot>(root))
+        return downcast<ShadowRoot>(*root).hostElement();
     if (Frame* frame = root->document().frame())
         return frame->ownerElement();
-    return 0;
+    return nullptr;
 }
 
 FocusNavigationScope FocusNavigationScope::focusNavigationScopeOf(Node* node)
@@ -134,7 +135,7 @@ static inline void dispatchEventsOnWindowAndFocusedElement(Document* document, b
 
 static inline bool hasCustomFocusLogic(Element& element)
 {
-    return element.isHTMLElement() && toHTMLElement(element).hasCustomFocusLogic();
+    return is<HTMLElement>(element) && downcast<HTMLElement>(element).hasCustomFocusLogic();
 }
 
 static inline bool isNonFocusableShadowHost(Element& element, KeyboardEvent& event)
@@ -227,8 +228,8 @@ Element* FocusController::findFocusableElementDescendingDownIntoFrameDocument(Fo
     // The node we found might be a HTMLFrameOwnerElement, so descend down the tree until we find either:
     // 1) a focusable node, or
     // 2) the deepest-nested HTMLFrameOwnerElement.
-    while (element && element->isFrameOwnerElement()) {
-        HTMLFrameOwnerElement& owner = toHTMLFrameOwnerElement(*element);
+    while (element && is<HTMLFrameOwnerElement>(element)) {
+        HTMLFrameOwnerElement& owner = downcast<HTMLFrameOwnerElement>(*element);
         if (!owner.contentFrame())
             break;
         Element* foundElement = findFocusableElement(direction, FocusNavigationScope::focusNavigationScopeOwnedByIFrame(&owner), 0, event);
@@ -311,10 +312,10 @@ bool FocusController::advanceFocusInDocumentOrder(FocusDirection direction, Keyb
         return true;
     }
 
-    if (element->isFrameOwnerElement() && (!element->isPluginElement() || !element->isKeyboardFocusable(event))) {
+    if (is<HTMLFrameOwnerElement>(*element) && (!is<HTMLPlugInElement>(*element) || !element->isKeyboardFocusable(event))) {
         // We focus frames rather than frame owners.
         // FIXME: We should not focus frames that have no scrollbars, as focusing them isn't useful to the user.
-        HTMLFrameOwnerElement& owner = toHTMLFrameOwnerElement(*element);
+        HTMLFrameOwnerElement& owner = downcast<HTMLFrameOwnerElement>(*element);
         if (!owner.contentFrame())
             return false;
 
@@ -884,7 +885,7 @@ bool FocusController::advanceFocusDirectionally(FocusDirection direction, Keyboa
         if (!hasOffscreenRect(focusedElement)) {
             container = scrollableEnclosingBoxOrParentFrameForNodeInDirection(direction, focusedElement);
             startingRect = nodeRectInAbsoluteCoordinates(focusedElement, true /* ignore border */);
-        } else if (isHTMLAreaElement(focusedElement)) {
+        } else if (is<HTMLAreaElement>(focusedElement)) {
             HTMLAreaElement& area = downcast<HTMLAreaElement>(*focusedElement);
             container = scrollableEnclosingBoxOrParentFrameForNodeInDirection(direction, area.imageElement());
             startingRect = virtualRectForAreaElementAndDirection(&area, direction);

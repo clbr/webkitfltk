@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2009 Holger Hans Peter Freyther
- * All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,22 +20,28 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef GtkPluginWidget_h
-#define GtkPluginWidget_h
+#ifndef DFGObjectAllocationSinkingPhase_h
+#define DFGObjectAllocationSinkingPhase_h
 
-#include "Widget.h"
+#if ENABLE(DFG_JIT)
 
-namespace WebCore {
-    class GtkPluginWidget : public Widget {
-    public:
-        GtkPluginWidget(GtkWidget*);
-        virtual ~GtkPluginWidget();
-        void invalidateRect(const IntRect&);
-        void frameRectsChanged();
-    };
-}
+namespace JSC { namespace DFG {
 
-#endif
+class Graph;
+
+// Sinks object allocations down to their uses. This will sink the allocations over OSR exits, by
+// replacing all stores to those objects with store hints so that OSR exit can materialize the
+// object. This may sink allocations past returns, creating control flow paths along which the
+// objects are not allocated at all. Replaces all uses of the objects' fields with SSA data flow.
+
+bool performObjectAllocationSinking(Graph&);
+
+} } // namespace JSC::DFG
+
+#endif // ENABLE(DFG_JIT)
+
+#endif // DFGObjectAllocationSinkingPhase_h
+

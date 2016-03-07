@@ -158,7 +158,7 @@ static void appendServerMapMousePosition(StringBuilder& url, Event* event)
     ASSERT(event->target());
     Node* target = event->target()->toNode();
     ASSERT(target);
-    if (!isHTMLImageElement(target))
+    if (!is<HTMLImageElement>(target))
         return;
 
     HTMLImageElement& imageElement = downcast<HTMLImageElement>(*target);
@@ -249,7 +249,7 @@ void HTMLAnchorElement::parseAttribute(const QualifiedName& name, const AtomicSt
         bool wasLink = isLink();
         setIsLink(!value.isNull() && !shouldProhibitLinks(this));
         if (wasLink != isLink())
-            didAffectSelector(AffectedSelectorLink | AffectedSelectorVisited | AffectedSelectorEnabled);
+            didAffectSelector(AffectedSelectorLink | AffectedSelectorVisited);
         if (isLink()) {
             String parsedURL = stripLeadingAndTrailingHTMLSpaces(value);
             if (document().isDNSPrefetchEnabled()) {

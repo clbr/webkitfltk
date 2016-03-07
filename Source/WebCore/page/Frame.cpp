@@ -61,6 +61,7 @@
 #include "HTMLFrameElementBase.h"
 #include "HTMLNames.h"
 #include "HTMLTableCellElement.h"
+#include "HTMLTableRowElement.h"
 #include "HitTestResult.h"
 #include "ImageBuffer.h"
 #include "InspectorInstrumentation.h"
@@ -392,9 +393,9 @@ String Frame::searchForLabelsBeforeElement(const Vector<String>& labels, Element
         if (is<HTMLFormElement>(n) || is<HTMLFormControlElement>(n))
             break;
 
-        if (n->hasTagName(tdTag) && !startingTableCell) {
-            startingTableCell = toHTMLTableCellElement(n);
-        } else if (n->hasTagName(trTag) && startingTableCell) {
+        if (n->hasTagName(tdTag) && !startingTableCell)
+            startingTableCell = downcast<HTMLTableCellElement>(n);
+        else if (is<HTMLTableRowElement>(n) && startingTableCell) {
             String result = searchForLabelsAboveCell(regExp, startingTableCell, resultDistance);
             if (!result.isEmpty()) {
                 if (resultIsInCellAbove)
@@ -967,10 +968,8 @@ void Frame::setPageAndTextZoomFactors(float pageZoomFactor, float textZoomFactor
 
     // Respect SVGs zoomAndPan="disabled" property in standalone SVG documents.
     // FIXME: How to handle compound documents + zoomAndPan="disabled"? Needs SVG WG clarification.
-    if (document->isSVGDocument()) {
-        if (!toSVGDocument(*document).zoomAndPanEnabled())
-            return;
-    }
+    if (is<SVGDocument>(document) && !downcast<SVGDocument>(*document).zoomAndPanEnabled())
+        return;
 
     if (m_pageZoomFactor != pageZoomFactor) {
         if (FrameView* view = this->view()) {

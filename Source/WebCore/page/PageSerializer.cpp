@@ -66,10 +66,10 @@ namespace WebCore {
 
 static bool isCharsetSpecifyingNode(const Node& node)
 {
-    if (!node.isHTMLElement())
+    if (!is<HTMLElement>(node))
         return false;
 
-    const HTMLElement& element = toHTMLElement(node);
+    const HTMLElement& element = downcast<HTMLElement>(node);
     if (!element.hasTagName(HTMLNames::metaTag))
         return false;
     HTMLMetaCharsetParser::AttributeList attributes;
@@ -146,10 +146,10 @@ void SerializerMarkupAccumulator::appendElement(StringBuilder& out, const Elemen
 
 void SerializerMarkupAccumulator::appendCustomAttributes(StringBuilder& out, const Element& element, Namespaces* namespaces)
 {
-    if (!element.isFrameOwnerElement())
+    if (!is<HTMLFrameOwnerElement>(element))
         return;
 
-    const HTMLFrameOwnerElement& frameOwner = toHTMLFrameOwnerElement(element);
+    const HTMLFrameOwnerElement& frameOwner = downcast<HTMLFrameOwnerElement>(element);
     Frame* frame = frameOwner.contentFrame();
     if (!frame)
         return;
@@ -225,25 +225,25 @@ void PageSerializer::serializeFrame(Frame* frame)
         if (!node->isElementNode())
             continue;
 
-        Element* element = toElement(node);
+        Element& element = toElement(*node);
         // We have to process in-line style as it might contain some resources (typically background images).
-        if (element->isStyledElement())
-            retrieveResourcesForProperties(toStyledElement(element)->inlineStyle(), document);
+        if (is<StyledElement>(element))
+            retrieveResourcesForProperties(downcast<StyledElement>(element).inlineStyle(), document);
 
-        if (isHTMLImageElement(element)) {
-            HTMLImageElement& imageElement = downcast<HTMLImageElement>(*element);
+        if (is<HTMLImageElement>(element)) {
+            HTMLImageElement& imageElement = downcast<HTMLImageElement>(element);
             URL url = document->completeURL(imageElement.fastGetAttribute(HTMLNames::srcAttr));
             CachedImage* cachedImage = imageElement.cachedImage();
             addImageToResources(cachedImage, imageElement.renderer(), url);
-        } else if (isHTMLLinkElement(element)) {
-            HTMLLinkElement& linkElement = downcast<HTMLLinkElement>(*element);
+        } else if (is<HTMLLinkElement>(element)) {
+            HTMLLinkElement& linkElement = downcast<HTMLLinkElement>(element);
             if (CSSStyleSheet* sheet = linkElement.sheet()) {
                 URL url = document->completeURL(linkElement.getAttribute(HTMLNames::hrefAttr));
                 serializeCSSStyleSheet(sheet, url);
                 ASSERT(m_resourceURLs.contains(url));
             }
-        } else if (isHTMLStyleElement(element)) {
-            if (CSSStyleSheet* sheet = downcast<HTMLStyleElement>(*element).sheet())
+        } else if (is<HTMLStyleElement>(element)) {
+            if (CSSStyleSheet* sheet = downcast<HTMLStyleElement>(element).sheet())
                 serializeCSSStyleSheet(sheet, URL());
         }
     }

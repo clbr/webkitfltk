@@ -321,7 +321,7 @@ AccessibilityRole AccessibilityNodeObject::determineAccessibilityRole()
         return DivRole;
     if (node()->hasTagName(pTag))
         return ParagraphRole;
-    if (isHTMLLabelElement(node()))
+    if (is<HTMLLabelElement>(node()))
         return LabelRole;
     if (node()->isElementNode() && toElement(node())->isFocusable())
         return GroupRole;
@@ -512,7 +512,7 @@ bool AccessibilityNodeObject::isNativeImage() const
     if (!node)
         return false;
 
-    if (isHTMLImageElement(node))
+    if (is<HTMLImageElement>(node))
         return true;
 
     if (node->hasTagName(appletTag) || node->hasTagName(embedTag) || node->hasTagName(objectTag))
@@ -963,7 +963,7 @@ Element* AccessibilityNodeObject::anchorElement() const
     // search up the DOM tree for an anchor element
     // NOTE: this assumes that any non-image with an anchor is an HTMLAnchorElement
     for ( ; node; node = node->parentNode()) {
-        if (isHTMLAnchorElement(node) || (node->renderer() && cache->getOrCreate(node->renderer())->isAnchor()))
+        if (is<HTMLAnchorElement>(node) || (node->renderer() && cache->getOrCreate(node->renderer())->isAnchor()))
             return toElement(node);
     }
 
@@ -1159,7 +1159,7 @@ bool AccessibilityNodeObject::isGenericFocusableElement() const
 
 HTMLLabelElement* AccessibilityNodeObject::labelForElement(Element* element) const
 {
-    if (!element->isHTMLElement() || !toHTMLElement(element)->isLabelable())
+    if (!is<HTMLElement>(element) || !downcast<HTMLElement>(element)->isLabelable())
         return nullptr;
 
     const AtomicString& id = element->getIdAttribute();
@@ -1305,7 +1305,7 @@ void AccessibilityNodeObject::alternativeText(Vector<AccessibilityText>& textOrd
         return;
     
     // The fieldset element derives its alternative text from the first associated legend element if one is available.
-    if (isHTMLFieldSetElement(node)) {
+    if (is<HTMLFieldSetElement>(node)) {
         AccessibilityObject* object = axObjectCache()->getOrCreate(downcast<HTMLFieldSetElement>(*node).legend());
         if (object && !object->isHidden())
             textOrder.append(AccessibilityText(accessibleNameForNode(object->node()), AlternativeText));
@@ -1640,8 +1640,8 @@ static bool shouldAddSpaceBeforeAppendingNextElement(StringBuilder& builder, Str
 String AccessibilityNodeObject::textUnderElement(AccessibilityTextUnderElementMode mode) const
 {
     Node* node = this->node();
-    if (node && node->isTextNode())
-        return toText(node)->wholeText();
+    if (node && is<Text>(node))
+        return downcast<Text>(*node).wholeText();
 
     // The render tree should be stable before going ahead. Otherwise, further uses of the
     // TextIterator will force a layout update, potentially altering the accessibility tree
@@ -1750,8 +1750,8 @@ String AccessibilityNodeObject::text() const
     if (!node)
         return String();
 
-    if (isNativeTextControl() && isHTMLTextFormControlElement(*node))
-        return toHTMLTextFormControlElement(*node).value();
+    if (isNativeTextControl() && is<HTMLTextFormControlElement>(*node))
+        return downcast<HTMLTextFormControlElement>(*node).value();
 
     if (!node->isElementNode())
         return String();

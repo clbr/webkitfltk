@@ -84,13 +84,13 @@ WebKitDOMNode* wrap(Node* node)
 
     switch (node->nodeType()) {
     case Node::ELEMENT_NODE:
-        if (node->isHTMLElement())
-            return WEBKIT_DOM_NODE(wrap(toHTMLElement(node)));
+        if (is<HTMLElement>(node))
+            return WEBKIT_DOM_NODE(wrap(downcast<HTMLElement>(node)));
         return WEBKIT_DOM_NODE(wrapElement(toElement(node)));
     case Node::ATTRIBUTE_NODE:
         return WEBKIT_DOM_NODE(wrapAttr(static_cast<Attr*>(node)));
     case Node::TEXT_NODE:
-        return WEBKIT_DOM_NODE(wrapText(toText(node)));
+        return WEBKIT_DOM_NODE(wrapText(downcast<Text>(node)));
     case Node::CDATA_SECTION_NODE:
         return WEBKIT_DOM_NODE(wrapCDATASection(static_cast<CDATASection*>(node)));
     case Node::ENTITY_REFERENCE_NODE:

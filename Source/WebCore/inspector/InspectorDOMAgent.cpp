@@ -806,7 +806,7 @@ void InspectorDOMAgent::setNodeValue(ErrorString* errorString, int nodeId, const
         return;
     }
 
-    m_domEditor->replaceWholeText(toText(node), value, errorString);
+    m_domEditor->replaceWholeText(downcast<Text>(node), value, errorString);
 }
 
 void InspectorDOMAgent::getEventListenersForNode(ErrorString* errorString, int nodeId, const String* objectGroup, RefPtr<Inspector::Protocol::Array<Inspector::Protocol::DOM::EventListener>>& listenersArray)
@@ -1280,14 +1280,14 @@ PassRefPtr<Inspector::Protocol::DOM::Node> InspectorDOMAgent::buildObjectForNode
     if (node->isElementNode()) {
         Element* element = toElement(node);
         value->setAttributes(buildArrayForElementAttributes(element));
-        if (node->isFrameOwnerElement()) {
-            HTMLFrameOwnerElement* frameOwner = toHTMLFrameOwnerElement(node);
-            Frame* frame = frameOwner->contentFrame();
+        if (is<HTMLFrameOwnerElement>(node)) {
+            HTMLFrameOwnerElement& frameOwner = downcast<HTMLFrameOwnerElement>(*node);
+            Frame* frame = frameOwner.contentFrame();
             if (frame)
                 value->setFrameId(m_pageAgent->frameId(frame));
-            Document* doc = frameOwner->contentDocument();
-            if (doc)
-                value->setContentDocument(buildObjectForNode(doc, 0, nodesMap));
+            Document* document = frameOwner.contentDocument();
+            if (document)
+                value->setContentDocument(buildObjectForNode(document, 0, nodesMap));
         }
 
         if (ShadowRoot* root = element->shadowRoot()) {
@@ -1297,7 +1297,7 @@ PassRefPtr<Inspector::Protocol::DOM::Node> InspectorDOMAgent::buildObjectForNode
         }
 
 #if ENABLE(TEMPLATE_ELEMENT)
-        if (isHTMLTemplateElement(element))
+        if (is<HTMLTemplateElement>(element))
             value->setTemplateContent(buildObjectForNode(downcast<HTMLTemplateElement>(*element).content(), 0, nodesMap));
 #endif
 
@@ -1306,15 +1306,15 @@ PassRefPtr<Inspector::Protocol::DOM::Node> InspectorDOMAgent::buildObjectForNode
         value->setDocumentURL(documentURLString(document));
         value->setBaseURL(documentBaseURLString(document));
         value->setXmlVersion(document->xmlVersion());
-    } else if (node->nodeType() == Node::DOCUMENT_TYPE_NODE) {
-        DocumentType* docType = toDocumentType(node);
-        value->setPublicId(docType->publicId());
-        value->setSystemId(docType->systemId());
-        value->setInternalSubset(docType->internalSubset());
-    } else if (node->isAttributeNode()) {
-        Attr* attribute = toAttr(node);
-        value->setName(attribute->name());
-        value->setValue(attribute->value());
+    } else if (is<DocumentType>(node)) {
+        DocumentType& docType = downcast<DocumentType>(*node);
+        value->setPublicId(docType.publicId());
+        value->setSystemId(docType.systemId());
+        value->setInternalSubset(docType.internalSubset());
+    } else if (is<Attr>(node)) {
+        Attr& attribute = downcast<Attr>(*node);
+        value->setName(attribute.name());
+        value->setValue(attribute.value());
     }
 
     // Need to enable AX to get the computed role.

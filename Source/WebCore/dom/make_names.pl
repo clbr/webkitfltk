@@ -194,7 +194,6 @@ sub defaultTagPropertyHash
         'wrapperOnlyIfMediaIsAvailable' => 0,
         'conditional' => 0,
         'runtimeConditional' => 0,
-        'generateTypeHelpers' => 0
     );
 }
 
@@ -627,25 +626,31 @@ sub printTypeHelpers
     my ($F, $namesRef) = @_;
     my %names = %$namesRef;
 
-    for my $name (sort keys %names) {
-        if (!$parsedTags{$name}{generateTypeHelpers}) {
-            next;
-        }
-
+    # Do a first pass to discard classes that map to several tags.
+    my %classToTags = ();
+    for my $name (keys %names) {
         my $class = $parsedTags{$name}{interfaceName};
+        push(@{$classToTags{$class}}, $name) if defined $class;
+    }
+
+    for my $class (sort keys %classToTags) {
+        # Skip classes that map to more than 1 tag.
+        my $tagCount = scalar @{$classToTags{$class}};
+        next if $tagCount > 1;
+        my $name = $classToTags{$class}[0];
         print F <<END
 class $class;
 template <typename ArgType>
 class NodeTypeCastTraits<const $class, ArgType> {
 public:
-    static bool is(ArgType& node) { return checkTagName(node); }
+    static bool isType(ArgType& node) { return checkTagName(node); }
 private:
 END
        ;
        if ($parameters{namespace} eq "HTML" && $parsedTags{$name}{wrapperOnlyIfMediaIsAvailable}) {
            print F <<END
     static bool checkTagName(const HTMLElement& element) { return !element.isHTMLUnknownElement() && element.hasTagName($parameters{namespace}Names::${name}Tag); }
-    static bool checkTagName(const Node& node) { return node.isHTMLElement() && checkTagName(toHTMLElement(node)); }
+    static bool checkTagName(const Node& node) { return is<HTMLElement>(node) && checkTagName(downcast<HTMLElement>(node)); }
 END
            ;
        } else {
@@ -659,15 +664,7 @@ END
 };
 END
        ;
-       if ($parameters{namespace} eq "HTML") {
-           print F <<END
-// FIXME: Remove these macros once the code has been ported to using
-// is<*Element>().
-#define is$class(x) WebCore::is<WebCore::$class>(x)
-END
-           ;
-        }
-        print F "\n";
+       print F "\n";
     }
 }
 

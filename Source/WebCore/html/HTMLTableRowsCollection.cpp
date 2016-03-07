@@ -58,7 +58,7 @@ static inline bool isInSection(HTMLTableRowElement& row, const HTMLQualifiedName
 {
     // Because we know that the parent is a table or a section, it's safe to cast it to an HTMLElement
     // giving us access to the faster hasTagName overload from that class.
-    return toHTMLElement(row.parentNode())->hasTagName(sectionTag);
+    return downcast<HTMLElement>(*row.parentNode()).hasTagName(sectionTag);
 }
 
 HTMLTableRowElement* HTMLTableRowsCollection::rowAfter(HTMLTableElement* table, HTMLTableRowElement* previous)
@@ -97,7 +97,7 @@ HTMLTableRowElement* HTMLTableRowsCollection::rowAfter(HTMLTableElement* table, 
     else if (isInSection(*previous, tbodyTag))
         child = ElementTraversal::nextSibling(previous->parentNode());
     for (; child; child = ElementTraversal::nextSibling(child)) {
-        if (isHTMLTableRowElement(child))
+        if (is<HTMLTableRowElement>(child))
             return downcast<HTMLTableRowElement>(child);
         if (child->hasTagName(tbodyTag)) {
             if (auto row = childrenOfType<HTMLTableRowElement>(*child).first())
@@ -130,7 +130,7 @@ HTMLTableRowElement* HTMLTableRowsCollection::lastRow(HTMLTableElement* table)
     }
 
     for (auto* child = ElementTraversal::lastChild(table); child; child = ElementTraversal::previousSibling(child)) {
-        if (isHTMLTableRowElement(child))
+        if (is<HTMLTableRowElement>(child))
             return downcast<HTMLTableRowElement>(child);
         if (child->hasTagName(tbodyTag)) {
             if (auto* row = childrenOfType<HTMLTableRowElement>(*child).last())

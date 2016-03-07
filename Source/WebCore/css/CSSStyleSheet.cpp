@@ -37,6 +37,7 @@
 #include "Node.h"
 #include "SVGElement.h"
 #include "SVGNames.h"
+#include "SVGStyleElement.h"
 #include "SecurityOrigin.h"
 #include "StyleResolver.h"
 #include "StyleRule.h"
@@ -68,9 +69,9 @@ static bool isAcceptableCSSStyleSheetParent(Node* parentNode)
     // Only these nodes can be parents of StyleSheets, and they need to call clearOwnerNode() when moved out of document.
     return !parentNode
         || parentNode->isDocumentNode()
-        || parentNode->hasTagName(HTMLNames::linkTag)
-        || isHTMLStyleElement(parentNode)
-        || parentNode->hasTagName(SVGNames::styleTag)
+        || is<HTMLLinkElement>(parentNode)
+        || is<HTMLStyleElement>(parentNode)
+        || is<SVGStyleElement>(parentNode)
         || parentNode->nodeType() == Node::PROCESSING_INSTRUCTION_NODE;
 }
 #endif

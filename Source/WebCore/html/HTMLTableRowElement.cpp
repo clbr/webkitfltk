@@ -60,7 +60,7 @@ int HTMLTableRowElement::rowIndex() const
     if (!table)
         return -1;
     table = table->parentNode();
-    if (!table || !isHTMLTableElement(table))
+    if (!table || !is<HTMLTableElement>(table))
         return -1;
 
     // To match Firefox, the row indices work like this:
@@ -81,8 +81,8 @@ int HTMLTableRowElement::rowIndex() const
     
     for (Node *node = table->firstChild(); node; node = node->nextSibling()) {
         if (node->hasTagName(tbodyTag)) {
-            HTMLTableSectionElement* section = toHTMLTableSectionElement(node);
-            for (Node* row = section->firstChild(); row; row = row->nextSibling()) {
+            HTMLTableSectionElement& section = downcast<HTMLTableSectionElement>(*node);
+            for (Node* row = section.firstChild(); row; row = row->nextSibling()) {
                 if (row == this)
                     return rIndex;
                 if (row->hasTagName(trTag))

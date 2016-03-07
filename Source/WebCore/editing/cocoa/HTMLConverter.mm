@@ -709,9 +709,9 @@ PassRefPtr<CSSValue> HTMLConverterCaches::computedStylePropertyForElement(Elemen
 
 PassRefPtr<CSSValue> HTMLConverterCaches::inlineStylePropertyForElement(Element& element, CSSPropertyID propertyId)
 {
-    if (propertyId == CSSPropertyInvalid || !element.isStyledElement())
+    if (propertyId == CSSPropertyInvalid || !is<StyledElement>(element))
         return nullptr;
-    const StyleProperties* properties = toStyledElement(element).inlineStyle();
+    const StyleProperties* properties = downcast<StyledElement>(element).inlineStyle();
     if (!properties)
         return nullptr;
     return properties->getPropertyCSSValue(propertyId);
@@ -1889,8 +1889,8 @@ void HTMLConverter::_addTableCellForElement(Element* element)
     RetainPtr<NSTextTableBlock> block;
     
     if (element) {
-        if (isHTMLTableCellElement(*element)) {
-            HTMLTableCellElement& tableCellElement = toHTMLTableCellElement(*element);
+        if (is<HTMLTableCellElement>(*element)) {
+            HTMLTableCellElement& tableCellElement = downcast<HTMLTableCellElement>(*element);
             
             rowSpan = tableCellElement.rowSpan();
             if (rowSpan < 1)
@@ -2002,8 +2002,8 @@ BOOL HTMLConverter::_processElement(Element& element, NSInteger depth)
             if (url)
                 retval = !_addAttachmentForElement(element, url, isBlockLevel, NO);
         }
-    } else if (element.hasTagName(frameTag) || element.hasTagName(iframeTag)) {
-        if (Document* contentDocument = toHTMLFrameElementBase(element).contentDocument()) {
+    } else if (is<HTMLFrameElementBase>(element)) {
+        if (Document* contentDocument = downcast<HTMLFrameElementBase>(element).contentDocument()) {
             _traverseNode(*contentDocument, depth + 1, true /* embedded */);
             retval = NO;
         }
@@ -2034,7 +2034,7 @@ BOOL HTMLConverter::_processElement(Element& element, NSInteger depth)
         if (!listStyleType.length())
             listStyleType = "decimal";
         list = adoptNS([[PlatformNSTextList alloc] initWithMarkerFormat:String("{" + listStyleType + "}") options:0]);
-        if (isHTMLOListElement(element)) {
+        if (is<HTMLOListElement>(element)) {
             NSInteger startingItemNumber = downcast<HTMLOListElement>(element).start();
             [list setStartingItemNumber:startingItemNumber];
         }
@@ -2414,8 +2414,8 @@ void HTMLConverter::_traverseNode(Node& node, unsigned depth, bool embedded)
                 _exitElement(element, depth, startIndex);
             }
         }
-    } else if (node.isCharacterDataNode())
-        _processText(toCharacterData(node));
+    } else if (is<CharacterData>(node))
+        _processText(downcast<CharacterData>(node));
 
     if (isEnd)
         _flags.reachedEnd = YES;

@@ -472,8 +472,8 @@ void ReplayController::willDispatchEvent(const Event& event, Frame* frame)
     // To ensure deterministic JS execution, all DOM events must be dispatched deterministically.
     // If these assertions fail, then this DOM event is being dispatched by a nondeterministic EventLoop
     // cycle, and may cause program execution to diverge if any JS code runs because of the DOM event.
-    if (cursor.isCapturing())
-        ASSERT(static_cast<CapturingInputCursor&>(cursor).withinEventLoopInputExtent());
+    if (cursor.isCapturing() || cursor.isReplaying())
+        ASSERT(cursor.withinEventLoopInputExtent());
     else if (cursor.isReplaying())
         ASSERT(dispatcher().isDispatching());
 #endif
@@ -510,6 +510,9 @@ void ReplayController::willDispatchInput(const EventLoopInputBase&)
     ASSERT(m_segmentState == SegmentState::Dispatching);
 
     m_currentPosition.inputOffset++;
+
+    InspectorInstrumentation::playbackHitPosition(&m_page, m_currentPosition);
+
     if (m_currentPosition == m_targetPosition)
         pausePlayback();
 }
@@ -518,8 +521,6 @@ void ReplayController::didDispatchInput(const EventLoopInputBase&)
 {
     ASSERT(m_sessionState == SessionState::Replaying);
     ASSERT(m_segmentState == SegmentState::Dispatching);
-
-    InspectorInstrumentation::playbackHitPosition(&m_page, m_currentPosition);
 }
 
 void ReplayController::didDispatchFinalInput()

@@ -62,7 +62,7 @@ static bool hasImpliedEndTag(const HTMLStackItem* item)
         || item->hasTagName(dtTag)
         || item->hasTagName(liTag)
         || is<HTMLOptionElement>(item->node())
-        || isHTMLOptGroupElement(item->node())
+        || is<HTMLOptGroupElement>(item->node())
         || item->hasTagName(pTag)
         || item->hasTagName(rbTag)
         || item->hasTagName(rpTag)
@@ -85,7 +85,7 @@ static inline bool isAllWhitespace(const String& string)
 static inline void insert(HTMLConstructionSiteTask& task)
 {
 #if ENABLE(TEMPLATE_ELEMENT)
-    if (isHTMLTemplateElement(*task.parent))
+    if (is<HTMLTemplateElement>(*task.parent))
         task.parent = downcast<HTMLTemplateElement>(*task.parent).content();
 #endif
 
@@ -458,11 +458,13 @@ void HTMLConstructionSite::insertHTMLBodyElement(AtomicHTMLToken* token)
 void HTMLConstructionSite::insertHTMLFormElement(AtomicHTMLToken* token, bool isDemoted)
 {
     RefPtr<Element> element = createHTMLElement(token);
-    ASSERT(isHTMLFormElement(element.get()));
-    m_form = static_pointer_cast<HTMLFormElement>(element.release());
-    m_form->setDemoted(isDemoted);
-    attachLater(currentNode(), m_form);
-    m_openElements.push(HTMLStackItem::create(m_form, token));
+    ASSERT(is<HTMLFormElement>(element.get()));
+    RefPtr<HTMLFormElement> form = static_pointer_cast<HTMLFormElement>(element.release());
+    if (!insideTemplateElement())
+        m_form = form;
+    form->setDemoted(isDemoted);
+    attachLater(currentNode(), form);
+    m_openElements.push(HTMLStackItem::create(form.release(), token));
 }
 
 void HTMLConstructionSite::insertHTMLElement(AtomicHTMLToken* token)
@@ -529,7 +531,7 @@ void HTMLConstructionSite::insertTextNode(const String& characters, WhitespaceMo
         findFosterSite(task);
 
 #if ENABLE(TEMPLATE_ELEMENT)
-    if (isHTMLTemplateElement(*task.parent))
+    if (is<HTMLTemplateElement>(*task.parent))
         task.parent = downcast<HTMLTemplateElement>(*task.parent).content();
 #endif
 
@@ -545,11 +547,11 @@ void HTMLConstructionSite::insertTextNode(const String& characters, WhitespaceMo
     // for performance, see <https://bugs.webkit.org/show_bug.cgi?id=55898>.
 
     Node* previousChild = task.nextChild ? task.nextChild->previousSibling() : task.parent->lastChild();
-    if (previousChild && previousChild->isTextNode()) {
+    if (previousChild && is<Text>(previousChild)) {
         // FIXME: We're only supposed to append to this text node if it
         // was the last text node inserted by the parser.
-        Text* textNode = toText(previousChild);
-        currentPosition = textNode->parserAppendData(characters, 0, lengthLimit);
+        Text& textNode = downcast<Text>(*previousChild);
+        currentPosition = textNode.parserAppendData(characters, 0, lengthLimit);
     }
 
     while (currentPosition < characters.length()) {
@@ -616,7 +618,7 @@ PassRefPtr<Element> HTMLConstructionSite::createElement(AtomicHTMLToken* token, 
 inline Document& HTMLConstructionSite::ownerDocumentForCurrentNode()
 {
 #if ENABLE(TEMPLATE_ELEMENT)
-    if (isHTMLTemplateElement(currentNode()))
+    if (is<HTMLTemplateElement>(currentNode()))
         return downcast<HTMLTemplateElement>(*currentElement()).content()->document();
 #endif
     return currentNode()->document();

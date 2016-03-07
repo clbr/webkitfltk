@@ -129,8 +129,8 @@ void HTMLOptionElement::setText(const String &text, ExceptionCode& ec)
 
     // Handle the common special case where there's exactly 1 child node, and it's a text node.
     Node* child = firstChild();
-    if (child && child->isTextNode() && !child->nextSibling())
-        toText(child)->setData(text, ec);
+    if (child && is<Text>(child) && !child->nextSibling())
+        downcast<Text>(*child).setData(text, ec);
     else {
         removeChildren();
         appendChild(Text::create(document(), text), ec);
@@ -257,7 +257,7 @@ void HTMLOptionElement::childrenChanged(const ChildChange& change)
 HTMLDataListElement* HTMLOptionElement::ownerDataListElement() const
 {
     for (ContainerNode* parent = parentNode(); parent ; parent = parent->parentNode()) {
-        if (isHTMLDataListElement(parent))
+        if (is<HTMLDataListElement>(parent))
             return downcast<HTMLDataListElement>(parent);
     }
     return nullptr;
@@ -302,7 +302,7 @@ void HTMLOptionElement::willResetComputedStyle()
 String HTMLOptionElement::textIndentedToRespectGroupLabel() const
 {
     ContainerNode* parent = parentNode();
-    if (parent && isHTMLOptGroupElement(parent))
+    if (parent && is<HTMLOptGroupElement>(parent))
         return "    " + text();
     return text();
 }
@@ -312,11 +312,10 @@ bool HTMLOptionElement::isDisabledFormControl() const
     if (ownElementDisabled())
         return true;
 
-    if (!parentNode() || !parentNode()->isHTMLElement())
+    if (!parentNode() || !is<HTMLOptGroupElement>(parentNode()))
         return false;
 
-    HTMLElement& parentElement = toHTMLElement(*parentNode());
-    return isHTMLOptGroupElement(parentElement) && parentElement.isDisabledFormControl();
+    return downcast<HTMLOptGroupElement>(*parentNode()).isDisabledFormControl();
 }
 
 Node::InsertionNotificationRequest HTMLOptionElement::insertedInto(ContainerNode& insertionPoint)

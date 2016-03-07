@@ -266,25 +266,25 @@ void DocumentStyleSheetCollection::collectActiveStyleSheets(Vector<RefPtr<StyleS
 
     for (auto& node : m_styleSheetCandidateNodes) {
         StyleSheet* sheet = nullptr;
-        if (node->nodeType() == Node::PROCESSING_INSTRUCTION_NODE) {
+        if (is<ProcessingInstruction>(node)) {
             // Processing instruction (XML documents only).
             // We don't support linking to embedded CSS stylesheets, see <https://bugs.webkit.org/show_bug.cgi?id=49281> for discussion.
-            ProcessingInstruction* pi = toProcessingInstruction(node);
-            sheet = pi->sheet();
+            ProcessingInstruction& pi = downcast<ProcessingInstruction>(*node);
+            sheet = pi.sheet();
 #if ENABLE(XSLT)
             // Don't apply XSL transforms to already transformed documents -- <rdar://problem/4132806>
-            if (pi->isXSL() && !m_document.transformSourceDocument()) {
+            if (pi.isXSL() && !m_document.transformSourceDocument()) {
                 // Don't apply XSL transforms until loading is finished.
                 if (!m_document.parsing())
-                    m_document.applyXSLTransform(pi);
+                    m_document.applyXSLTransform(&pi);
                 return;
             }
 #endif
-        } else if ((node->isHTMLElement() && (toHTMLElement(*node).hasTagName(linkTag) || toHTMLElement(*node).hasTagName(styleTag))) || (node->isSVGElement() && downcast<SVGElement>(*node).hasTagName(SVGNames::styleTag))) {
+        } else if (is<HTMLLinkElement>(*node) || is<HTMLStyleElement>(*node) || is<SVGStyleElement>(*node)) {
             Element& element = toElement(*node);
             AtomicString title = element.fastGetAttribute(titleAttr);
             bool enabledViaScript = false;
-            if (isHTMLLinkElement(element)) {
+            if (is<HTMLLinkElement>(element)) {
                 // <LINK> element
                 HTMLLinkElement& linkElement = downcast<HTMLLinkElement>(element);
                 if (linkElement.isDisabled())
@@ -307,7 +307,7 @@ void DocumentStyleSheetCollection::collectActiveStyleSheets(Vector<RefPtr<StyleS
             // set of sheets that will be enabled.
             if (is<SVGStyleElement>(element))
                 sheet = downcast<SVGStyleElement>(element).sheet();
-            else if (isHTMLLinkElement(element))
+            else if (is<HTMLLinkElement>(element))
                 sheet = downcast<HTMLLinkElement>(element).sheet();
             else
                 sheet = downcast<HTMLStyleElement>(element).sheet();
@@ -322,7 +322,7 @@ void DocumentStyleSheetCollection::collectActiveStyleSheets(Vector<RefPtr<StyleS
                     // we are NOT an alternate sheet, then establish
                     // us as the preferred set. Otherwise, just ignore
                     // this sheet.
-                    if (isHTMLStyleElement(element) || !rel.contains("alternate"))
+                    if (is<HTMLStyleElement>(element) || !rel.contains("alternate"))
                         m_preferredStylesheetSetName = m_selectedStylesheetSetName = title;
                 }
                 if (title != m_preferredStylesheetSetName)
