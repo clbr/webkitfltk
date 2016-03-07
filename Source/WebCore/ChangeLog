@@ -1,3 +1,891 @@
+2015-02-05  Darin Adler  <darin@apple.com>
+
+        Move InstanceInvalidationGuard/UpdateBlocker to SVGElement from SVGElementInstance
+        https://bugs.webkit.org/show_bug.cgi?id=141148
+
+        Reviewed by Brent Fulgham and Anders Carlsson.
+
+        Inspired by this change Rob Buis made in Blink:
+
+            http://src.chromium.org/viewvc/blink?view=revision&revision=173343
+
+        I actually wrote the whole thing and then discovered we did it almost identically.
+
+        * svg/SVGAnimatedTypeAnimator.cpp:
+        (WebCore::SVGElementAnimatedPropertyList::setInstanceUpdatesBlocked): Added this
+        helper function to get around a circular header dependency.
+        * svg/SVGAnimatedTypeAnimator.h:
+        (WebCore::SVGAnimatedTypeAnimator::executeAction): Use setInstanceUpdatesBlocked.
+
+        * svg/SVGElement.cpp:
+        (WebCore::SVGElement::removedFrom): Use invalidateInstances.
+        (WebCore::SVGElement::finishParsingChildren): Ditto.
+        (WebCore::SVGElement::svgAttributeChanged): Ditto.
+        (WebCore::SVGElement::childrenChanged): Ditto.
+        (WebCore::SVGElement::setInstanceUpdatesBlocked): Added an assertion that will
+        catch anyone who nests InstanceUpdateBlocker by accident.
+        (WebCore::SVGElement::invalidateInstances): Moved this here from
+        SVGElementInstance::invalidateAllInstancesOfElement. I had already modified this
+        so it had nothing to do with SVGElementInstance, so it was a simple matter of
+        converting this into a member function. Added a FIXME about the mysterious
+        updateStyleIfNeeded that makes multiple tests fail if it's removed.
+
+        * svg/SVGElement.h: Added public InstanceUpdateBlocker class, protected
+        InstanceInvalidationGuard class, and private invalidateInstances function.
+        Unlike the ones in SVGElementInstance these use references so they are then
+        not copyable without using the WTF_MAKE_NONCOPYABLE macro.
+
+        * svg/SVGElementInstance.cpp:
+        (WebCore::SVGElementInstance::invalidateAllInstancesOfElement): Deleted.
+        (WebCore::SVGElementInstance::InstanceUpdateBlocker::InstanceUpdateBlocker): Deleted.
+        (WebCore::SVGElementInstance::InstanceUpdateBlocker::~InstanceUpdateBlocker): Deleted.
+        * svg/SVGElementInstance.h: Removed InvalidationGuard, InstanceUpdateBlocker, and
+        invalidateAllInstancesOfElement. Didn't do any further cleanup since we soon will
+        delete this entire file.
+
+        * svg/SVGAElement.cpp:
+        (WebCore::SVGAElement::svgAttributeChanged): Updated to use new name and reference
+        instead of pointer.
+        * svg/SVGAnimateElementBase.cpp:
+        (WebCore::applyCSSPropertyToTargetAndInstances): Ditto.
+        (WebCore::removeCSSPropertyFromTargetAndInstances): Ditto.
+        (WebCore::notifyTargetAndInstancesAboutAnimValChange): Ditto.
+        * svg/SVGAnimatedPath.cpp:
+        (WebCore::SVGAnimatedPathAnimator::startAnimValAnimation): Ditto.
+        * svg/SVGCircleElement.cpp:
+        (WebCore::SVGCircleElement::svgAttributeChanged): Ditto.
+        * svg/SVGClipPathElement.cpp:
+        (WebCore::SVGClipPathElement::svgAttributeChanged): Ditto.
+        * svg/SVGComponentTransferFunctionElement.cpp:
+        (WebCore::SVGComponentTransferFunctionElement::svgAttributeChanged): Ditto.
+        * svg/SVGCursorElement.cpp:
+        (WebCore::SVGCursorElement::svgAttributeChanged): Ditto.
+        * svg/SVGEllipseElement.cpp:
+        (WebCore::SVGEllipseElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEBlendElement.cpp:
+        (WebCore::SVGFEBlendElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEColorMatrixElement.cpp:
+        (WebCore::SVGFEColorMatrixElement::svgAttributeChanged): Ditto.
+        * svg/SVGFECompositeElement.cpp:
+        (WebCore::SVGFECompositeElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEConvolveMatrixElement.cpp:
+        (WebCore::SVGFEConvolveMatrixElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEDiffuseLightingElement.cpp:
+        (WebCore::SVGFEDiffuseLightingElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEDisplacementMapElement.cpp:
+        (WebCore::SVGFEDisplacementMapElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEDropShadowElement.cpp:
+        (WebCore::SVGFEDropShadowElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEGaussianBlurElement.cpp:
+        (WebCore::SVGFEGaussianBlurElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEImageElement.cpp:
+        (WebCore::SVGFEImageElement::svgAttributeChanged): Ditto.
+        * svg/SVGFELightElement.cpp:
+        (WebCore::SVGFELightElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEMergeNodeElement.cpp:
+        (WebCore::SVGFEMergeNodeElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEMorphologyElement.cpp:
+        (WebCore::SVGFEMorphologyElement::svgAttributeChanged): Ditto.
+        * svg/SVGFEOffsetElement.cpp:
+        (WebCore::SVGFEOffsetElement::svgAttributeChanged): Ditto.
+        * svg/SVGFESpecularLightingElement.cpp:
+        (WebCore::SVGFESpecularLightingElement::svgAttributeChanged): Ditto.
+        * svg/SVGFETileElement.cpp:
+        (WebCore::SVGFETileElement::svgAttributeChanged): Ditto.
+        * svg/SVGFETurbulenceElement.cpp:
+        (WebCore::SVGFETurbulenceElement::svgAttributeChanged): Ditto.
+        * svg/SVGFilterElement.cpp:
+        (WebCore::SVGFilterElement::svgAttributeChanged): Ditto.
+        * svg/SVGFilterPrimitiveStandardAttributes.cpp:
+        (WebCore::SVGFilterPrimitiveStandardAttributes::svgAttributeChanged): Ditto.
+        * svg/SVGForeignObjectElement.cpp:
+        (WebCore::SVGForeignObjectElement::svgAttributeChanged): Ditto.
+        * svg/SVGGElement.cpp:
+        (WebCore::SVGGElement::svgAttributeChanged): Ditto.
+        * svg/SVGGradientElement.cpp:
+        (WebCore::SVGGradientElement::svgAttributeChanged): Ditto.
+        * svg/SVGGraphicsElement.cpp:
+        (WebCore::SVGGraphicsElement::svgAttributeChanged): Ditto.
+        * svg/SVGImageElement.cpp:
+        (WebCore::SVGImageElement::svgAttributeChanged): Ditto.
+        * svg/SVGLineElement.cpp:
+        (WebCore::SVGLineElement::svgAttributeChanged): Ditto.
+        * svg/SVGLinearGradientElement.cpp:
+        (WebCore::SVGLinearGradientElement::svgAttributeChanged): Ditto.
+        * svg/SVGMPathElement.cpp:
+        (WebCore::SVGMPathElement::svgAttributeChanged): Ditto.
+        * svg/SVGMarkerElement.cpp:
+        (WebCore::SVGMarkerElement::svgAttributeChanged): Ditto.
+        * svg/SVGMaskElement.cpp:
+        (WebCore::SVGMaskElement::svgAttributeChanged): Ditto.
+        * svg/SVGPathElement.cpp:
+        (WebCore::SVGPathElement::svgAttributeChanged): Ditto.
+        * svg/SVGPatternElement.cpp:
+        (WebCore::SVGPatternElement::svgAttributeChanged): Ditto.
+        * svg/SVGPolyElement.cpp:
+        (WebCore::SVGPolyElement::svgAttributeChanged): Ditto.
+        * svg/SVGRadialGradientElement.cpp:
+        (WebCore::SVGRadialGradientElement::svgAttributeChanged): Ditto.
+        * svg/SVGRectElement.cpp:
+        (WebCore::SVGRectElement::svgAttributeChanged): Ditto.
+        * svg/SVGSVGElement.cpp:
+        (WebCore::SVGSVGElement::svgAttributeChanged): Ditto.
+        * svg/SVGScriptElement.cpp:
+        (WebCore::SVGScriptElement::svgAttributeChanged): Ditto.
+        * svg/SVGStopElement.cpp:
+        (WebCore::SVGStopElement::svgAttributeChanged): Ditto.
+        * svg/SVGSymbolElement.cpp:
+        (WebCore::SVGSymbolElement::svgAttributeChanged): Ditto.
+        * svg/SVGTRefElement.cpp:
+        (WebCore::SVGTRefElement::svgAttributeChanged): Ditto.
+        * svg/SVGTextContentElement.cpp:
+        (WebCore::SVGTextContentElement::svgAttributeChanged): Ditto.
+        * svg/SVGTextPathElement.cpp:
+        (WebCore::SVGTextPathElement::svgAttributeChanged): Ditto.
+        * svg/SVGTextPositioningElement.cpp:
+        (WebCore::SVGTextPositioningElement::svgAttributeChanged): Ditto.
+        * svg/SVGUseElement.cpp:
+        (WebCore::SVGUseElement::svgAttributeChanged): Ditto.
+        * svg/animation/SVGSMILElement.cpp:
+        (WebCore::SVGSMILElement::svgAttributeChanged): Ditto.
+
+2015-02-05  Brent Fulgham  <bfulgham@apple.com>
+
+        Remind ourselves to remove work-around code
+        https://bugs.webkit.org/show_bug.cgi?id=141289
+
+        Unreviewed gardening: Add a reminder FIXME to CSSParser
+        so we can remove the MSVC-specific hack in the future.
+
+        * css/CSSParser.cpp:
+
+2015-02-05  Zalan Bujtas  <zalan@apple.com>
+
+        Do not destroy RenderQuote's text fragment child when quotation mark string is changing.
+        https://bugs.webkit.org/show_bug.cgi?id=141271
+        rdar://problem/18169375
+
+        Reviewed by Antti Koivisto.
+
+        Similar approach as https://codereview.chromium.org/679593004/
+
+        This patch ensures that laying out a RenderQuote does not force a sibling RenderQuote's
+        child renderer(RenderText) to be destroyed.
+        BreakingContext holds a pointer to the next renderer on the line (BreakingContext::m_nextObject).
+        While laying out the line, initiated by BreakingContext, placing the current renderer could end up destroying the "next" renderer.
+        This happens when the pseudo after quotation mark(RenderQuote) becomes floated, the sibling <q>'s pseudo
+        before text needs to be changed (from " to ') so that we don't end up with 2 sets of the same opening
+        strings.
+        The fix is to reuse the RenderTextFragment object instead of destroy/recreate it.
+
+        Test: fast/css/content/quote-crash-when-floating.html
+
+        * rendering/RenderQuote.cpp:
+        (WebCore::RenderQuote::RenderQuote):
+        (WebCore::fragmentChild):
+        (WebCore::RenderQuote::updateText):
+        * rendering/RenderQuote.h:
+        * rendering/RenderTextFragment.cpp:
+        (WebCore::RenderTextFragment::setText):
+        (WebCore::RenderTextFragment::setContentString):
+        * rendering/RenderTextFragment.h:
+
+2015-02-04  Dean Jackson  <dino@apple.com>
+
+        [Media iOS] Add a debug setting to always show the optimized fullscreen button
+        https://bugs.webkit.org/show_bug.cgi?id=141277
+        <rdar://problem/19724471>
+
+        Reviewed by Eric Carlson.
+
+        Add a debug option so that we can test the optimized fullscreen
+        control on media that doesn't support it.
+
+        * Modules/mediacontrols/mediaControlsiOS.js: Add gSimulateOptimizedFullscreenAvailable.
+        (ControllerIOS.prototype.createControls): Check the setting.
+        (ControllerIOS.prototype.configureInlineControls): Ditto.
+        (ControllerIOS.prototype.formatTime): Drive-by whitespace cleanup.
+        (ControllerIOS.prototype.handleBaseGestureChange):
+        (ControllerIOS.prototype.handleWrapperTouchStart):
+        (ControllerIOS.prototype.handleOptimizedFullscreenTouchEnd):
+        (ControllerIOS.prototype.handlePresentationModeChange): Drive-by variable renaming.
+
+2015-02-05  Youenn Fablet  <youenn.fablet@crf.canon.fr> and Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+        [Streams API] Implement a barebone ReadableStream interface
+        https://bugs.webkit.org/show_bug.cgi?id=141045
+
+        Reviewed by Benjamin Poulain.
+
+        This patch implements the ReadableStream IDL (https://streams.spec.whatwg.org/#rs-model).
+        No functionality is yet added.
+        ReadableStreamSource is expected to be implemented for native sources (such as HTTP sources)
+        as well as JavaScript source through ReadableStreamJSSource.
+
+        Test: streams/readablestream-constructor.html
+
+        * CMakeLists.txt:
+        * Configurations/FeatureDefines.xcconfig:
+        * DerivedSources.cpp:
+        * DerivedSources.make:
+        * Modules/streams/ReadableStream.cpp: Added.
+        (WebCore::ReadableStream::create):
+        (WebCore::ReadableStream::ReadableStream):
+        (WebCore::ReadableStream::~ReadableStream):
+        (WebCore::ReadableStream::state):
+        (WebCore::ReadableStream::closed):
+        (WebCore::ReadableStream::ready):
+        * Modules/streams/ReadableStream.h: Added.
+        * Modules/streams/ReadableStream.idl: Added.
+        * Modules/streams/ReadableStreamSource.h: Added.
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.vcxproj/WebCoreCommon.props:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSBindingsAllInOne.cpp:
+        * bindings/js/JSReadableStreamCustom.cpp: Added.
+        (WebCore::JSReadableStream::read):
+        (WebCore::JSReadableStream::ready):
+        (WebCore::JSReadableStream::closed):
+        (WebCore::JSReadableStream::cancel):
+        (WebCore::JSReadableStream::pipeTo):
+        (WebCore::JSReadableStream::pipeThrough):
+        (WebCore::constructJSReadableStream):
+        * bindings/js/ReadableStreamJSSource.cpp: Added.
+        (WebCore::ReadableStreamJSSource::create):
+        (WebCore::ReadableStreamJSSource::ReadableStreamJSSource):
+        (WebCore::ReadableStreamJSSource::setInternalError):
+        * bindings/JSReadableStreamJSSource.h: Added.
+
+2015-02-04  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed project file corrections.
+
+        Correct some parsing errors caused by recent manual editing of
+        the project files.
+
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+
+2015-02-04  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] add method to toggle playback when in the background
+        https://bugs.webkit.org/show_bug.cgi?id=141270
+
+        Reviewed by Dean Jackson.
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (-[WebAVPlayerController togglePlaybackEvenWhenInBackground:]): Added.
+
+2015-02-04  Jer Noble  <jer.noble@apple.com>
+
+        [Mac][EME] Support ClearKey encryption with AES128-encrypted HLS
+        https://bugs.webkit.org/show_bug.cgi?id=140825
+
+        Reviewed by Eric Carlson.
+
+        Test: http/tests/media/clearkey/clear-key-hls-aes128.html
+
+        Add support for ClearKey encryption when used with an AES-128 encrypted HLS stream.
+
+        * Modules/encryptedmedia/CDM.cpp:
+        (WebCore::installedCDMFactories): Add the CDMPrivateClearKey factory.
+        * Modules/encryptedmedia/CDMPrivateClearKey.cpp:
+        (WebCore::CDMPrivateClearKey::supportsKeySystem): Support the "org.w3c.clearkey" key system.
+        (WebCore::CDMPrivateClearKey::supportsKeySystemAndMimeType): Ditto.
+        (WebCore::CDMPrivateClearKey::supportsMIMEType): Ditto.
+        (WebCore::CDMPrivateClearKey::createSession): Create a CDMSessionClearKey.
+        * Modules/encryptedmedia/CDMPrivateClearKey.h:
+        (WebCore::CDMPrivateClearKey::create): Simple factory.
+        (WebCore::CDMPrivateClearKey::~CDMPrivateClearKey): Virtual destructor.
+        (WebCore::CDMPrivateClearKey::CDMPrivateClearKey): Simple destructor.
+        * Modules/encryptedmedia/CDMSessionClearKey.cpp: Added.
+        (WebCore::clearKeyVM): Static method returning the VM to be used by JSON parsing.
+        (WebCore::CDMSessionClearKey::CDMSessionClearKey): Simple constructor.
+        (WebCore::CDMSessionClearKey::~CDMSessionClearKey): Simple destructor.
+        (WebCore::CDMSessionClearKey::generateKeyRequest): Store the initData, ensure that it consists of a UTF8-encoded key
+            URI, and return same.
+        (WebCore::CDMSessionClearKey::releaseKeys): Purged all cached keys.
+        (WebCore::CDMSessionClearKey::update): Parse raw JSON-encoded JWK keys, rejecting non-AES, non-oct keys.
+        (WebCore::CDMSessionClearKey::cachedKeyForKeyID): Return cached keys.
+        * Modules/encryptedmedia/CDMSessionClearKey.h:
+
+        Add support for the "org.w3c.clearkey" CDM to MediaPlayerPrivateAVFoundationObjC, and do so in a platform-agnostic
+        way by simply asking for raw key data from MediaPlayerClient when notified that a key has been added.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::keySystemIsSupported):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::supportsType):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::supportsKeySystem):
+        (WebCore::fulfillRequestWithKeyData): Added utility method.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::shouldWaitForLoadingOfResource):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::keyAdded):
+
+        Pipe a keyAdded() notification down to MediaPlayer and a cachedKeyForKeyId() request up to CDMSessionClearKey:
+
+        * Modules/encryptedmedia/MediaKeySession.cpp:
+        (WebCore::MediaKeySession::cachedKeyForKeyId):
+        (WebCore::MediaKeySession::addKeyTimerFired):
+        * Modules/encryptedmedia/MediaKeySession.h:
+        * Modules/encryptedmedia/MediaKeys.cpp:
+        (WebCore::MediaKeys::keyAdded):
+        (WebCore::MediaKeys::cachedKeyForKeyId):
+        * Modules/encryptedmedia/MediaKeys.h:
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::keyAdded):
+        * html/HTMLMediaElement.h:
+        * platform/graphics/CDMSession.h:
+        (WebCore::CDMSession::cachedKeyForKeyID):
+        * platform/graphics/MediaPlayer.cpp:
+        (WebCore::MediaPlayer::keyAdded):
+        (WebCore::MediaPlayer::cachedKeyForKeyId):
+        * platform/graphics/MediaPlayer.h:
+        (WebCore::MediaPlayerClient::mediaPlayerCachedKeyForKeyId):
+        * platform/graphics/MediaPlayerPrivate.h:
+        (WebCore::MediaPlayerPrivateInterface::keyAdded):
+
+        Add new files to project:
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * CMakeLists.txt:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+
+2015-02-04  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179618.
+        https://bugs.webkit.org/show_bug.cgi?id=141263
+
+        Off-by-one error causing flaky behavior in webaudio
+        /audiobuffersource-negative-playbackrate.html (Requested by
+        jernoble_ on #webkit).
+
+        Reverted changeset:
+
+        "[WebAudio] AudioBufferSourceNodes should accurately play
+        backwards if given a negative playbackRate."
+        https://bugs.webkit.org/show_bug.cgi?id=140955
+        http://trac.webkit.org/changeset/179618
+
+2015-02-03  David Hyatt  <hyatt@apple.com>
+
+        Tables don't repaginate properly when the pagination height changes or the pagination offset changes.
+        https://bugs.webkit.org/show_bug.cgi?id=141207
+        <rdar://problem/18387659>
+
+        Reviewed by Dean Jackson.
+
+        Added fast/multicol/table-dynamic-movement.html
+
+        Change markForPaginationRelayoutIfNeeded to be called always and to check needsLayout inside it.
+
+        Make RenderTable override markForPaginationRelayoutIfNeeded and also dirty the sections if the table
+        ended up getting marked for relayout.
+
+        Make sure rows do the right thing as well.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::layoutPositionedObjects):
+        (WebCore::RenderBlock::markForPaginationRelayoutIfNeeded):
+        * rendering/RenderBlock.h:
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::layoutBlockChild):
+        (WebCore::RenderBlockFlow::adjustBlockChildForPagination):
+        (WebCore::RenderBlockFlow::positionNewFloats):
+        * rendering/RenderDeprecatedFlexibleBox.cpp:
+        (WebCore::RenderDeprecatedFlexibleBox::layoutHorizontalBox):
+        (WebCore::RenderDeprecatedFlexibleBox::layoutVerticalBox):
+        * rendering/RenderTable.cpp:
+        (WebCore::RenderTable::markForPaginationRelayoutIfNeeded):
+        * rendering/RenderTable.h:
+        * rendering/RenderTableRow.cpp:
+        (WebCore::RenderTableRow::layout):
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::layout):
+
+2015-02-04  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        When using SVG as an image, we should load datauri images when these images are not in the image cache.
+        https://bugs.webkit.org/show_bug.cgi?id=99677.
+
+        Reviewed by Darin Adler.
+        
+        Data URI sub-resources are not loaded because the networking context of FrameLoader
+        attached to the SubResourceLoader is set to null. This is done intentionally to
+        disallow any resource from loading external sub-resources. For example if an <img>
+        tag has its 'src' attribute points to an svg file, this svg is not allowed to load
+        an external image through the 'xlink' attribute of an <image> element. This restriction
+        is not valid if the value of the 'xlink' attribute is a data URI. In this case the image 
+        should be loaded into memory since there is no network traffic involved. All we need
+        to do is to decode the data part of the URI.
+        
+        The fix is to pass the root FrameLoader, which has a valid NetworkingContext, through
+        the FrameLoaderClient, to the ResourceHandle::create() which uses the NetworkingContext
+        to decode the data and fire the load events of the data URI resources.
+
+        Tests:  svg/as-image/svg-image-with-data-uri-background.html
+                svg/as-image/svg-image-with-data-uri-from-canvas.html
+                svg/as-image/svg-image-with-data-uri-images-disabled.html
+                svg/as-image/svg-image-with-data-uri-reloading.html
+                svg/as-image/svg-image-with-data-uri-use-data-uri.svg
+                svg/as-image/svg-image-with-svg-data-uri.html
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        Remove unreferenced header file.
+
+        * loader/FrameLoaderClient.h:
+        Define the null virtual function dataProtocolLoader() which should return the FrameLoader
+        for loading data URI resources.
+
+        * loader/ResourceLoader.cpp:
+        (WebCore::ResourceLoader::start):
+        (WebCore::ResourceLoader::dataProtocolFrameLoader):
+        * loader/ResourceLoader.h:
+        Add ResourceLoader::dataProtocolFrameLoader() which returns the root FrameLoader. The
+        root FrameLoader is used to get a valid NetworkingContext which can be passed to
+        ResourceHandle::create() when url().protocolIsData().
+
+        * loader/cache/CachedImage.cpp:
+        (WebCore::CachedImage::load):
+        (WebCore::CachedImage::finishLoading):
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::shouldPerformImageLoad):
+        (WebCore::CachedResourceLoader::shouldDeferImageLoad):
+        * loader/cache/CachedResourceLoader.h:
+        Allow loading data URI sub-resources as long as loading images is not disabled. Also we
+        need to call setDataProtocolLoader() before calling setData() for the isSVGImage case, 
+        setData() will create a page by calling Page::createPageFromBuffer() via SVGImage::dataChanged(),
+        and we need to pass the correct FrameLoaderClient to the created FrameLoader of the main
+         frame of this page.
+
+        * svg/graphics/SVGImage.cpp:
+        (WebCore::SVGImage::SVGImage):
+        (WebCore::SVGImage::dataChanged):
+        * svg/graphics/SVGImage.h:
+        Create a new FrameLoaderClient of type SVGFrameLoaderClient and set it in pageConfiguration
+        which is used when creating the page from the SVG data URI.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * svg/graphics/SVGImageChromeClient.h: Removed.
+        * svg/graphics/SVGImageClients.h: Added.
+        Add a new class SVGImageChromeClient which overrides the function dataProtocolLoader().
+        Rename the header file SVGImageChromeClient.h to be SVGImageClients.h since it now 
+        includes the classes SVGImageChromeClient and SVGFrameLoaderClient.
+
+2015-02-04  Timothy Horton  <timothy_horton@apple.com>
+
+        Fix a misplaced include in CaptionUserPreferencesMediaAF
+        https://bugs.webkit.org/show_bug.cgi?id=141239
+
+        Reviewed by Jer Noble.
+
+        * page/CaptionUserPreferencesMediaAF.cpp:
+        CoreText is a system header, and there's already a good spot for it!
+
+2015-02-04  Jer Noble  <jer.noble@apple.com>
+
+        [WebAudio] AudioBufferSourceNodes should accurately play backwards if given a negative playbackRate.
+        https://bugs.webkit.org/show_bug.cgi?id=140955
+
+        Reviewed by Eric Carlson.
+
+        Tests: webaudio/audiobuffersource-negative-playbackrate-interpolated.html
+               webaudio/audiobuffersource-negative-playbackrate.html
+
+        Add support for playing an AudioBufferSourceNode at a negative playbackRate. Change the meaning of
+        start() to set the initial playback position at the end of the play range if the rate of playback
+        is negtive.
+
+        * Modules/webaudio/AudioBufferSourceNode.cpp:
+        (WebCore::AudioBufferSourceNode::AudioBufferSourceNode): Allow the playbackRate AudioParam to range from [-32, 32].
+        (WebCore::AudioBufferSourceNode::renderFromBuffer): Change variable names from "start" and "end" to "min" and "max"
+            for clarity. Add a non-interpolated and interpolated render step for negative playback.
+        (WebCore::AudioBufferSourceNode::start): Drive-by fix: default value of grainDuration is not 0.02.
+        (WebCore::AudioBufferSourceNode::startPlaying): Start playing at the end of the buffer for negative playback.
+        (WebCore::AudioBufferSourceNode::totalPitchRate): Allow the pitch to be negative.
+
+2015-02-04  Eric Carlson  <eric.carlson@apple.com>
+
+        video.attribute should not return true just because of fullscreen
+        https://bugs.webkit.org/show_bug.cgi?id=141219
+
+        Reviewed by Dean Jackson.
+
+        No new tests, updated media/video-fullscreeen-only-controls.html
+
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller.prototype.shouldHaveControls):
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.isFullScreen):
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::controls): Don't consider fullscreen status.
+        (WebCore::HTMLMediaElement::configureMediaControls): Create controls if a video element
+            isn't allowed to play inline, or if it is in fullscreen.
+
+2015-02-04  Mark Lam  <mark.lam@apple.com>
+
+        Remove concept of makeUsableFromMultipleThreads().
+        <https://webkit.org/b/141221>
+
+        Reviewed by Mark Hahnenberg.
+
+        No new tests.
+
+        * bindings/js/JSDOMWindowBase.cpp:
+        (WebCore::JSDOMWindowBase::commonVM):
+
+2015-02-04  Simon Fraser  <simon.fraser@apple.com>
+
+        [iOS WK2] Assert in ScrollingTreeOverflowScrollingNodeIOS::updateAfterChildren() on tab switching
+        https://bugs.webkit.org/show_bug.cgi?id=141223
+        rdar://problem/18458993
+
+        Reviewed by Tim Horton.
+        
+        It's possible to submit a RemoteLayerTree transaction that contains data
+        about a created layer, but doesn't have any properties for that layer. This
+        happens when the newly created layer isn't reached during the traversal that
+        gathers layer properties (i.e. it's not rooted). However, whether we create
+        a scrolling layer or not requires having properties; they are missing, so we
+        create a normal layer, but then the scrolling tree commit asserts that we
+        should have a scrolling layer.
+        
+        Fix by making scrolling layers have a corresponding layer type, which is
+        stored in layer creation properties. This required exposing layer types
+        up through GraphicsLayer, but that allows for some nice cleanup:
+        
+        1. No need to have the hokey shouldUseTiledBacking() GraphicsLayerClient hack
+           for creating the page tiled layer.
+        2. The notion of "custom behaviors" can be removed from GraphicsLayer entirely.
+
+        Not testable because it requires tab switching.
+
+        * WebCore.exp.in:
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::GraphicsLayer):
+        * platform/graphics/GraphicsLayer.h:
+        (WebCore::GraphicsLayer::initialize):
+        (WebCore::GraphicsLayer::setCustomBehavior): Deleted.
+        (WebCore::GraphicsLayer::customBehavior): Deleted.
+        * platform/graphics/GraphicsLayerClient.h:
+        (WebCore::GraphicsLayerClient::shouldUseTiledBacking): Deleted.
+        * platform/graphics/GraphicsLayerFactory.h:
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayer::create):
+        (WebCore::GraphicsLayerCA::GraphicsLayerCA):
+        (WebCore::GraphicsLayerCA::initialize):
+        (WebCore::GraphicsLayerCA::commitLayerChangesBeforeSublayers):
+        (WebCore::GraphicsLayerCA::ensureStructuralLayer):
+        (WebCore::GraphicsLayerCA::swapFromOrToTiledLayer):
+        (WebCore::GraphicsLayerCA::updateCustomBehavior): Deleted.
+        (WebCore::GraphicsLayerCA::setCustomBehavior): Deleted.
+        * platform/graphics/ca/GraphicsLayerCA.h:
+        (WebCore::GraphicsLayerCA::moveAnimations):
+        (WebCore::GraphicsLayerCA::copyAnimations):
+        * platform/graphics/ca/PlatformCALayer.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        (PlatformCALayerMac::PlatformCALayerMac):
+        (PlatformCALayerMac::commonInit):
+        (PlatformCALayerMac::updateCustomBehavior): Deleted.
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::createGraphicsLayer):
+        (WebCore::RenderLayerBacking::createPrimaryGraphicsLayer):
+        (WebCore::RenderLayerBacking::updateScrollingLayers):
+        (WebCore::RenderLayerBacking::shouldUseTiledBacking): Deleted.
+        * rendering/RenderLayerBacking.h:
+
+2015-02-04  Dean Jackson  <dino@apple.com>
+
+        [Media] Fullscreen button should always come last in inline controls (141245)
+        https://bugs.webkit.org/show_bug.cgi?id=141245
+        <rdar://problem/19714622>
+
+        Reviewed by Eric Carlson.
+
+        Make sure the optimizedFullscreen button is inserted before the
+        normal fullscreen button.
+
+        * Modules/mediacontrols/mediaControlsiOS.js:
+        (ControllerIOS.prototype.configureInlineControls):
+
+2015-02-04  Dean Jackson  <dino@apple.com>
+
+        REGRESSION: AirPlay button not visible but present in inline toolbar
+        https://bugs.webkit.org/show_bug.cgi?id=141244
+        <rdar://problem/19328322>
+
+        Reviewed by Eric Carlson.
+
+        Replace the use of mask-image with a background-image (which matches
+        what the other buttons are doing).
+
+        * Modules/mediacontrols/mediaControlsiOS.css:
+        (::-webkit-media-controls):
+        (video::-webkit-media-controls-wireless-playback-picker-button):
+        (audio::-webkit-media-controls-wireless-playback-picker-button):
+        (video::-webkit-media-controls-wireless-playback-picker-button.active):
+        (audio::-webkit-media-controls-wireless-playback-picker-button.active):
+
+2015-02-04  Chris Dumez  <cdumez@apple.com>
+
+        Add removeFirst(value) / removeAll(value) methods to WTF::Vector
+        https://bugs.webkit.org/show_bug.cgi?id=141192
+
+        Reviewed by Benjamin Poulain.
+
+        Use new Vector::removeFirst(value) / removeAll(value) API to simplify the
+        code a bit.
+
+        * css/StyleSheetContents.cpp:
+        (WebCore::StyleSheetContents::unregisterClient):
+        * html/HTMLFormElement.cpp:
+        (WebCore::HTMLFormElement::removeFormElement):
+        (WebCore::HTMLFormElement::removeImgElement):
+        (WebCore::removeFromVector): Deleted.
+        * page/Chrome.cpp:
+        (WebCore::Chrome::unregisterPopupOpeningObserver):
+        * page/PageOverlayController.cpp:
+        (WebCore::PageOverlayController::uninstallPageOverlay):
+        * page/SecurityPolicy.cpp:
+        (WebCore::SecurityPolicy::removeOriginAccessWhitelistEntry):
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::removeFromParent):
+        * platform/graphics/texmap/TextureMapperAnimation.cpp:
+        (WebCore::TextureMapperAnimations::remove):
+        * rendering/RenderSearchField.cpp:
+        (WebCore::RenderSearchField::addSearchResult):
+        * rendering/RenderTable.cpp:
+        (WebCore::RenderTable::removeCaption):
+        * rendering/svg/RenderSVGText.cpp:
+        (WebCore::RenderSVGText::subtreeChildWillBeRemoved):
+        * svg/SVGDocumentExtensions.cpp:
+        (WebCore::SVGDocumentExtensions::removeAllElementReferencesForTarget):
+        * svg/animation/SMILTimeContainer.cpp:
+        (WebCore::SMILTimeContainer::unschedule):
+
+2015-02-03  Maciej Stachowiak  <mjs@apple.com>
+
+        Crash when printing snapshotted plugins
+        https://bugs.webkit.org/show_bug.cgi?id=141212
+
+        Reviewed by Simon Fraser.
+
+        Test: plugins/snapshotting/print-snapshotted-plugin.html
+
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::childShouldCreateRenderer): New
+        method. If the current renderer is a snapshotted plugin, only
+        allow children to create renderers if they are part of the
+        snapshot shadow dom. Otherwise RenderEmbeddedObject invariants
+        will be violated. This DOM class can have many other renderers, but they
+        can just follow their own rules.
+        (WebCore::HTMLPlugInImageElement::partOfSnapshotOverlay): Make this
+        const-correct, and don't create UA shadow DOM as a side effect if it doesn't
+        already exist.
+        * html/HTMLPlugInImageElement.h:
+
+2015-02-03  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r179584): Assertion hit in toResourceLoadPriority() on Yosemite
+        https://bugs.webkit.org/show_bug.cgi?id=141230
+
+        Reviewed by Alexey Proskuryakov.
+
+        Handle -1 priority value again in toResourceLoadPriority() as it seems to
+        be returned by CFNetwork on some configurations.
+
+        No new tests, already covered by existing tests.
+
+        * platform/network/cf/ResourceRequestCFNet.h:
+        (WebCore::toResourceLoadPriority):
+
+2015-02-03  Chris Dumez  <cdumez@apple.com>
+
+        Drop ResourceLoadPriorityUnresolved resource load priority and use Optional<> instead
+        https://bugs.webkit.org/show_bug.cgi?id=141186
+
+        Reviewed by Antti Koivisto.
+
+        Drop ResourceLoadPriorityUnresolved resource load priority value and use
+        Optional<ResourceLoadPriority> when needed instead. If the Optional
+        doesn't have a value, then it means it is unresolved. Having
+        ResourceLoadPriorityUnresolved in ResourceLoadPriority was confusing
+        because this value is only valid in CachedResourceRequest, it is not
+        a valid value in CachedResource or in ResourceRequest. After this
+        refactoring, it now becomes more obvious.
+
+2015-02-03  Chris Dumez  <cdumez@apple.com>
+
+        REGRESSION(176609): Very high memory usage in Canvas/reuse.html performance test
+        https://bugs.webkit.org/show_bug.cgi?id=139812
+
+        Reviewed by Geoffrey Garen.
+
+        Update DOMTimerFireState.elementsChangedOutsideViewport to keep only
+        weak pointers to the Elements, instead of ref'ing them, so as to not
+        extend their life unnecessarily (by preventing garbage-collection).
+        The same approach was already adopted in r176496 for
+        DOMTimer.m_elementsCausingThrottling to address the same issue.
+
+        No new tests, already covered by Canvas/reuse.html performance test.
+
+        * page/DOMTimer.cpp:
+        (WebCore::DOMTimerFireState::setScriptMadeNonUserObservableChangesToElement):
+        (WebCore::DOMTimerFireState::elementsChangedOutsideViewport):
+
+2015-02-03  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Setting timestampOffset does not change the timestamps in the actual sample, leading to visual and audible errors.
+        https://bugs.webkit.org/show_bug.cgi?id=140929
+
+        Reviewed by Alexey Proskuryakov.
+
+        Fixes http/tests/media/media-source/mediasource-config-change-mp4-v-framerate.html.
+
+        Only apply the timestamp offset to the actual sample after step 1.6, where we may loop back to
+        the top, to avoid double-offsetting the same sample.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::sourceBufferPrivateDidReceiveSample):
+
+2015-02-03  Jeremy Jones  <jeremyj@apple.com>
+
+        Restore interface before exiting optimized fullscreen mode.
+        https://bugs.webkit.org/show_bug.cgi?id=141167
+
+        Reviewed by Simon Fraser.
+
+        This change allows the user interface to be restored before exiting optimized fullscreen mode.
+
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h: Add declaration.
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm: 
+        (-[WebAVPlayerController playerViewController:restoreUserInterfaceForOptimizedFullscreenStopWithCompletionHandler:]): Added.
+        (WebVideoFullscreenInterfaceAVKit::fullscreenMayReturnToInline): Added.
+        * platform/spi/ios/AVKitSPI.h: Add new SPI.
+
+2015-02-03  Jeremy Jones  <jeremyj@apple.com>
+
+        Prevent flicker when exiting fullscreen by synchronizing transactions.
+        https://bugs.webkit.org/show_bug.cgi?id=140897
+
+        Reviewed by Tim Horton.
+
+        Synchronize across CAContexts when moving the video layer between layer hierarchies.
+        Normally transactions involving multiple CAContexts are not synchronized.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setVideoFullscreenLayer):
+        * platform/spi/cocoa/QuartzCoreSPI.h: add additional CAContext SPI declarations.
+
+2015-02-03  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Smart quoting could move the caret backwards in some configurations
+        https://bugs.webkit.org/show_bug.cgi?id=141203
+        <rdar://problem/17452543>
+
+        Reviewed by Enrica Casucci.
+
+        The bug was caused by markAndReplaceFor not running the code to preserve the selection after
+        text replacement only when smart quote is enabled. Furthermore, when smart link was disabled,
+        we never applied smart quote due to the following condition at line 2502:
+
+        if (!(shouldPerformReplacement || shouldCheckForCorrection || shouldMarkLink) || !doReplacement)
+            continue;
+
+        This condition prevented the code to apply smart quote from running when both continuous
+        spellchecking, smart link, and text replacement are disabled.
+
+        Fixed the bug by treating smart quotes and smart dashes like any other text replacement and set
+        shouldPerformReplacement to true whenever either one of those text checking options are present.
+
+        Smart link didn't have this issue due to the explicit check for shouldMarkLink.
+
+        Smart dashes didn't suffer this problem either because dashes replacement happens only once
+        the caret has moved past the dashes but his patch makes go through the same code path to preserve
+        the selection as well for consistency.
+
+        Test: editing/inserting/smart-quote-with-all-configurations.html
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::markAndReplaceFor):
+
+2015-02-02  Enrica Casucci  <enrica@apple.com>
+
+        Additional emoji support.
+        https://bugs.webkit.org/show_bug.cgi?id=141047
+        rdar://problem/19045135
+
+        Reviewed by Darin Adler.
+
+        Adds support for emoji modifiers and group emoji.
+
+        Test: editing/deleting/delete-emoji.html
+
+        * platform/graphics/FontCascade.cpp:
+        (WebCore::FontCascade::characterRangeCodePath):
+        * platform/text/TextBreakIterator.cpp:
+        (WebCore::cursorMovementIterator):
+        * rendering/RenderText.cpp:
+        (WebCore::isEmojiGroupCandidate):
+        (WebCore::isEmojiModifier):
+        (WebCore::RenderText::previousOffsetForBackwardDeletion):
+
+2015-02-03  Jer Noble  <jer.noble@apple.com>
+
+        Passing invalid values to OfflineAudioContext's constructor should not crash.
+        https://bugs.webkit.org/show_bug.cgi?id=141197
+
+        Reviewed by Darin Adler.
+
+        Test: webaudio/offlineaudiocontext-constructor.html
+
+        Throw a SYNTAX_ERR exception if passed in a zero for channelCount or numberOfSamples. This avoids
+        a crash where OfflineAudioDestinationNode is passed a null renderTarget.
+
+        * Modules/webaudio/OfflineAudioContext.cpp:
+        (WebCore::OfflineAudioContext::create):
+
+2015-02-03  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Setting timestampOffset does not change the timestamps in the actual sample, leading to visual and audible errors.
+        https://bugs.webkit.org/show_bug.cgi?id=140929
+
+        Reviewed by Darin Adler.
+
+        Test: media/media-source/media-source-timeoffset.html
+
+        Changing timestampOffset will correctly offset the presentation and decode times within SourceBuffer and
+        will correctly modify things like buffered ranges. But those changes need to be reflected in the underlying
+        MediaSample for decoders to decode and display the samples at the correct times.
+
+        Add a method to MediaSample which allows the caller to offset timestamps of the underlying PlatformMediaSample.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::sourceBufferPrivateDidReceiveSample): Call offsetTimestampsBy() on the sample.
+        * platform/MediaSample.h:
+        * platform/graphics/avfoundation/objc/SourceBufferPrivateAVFObjC.mm:
+        (WebCore::MediaSampleAVFObjC::offsetTimestampsBy): Create a new sample with the same underlying data
+            but with a new timing info array, each timing info offset by the requested amount.
+        * platform/mock/mediasource/MockBox.h:
+        (WebCore::MockBox::offsetTimestampsBy): Offset m_presentationTimestamp and m_decodeTimestamp;
+        * platform/mock/mediasource/MockSourceBufferPrivate.cpp:
+        (WebCore::MockMediaSample::offsetTimestampsBy): Pass to MockBox.
+
+2015-02-03  Jer Noble  <jer.noble@apple.com>
+
+        [Mac][EME] Crash in CDMSessionMediaSourceAVFObjC::layerDidReceiveError() - NSError not KVO compliant for key NSUnderlyingError.
+        https://bugs.webkit.org/show_bug.cgi?id=140529
+
+        Reviewed by Darin Adler.
+
+        The underlying error should be fetched from the userInfo dictionary, not the error itself.
+
+        * platform/graphics/avfoundation/objc/CDMSessionMediaSourceAVFObjC.mm:
+        (WebCore::systemCodeForError):
+
 2015-02-03  Commit Queue  <commit-queue@webkit.org>
 
         Unreviewed, rolling out r179548.

@@ -211,6 +211,12 @@ SOFT_LINK_CONSTANT(CoreMedia, kCMTimeIndefinite, CMTime)
     return NO;
 }
 
+- (void)playerViewController:(AVPlayerViewController *)playerViewController restoreUserInterfaceForOptimizedFullscreenStopWithCompletionHandler:(void (^)(BOOL restored))completionHandler
+{
+    UNUSED_PARAM(playerViewController);
+    completionHandler(self.fullscreenInterface->fullscreenMayReturnToInline());
+}
+
 - (void)play:(id)sender
 {
     UNUSED_PARAM(sender);
@@ -233,6 +239,11 @@ SOFT_LINK_CONSTANT(CoreMedia, kCMTimeIndefinite, CMTime)
     if (!self.delegate)
         return;
     self.delegate->togglePlayState();
+}
+
+- (void)togglePlaybackEvenWhenInBackground:(id)sender
+{
+    [self togglePlayback:sender];
 }
 
 - (BOOL)isPlaying
@@ -1172,5 +1183,10 @@ bool WebVideoFullscreenInterfaceAVKit::mayAutomaticallyShowVideoOptimized()
     return [m_playerController isPlaying] && m_mode == HTMLMediaElement::VideoFullscreenModeStandard && wkIsOptimizedFullscreenSupported();
 }
 
+bool WebVideoFullscreenInterfaceAVKit::fullscreenMayReturnToInline()
+{
+    m_fullscreenChangeObserver->fullscreenMayReturnToInline();
+    return true;
+}
 
 #endif

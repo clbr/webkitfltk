@@ -452,7 +452,7 @@ CachedResourceHandle<CachedResource> CachedResourceLoader::requestResource(Cache
 {
     URL url = request.resourceRequest().url();
     
-    LOG(ResourceLoading, "CachedResourceLoader::requestResource '%s', charset '%s', priority=%d, forPreload=%u", url.stringCenterEllipsizedToLength().latin1().data(), request.charset().latin1().data(), request.priority(), request.forPreload());
+    LOG(ResourceLoading, "CachedResourceLoader::requestResource '%s', charset '%s', priority=%d, forPreload=%u", url.stringCenterEllipsizedToLength().latin1().data(), request.charset().latin1().data(), request.priority() ? request.priority().value() : -1, request.forPreload());
     
     // If only the fragment identifiers differ, it is the same resource.
     url = MemoryCache::removeFragmentIdentifierIfNeeded(url);
@@ -754,9 +754,14 @@ bool CachedResourceLoader::clientDefersImage(const URL&) const
     return !m_imagesEnabled;
 }
 
+bool CachedResourceLoader::shouldPerformImageLoad(const URL& url) const
+{
+    return m_autoLoadImages || url.protocolIsData();
+}
+
 bool CachedResourceLoader::shouldDeferImageLoad(const URL& url) const
 {
-    return clientDefersImage(url) || !m_autoLoadImages;
+    return clientDefersImage(url) || !shouldPerformImageLoad(url);
 }
 
 void CachedResourceLoader::reloadImagesIfNotDeferred()

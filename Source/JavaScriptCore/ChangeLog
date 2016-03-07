@@ -1,3 +1,237 @@
+2015-02-05  Youenn Fablet  <youenn.fablet@crf.canon.fr> and Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+        [Streams API] Implement a barebone ReadableStream interface
+        https://bugs.webkit.org/show_bug.cgi?id=141045
+
+        Reviewed by Benjamin Poulain.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-02-05  Saam Barati  <saambarati1@gmail.com>
+
+        Crash in uninitialized deconstructing variable.
+        https://bugs.webkit.org/show_bug.cgi?id=141070
+
+        Reviewed by Michael Saboff.
+
+        According to the ES6 spec, when a destructuring pattern occurs
+        as the left hand side of an assignment inside a var declaration 
+        statement, the assignment must also have a right hand side value.
+        "var {x} = {};" is a legal syntactic statement, but,
+        "var {x};" is a syntactic error.
+
+        Section 13.2.2 of the latest draft ES6 spec specifies this requirement:
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-variable-statement
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseVarDeclaration):
+        (JSC::Parser<LexerType>::parseVarDeclarationList):
+        (JSC::Parser<LexerType>::parseForStatement):
+        * parser/Parser.h:
+
+2015-02-04  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, fix a build break on EFL port since r179648.
+
+        * heap/MachineStackMarker.cpp: EFL port doesn't use previousThread variable. 
+        (JSC::MachineThreads::tryCopyOtherThreadStacks):
+
+2015-02-04  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: ES6: Improved Console Support for Symbol Objects
+        https://bugs.webkit.org/show_bug.cgi?id=141173
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/protocol/Runtime.json:
+        New type, "symbol".
+
+        * inspector/InjectedScriptSource.js:
+        Handle Symbol objects in a few places. They don't have properties
+        and they cannot be implicitly converted to strings.
+
+2015-02-04  Mark Lam  <mark.lam@apple.com>
+
+        Undo gardening: Restoring the expected ERROR message since that is not the cause of the bot unhappiness.
+
+        Not reviewed.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::tryCopyOtherThreadStacks):
+
+2015-02-04  Mark Lam  <mark.lam@apple.com>
+
+        Gardening: Changed expected ERROR message to WARNING to make test bots happy.
+
+        Rubber stamped by Simon Fraser.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::tryCopyOtherThreadStacks):
+
+2015-02-04  Mark Lam  <mark.lam@apple.com>
+
+        r179576 introduce a deadlock potential during GC thread suspension.
+        <https://webkit.org/b/141268>
+
+        Reviewed by Michael Saboff.
+
+        http://trac.webkit.org/r179576 introduced a potential for deadlocking.
+        In the GC thread suspension loop, we currently delete
+        MachineThreads::Thread that we detect to be invalid.  This is unsafe
+        because we may have already suspended some threads, and one of those
+        suspended threads may still be holding the C heap lock which we need
+        for deleting the invalid thread.
+
+        The fix is to put the invalid threads in a separate toBeDeleted list,
+        and delete them only after GC has resumed all threads.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::removeCurrentThread):
+        - Undo refactoring removeThreadWithLockAlreadyAcquired() out of
+          removeCurrentThread() since it is no longer needed.
+
+        (JSC::MachineThreads::tryCopyOtherThreadStacks):
+        - Put invalid Threads on a threadsToBeDeleted list, and delete those
+          Threads only after all threads have been resumed.
+
+        (JSC::MachineThreads::removeThreadWithLockAlreadyAcquired): Deleted.
+        * heap/MachineStackMarker.h:
+
+2015-02-04  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Clean up Object Property Descriptor Collection
+        https://bugs.webkit.org/show_bug.cgi?id=141222
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InjectedScriptSource.js:
+        Use a list of options when determining which properties to collect
+        instead of a few booleans with overlapping responsibilities.
+
+2015-02-04  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: console.table with columnName filter for non-existent property should still show column
+        https://bugs.webkit.org/show_bug.cgi?id=141066
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/ConsoleMessage.cpp:
+        (Inspector::ConsoleMessage::addToFrontend):
+        When a user provides a second argument, e.g. console.table(..., columnNames),
+        then pass that second argument to the frontend.
+
+        * inspector/InjectedScriptSource.js:
+        Add a FIXME about the old, unused path now.
+
+2015-02-04  Saam Barati  <saambarati1@gmail.com>
+
+        TypeSet can use 1 byte instead of 4 bytes for its m_seenTypes member variable
+        https://bugs.webkit.org/show_bug.cgi?id=141204
+
+        Reviewed by Darin Adler.
+
+        There is no need to use 32 bits to store a TypeSet::RuntimeType set 
+        bit-vector when the largest value for a single TypeSet::RuntimeType 
+        is 0x80. 8 bits is enough to represent the set of seen types.
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * runtime/TypeSet.cpp:
+        (JSC::TypeSet::doesTypeConformTo):
+        * runtime/TypeSet.h:
+        (JSC::TypeSet::seenTypes):
+
+2015-02-04  Mark Lam  <mark.lam@apple.com>
+
+        Remove concept of makeUsableFromMultipleThreads().
+        <https://webkit.org/b/141221>
+
+        Reviewed by Mark Hahnenberg.
+
+        Currently, we rely on VM::makeUsableFromMultipleThreads() being called before we
+        start acquiring the JSLock and entering the VM from different threads.
+        Acquisition of the JSLock will register the acquiring thread with the VM's thread
+        registry if not already registered.  However, it will only do this if the VM's
+        thread specific key has been initialized by makeUsableFromMultipleThreads().
+
+        This is fragile, and also does not read intuitively because one would expect to
+        acquire the JSLock before calling any methods on the VM.  This is exactly what
+        JSGlobalContextCreateInGroup() did (i.e. acquire the lock before calling
+        makeUsableFromMultipleThreads()), but is wrong.  The result is that the invoking
+        thread will not have been registered with the VM during that first entry into
+        the VM.
+
+        The fix is to make it so that we initialize the VM's thread specific key on
+        construction of the VM's MachineThreads registry instead of relying on
+        makeUsableFromMultipleThreads() being called.  With this, we can eliminate
+        makeUsableFromMultipleThreads() altogether.
+
+        Performance results are neutral in aggregate.
+
+        * API/JSContextRef.cpp:
+        (JSGlobalContextCreateInGroup):
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::MachineThreads):
+        (JSC::MachineThreads::~MachineThreads):
+        (JSC::MachineThreads::addCurrentThread):
+        (JSC::MachineThreads::removeThread):
+        (JSC::MachineThreads::gatherConservativeRoots):
+        (JSC::MachineThreads::makeUsableFromMultipleThreads): Deleted.
+        * heap/MachineStackMarker.h:
+        * runtime/VM.cpp:
+        (JSC::VM::sharedInstance):
+        * runtime/VM.h:
+        (JSC::VM::makeUsableFromMultipleThreads): Deleted.
+
+2015-02-04  Chris Dumez  <cdumez@apple.com>
+
+        Add removeFirst(value) / removeAll(value) methods to WTF::Vector
+        https://bugs.webkit.org/show_bug.cgi?id=141192
+
+        Reviewed by Benjamin Poulain.
+
+        Use new Vector::removeFirst(value) / removeAll(value) API to simplify the
+        code a bit.
+
+        * inspector/InspectorValues.cpp:
+        (Inspector::InspectorObjectBase::remove):
+
+2015-02-03  Mark Lam  <mark.lam@apple.com>
+
+        Workaround a thread library bug where thread destructors may not get called.
+        <https://webkit.org/b/141209>
+
+        Reviewed by Michael Saboff.
+
+        There's a bug where thread destructors may not get called.  As far as
+        we know, this only manifests on darwin ports.  We will work around this
+        by checking at GC time if the platform thread is still valid.  If not,
+        we'll purge it from the VM's registeredThreads list before proceeding
+        with thread scanning activity.
+
+        Note: it is important that we do this invalid thread detection during
+        suspension, because the validity (and liveness) of the other thread is
+        only guaranteed while it is suspended.
+
+        * API/tests/testapi.mm:
+        (threadMain):
+        - Added a test to enter the VM from another thread before we GC on
+          the main thread.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::removeThreadWithLockAlreadyAcquired):
+        (JSC::MachineThreads::removeCurrentThread):
+        - refactored removeThreadWithLockAlreadyAcquired() out from
+          removeCurrentThread() so that we can also call it for purging invalid
+          threads.
+        (JSC::suspendThread):
+        - Added a return status to tell if the suspension succeeded or not.
+        (JSC::MachineThreads::tryCopyOtherThreadStacks):
+        - Check if the suspension failed, and purge the thread if we can't
+          suspend it.  Failure to suspend implies that the thread has
+          terminated without calling its destructor.
+        * heap/MachineStackMarker.h:
+
 2015-02-03  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: ASSERT mainThreadPthread launching remote debuggable JSContext app with Debug JavaScriptCore

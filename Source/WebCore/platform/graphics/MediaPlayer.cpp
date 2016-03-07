@@ -491,6 +491,11 @@ void MediaPlayer::setCDMSession(CDMSession* session)
 {
     m_private->setCDMSession(session);
 }
+
+void MediaPlayer::keyAdded()
+{
+    m_private->keyAdded();
+}
 #endif
     
 MediaTime MediaPlayer::duration() const
@@ -1095,6 +1100,11 @@ bool MediaPlayer::keyNeeded(const String& keySystem, const String& sessionId, co
 #endif
 
 #if ENABLE(ENCRYPTED_MEDIA_V2)
+RefPtr<ArrayBuffer> MediaPlayer::cachedKeyForKeyId(const String& keyId) const
+{
+    return m_client.mediaPlayerCachedKeyForKeyId(keyId);
+}
+
 bool MediaPlayer::keyNeeded(Uint8Array* initData)
 {
     return m_client.mediaPlayerKeyNeeded(this, initData);
