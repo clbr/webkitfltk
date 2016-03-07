@@ -1,3 +1,307 @@
+2014-06-12  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix assertions under JSC::setNeverInline() when running js tests in WebKitTestRunner
+        https://bugs.webkit.org/show_bug.cgi?id=133840
+
+        Reviewed by Filip Pizlo.
+        
+        Fix ASSERT(exec->vm().currentThreadIsHoldingAPILock()); under JSC::setNeverInline()
+        when running DFG tests.
+
+        * API/JSCTestRunnerUtils.cpp:
+        (JSC::numberOfDFGCompiles):
+        (JSC::setNeverInline):
+
+2014-06-12  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Avoid fork bomb during build
+        https://bugs.webkit.org/show_bug.cgi?id=133837
+        <rdar://problem/17296034>
+
+        Reviewed by Tim Horton.
+
+        * JavaScriptCore.vcxproj/build-generated-files.sh: Use a
+        reasonable default value when the 'num-cpus' script is not available.
+
+2014-06-12  Mark Lam  <mark.lam@apple.com>
+
+        Remove some dead / unused code.
+        <https://webkit.org/b/133828>
+
+        Reviewed by Filip Pizlo.
+
+        * builtins/BuiltinExecutables.cpp:
+        (JSC::BuiltinExecutables::createBuiltinExecutable):
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedFunctionExecutable::UnlinkedFunctionExecutable):
+        * bytecode/UnlinkedCodeBlock.h:
+        (JSC::UnlinkedFunctionExecutable::create):
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::makeFunction):
+        * parser/Parser.h:
+        (JSC::DepthManager::DepthManager): Deleted.
+        (JSC::DepthManager::~DepthManager): Deleted.
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getFunctionExecutableFromGlobalCode):
+
+2014-06-12  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Move structureHasRareData out of TypeInfo
+        https://bugs.webkit.org/show_bug.cgi?id=133800
+
+        Reviewed by Andreas Kling.
+
+        StructureHasRareData was originally put in TypeInfo to avoid making Structure bigger, 
+        but we have a few spare bits in Structure so it would be nice to remove this hack.
+
+        * runtime/JSTypeInfo.h:
+        (JSC::TypeInfo::newImpurePropertyFiresWatchpoints):
+        (JSC::TypeInfo::structureHasRareData): Deleted.
+        * runtime/Structure.cpp:
+        (JSC::Structure::Structure):
+        (JSC::Structure::allocateRareData):
+        (JSC::Structure::cloneRareDataFrom):
+        * runtime/Structure.h:
+        (JSC::Structure::previousID):
+        (JSC::Structure::objectToStringValue):
+        (JSC::Structure::setObjectToStringValue):
+        (JSC::Structure::setPreviousID):
+        (JSC::Structure::clearPreviousID):
+        (JSC::Structure::previous):
+        (JSC::Structure::rareData):
+        * runtime/StructureInlines.h:
+        (JSC::Structure::setEnumerationCache):
+        (JSC::Structure::enumerationCache):
+
+2014-06-12  Zsolt Borbely  <zsborbely.u-szeged@partner.samsung.com>
+
+        Allow enum guards to be generated from the replay json files
+        https://bugs.webkit.org/show_bug.cgi?id=133399
+
+        Reviewed by Csaba Osztrogonác.
+
+        * replay/scripts/CodeGeneratorReplayInputs.py:
+        (Type.__init__):
+        (InputsModel.parse_type_with_framework_name):
+        (Generator.generate_header):
+        (Generator.generate_implementation):
+        * replay/scripts/tests/expected/generate-enum-with-guard.json-TestReplayInputs.cpp: Added.
+        (Test::HandleWheelEvent::HandleWheelEvent):
+        (Test::HandleWheelEvent::~HandleWheelEvent):
+        (JSC::InputTraits<Test::HandleWheelEvent>::type):
+        (JSC::InputTraits<Test::HandleWheelEvent>::encode):
+        (JSC::InputTraits<Test::HandleWheelEvent>::decode):
+        (JSC::EncodingTraits<WebCore::PlatformWheelEventPhase>::encodeValue):
+        (JSC::EncodingTraits<WebCore::PlatformWheelEventPhase>::decodeValue):
+        * replay/scripts/tests/expected/generate-enum-with-guard.json-TestReplayInputs.h: Added.
+        (JSC::InputTraits<Test::HandleWheelEvent>::queue):
+        (Test::HandleWheelEvent::platformEvent):
+        * replay/scripts/tests/generate-enum-with-guard.json: Added.
+
+2014-06-12  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix GTK+ build after r169823.
+
+        Include StructureInlines.h in a few more files to fix linking
+        issues due to JSC::Structure::get undefined symbol.
+
+        * runtime/ArrayIteratorConstructor.cpp:
+        * runtime/ArrayIteratorPrototype.cpp:
+        * runtime/JSConsole.cpp:
+        * runtime/JSMapIterator.cpp:
+        * runtime/JSSet.cpp:
+        * runtime/JSSetIterator.cpp:
+        * runtime/JSWeakMap.cpp:
+        * runtime/MapIteratorPrototype.cpp:
+        * runtime/MapPrototype.cpp:
+        * runtime/SetIteratorPrototype.cpp:
+        * runtime/SetPrototype.cpp:
+        * runtime/WeakMapPrototype.cpp:
+
+2014-06-12  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [EFL] One more URTBF after r169823 to make ARM64 build happy too.
+
+        * runtime/JSMap.cpp:
+
+2014-06-11  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Inline caching should try to flatten uncacheable dictionaries
+        https://bugs.webkit.org/show_bug.cgi?id=133683
+
+        Reviewed by Geoffrey Garen.
+
+        There exists a body of JS code that deletes properties off of objects (especially function/constructor objects), 
+        which puts them into an uncacheable dictionary state. This prevents all future inline caching for these objects. 
+        If properties are deleted out of the object during its initialization, we can enable caching for that object by 
+        attempting to flatten it when we see we're trying to do inline caching with that object. We then record that we 
+        performed this flattening optimization in the object's Structure. If it ever re-enters the uncacheable dictionary 
+        state then we can just give up on caching that object.
+
+        In refactoring some of the code in tryCacheGetById and tryBuildGetByIdList to reduce some duplication, I added
+        the InlineCacheAction enum, a new way to indicate the success or failure of an inline caching attempt. I changed
+        the other inline caching functions to return this enum rather than the opaque booleans that we were previously 
+        returning.
+
+        * jit/Repatch.cpp:
+        (JSC::actionForCell):
+        (JSC::tryCacheGetByID):
+        (JSC::repatchGetByID):
+        (JSC::tryBuildGetByIDList):
+        (JSC::buildGetByIDList):
+        (JSC::tryCachePutByID):
+        (JSC::repatchPutByID):
+        (JSC::tryBuildPutByIdList):
+        (JSC::buildPutByIdList):
+        (JSC::tryRepatchIn):
+        (JSC::repatchIn):
+        * runtime/Structure.cpp:
+        (JSC::Structure::Structure):
+        (JSC::Structure::flattenDictionaryStructure):
+        * runtime/Structure.h:
+        (JSC::Structure::hasBeenFlattenedBefore):
+
+2014-06-11  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [EFL] URTBF after r169823.
+
+        * bindings/ScriptValue.cpp: Missing include added.
+
+2014-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove an unnecessary asObject(this) call inside JSObject::fastGetOwnPropertySlot.
+
+        Rubber-stamped by Andreas Kling.
+
+        * runtime/JSObject.h:
+        (JSC::JSObject::fastGetOwnPropertySlot):
+
+2014-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Turning on DUMP_PROPERTYMAP_STATS causes a build failure
+        https://bugs.webkit.org/show_bug.cgi?id=133673
+
+        Reviewed by Andreas Kling.
+
+        Rewrote the property map statistics code because the old code wasn't building,
+        and it was also mixing numbers for lookups and insertions/removals.
+
+        New logging code records the number of calls to PropertyTable::find (finds) and
+        PropertyTable::get/PropertyTable::findWithString separately so that we can quantify
+        the number of probing during updates and lookups.
+
+        * jsc.cpp:
+        * runtime/PropertyMapHashTable.h:
+        (JSC::PropertyTable::find):
+        (JSC::PropertyTable::get):
+        (JSC::PropertyTable::findWithString):
+        (JSC::PropertyTable::add):
+        (JSC::PropertyTable::remove):
+        (JSC::PropertyTable::reinsert):
+        (JSC::PropertyTable::rehash):
+        * runtime/Structure.cpp:
+        (JSC::PropertyMapStatisticsExitLogger::PropertyMapStatisticsExitLogger):
+        (JSC::PropertyMapStatisticsExitLogger::~PropertyMapStatisticsExitLogger):
+
+2014-06-11  Andreas Kling  <akling@apple.com>
+
+        Always inline JSValue::get() and Structure::get().
+        <https://webkit.org/b/133755>
+
+        Reviewed by Ryosuke Niwa.
+
+        These functions get really hot, so ask the compiler to be more
+        aggressive about inlining them.
+
+        ~28% speed-up on Ryosuke's microbenchmark for accessing nextSibling
+        through GetByVal.
+
+        * runtime/JSArrayIterator.cpp:
+        * runtime/JSCJSValue.cpp:
+        * runtime/JSCJSValueInlines.h:
+        (JSC::JSValue::get):
+        * runtime/JSPromiseDeferred.cpp:
+        * runtime/StructureInlines.h:
+        (JSC::Structure::get):
+
+2014-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Structure::get should instantiate DeferGC only when materializing property map
+        https://bugs.webkit.org/show_bug.cgi?id=133727
+
+        Rubber-stamped by Andreas Kling.
+
+        Make materializePropertyMapIfNecessary always inline.
+
+        This is ~12% improvement on the microbenchmark attached in the bug.
+
+        * runtime/Structure.h:
+        (JSC::Structure::materializePropertyMapIfNecessary):
+        (JSC::Structure::materializePropertyMapIfNecessaryForPinning):
+
+2014-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Structure::get should instantiate DeferGC only when materializing property map
+        https://bugs.webkit.org/show_bug.cgi?id=133727
+
+        Reviewed by Geoffrey Garen.
+
+        DeferGC instances in Structure::get was added in http://trac.webkit.org/r157539 in order to avoid
+        collecting the property table newly created by materializePropertyMapIfNecessary since GC can happen
+        when GCSafeConcurrentJITLocker goes out of scope.
+
+        However, always instantiating DeferGC inside Structure::get introduced a new performance bottleneck
+        in JSObject::getPropertySlot because frequently incrementing and decrementing a counter in vm.m_heap
+        and running a release assertion inside Heap::incrementDeferralDepth() is expensive.
+
+        Work around this by instantiating DeferGC only when we're actually calling materializePropertyMap,
+        and immediately storing a pointer to the newly created property table in the stack before DeferGC
+        goes out of scope so that the property table will be marked.
+
+        This shows 13-16% improvement on the microbenchmark attached in the bug.
+
+        * runtime/JSCJSValue.cpp:
+        * runtime/JSObject.h:
+        (JSC::JSObject::fastGetOwnPropertySlot):
+        * runtime/Structure.h:
+        (JSC::Structure::materializePropertyMapIfNecessary):
+        * runtime/StructureInlines.h:
+        (JSC::Structure::get):
+
+2014-06-11  Andreas Kling  <akling@apple.com>
+
+        Some JSValue::get() micro-optimzations.
+        <https://webkit.org/b/133739>
+
+        Tighten some of the property lookup code to improve performance of the
+        eagerly reified prototype attributes:
+
+        - Instead of converting the property name to an integer at every step
+          in the prototype chain, move that to a separate pass at the end
+          since it should be a rare case.
+
+        - Cache the StructureIDTable in a local instead of fetching it from
+          the Heap on every step.
+
+        - Make fillCustomGetterPropertySlot inline. It was out-of-lined based
+          on the assumption that clients would mostly be cacheable GetByIds,
+          and it gets pretty hot (~1%) in GetByVal.
+
+        - Pass the Structure directly to fillCustomGetterPropertySlot instead
+          of refetching it from the StructureIDTable.
+
+        Reviewed by Geoff Garen.
+
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::fillCustomGetterPropertySlot): Deleted.
+        * runtime/JSObject.h:
+        (JSC::JSObject::inlineGetOwnPropertySlot):
+        (JSC::JSObject::fillCustomGetterPropertySlot):
+        (JSC::JSObject::getOwnPropertySlot):
+        (JSC::JSObject::fastGetOwnPropertySlot):
+        (JSC::JSObject::getPropertySlot):
+        (JSC::JSObject::getOwnPropertySlotSlow): Deleted.
+
 2014-06-10  Sam Weinig  <sam@webkit.org>
 
         Don't create a HashTable for JSObjects that use eager reification

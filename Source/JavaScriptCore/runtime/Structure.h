@@ -146,6 +146,8 @@ public:
     bool isDictionary() const { return m_dictionaryKind != NoneDictionaryKind; }
     bool isUncacheableDictionary() const { return m_dictionaryKind == UncachedDictionaryKind; }
 
+    bool hasBeenFlattenedBefore() const { return m_hasBeenFlattenedBefore; }
+
     bool propertyAccessesAreCacheable() { return m_dictionaryKind != UncachedDictionaryKind && !typeInfo().prohibitsPropertyCaching(); }
 
     // We use SlowPath in GetByIdStatus for structures that may get new impure properties later to prevent
@@ -194,7 +196,7 @@ public:
     Structure* previousID() const
     {
         ASSERT(structure()->classInfo() == info());
-        if (typeInfo().structureHasRareData())
+        if (m_hasRareData)
             return rareData()->previousID();
         return previous();
     }
@@ -303,14 +305,14 @@ public:
 
     JSString* objectToStringValue()
     {
-        if (!typeInfo().structureHasRareData())
+        if (!m_hasRareData)
             return 0;
         return rareData()->objectToStringValue();
     }
 
     void setObjectToStringValue(VM& vm, const JSCell* owner, JSString* value)
     {
-        if (!typeInfo().structureHasRareData())
+        if (!m_hasRareData)
             allocateRareData(vm);
         rareData()->setObjectToStringValue(vm, owner, value);
     }
@@ -426,13 +428,25 @@ private:
     PropertyTable* copyPropertyTable(VM&, Structure* owner);
     PropertyTable* copyPropertyTableForPinning(VM&, Structure* owner);
     JS_EXPORT_PRIVATE void materializePropertyMap(VM&);
-    void materializePropertyMapIfNecessary(VM& vm, DeferGC&)
+    ALWAYS_INLINE void materializePropertyMapIfNecessary(VM& vm, DeferGC&)
     {
         ASSERT(!isCompilationThread());
         ASSERT(structure()->classInfo() == info());
         ASSERT(checkOffsetConsistency());
         if (!propertyTable() && previousID())
             materializePropertyMap(vm);
+    }
+    ALWAYS_INLINE void materializePropertyMapIfNecessary(VM& vm, PropertyTable*& table)
+    {
+        ASSERT(!isCompilationThread());
+        ASSERT(structure()->classInfo() == info());
+        ASSERT(checkOffsetConsistency());
+        table = propertyTable().get();
+        if (!table && previousID()) {
+            DeferGC deferGC(vm.heap);
+            materializePropertyMap(vm);
+            table = propertyTable().get();
+        }
     }
     void materializePropertyMapIfNecessaryForPinning(VM& vm, DeferGC&)
     {
@@ -444,7 +458,7 @@ private:
 
     void setPreviousID(VM& vm, Structure* transition, Structure* structure)
     {
-        if (typeInfo().structureHasRareData())
+        if (m_hasRareData)
             rareData()->setPreviousID(vm, transition, structure);
         else
             m_previousOrRareData.set(vm, transition, structure);
@@ -452,7 +466,7 @@ private:
 
     void clearPreviousID()
     {
-        if (typeInfo().structureHasRareData())
+        if (m_hasRareData)
             rareData()->clearPreviousID();
         else
             m_previousOrRareData.clear();
@@ -471,13 +485,13 @@ private:
 
     Structure* previous() const
     {
-        ASSERT(!typeInfo().structureHasRareData());
+        ASSERT(!m_hasRareData);
         return static_cast<Structure*>(m_previousOrRareData.get());
     }
 
     StructureRareData* rareData() const
     {
-        ASSERT(typeInfo().structureHasRareData());
+        ASSERT(m_hasRareData);
         return static_cast<StructureRareData*>(m_previousOrRareData.get());
     }
         
@@ -524,6 +538,7 @@ private:
     ConcurrentJITLock m_lock;
     
     unsigned m_dictionaryKind : 2;
+    bool m_hasBeenFlattenedBefore : 1;
     bool m_isPinnedPropertyTable : 1;
     bool m_hasGetterSetterProperties : 1;
     bool m_hasCustomGetterSetterProperties : 1;
@@ -534,6 +549,7 @@ private:
     unsigned m_preventExtensions : 1;
     unsigned m_didTransition : 1;
     unsigned m_staticFunctionReified : 1;
+    bool m_hasRareData : 1;
 };
 
 } // namespace JSC

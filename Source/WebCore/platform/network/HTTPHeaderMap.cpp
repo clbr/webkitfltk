@@ -31,7 +31,9 @@
 #include "config.h"
 #include "HTTPHeaderMap.h"
 
+#include "HTTPHeaderNames.h"
 #include <utility>
+#include <wtf/text/StringView.h>
 
 namespace WebCore {
 
@@ -67,14 +69,16 @@ String HTTPHeaderMap::get(const AtomicString& name) const
     return m_headers.get(name);
 }
 
-HTTPHeaderMap::AddResult HTTPHeaderMap::set(const AtomicString& name, const String& value)
+void HTTPHeaderMap::set(const AtomicString& name, const String& value)
 {
-    return m_headers.set(name, value);
+    m_headers.set(name, value);
 }
 
-HTTPHeaderMap::AddResult HTTPHeaderMap::add(const AtomicString& name, const String& value)
+void HTTPHeaderMap::add(const AtomicString& name, const String& value)
 {
-    return m_headers.add(name, value);
+    auto result = m_headers.add(name, value);
+    if (!result.isNewEntry)
+        result.iterator->value = result.iterator->value + ", " + value;
 }
 
 // Adapter that allows the HashMap to take C strings as keys.
@@ -95,6 +99,11 @@ struct CaseFoldingCStringTranslator {
     }
 };
 
+bool HTTPHeaderMap::contains(HTTPHeaderName name) const
+{
+    return m_headers.contains(httpHeaderNameString(name).toStringWithoutCopying());
+}
+
 String HTTPHeaderMap::get(const char* name) const
 {
     auto it = find(name);
@@ -102,41 +111,15 @@ String HTTPHeaderMap::get(const char* name) const
         return String();
     return it->value;
 }
-    
-bool HTTPHeaderMap::contains(const char* name) const
-{
-    return find(name) != end();
-}
-
-HTTPHeaderMap::iterator HTTPHeaderMap::find(const char* name)
-{
-    return m_headers.find<CaseFoldingCStringTranslator>(name);
-}
 
 HTTPHeaderMap::const_iterator HTTPHeaderMap::find(const char* name) const
 {
     return m_headers.find<CaseFoldingCStringTranslator>(name);
 }
 
-HTTPHeaderMap::AddResult HTTPHeaderMap::add(const char* name, const String& value)
+bool HTTPHeaderMap::remove(HTTPHeaderName name)
 {
-    return m_headers.add<CaseFoldingCStringTranslator>(name, value);
+    return m_headers.remove(httpHeaderNameString(name).toStringWithoutCopying());
 }
-
-void HTTPHeaderMap::remove(const char* name)
-{
-    remove(find(name));
-}
-
-void HTTPHeaderMap::remove(iterator it)
-{
-    m_headers.remove(it);
-}
-
-WTF::IteratorRange<HTTPHeaderMap::const_iterator::Keys> HTTPHeaderMap::keys() const
-{
-    return m_headers.keys();
-}
-
 
 } // namespace WebCore

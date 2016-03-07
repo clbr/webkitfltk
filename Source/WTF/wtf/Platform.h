@@ -1010,6 +1010,11 @@
 #define WTF_USE_CONTENT_FILTERING 1
 #endif
 
+#ifndef HAVE_QOS_CLASSES
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+#define HAVE_QOS_CLASSES 1
+#endif
+#endif
 
 #define WTF_USE_GRAMMAR_CHECKING 1
 
@@ -1069,6 +1074,10 @@
 #if (OS(DARWIN) && USE(CG)) || USE(FREETYPE) || (PLATFORM(WIN) && (USE(CG) || USE(CAIRO)))
 #undef ENABLE_OPENTYPE_MATH
 #define ENABLE_OPENTYPE_MATH 1
+#endif
+
+#if PLATFORM(EFL) || PLATFORM(GTK)
+#define TARGET_OS_IPHONE 0
 #endif
 
 #endif /* WTF_Platform_h */

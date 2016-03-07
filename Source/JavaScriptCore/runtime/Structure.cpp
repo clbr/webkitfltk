@@ -37,6 +37,7 @@
 #include "StructureChain.h"
 #include "StructureRareDataInlines.h"
 #include <wtf/CommaPrinter.h>
+#include <wtf/ProcessID.h>
 #include <wtf/RefCountedLeakCounter.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Threading.h>
@@ -51,15 +52,6 @@
 
 using namespace std;
 using namespace WTF;
-
-#if DUMP_PROPERTYMAP_STATS
-
-int numProbes;
-int numCollisions;
-int numRehashes;
-int numRemoves;
-
-#endif
 
 namespace JSC {
 
@@ -166,6 +158,7 @@ Structure::Structure(VM& vm, JSGlobalObject* globalObject, JSValue prototype, co
     , m_offset(invalidOffset)
     , m_inlineCapacity(inlineCapacity)
     , m_dictionaryKind(NoneDictionaryKind)
+    , m_hasBeenFlattenedBefore(false)
     , m_isPinnedPropertyTable(false)
     , m_hasGetterSetterProperties(classInfo->hasStaticSetterOrReadonlyProperties(vm))
     , m_hasCustomGetterSetterProperties(false)
@@ -176,10 +169,11 @@ Structure::Structure(VM& vm, JSGlobalObject* globalObject, JSValue prototype, co
     , m_preventExtensions(false)
     , m_didTransition(false)
     , m_staticFunctionReified(false)
+    , m_hasRareData(false)
 {
     ASSERT(inlineCapacity <= JSFinalObject::maxInlineCapacity());
     ASSERT(static_cast<PropertyOffset>(inlineCapacity) < firstOutOfLineOffset);
-    ASSERT(!typeInfo.structureHasRareData());
+    ASSERT(!m_hasRareData);
     ASSERT(hasReadOnlyOrGetterSetterPropertiesExcludingProto() || !m_classInfo->hasStaticSetterOrReadonlyProperties(vm));
     ASSERT(hasGetterSetterProperties() || !m_classInfo->hasStaticSetterOrReadonlyProperties(vm));
 }
@@ -194,6 +188,7 @@ Structure::Structure(VM& vm)
     , m_offset(invalidOffset)
     , m_inlineCapacity(0)
     , m_dictionaryKind(NoneDictionaryKind)
+    , m_hasBeenFlattenedBefore(false)
     , m_isPinnedPropertyTable(false)
     , m_hasGetterSetterProperties(m_classInfo->hasStaticSetterOrReadonlyProperties(vm))
     , m_hasCustomGetterSetterProperties(false)
@@ -204,6 +199,7 @@ Structure::Structure(VM& vm)
     , m_preventExtensions(false)
     , m_didTransition(false)
     , m_staticFunctionReified(false)
+    , m_hasRareData(false)
 {
     TypeInfo typeInfo = TypeInfo(CompoundType, OverridesVisitChildren | StructureIsImmortal);
     m_blob = StructureIDBlob(vm.heap.structureIDTable().allocateID(this), 0, typeInfo);
@@ -221,6 +217,7 @@ Structure::Structure(VM& vm, Structure* previous)
     , m_offset(invalidOffset)
     , m_inlineCapacity(previous->m_inlineCapacity)
     , m_dictionaryKind(previous->m_dictionaryKind)
+    , m_hasBeenFlattenedBefore(previous->m_hasBeenFlattenedBefore)
     , m_isPinnedPropertyTable(false)
     , m_hasGetterSetterProperties(previous->m_hasGetterSetterProperties)
     , m_hasCustomGetterSetterProperties(previous->m_hasCustomGetterSetterProperties)
@@ -231,13 +228,14 @@ Structure::Structure(VM& vm, Structure* previous)
     , m_preventExtensions(previous->m_preventExtensions)
     , m_didTransition(true)
     , m_staticFunctionReified(previous->m_staticFunctionReified)
+    , m_hasRareData(false)
 {
-    TypeInfo typeInfo = TypeInfo(previous->typeInfo().type(), previous->typeInfo().flags() & ~StructureHasRareData);
+    TypeInfo typeInfo = previous->typeInfo();
     m_blob = StructureIDBlob(vm.heap.structureIDTable().allocateID(this), previous->indexingTypeIncludingHistory(), typeInfo);
     m_outOfLineTypeFlags = typeInfo.outOfLineTypeFlags();
 
     ASSERT(!previous->typeInfo().structureIsImmortal());
-    if (previous->typeInfo().structureHasRareData() && previous->rareData()->needsCloning())
+    if (previous->m_hasRareData && previous->rareData()->needsCloning())
         cloneRareDataFrom(vm, previous);
     setPreviousID(vm, this, previous);
 
@@ -748,6 +746,7 @@ Structure* Structure::flattenDictionaryStructure(VM& vm, JSObject* object)
     }
 
     m_dictionaryKind = NoneDictionaryKind;
+    m_hasBeenFlattenedBefore = true;
 
     // If the object had a Butterfly but after flattening/compacting we no longer have need of it,
     // we need to zero it out because the collector depends on the Structure to know the size for copying.
@@ -794,41 +793,52 @@ void Structure::pin()
 
 void Structure::allocateRareData(VM& vm)
 {
-    ASSERT(!typeInfo().structureHasRareData());
+    ASSERT(!m_hasRareData);
     StructureRareData* rareData = StructureRareData::create(vm, previous());
-    TypeInfo oldTypeInfo = typeInfo();
-    TypeInfo newTypeInfo = TypeInfo(oldTypeInfo.type(), oldTypeInfo.flags() | StructureHasRareData);
-    m_outOfLineTypeFlags = newTypeInfo.outOfLineTypeFlags();
     m_previousOrRareData.set(vm, this, rareData);
-    ASSERT(typeInfo().structureHasRareData());
+    m_hasRareData = true;
+    ASSERT(m_hasRareData);
 }
 
 void Structure::cloneRareDataFrom(VM& vm, const Structure* other)
 {
-    ASSERT(other->typeInfo().structureHasRareData());
+    ASSERT(!m_hasRareData);
+    ASSERT(other->m_hasRareData);
     StructureRareData* newRareData = StructureRareData::clone(vm, other->rareData());
-    TypeInfo oldTypeInfo = typeInfo();
-    TypeInfo newTypeInfo = TypeInfo(oldTypeInfo.type(), oldTypeInfo.flags() | StructureHasRareData);
-    m_outOfLineTypeFlags = newTypeInfo.outOfLineTypeFlags();
     m_previousOrRareData.set(vm, this, newRareData);
-    ASSERT(typeInfo().structureHasRareData());
+    m_hasRareData = true;
+    ASSERT(m_hasRareData);
 }
 
 #if DUMP_PROPERTYMAP_STATS
 
+PropertyMapHashTableStats* propertyMapHashTableStats = 0;
+
 struct PropertyMapStatisticsExitLogger {
+    PropertyMapStatisticsExitLogger();
     ~PropertyMapStatisticsExitLogger();
 };
 
-static PropertyMapStatisticsExitLogger logger;
+DEFINE_GLOBAL_FOR_LOGGING(PropertyMapStatisticsExitLogger, logger, );
+
+PropertyMapStatisticsExitLogger::PropertyMapStatisticsExitLogger()
+{
+    propertyMapHashTableStats = adoptPtr(new PropertyMapHashTableStats()).leakPtr();
+}
 
 PropertyMapStatisticsExitLogger::~PropertyMapStatisticsExitLogger()
 {
-    dataLogF("\nJSC::PropertyMap statistics\n\n");
-    dataLogF("%d probes\n", numProbes);
-    dataLogF("%d collisions (%.1f%%)\n", numCollisions, 100.0 * numCollisions / numProbes);
-    dataLogF("%d rehashes\n", numRehashes);
-    dataLogF("%d removes\n", numRemoves);
+    unsigned finds = propertyMapHashTableStats->numFinds;
+    unsigned collisions = propertyMapHashTableStats->numCollisions;
+    dataLogF("\nJSC::PropertyMap statistics for process %d\n\n", getCurrentProcessID());
+    dataLogF("%d finds\n", finds);
+    dataLogF("%d collisions (%.1f%%)\n", collisions, 100.0 * collisions / finds);
+    dataLogF("%d lookups\n", propertyMapHashTableStats->numLookups.load());
+    dataLogF("%d lookup probings\n", propertyMapHashTableStats->numLookupProbing.load());
+    dataLogF("%d adds\n", propertyMapHashTableStats->numAdds.load());
+    dataLogF("%d removes\n", propertyMapHashTableStats->numRemoves.load());
+    dataLogF("%d rehashes\n", propertyMapHashTableStats->numRehashes.load());
+    dataLogF("%d reinserts\n", propertyMapHashTableStats->numReinserts.load());
 }
 
 #endif

@@ -73,43 +73,43 @@ inline Structure* Structure::storedPrototypeStructure() const
     return object->structure();
 }
 
-inline PropertyOffset Structure::get(VM& vm, PropertyName propertyName)
+ALWAYS_INLINE PropertyOffset Structure::get(VM& vm, PropertyName propertyName)
 {
     ASSERT(!isCompilationThread());
     ASSERT(structure()->classInfo() == info());
-    DeferGC deferGC(vm.heap);
-    materializePropertyMapIfNecessary(vm, deferGC);
-    if (!propertyTable())
+    PropertyTable* propertyTable;
+    materializePropertyMapIfNecessary(vm, propertyTable);
+    if (!propertyTable)
         return invalidOffset;
 
-    PropertyMapEntry* entry = propertyTable()->get(propertyName.uid());
+    PropertyMapEntry* entry = propertyTable->get(propertyName.uid());
     return entry ? entry->offset : invalidOffset;
 }
 
-inline PropertyOffset Structure::get(VM& vm, const WTF::String& name)
+ALWAYS_INLINE PropertyOffset Structure::get(VM& vm, const WTF::String& name)
 {
     ASSERT(!isCompilationThread());
     ASSERT(structure()->classInfo() == info());
-    DeferGC deferGC(vm.heap);
-    materializePropertyMapIfNecessary(vm, deferGC);
-    if (!propertyTable())
+    PropertyTable* propertyTable;
+    materializePropertyMapIfNecessary(vm, propertyTable);
+    if (!propertyTable)
         return invalidOffset;
 
-    PropertyMapEntry* entry = propertyTable()->findWithString(name.impl()).first;
+    PropertyMapEntry* entry = propertyTable->findWithString(name.impl()).first;
     return entry ? entry->offset : invalidOffset;
 }
     
-inline PropertyOffset Structure::get(VM& vm, PropertyName propertyName, unsigned& attributes, JSCell*& specificValue)
+ALWAYS_INLINE PropertyOffset Structure::get(VM& vm, PropertyName propertyName, unsigned& attributes, JSCell*& specificValue)
 {
     ASSERT(!isCompilationThread());
     ASSERT(structure()->classInfo() == info());
 
-    DeferGC deferGC(vm.heap);
-    materializePropertyMapIfNecessary(vm, deferGC);
-    if (!propertyTable())
+    PropertyTable* propertyTable;
+    materializePropertyMapIfNecessary(vm, propertyTable);
+    if (!propertyTable)
         return invalidOffset;
 
-    PropertyMapEntry* entry = propertyTable()->get(propertyName.uid());
+    PropertyMapEntry* entry = propertyTable->get(propertyName.uid());
     if (!entry)
         return invalidOffset;
 
@@ -154,14 +154,14 @@ inline bool Structure::transitivelyTransitionedFrom(Structure* structureToFind)
 inline void Structure::setEnumerationCache(VM& vm, JSPropertyNameIterator* enumerationCache)
 {
     ASSERT(!isDictionary());
-    if (!typeInfo().structureHasRareData())
+    if (!m_hasRareData)
         allocateRareData(vm);
     rareData()->setEnumerationCache(vm, this, enumerationCache);
 }
 
 inline JSPropertyNameIterator* Structure::enumerationCache()
 {
-    if (!typeInfo().structureHasRareData())
+    if (!m_hasRareData)
         return 0;
     return rareData()->enumerationCache();
 }

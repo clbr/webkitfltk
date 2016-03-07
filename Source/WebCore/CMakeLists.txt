@@ -2387,6 +2387,7 @@ set(WebCore_SOURCES
     rendering/style/ContentData.cpp
     rendering/style/CounterDirectives.cpp
     rendering/style/FillLayer.cpp
+    rendering/style/GridResolvedPosition.cpp
     rendering/style/KeyframeList.cpp
     rendering/style/NinePieceImage.cpp
     rendering/style/QuotesData.cpp
@@ -2394,6 +2395,7 @@ set(WebCore_SOURCES
     rendering/style/SVGRenderStyle.cpp
     rendering/style/SVGRenderStyleDefs.cpp
     rendering/style/ShadowData.cpp
+    rendering/style/ShapeValue.cpp
     rendering/style/StyleBackgroundData.cpp
     rendering/style/StyleBoxData.cpp
     rendering/style/StyleCachedImage.cpp
@@ -3317,6 +3319,16 @@ add_custom_command(
     COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/html/parser/create-html-entity-table -o ${DERIVED_SOURCES_WEBCORE_DIR}/HTMLEntityTable.cpp ${WEBCORE_DIR}/html/parser/HTMLEntityNames.in
     VERBATIM)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/HTMLEntityTable.cpp)
+
+# Generate HTTP header names
+add_custom_command(
+    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/HTTPHeaderNames.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/HTTPHeaderNames.gperf ${DERIVED_SOURCES_WEBCORE_DIR}/HTTPHeaderNames.h
+    MAIN_DEPENDENCY ${WEBCORE_DIR}/platform/network/HTTPHeaderNames.in
+    DEPENDS ${WEBCORE_DIR}/platform/network/create-http-header-name-table
+    WORKING_DIRECTORY ${DERIVED_SOURCES_WEBCORE_DIR}
+    COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/platform/network/create-http-header-name-table ${WEBCORE_DIR}/platform/network/HTTPHeaderNames.in
+    VERBATIM)
+list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/HTTPHeaderNames.cpp)
 
 # Generate CSS property names
 add_custom_command(
