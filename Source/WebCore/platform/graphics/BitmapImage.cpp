@@ -83,6 +83,13 @@ BitmapImage::~BitmapImage()
     stopAnimation();
 }
 
+#if !USE(CG)
+bool BitmapImage::decodedDataIsPurgeable() const
+{
+    return false;
+}
+#endif
+
 bool BitmapImage::haveFrameAtIndex(size_t index)
 {
     if (index >= frameCount())
@@ -133,6 +140,11 @@ void BitmapImage::destroyDecodedDataIfNecessary(bool destroyAll)
     /* The GIF decoder is too buggy to handle the resize. Just use the memory for now. */
     return;
 #endif
+
+    // If decoded data is purgeable, the operating system will
+    // take care of throwing it away when the system is under pressure.
+    if (decodedDataIsPurgeable())
+        return;
 
     // If we have decoded frames but there is no encoded data, we shouldn't destroy
     // the decoded image since we won't be able to reconstruct it later.

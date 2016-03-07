@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2006, 2008 Apple Inc.  All rights reserved.
- * Copyright (C) 2007 Nicholas Shanks <webkit@nickshanks.com>
+ * Copyright (C) 2014 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,16 +23,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#import <AppKit/NSFontManager.h>
-#import <wtf/Vector.h>
+#if USE(APPLE_INTERNAL_SDK)
 
-// This interface exists so that third party products (like Silk) can patch in to an Obj-C method to manipulate WebKit's font caching/substitution.
-WEBCORE_EXPORT @interface WebFontCache : NSObject
-+ (NSFont *)fontWithFamily:(NSString *)desiredFamily traits:(NSFontTraitMask)desiredTraits weight:(int)desiredWeight size:(float)size shouldAutoActivateIfNeeded:(BOOL)shouldAutoActivateIfNeeded;
-+ (NSFont *)fontWithFamily:(NSString *)desiredFamily traits:(NSFontTraitMask)desiredTraits weight:(int)desiredWeight size:(float)size;
-+ (void)getTraits:(Vector<unsigned>&)traitsMasks inFamily:(NSString *)desiredFamily;
-+ (void)invalidate;
+#import <AppKit/NSFont_Private.h>
 
-// This older version of the interface is relied upon by some clients. WebCore doesn't use it.
-+ (NSFont *)fontWithFamily:(NSString *)desiredFamily traits:(NSFontTraitMask)desiredTraits size:(float)size;
+#else
+
+@interface NSFont (Private)
++ (NSFont *)findFontLike:(NSFont *)aFont forCharacter:(UInt32)c inLanguage:(id) language;
++ (NSFont *)findFontLike:(NSFont *)aFont forString:(NSString *)string withRange:(NSRange)range inLanguage:(id) language;
 @end
+
+#endif

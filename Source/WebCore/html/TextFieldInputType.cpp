@@ -258,6 +258,7 @@ void TextFieldInputType::createShadowSubtree()
     m_innerText = TextControlInnerTextElement::create(document);
     if (!createsContainer) {
         element().userAgentShadowRoot()->appendChild(m_innerText, IGNORE_EXCEPTION);
+        updatePlaceholderText();
         return;
     }
 
@@ -269,6 +270,8 @@ void TextFieldInputType::createShadowSubtree()
     m_innerBlock = TextControlInnerElement::create(document);
     m_innerBlock->appendChild(m_innerText, IGNORE_EXCEPTION);
     m_container->appendChild(m_innerBlock, IGNORE_EXCEPTION);
+
+    updatePlaceholderText();
 
     if (shouldHaveSpinButton) {
         m_innerSpinButton = SpinButtonElement::create(document, *this);

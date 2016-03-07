@@ -24,6 +24,7 @@
 #include "CSSCharsetRule.h"
 #include "CSSFontFaceRule.h"
 #include "CSSImportRule.h"
+#include "CSSKeyframesRule.h"
 #include "CSSParser.h"
 #include "CSSRuleList.h"
 #include "CSSStyleRule.h"
@@ -42,7 +43,6 @@
 #include "StyleResolver.h"
 #include "StyleRule.h"
 #include "StyleSheetContents.h"
-#include "WebKitCSSKeyframesRule.h"
 #include <wtf/text/StringBuilder.h>
 
 namespace WebCore {

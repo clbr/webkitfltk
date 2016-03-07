@@ -29,9 +29,9 @@
 #import "config.h"
 #import "FontCache.h"
 
+#import "CoreGraphicsSPI.h"
 #import "Font.h"
 #import "RenderThemeIOS.h"
-#import <CoreGraphics/CGFontUnicodeSupport.h>
 #import <CoreText/CTFontDescriptorPriv.h>
 #import <CoreText/CTFontPriv.h>
 #import <wtf/NeverDestroyed.h>
@@ -42,7 +42,6 @@ namespace WebCore {
 
 void FontCache::platformInit()
 {
-    wkSetUpFontCache();
 }
 
 static inline bool isFontWeightBold(NSInteger fontWeight)
