@@ -41,6 +41,7 @@ list(APPEND WebCore_SOURCES
     platform/geoclue/GeolocationProviderGeoclue2.cpp
 
     platform/graphics/GraphicsContext3DPrivate.cpp
+    platform/graphics/ImageSource.cpp
     platform/graphics/OpenGLShims.cpp
     platform/graphics/WOFFFileFormat.cpp
 
@@ -100,7 +101,23 @@ list(APPEND WebCore_SOURCES
 
     platform/gtk/GamepadsGtk.cpp
 
+    platform/image-decoders/ImageDecoder.cpp
+
     platform/image-decoders/cairo/ImageDecoderCairo.cpp
+
+    platform/image-decoders/gif/GIFImageDecoder.cpp
+    platform/image-decoders/gif/GIFImageReader.cpp
+
+    platform/image-decoders/ico/ICOImageDecoder.cpp
+
+    platform/image-decoders/jpeg/JPEGImageDecoder.cpp
+
+    platform/image-decoders/bmp/BMPImageDecoder.cpp
+    platform/image-decoders/bmp/BMPImageReader.cpp
+
+    platform/image-decoders/png/PNGImageDecoder.cpp
+
+    platform/image-decoders/webp/WEBPImageDecoder.cpp
 
     platform/linux/GamepadDeviceLinux.cpp
 
@@ -768,3 +785,48 @@ list(REMOVE_ITEM GObjectDOMBindings_GIR_HEADERS
 
 # Propagate this variable to the parent scope, so that it can be used in other parts of the build.
 set(GObjectDOMBindings_GIR_HEADERS ${GObjectDOMBindings_GIR_HEADERS} PARENT_SCOPE)
+
+if (ENABLE_SUBTLE_CRYPTO)
+    list(APPEND WebCore_SOURCES
+        crypto/CryptoAlgorithm.cpp
+        crypto/CryptoAlgorithmDescriptionBuilder.cpp
+        crypto/CryptoAlgorithmRegistry.cpp
+        crypto/CryptoKey.cpp
+        crypto/CryptoKeyPair.cpp
+        crypto/SubtleCrypto.cpp
+        crypto/algorithms/CryptoAlgorithmAES_CBC.cpp
+        crypto/algorithms/CryptoAlgorithmAES_KW.cpp
+        crypto/algorithms/CryptoAlgorithmHMAC.cpp
+        crypto/algorithms/CryptoAlgorithmRSAES_PKCS1_v1_5.cpp
+        crypto/algorithms/CryptoAlgorithmRSA_OAEP.cpp
+        crypto/algorithms/CryptoAlgorithmRSASSA_PKCS1_v1_5.cpp
+        crypto/algorithms/CryptoAlgorithmSHA1.cpp
+        crypto/algorithms/CryptoAlgorithmSHA224.cpp
+        crypto/algorithms/CryptoAlgorithmSHA256.cpp
+        crypto/algorithms/CryptoAlgorithmSHA384.cpp
+        crypto/algorithms/CryptoAlgorithmSHA512.cpp
+        crypto/keys/CryptoKeyAES.cpp
+        crypto/keys/CryptoKeyDataOctetSequence.cpp
+        crypto/keys/CryptoKeyDataRSAComponents.cpp
+        crypto/keys/CryptoKeyHMAC.cpp
+        crypto/keys/CryptoKeySerializationRaw.cpp
+
+        crypto/gtk/CryptoAlgorithmRegistryGtk.cpp
+        crypto/gtk/CryptoAlgorithmAES_CBCGtk.cpp
+        crypto/gtk/CryptoAlgorithmAES_KWGtk.cpp
+        crypto/gtk/CryptoAlgorithmHMACGtk.cpp
+        crypto/gtk/CryptoAlgorithmRSAES_PKCS1_v1_5Gtk.cpp
+        crypto/gtk/CryptoAlgorithmRSA_OAEPGtk.cpp
+        crypto/gtk/CryptoAlgorithmRSASSA_PKCS1_v1_5Gtk.cpp
+        crypto/gtk/CryptoDigestGtk.cpp
+        crypto/gtk/CryptoKeyRSAGtk.cpp
+        crypto/gtk/SerializedCryptoKeyWrapGtk.cpp
+    )
+
+    list(APPEND WebCore_INCLUDE_DIRECTORIES
+        ${GNUTLS_INCLUDE_DIRS}
+    )
+    list(APPEND WebCore_LIBRARIES
+        ${GNUTLS_LIBRARIES}
+    )
+endif ()

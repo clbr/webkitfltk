@@ -110,9 +110,18 @@ WebInspector.TimelineSidebarPanel = function()
     this._replayCaptureButtonItem.enabled = true;
     this._navigationBar.addNavigationItem(this._replayCaptureButtonItem);
 
+    var pauseImage, resumeImage;
+    if (WebInspector.Platform.isLegacyMacOS) {
+        pauseImage = {src: "Images/Legacy/Pause.svg", width: 16, height: 16};
+        resumeImage = {src: "Images/Legacy/Resume.svg", width: 16, height: 16};
+    } else {
+        pauseImage = {src: "Images/Pause.svg", width: 15, height: 15};
+        resumeImage = {src: "Images/Resume.svg", width: 15, height: 15};
+    }
+
     toolTip = WebInspector.UIString("Start Playback");
     altToolTip = WebInspector.UIString("Pause Playback");
-    this._replayPauseResumeButtonItem = new WebInspector.ToggleButtonNavigationItem("replay-pause-resume", toolTip, altToolTip, "Images/Resume.svg", "Images/Pause.svg", 16, 16, true);
+    this._replayPauseResumeButtonItem = new WebInspector.ToggleButtonNavigationItem("replay-pause-resume", toolTip, altToolTip, resumeImage.src, pauseImage.src, pauseImage.width, pauseImage.height, true);
     this._replayPauseResumeButtonItem.addEventListener(WebInspector.ButtonNavigationItem.Event.Clicked, this._replayPauseResumeButtonClicked, this);
     this._replayPauseResumeButtonItem.enabled = false;
     this._navigationBar.addNavigationItem(this._replayPauseResumeButtonItem);
@@ -337,12 +346,13 @@ WebInspector.TimelineSidebarPanel.prototype = {
         this._restoredShowingTimelineContentView = cookie[WebInspector.TimelineSidebarPanel.ShowingTimelineContentViewCookieKey];
 
         var selectedTimelineViewIdentifier = cookie[WebInspector.TimelineSidebarPanel.SelectedTimelineViewIdentifierCookieKey];
-        if (selectedTimelineViewIdentifier === WebInspector.TimelineSidebarPanel.OverviewTimelineIdentifierCookieValue)
+        if (!selectedTimelineViewIdentifier || selectedTimelineViewIdentifier === WebInspector.TimelineSidebarPanel.OverviewTimelineIdentifierCookieValue)
             this.showTimelineOverview();
         else
             this.showTimelineViewForType(selectedTimelineViewIdentifier);
 
-        WebInspector.NavigationSidebarPanel.prototype.restoreStateFromCookie.call(this, cookie, relaxedMatchDelay);
+        // Don't call NavigationSidebarPanel.restoreStateFromCookie, because it tries to match based
+        // on type only as a last resort. This would cause the first recording to be reselected on reload.
     },
 
     // Private
@@ -362,6 +372,8 @@ WebInspector.TimelineSidebarPanel.prototype = {
             this._timelineTreeElementMap.get(currentTimelineView.representedObject.type).select(true, wasSelectedByUser, shouldSuppressOnSelect, true);
         } else if (this._timelinesTreeOutline.selectedTreeElement)
             this._timelinesTreeOutline.selectedTreeElement.deselect();
+
+        this.updateFilter();
     },
 
     _timelinesTreeElementSelected: function(treeElement, selectedByUser)

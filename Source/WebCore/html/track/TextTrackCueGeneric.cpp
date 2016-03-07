@@ -44,6 +44,9 @@
 
 namespace WebCore {
 
+// This default value must be the same as the one specified in mediaControlsApple.css for -webkit-media-controls-closed-captions-container
+const static int DEFAULTCAPTIONFONTSIZE = 10;
+
 class TextTrackCueGenericBoxElement final : public VTTCueBox {
 public:
     static PassRefPtr<TextTrackCueGenericBoxElement> create(Document& document, TextTrackCueGeneric& cue)
@@ -70,6 +73,7 @@ void TextTrackCueGenericBoxElement::applyCSSProperties(const IntSize& videoSize)
     TextTrackCueGeneric* cue = static_cast<TextTrackCueGeneric*>(getCue());
     RefPtr<HTMLSpanElement> cueElement = cue->element();
 
+    CSSValueID alignment = cue->getCSSAlignment();
     float size = static_cast<float>(cue->getCSSSize());
     if (cue->useDefaultPosition()) {
         setInlineStyleProperty(CSSPropertyBottom, 0, CSSPrimitiveValue::CSS_PX);
@@ -78,26 +82,33 @@ void TextTrackCueGenericBoxElement::applyCSSProperties(const IntSize& videoSize)
         setInlineStyleProperty(CSSPropertyLeft, static_cast<float>(cue->position()), CSSPrimitiveValue::CSS_PERCENTAGE);
         setInlineStyleProperty(CSSPropertyTop, static_cast<float>(cue->line()), CSSPrimitiveValue::CSS_PERCENTAGE);
 
-        float authorFontSize = std::max(DEFAULTCAPTIONFONTSIZE, static_cast<float>(videoSize.height() * cue->baseFontSizeRelativeToVideoHeight() / 100));
+        double authorFontSize = videoSize.height() * cue->baseFontSizeRelativeToVideoHeight() / 100.0;
+        if (!authorFontSize)
+            authorFontSize = DEFAULTCAPTIONFONTSIZE;
+
         if (cue->fontSizeMultiplier())
             authorFontSize *= cue->fontSizeMultiplier() / 100;
 
-        float multiplier = std::max(1.0f, m_fontSizeFromCaptionUserPrefs / authorFontSize);
-        if (cue->getWritingDirection() == VTTCue::Horizontal)
-            setInlineStyleProperty(CSSPropertyWidth, size * multiplier, CSSPrimitiveValue::CSS_PERCENTAGE);
-        else
-            setInlineStyleProperty(CSSPropertyHeight, size * multiplier,  CSSPrimitiveValue::CSS_PERCENTAGE);
+        double multiplier = m_fontSizeFromCaptionUserPrefs / authorFontSize;
+        double newCueSize = std::min(size * multiplier, 100.0);
+        if (cue->getWritingDirection() == VTTCue::Horizontal) {
+            setInlineStyleProperty(CSSPropertyWidth, newCueSize, CSSPrimitiveValue::CSS_PERCENTAGE);
+            if ((alignment == CSSValueMiddle || alignment == CSSValueCenter) && multiplier != 1.0)
+                setInlineStyleProperty(CSSPropertyLeft, static_cast<double>(cue->position() - (newCueSize - m_cue.getCSSSize()) / 2), CSSPrimitiveValue::CSS_PERCENTAGE);
+        } else {
+            setInlineStyleProperty(CSSPropertyHeight, newCueSize,  CSSPrimitiveValue::CSS_PERCENTAGE);
+            if ((alignment == CSSValueMiddle || alignment == CSSValueCenter) && multiplier != 1.0)
+                setInlineStyleProperty(CSSPropertyTop, static_cast<double>(cue->line() - (newCueSize - m_cue.getCSSSize()) / 2), CSSPrimitiveValue::CSS_PERCENTAGE);
+        }
     }
 
     std::pair<float, float> position = m_cue.getCSSPosition();
     if (cue->getWritingDirection() == VTTCue::Horizontal) {
         setInlineStyleProperty(CSSPropertyMinWidth, "-webkit-min-content");
-        double maxWidth = videoSize.width() * (100.0 - position.first) / 100.0;
-        setInlineStyleProperty(CSSPropertyMaxWidth, maxWidth, CSSPrimitiveValue::CSS_PX);
+        setInlineStyleProperty(CSSPropertyMaxWidth, 100.0 - position.first, CSSPrimitiveValue::CSS_PERCENTAGE);
     } else {
         setInlineStyleProperty(CSSPropertyMinHeight, "-webkit-min-content");
-        double maxHeight = videoSize.height() * (100.0 - position.second) / 100.0;
-        setInlineStyleProperty(CSSPropertyMaxHeight, maxHeight, CSSPrimitiveValue::CSS_PX);
+        setInlineStyleProperty(CSSPropertyMaxHeight, 100.0 - position.second, CSSPrimitiveValue::CSS_PERCENTAGE);
     }
 
     if (cue->foregroundColor().isValid())

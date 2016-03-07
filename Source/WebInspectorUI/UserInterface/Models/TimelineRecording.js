@@ -79,13 +79,31 @@ WebInspector.TimelineRecording.prototype = {
         return this._endTime;
     },
 
+    saveIdentityToCookie: function()
+    {
+        // Do nothing. Timeline recordings are not persisted when the inspector is
+        // re-opened, so do not attempt to restore by identifier or display name.
+    },
+
     isWritable: function()
     {
         return this._isWritable;
     },
 
+    isEmpty: function()
+    {
+        for (var timeline of this._timelines.values()) {
+            if (timeline.records.length)
+                return false;
+        }
+
+        return true;
+    },
+
     unloaded: function()
     {
+        console.assert(!this.isEmpty(), "Shouldn't unload an empty recording; it should be reused instead.");
+
         this._isWritable = false;
     },
 

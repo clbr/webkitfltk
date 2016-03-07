@@ -1128,11 +1128,12 @@ void RenderBoxModelObject::calculateBackgroundImageGeometry(const RenderLayerMod
             viewportRect = view().unscaledDocumentRect();
         else {
             viewportRect.setSize(view().frameView().unscaledVisibleContentSizeIncludingObscuredArea());
-            top += view().frameView().topContentInset(ScrollView::TopContentInsetType::WebCoreOrPlatformContentInset);
             if (fixedBackgroundPaintsInLocalCoordinates())
                 viewportRect.setLocation(LayoutPoint());
-            else
+            else {
                 viewportRect.setLocation(toLayoutPoint(view().frameView().documentScrollOffsetRelativeToViewOrigin()));
+                top += view().frameView().topContentInset(ScrollView::TopContentInsetType::WebCoreOrPlatformContentInset);
+            }
         }
         
         if (paintContainer)
