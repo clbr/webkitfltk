@@ -890,10 +890,8 @@ void StyleResolver::keyframeStylesForAnimation(Element* e, const RenderStyle* el
         keyframeValue.setStyle(styleForKeyframe(elementStyle, keyframe, keyframeValue));
 
         // Add this keyframe style to all the indicated key times
-        Vector<double> keys;
-        keyframe->getKeys(keys);
-        for (size_t keyIndex = 0; keyIndex < keys.size(); ++keyIndex) {
-            keyframeValue.setKey(keys[keyIndex]);
+        for (auto& key: keyframe->keys()) {
+            keyframeValue.setKey(key);
             list.insert(keyframeValue);
         }
     }
@@ -1925,7 +1923,7 @@ bool StyleResolver::useSVGZoomRulesForLength()
 
 void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
 {
-    ASSERT_WITH_MESSAGE(!isExpandedShorthand(id), "Shorthand property id = %d wasn't expanded at parsing time", id);
+    ASSERT_WITH_MESSAGE(!isShorthandCSSProperty(id), "Shorthand property id = %d wasn't expanded at parsing time", id);
 
     State& state = m_state;
 
@@ -2231,7 +2229,7 @@ void StyleResolver::loadPendingSVGDocuments()
     if (!hasFilters && !hasMasks)
         return;
 
-    CachedResourceLoader* cachedResourceLoader = state.document().cachedResourceLoader();
+    CachedResourceLoader& cachedResourceLoader = state.document().cachedResourceLoader();
     
     if (hasFilters) {
         for (auto& filterOperation : state.filtersWithPendingSVGDocuments())

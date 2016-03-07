@@ -43,7 +43,8 @@ namespace WebCore {
     class PageCache {
         WTF_MAKE_NONCOPYABLE(PageCache); WTF_MAKE_FAST_ALLOCATED;
     public:
-        friend PageCache* pageCache();
+        // Function to obtain the global page cache.
+        WEBCORE_EXPORT static PageCache& shared();
         
         bool canCache(Page*) const;
 
@@ -58,7 +59,7 @@ namespace WebCore {
         int pageCount() const { return m_size; }
         WEBCORE_EXPORT int frameCount() const;
 
-        WEBCORE_EXPORT void markPagesForVistedLinkStyleRecalc();
+        WEBCORE_EXPORT void markPagesForVisitedLinkStyleRecalc();
 
         // Will mark all cached pages associated with the given page as needing style recalc.
         void markPagesForFullStyleRecalc(Page*);
@@ -75,7 +76,7 @@ namespace WebCore {
         void markPagesForDeviceScaleChanged(Page*);
 
     private:
-        PageCache(); // Use pageCache() instead.
+        PageCache(); // Use shared() instead.
         ~PageCache(); // Not implemented to make sure nobody accidentally calls delete -- WebCore does not delete singletons.
         
         static bool canCachePageContainingThisFrame(Frame*);
@@ -93,10 +94,9 @@ namespace WebCore {
         HistoryItem* m_tail;
         
         bool m_shouldClearBackingStores;
-     };
 
-    // Function to obtain the global page cache.
-    WEBCORE_EXPORT PageCache* pageCache();
+        friend class WTF::NeverDestroyed<PageCache>;
+    };
 
 } // namespace WebCore
 

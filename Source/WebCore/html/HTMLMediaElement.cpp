@@ -5730,7 +5730,7 @@ bool HTMLMediaElement::mediaPlayerIsLooping() const
 
 CachedResourceLoader* HTMLMediaElement::mediaPlayerCachedResourceLoader()
 {
-    return document().cachedResourceLoader();
+    return &document().cachedResourceLoader();
 }
 
 PassRefPtr<PlatformMediaResourceLoader> HTMLMediaElement::mediaPlayerCreateResourceLoader(std::unique_ptr<PlatformMediaResourceLoaderClient> client)

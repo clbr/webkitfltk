@@ -57,8 +57,8 @@ static void setImageLoadingSettings(Page* page)
         return;
 
     for (Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
-        frame->document()->cachedResourceLoader()->setImagesEnabled(page->settings().areImagesEnabled());
-        frame->document()->cachedResourceLoader()->setAutoLoadImages(page->settings().loadsImagesAutomatically());
+        frame->document()->cachedResourceLoader().setImagesEnabled(page->settings().areImagesEnabled());
+        frame->document()->cachedResourceLoader().setAutoLoadImages(page->settings().loadsImagesAutomatically());
     }
 }
 
@@ -523,7 +523,7 @@ void Settings::setUsesPageCache(bool usesPageCache)
         int first = -m_page->backForward().backCount();
         int last = m_page->backForward().forwardCount();
         for (int i = first; i <= last; i++)
-            pageCache()->remove(m_page->backForward().itemAtIndex(i));
+            PageCache::shared().remove(m_page->backForward().itemAtIndex(i));
     }
 }
 

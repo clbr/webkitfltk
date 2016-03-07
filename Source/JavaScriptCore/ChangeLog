@@ -1,3 +1,264 @@
+2015-01-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed fastMallocForbid / fastMallocAllow
+        https://bugs.webkit.org/show_bug.cgi?id=141012
+
+        Reviewed by Mark Hahnenberg.
+
+        Copy non-current thread stacks before scanning them instead of scanning
+        them in-place.
+
+        This operation is uncommon (i.e., never in the web content process),
+        and even in a stress test with 4 threads it only copies about 27kB,
+        so I think the performance cost is OK.
+
+        Scanning in-place requires a complex dance where we constrain our GC
+        data structures not to use malloc, free, or any other interesting functions
+        that might acquire locks. We've gotten this wrong many times in the past,
+        and I just got it wrong again yesterday. Since this code path is rarely
+        tested, I want it to just make sense, and not depend on or constrain the
+        details of the rest of the GC heap's design.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::otherThreadStack): Factored out a helper function for dealing with
+        unaligned and/or backwards pointers.
+
+        (JSC::MachineThreads::tryCopyOtherThreadStack): This is now the only
+        constrained function, and it only calls memcpy and low-level thread APIs.
+
+        (JSC::MachineThreads::tryCopyOtherThreadStacks): The design here is that
+        you do one pass over all the threads to compute their combined size,
+        and then a second pass to do all the copying. In theory, the threads may
+        grow in between passes, in which case you'll continue until the threads
+        stop growing. In practice, you never continue.
+
+        (JSC::growBuffer): Helper function for growing.
+
+        (JSC::MachineThreads::gatherConservativeRoots):
+        (JSC::MachineThreads::gatherFromOtherThread): Deleted.
+        * heap/MachineStackMarker.h: Updated for interface changes.
+
+2015-01-28  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: remove CSS.setPropertyText, CSS.toggleProperty and related dead code
+        https://bugs.webkit.org/show_bug.cgi?id=140961
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/protocol/CSS.json: Remove unused protocol methods.
+
+2015-01-28  Dana Burkart  <dburkart@apple.com>
+
+        Move ASan flag settings from DebugRelease.xcconfig to Base.xcconfig
+        https://bugs.webkit.org/show_bug.cgi?id=136765
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2015-01-27  Filip Pizlo  <fpizlo@apple.com>
+
+        ExitSiteData saying m_takesSlowPath shouldn't mean early returning takesSlowPath() since for the non-LLInt case we later set m_couldTakeSlowPath, which is more precise
+        https://bugs.webkit.org/show_bug.cgi?id=140980
+
+        Reviewed by Oliver Hunt.
+
+        * bytecode/CallLinkStatus.cpp:
+        (JSC::CallLinkStatus::computeFor):
+
+2015-01-27  Filip Pizlo  <fpizlo@apple.com>
+
+        Move DFGBinarySwitch out of the DFG so that all of the JITs can use it
+        https://bugs.webkit.org/show_bug.cgi?id=140959
+
+        Rubber stamped by Geoffrey Garen.
+        
+        I want to use this for polymorphic stubs for https://bugs.webkit.org/show_bug.cgi?id=140660.
+        This code no longer has DFG dependencies so this is a very clean move.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * dfg/DFGBinarySwitch.cpp: Removed.
+        * dfg/DFGBinarySwitch.h: Removed.
+        * dfg/DFGSpeculativeJIT.cpp:
+        * jit/BinarySwitch.cpp: Copied from Source/JavaScriptCore/dfg/DFGBinarySwitch.cpp.
+        * jit/BinarySwitch.h: Copied from Source/JavaScriptCore/dfg/DFGBinarySwitch.h.
+
+2015-01-27  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179192.
+        https://bugs.webkit.org/show_bug.cgi?id=140953
+
+        Caused numerous layout test failures (Requested by mattbaker_
+        on #webkit).
+
+        Reverted changeset:
+
+        "Use FastMalloc (bmalloc) instead of BlockAllocator for GC
+        pages"
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+        http://trac.webkit.org/changeset/179192
+
+2015-01-27  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION(r178591): 20% regression in Octane box2d
+        https://bugs.webkit.org/show_bug.cgi?id=140948
+
+        Reviewed by Geoffrey Garen.
+
+        Added check that we have a lexical environment to the arguments is captured check.
+        It doesn't make sense to resolve "arguments" when it really isn't captured.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::willResolveToArgumentsRegister):
+
+2015-01-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        Removes some more custom allocation code.
+
+        Looks like a speedup. (See results attached to bugzilla.)
+
+        Will hopefully reduce memory use by improving sharing between the GC and
+        malloc heaps.
+
+        * API/JSBase.cpp:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj: Feed the compiler.
+
+        * heap/BlockAllocator.cpp: Removed.
+        * heap/BlockAllocator.h: Removed. No need for a custom allocator anymore.
+
+        * heap/CodeBlockSet.cpp:
+        (JSC::CodeBlockSet::CodeBlockSet):
+        * heap/CodeBlockSet.h: Feed the compiler.
+
+        * heap/CopiedBlock.h:
+        (JSC::CopiedBlock::createNoZeroFill):
+        (JSC::CopiedBlock::create):
+        (JSC::CopiedBlock::CopiedBlock):
+        (JSC::CopiedBlock::isOversize):
+        (JSC::CopiedBlock::payloadEnd):
+        (JSC::CopiedBlock::capacity):
+        * heap/CopiedBlockInlines.h:
+        (JSC::CopiedBlock::reportLiveBytes): Each copied block now tracks its
+        own size, since we can't rely on Region to tell us our size anymore.
+
+        * heap/CopiedSpace.cpp:
+        (JSC::CopiedSpace::~CopiedSpace):
+        (JSC::CopiedSpace::tryAllocateOversize):
+        (JSC::CopiedSpace::tryReallocateOversize):
+        * heap/CopiedSpaceInlines.h:
+        (JSC::CopiedSpace::recycleEvacuatedBlock):
+        (JSC::CopiedSpace::recycleBorrowedBlock):
+        (JSC::CopiedSpace::allocateBlockForCopyingPhase):
+        (JSC::CopiedSpace::allocateBlock):
+        (JSC::CopiedSpace::startedCopying): Deallocate blocks directly, rather
+        than pushing them onto the block allocator's free list; the block
+        allocator doesn't exist anymore.
+
+        * heap/CopyWorkList.h:
+        (JSC::CopyWorkListSegment::create):
+        (JSC::CopyWorkListSegment::CopyWorkListSegment):
+        (JSC::CopyWorkList::~CopyWorkList):
+        (JSC::CopyWorkList::append):
+        (JSC::CopyWorkList::CopyWorkList): Deleted.
+        * heap/GCSegmentedArray.h:
+        (JSC::GCArraySegment::GCArraySegment):
+        * heap/GCSegmentedArrayInlines.h:
+        (JSC::GCSegmentedArray<T>::GCSegmentedArray):
+        (JSC::GCSegmentedArray<T>::~GCSegmentedArray):
+        (JSC::GCSegmentedArray<T>::clear):
+        (JSC::GCSegmentedArray<T>::expand):
+        (JSC::GCSegmentedArray<T>::refill):
+        (JSC::GCArraySegment<T>::create):
+        * heap/GCThreadSharedData.cpp:
+        (JSC::GCThreadSharedData::GCThreadSharedData):
+        * heap/GCThreadSharedData.h: Feed the compiler.
+
+        * heap/HandleBlock.h:
+        * heap/HandleBlockInlines.h:
+        (JSC::HandleBlock::create):
+        (JSC::HandleBlock::HandleBlock):
+        (JSC::HandleBlock::payloadEnd):
+        * heap/HandleSet.cpp:
+        (JSC::HandleSet::~HandleSet):
+        (JSC::HandleSet::grow): Same as above.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        * heap/Heap.h: Removed the block allocator since it is unused now.
+
+        * heap/HeapBlock.h:
+        (JSC::HeapBlock::destroy):
+        (JSC::HeapBlock::HeapBlock):
+        (JSC::HeapBlock::region): Deleted. Removed the Region pointer from each
+        HeapBlock since a HeapBlock is just a normal allocation now.
+
+        * heap/HeapInlines.h:
+        (JSC::Heap::blockAllocator): Deleted.
+
+        * heap/HeapTimer.cpp:
+        * heap/MarkStack.cpp:
+        (JSC::MarkStackArray::MarkStackArray):
+        * heap/MarkStack.h: Feed the compiler.
+
+        * heap/MarkedAllocator.cpp:
+        (JSC::MarkedAllocator::allocateBlock): No need to use a custom code path
+        based on size, since we use a general purpose allocator now.
+
+        * heap/MarkedBlock.cpp:
+        (JSC::MarkedBlock::create):
+        (JSC::MarkedBlock::destroy):
+        (JSC::MarkedBlock::MarkedBlock):
+        * heap/MarkedBlock.h:
+        (JSC::MarkedBlock::capacity): Track block size explicitly, like CopiedBlock.
+
+        * heap/MarkedSpace.cpp:
+        (JSC::MarkedSpace::freeBlock):
+        * heap/MarkedSpace.h:
+
+        * heap/Region.h: Removed.
+
+        * heap/SlotVisitor.cpp:
+        (JSC::SlotVisitor::SlotVisitor): Removed reference to block allocator.
+
+        * heap/SuperRegion.cpp: Removed.
+        * heap/SuperRegion.h: Removed.
+
+        * heap/WeakBlock.cpp:
+        (JSC::WeakBlock::create):
+        (JSC::WeakBlock::WeakBlock):
+        * heap/WeakBlock.h:
+        * heap/WeakSet.cpp:
+        (JSC::WeakSet::~WeakSet):
+        (JSC::WeakSet::addAllocator):
+        (JSC::WeakSet::removeAllocator): Removed reference to block allocator.
+
+2015-01-27  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [ARM] Typo fix after r176083
+        https://bugs.webkit.org/show_bug.cgi?id=140937
+
+        Reviewed by Anders Carlsson.
+
+        * assembler/ARMv7Assembler.h:
+        (JSC::ARMv7Assembler::ldrh):
+
+2015-01-27  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Win] Unreviewed gardening, skip failing tests.
+
+        * tests/exceptionFuzz.yaml: Skip exception fuzz tests due to bug140928.
+        * tests/mozilla/mozilla-tests.yaml: Skip ecma/Date/15.9.5.28-1.js due to bug140927.
+
 2015-01-26  Csaba Osztrogonác  <ossy@webkit.org>
 
         [Win] Enable JSC stress tests by default

@@ -51,6 +51,7 @@
 #include "Settings.h"
 #include "SubframeLoader.h"
 #include <wtf/CurrentTime.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/TemporaryChange.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringConcatenate.h>
@@ -291,10 +292,10 @@ static void logCanCachePageDecision(Page& page)
     diagnosticLoggingClient.logDiagnosticMessageWithResult(DiagnosticLoggingKeys::pageCacheKey(), emptyString(), rejectReasons ? DiagnosticLoggingResultFail : DiagnosticLoggingResultPass);
 }
 
-PageCache* pageCache()
+PageCache& PageCache::shared()
 {
-    static PageCache* staticPageCache = new PageCache;
-    return staticPageCache;
+    static NeverDestroyed<PageCache> globalPageCache;
+    return globalPageCache;
 }
 
 PageCache::PageCache()
@@ -392,35 +393,35 @@ int PageCache::frameCount() const
     for (HistoryItem* current = m_head; current; current = current->m_next) {
         ++frameCount;
         ASSERT(current->m_cachedPage);
-        frameCount += current->m_cachedPage ? current->m_cachedPage->cachedMainFrame()->descendantFrameCount() : 0;
+        frameCount += current->m_cachedPage->cachedMainFrame()->descendantFrameCount();
     }
     
     return frameCount;
 }
 
-void PageCache::markPagesForVistedLinkStyleRecalc()
+void PageCache::markPagesForVisitedLinkStyleRecalc()
 {
     for (HistoryItem* current = m_head; current; current = current->m_next) {
-        if (current->m_cachedPage)
-            current->m_cachedPage->markForVistedLinkStyleRecalc();
+        ASSERT(current->m_cachedPage);
+        current->m_cachedPage->markForVisitedLinkStyleRecalc();
     }
 }
 
 void PageCache::markPagesForFullStyleRecalc(Page* page)
 {
     for (HistoryItem* current = m_head; current; current = current->m_next) {
-        CachedPage* cachedPage = current->m_cachedPage.get();
-        if (cachedPage && &page->mainFrame() == &cachedPage->cachedMainFrame()->view()->frame())
-            cachedPage->markForFullStyleRecalc();
+        CachedPage& cachedPage = *current->m_cachedPage;
+        if (&page->mainFrame() == &cachedPage.cachedMainFrame()->view()->frame())
+            cachedPage.markForFullStyleRecalc();
     }
 }
 
 void PageCache::markPagesForDeviceScaleChanged(Page* page)
 {
     for (HistoryItem* current = m_head; current; current = current->m_next) {
-        CachedPage* cachedPage = current->m_cachedPage.get();
-        if (cachedPage && &page->mainFrame() == &cachedPage->cachedMainFrame()->view()->frame())
-            cachedPage->markForDeviceScaleChanged();
+        CachedPage& cachedPage = *current->m_cachedPage;
+        if (&page->mainFrame() == &cachedPage.cachedMainFrame()->view()->frame())
+            cachedPage.markForDeviceScaleChanged();
     }
 }
 
@@ -428,8 +429,8 @@ void PageCache::markPagesForDeviceScaleChanged(Page* page)
 void PageCache::markPagesForCaptionPreferencesChanged()
 {
     for (HistoryItem* current = m_head; current; current = current->m_next) {
-        if (current->m_cachedPage)
-            current->m_cachedPage->markForCaptionPreferencesChanged();
+        ASSERT(current->m_cachedPage);
+        current->m_cachedPage->markForCaptionPreferencesChanged();
     }
 }
 #endif
@@ -507,7 +508,7 @@ CachedPage* PageCache::get(HistoryItem* item, Page* page)
         
         LOG(PageCache, "Not restoring page for %s from back/forward cache because cache entry has expired", item->url().string().ascii().data());
         logPageCacheFailureDiagnosticMessage(page, DiagnosticLoggingKeys::expiredKey());
-        pageCache()->remove(item);
+        PageCache::shared().remove(item);
     } else if (item->m_pruningReason != PruningReason::None)
         logPageCacheFailureDiagnosticMessage(page, pruningReasonToDiagnosticLoggingKey(item->m_pruningReason));
 

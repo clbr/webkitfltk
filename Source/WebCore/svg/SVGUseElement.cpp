@@ -260,7 +260,7 @@ void SVGUseElement::svgAttributeChanged(const QualifiedName& attrName)
             if (url.hasFragmentIdentifier()) {
                 CachedResourceRequest request(ResourceRequest(url.string()));
                 request.setInitiator(this);
-                setCachedDocument(document().cachedResourceLoader()->requestSVGDocument(request));
+                setCachedDocument(document().cachedResourceLoader().requestSVGDocument(request));
             }
         } else
             setCachedDocument(0);
@@ -776,10 +776,8 @@ void SVGUseElement::invalidateShadowTree()
 void SVGUseElement::invalidateDependentShadowTrees()
 {
     // Recursively invalidate dependent <use> shadow trees
-    const HashSet<SVGElementInstance*>& instances = instancesForElement();
-    const HashSet<SVGElementInstance*>::const_iterator end = instances.end();
-    for (HashSet<SVGElementInstance*>::const_iterator it = instances.begin(); it != end; ++it) {
-        if (SVGUseElement* element = (*it)->correspondingUseElement()) {
+    for (auto* instance : instances()) {
+        if (SVGUseElement* element = instance->correspondingUseElement()) {
             ASSERT(element->inDocument());
             element->invalidateShadowTree();
         }
