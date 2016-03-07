@@ -1,3 +1,696 @@
+2014-07-21  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Update GObject DOM bindings test results after r171285.
+
+        * bindings/scripts/test/GObject/WebKitDOMTestActiveDOMObject.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestCallback.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestCustomNamedGetter.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestEventConstructor.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestEventTarget.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestException.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestGenerateIsReachable.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestInterface.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestMediaQueryListListener.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestNamedConstructor.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestNode.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestNondeterministic.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestOverloadedConstructors.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestSerializedScriptValueInterface.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMattribute.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMreadonly.cpp:
+
+2014-07-20  Pratik Solanki  <psolanki@apple.com>
+
+        Reduce the chances of a race condition when sharing SharedBuffer
+        https://bugs.webkit.org/show_bug.cgi?id=135060
+        <rdar://problem/17729444>
+
+        Reviewed by Darin Adler.
+
+        We currently pass a SharedBuffer wrapped in WebCoreSharedBufferData to ImageIO for image
+        decoding. This is not thread safe since ImageIO will access this buffer on a separate
+        thread. We access SharedBuffer::buffer() on the other thread which resizes the Vector
+        m_buffer if m_size is greater than the vector size. Since the code in SharedBuffer::append()
+        sets m_size before appending the data to the buffer, m_size is out of sync with the m_buffer
+        size for the entire duration of the Vector append which could be doing a lot of copying if
+        the resource is large. While this change does not fix the race condition, we can at least
+        reduce the chances of SharedBuffer::buffer() calling resize() by setting m_size after the
+        cector has finished appending.
+
+        No new tests because no functional changes.
+
+        * platform/SharedBuffer.cpp:
+        (WebCore::SharedBuffer::append):
+
+2014-07-20  Jeremy Jones  <jeremyj@apple.com>
+
+        Fix test crashes when cloning video layer since r171286
+        https://bugs.webkit.org/show_bug.cgi?id=135112
+
+        Unreviewed. Fix crashing tests by conditionalizing inline video layer change.
+        compositing/video/video-reflection.html [ Crash ]
+        media/video-layer-crash.html [ Crash ]
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h: add conditional
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm: ditto
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayerLayer): ditto
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::destroyVideoLayer): ditto
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::platformLayer): ditto
+
+2014-07-20  Jeremy Jones  <jeremyj@apple.com>
+
+        Disable ff/rw based on canPlayFastForward and canPlayFastRewind.
+        https://bugs.webkit.org/show_bug.cgi?id=134894
+
+        Reviewed by Darin Adler.
+
+        * WebCore.exp.in: add symbol for canPlayFastReverse
+        * html/HTMLMediaElement.cpp: Add two new accessors
+        (WebCore::HTMLMediaElement::nextScanRate): possibly limit scanRate
+        (WebCore::HTMLMediaElement::canPlayFastForward): added
+        (WebCore::HTMLMediaElement::canPlayFastReverse): added
+        * html/HTMLMediaElement.h: declare two new methods
+        * platform/graphics/MediaPlayer.cpp: Plumb through two new accessors
+        (WebCore::MediaPlayer::maxFastForwardRate): added
+        (WebCore::MediaPlayer::minFastReverseRate): added
+        * platform/graphics/MediaPlayer.h: Declare new methods
+        * platform/graphics/MediaPlayerPrivate.h: Added two new methods.
+        (WebCore::MediaPlayerPrivateInterface::maxFastForwardRate): added
+        (WebCore::MediaPlayerPrivateInterface::minFastReverseRate): added
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h: member to cache ff/rw enabled state
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayer): observe on item canPlayFastForward canPlayFastReverse
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::canPlayFastForwardDidChange): added
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::canPlayFastReverseDidChange): added
+        (WebCore::itemKVOProperties): observe canPlayFastForward canPlayFastRewind
+        (-[WebCoreAVFMovieObserver observeValueForKeyPath:ofObject:change:context:]): ditto
+        * platform/ios/WebVideoFullscreenInterface.h: add new method
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.h: ditto
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm: ditto
+        (WebVideoFullscreenInterfaceAVKit::setCanPlayFastReverse): Set value on WebAVPlayerController.
+        (-[WebAVPlayerController canScanBackward]): Deleted.
+        (+[WebAVPlayerController keyPathsForValuesAffectingCanScanBackward]): Deleted.
+        * platform/ios/WebVideoFullscreenModelMediaElement.mm:
+        (WebVideoFullscreenModelMediaElement::updateForEventName): update canPlayFastReverse.
+
+2014-07-18  Gavin Barraclough  <baraclough@apple.com>
+
+        HTMLMediaElement should registerWithDocument on iOS
+        https://bugs.webkit.org/show_bug.cgi?id=135084
+        <rdar://problem/17702531>
+
+        Reviewed by Andreas Kling.
+
+        Otherwise it won't know when the visibility changes!
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::registerWithDocument):
+        (WebCore::HTMLMediaElement::unregisterWithDocument):
+
+2014-07-20  Jeremy Jones  <jeremyj@apple.com>
+
+        Decrease flicker when enter and exit fullscreen.
+        https://bugs.webkit.org/show_bug.cgi?id=134919
+
+        Reviewed by Simon Fraser.
+
+        Put AVPlayerLayer in a container layer so moving it between inline and fullscreen
+        is as easy as adding and removing it from a containter layer; no need to do a layout.
+
+        Make sure fullscreen layers are transparent before moving moving the AVPlayerLayer
+        between inline and fullscreen so you don't briefly see the empty fullscreen layers.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::platformLayer): remove fullscreen special case.
+        (WebCore::HTMLMediaElement::setVideoFullscreenLayer): no need to recalc style
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.h: add inline container layer
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm: 
+        add WebVideoContainerLayer to contain AVPlayerLayer and keep layout correct.
+        (-[WebVideoContainerLayer setBounds:]): forward setbounds to set child frame.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createAVPlayerLayer): create the video container layer
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::destroyVideoLayer): destroy the video container layer
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::platformLayer): use container layer instead of video layer
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setVideoFullscreenLayer): use transactions to prevent unwanted animation.
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setVideoFullscreenFrame): ditto
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        (PlatformCALayerMac::layerTypeForPlatformLayer): WebVideoContainerLayer is a kind of AVPlayerLayer
+        * platform/ios/WebVideoFullscreenControllerAVKit.mm:
+        (-[WebVideoFullscreenController didCleanupFullscreen]): remove video fullscreen layer first
+        * platform/ios/WebVideoFullscreenInterfaceAVKit.mm:
+        (WebVideoFullscreenInterfaceAVKit::setupFullscreen): make background transparent during transition.
+           dispatch_async to allow CATransaction to complete before calling didSetupFullscreen()
+
+2014-07-20  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Move ExceptionCodeDescription.h into the files that actually need it
+        https://bugs.webkit.org/show_bug.cgi?id=134968
+
+        Reviewed by Darin Adler.
+
+        No new tests because no functional changes.
+
+        * Modules/indexeddb/IDBDatabaseException.cpp:
+        * Modules/webdatabase/SQLException.cpp:
+        * bindings/js/JSDOMBinding.cpp:
+        * bindings/objc/ExceptionHandlers.mm:
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (Generate):
+        * dom/DOMCoreException.cpp:
+        * dom/EventException.cpp:
+        * dom/ExceptionBase.cpp:
+        * dom/ExceptionCode.h:
+        * dom/RangeException.cpp:
+        * fileapi/FileException.cpp:
+        * inspector/DOMEditor.cpp:
+        * inspector/InspectorDOMAgent.cpp:
+        * svg/SVGException.cpp:
+        * xml/XMLHttpRequestException.cpp:
+        * xml/XPathException.cpp:
+
+2014-07-20  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problems/17742611> -[_WKActivatedElementInfo image] is often empty
+        https://bugs.webkit.org/show_bug.cgi?id=135107
+
+        Reviewed by Sam Weinig.
+
+        Test: TestWebKitAPI/Tests/mac/RenderedImageFromDOMNode.mm
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::paintContents): To work around http://webkit.org/b/135106, replace the
+        paint root with its nearest ancestor that isn’t an inline with culled line boxes, if needed.
+
+2014-07-20  Darin Adler  <darin@apple.com>
+
+        Crashes seen in wheel event handling
+        https://bugs.webkit.org/show_bug.cgi?id=135102
+
+        Reviewed by Beth Dakin.
+
+        Speculative fix based on guesses about what could be crashing.
+        The crash seems to be calling ref on an event target, and my guess is that this
+        has something to do with latching.
+
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::platformPrepareForWheelEvents): Updated argument types.
+        (WebCore::EventHandler::handleWheelEvent): Refactored a little and made some local
+        variables use RefPtr instead of raw pointers. Also added some comments.
+
+        * page/EventHandler.h: Changed argument types to RefPtr.
+
+        * page/mac/EventHandlerMac.mm:
+        (WebCore::EventHandler::platformPrepareForWheelEvents): Updated argument types.
+        Also added a FIXME.
+
+2014-07-20  Simon Fraser  <simon.fraser@apple.com>
+
+        Print layerIDs in GraphicsLayer dumps
+        https://bugs.webkit.org/show_bug.cgi?id=135100
+
+        Reviewed by Darin Adler.
+
+        When calling showGraphicsLayerTree() from the debugger, it's useful to show
+        layerIDs so they can be correlated with remote layer tree transactions. So
+        when dumping with debug info, dump the primary layer ID.
+
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::dumpProperties):
+
+2014-07-20  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] ignore requests to set volume
+        https://bugs.webkit.org/show_bug.cgi?id=135081
+
+        Applied post-review comments from Darin Adler.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setVolume): Don't include unreachable
+            code on iOS.
+
+2014-07-19  Mark Rowe  <mrowe@apple.com>
+
+        <https://webkit.org/b/135085> Ensure that make_names.pl generates the same result when run multiple times.
+
+        Perl 5.18 introduced hash randomization. This results in the iteration order of hashes being different
+        from one run to the next. To ensure identical output we can iterate over the hash keys in sorted order.
+
+        Reviewed by Alexey Proskuryakov.
+
+        * bindings/scripts/StaticString.pm:
+        (GenerateStrings):
+        (GenerateStringAsserts):
+        * dom/make_names.pl:
+
+2014-07-19  Zan Dobersek  <zdobersek@igalia.com>
+
+        Document::unregisterNodeListforInvalidation() and Document::unregisterCollection() have incorrect assertions
+        https://bugs.webkit.org/show_bug.cgi?id=134869
+
+        Reviewed by Darin Adler.
+
+        Both methods should assert that the relevant HashMap is either empty if invalidation originates
+        from Document::invalidateNodeListAndCollectionCaches() or acutally contains the element that is
+        being invalidated. In the first case the HashMap is empty because its entries were moved out in
+        the Document::invalidateNodeListAndCollectionCaches().
+
+        This was exposed by r170995 (later rolled out in r170999) which introduced move constructor and
+        move assignment operators for HashTable. The assertions in the titular methods won't be passing
+        until r170995 relands.
+
+        * dom/Document.cpp:
+        (WebCore::Document::unregisterNodeListForInvalidation):
+
+2014-07-18  Eric Carlson  <eric.carlson@apple.com>
+
+        [iOS] ignore requests to set volume
+        https://bugs.webkit.org/show_bug.cgi?id=135081
+
+        Reviewed by Jer Noble.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::setVolume): Do nothing on iOS.
+
+2014-07-18  Andy Estes  <aestes@apple.com>
+
+        [iOS] Tapping "Allow Website" on a restricted page does not bring up the keypad
+        https://bugs.webkit.org/show_bug.cgi?id=135072
+        <rdar://problem/17528188>
+
+        Reviewed by David Kilzer.
+
+        No new tests. Content filtering is not testable from WebKit.
+
+        * WebCore.exp.in: Exported necessary ContentFilter symbols.
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::finishedLoading): Called FrameLoaderClient::contentFilterDidBlockLoad().
+        (WebCore::DocumentLoader::responseReceived): Created a new ContentFilter.
+        (WebCore::DocumentLoader::dataReceived): Called FrameLoaderClient::contentFilterDidBlockLoad().
+        (WebCore::DocumentLoader::setContentFilterForBlockedLoad): Deleted.
+        (WebCore::DocumentLoader::handleContentFilterRequest): Deleted.
+        * loader/DocumentLoader.h:
+        * loader/FrameLoaderClient.h:
+        (WebCore::FrameLoaderClient::contentFilterDidBlockLoad):
+        * loader/PolicyChecker.cpp:
+        (WebCore::PolicyChecker::checkNavigationPolicy): Removed the check for unblock navigations, as this is now
+        handled at the WebKit layer.
+        * platform/ContentFilter.h: ContentFilter no longer needs to be RefCounted, so made various changes in order to
+        make it compatible with unique_ptr.
+        * platform/ios/ContentFilterIOS.mm:
+        (WebCore::scheme): Changed from a public member function to a static inline free function.
+        (WebCore::ContentFilter::handleUnblockRequestAndDispatchIfSuccessful): Renamed from requestUnblockAndDispatchIfSuccessful.
+        * platform/mac/ContentFilterMac.mm:
+        (WebCore::ContentFilter::ContentFilter): Added a default constructor for use during message decoding.
+        (WebCore::ContentFilter::addData): Removed calls to ref() and deref(). These were never actually needed since
+        we were dispatching the block synchronously.
+        (WebCore::ContentFilter::finishedAddingData): Ditto.
+        (WebCore::ContentFilter::encode): Encoded m_platformContentFilter to the NSKeyedArchiver if it conforms to NSSecureCoding.
+        (WebCore::ContentFilter::decode): Decoded m_platformContentFilter from the NSKeyedUnarchiver if it conforms to NSSecureCoding.
+        (WebCore::ContentFilter::create): Deleted.
+
+2014-07-18  Simon Fraser  <simon.fraser@apple.com>
+
+        [iOS WK2] position:fixed in iframes with programmatic scroll could end up in the wrong place
+        https://bugs.webkit.org/show_bug.cgi?id=135078
+        <rdar://problem/17401823>
+
+        Reviewed by Tim Horton.
+        
+        When the UI-side scrolling tree receives a requested scroll position update, it scrolls
+        the node (e.g. a frame) then traverses child nodes to update them, e.g. for fixed position.
+        However, we would always use a viewport rect for the main document (from the scrolling tree),
+        which is not appropriate for subframes. Subframes should just use their own visible
+        rect to position fixed children.
+
+        Test: platform/mac-wk2/tiled-drawing/scrolling/frames/fixed-inside-frame.html
+
+        * page/scrolling/ios/ScrollingTreeFrameScrollingNodeIOS.mm:
+        (WebCore::ScrollingTreeFrameScrollingNodeIOS::updateChildNodesAfterScroll):
+
+2014-07-18  Beth Dakin  <bdakin@apple.com>
+
+        Fixed position elements are misplaced when a WK1 view has contentInsets set
+        https://bugs.webkit.org/show_bug.cgi?id=135031
+        -and corresponding-
+        <rdar://problem/17682335>
+
+        Reviewed by Tim Horton.
+
+        [NSScrollView documentVisibleRect] includes content that is within the inset-area 
+        of a view, but WebCore is interested in the content that is fully visible, so we 
+        need to factor the inset sizes out of this rect.
+
+        Implement contract() to avoid the awkwardness of calling expand() with negative 
+        values.
+        * platform/graphics/IntSize.h:
+        (WebCore::IntSize::contract):
+
+        Factor out insets
+        * platform/mac/ScrollViewMac.mm:
+        (WebCore::ScrollView::platformVisibleContentRect):
+        (WebCore::ScrollView::platformVisibleContentSize):
+
+2014-07-18  Tim Horton  <timothy_horton@apple.com>
+
+        Take navigation snapshots whenever the current back-forward item is going to change
+        https://bugs.webkit.org/show_bug.cgi?id=135058
+        <rdar://problem/17464515>
+
+        Reviewed by Dan Bernstein.
+
+        * loader/HistoryController.cpp:
+        (WebCore::HistoryController::updateForCommit):
+        (WebCore::HistoryController::recursiveUpdateForCommit):
+        (WebCore::HistoryController::recursiveUpdateForSameDocumentNavigation):
+        (WebCore::HistoryController::createItem):
+        Use setCurrentItem instead of duplicating the contents of it inside each of these functions.
+
+        (WebCore::HistoryController::setCurrentItem):
+        (WebCore::HistoryController::replaceCurrentItem):
+        When setting or replacing the current item, let the FrameLoaderClient know that we're going
+        to change which history item is "current".
+
+        * loader/FrameLoaderClient.h:
+        (WebCore::FrameLoaderClient::willChangeCurrentHistoryItem): Added.
+
+2014-07-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r171207.
+        https://bugs.webkit.org/show_bug.cgi?id=135056
+
+        Broke multiple tests on Yosemite (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "Fixed position elements are misplaced when a WK1 view has
+        contentInsets set"
+        https://bugs.webkit.org/show_bug.cgi?id=135031
+        http://trac.webkit.org/changeset/171207
+
+2014-07-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r171218.
+        https://bugs.webkit.org/show_bug.cgi?id=135055
+
+        Made fast/dom/HTMLObjectElement/beforeload-set-text-
+        crash.xhtml crash (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "REGRESSION (r169105): Crash in selection"
+        https://bugs.webkit.org/show_bug.cgi?id=134303
+        http://trac.webkit.org/changeset/171218
+
+2014-07-18  Radu Stavila  <stavila@adobe.com>
+
+        REGRESSION (r169105): Crash in selection
+        https://bugs.webkit.org/show_bug.cgi?id=134303
+
+        Reviewed by Ryosuke Niwa.
+
+        When splitting the selection between different subtrees, all subtrees must have their selection cleared before
+        starting to apply the new selection. Otherwise, when selecting objects in a named flow thread and going up
+        its containing block chain, we can end up in the view's selection root, which has not yet been updated and so
+        we get inconsistent data.
+
+        To achieve this goal, the selection update was split into a "clear" and an "apply" method. The updateSelectionForSubtrees
+        method first iterates through all subtrees and performs the "clear" method and then starts all over again
+        and performs the "apply" method.
+
+        Also, the selectionStart/End members in RenderView have been renamed to fix problems caused by the fact that
+        RenderView inherits SelectionSubtreeRoot, which also has the same selectionStart/End members.
+
+        Test: fast/regions/selection/crash-deselect.html
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::isSelectionRoot):
+        * rendering/RenderSelectionInfo.h:
+        * rendering/RenderView.cpp:
+        (WebCore::RenderView::RenderView):
+        (WebCore::RenderView::setSelection): Renamed m_selectionStart/End to m_unsplitSelectionStart/End
+        (WebCore::RenderView::splitSelectionBetweenSubtrees):
+        (WebCore::RenderView::updateSelectionForSubtrees): Added, clears and re-applies selection for all selection subtrees.
+        (WebCore::RenderView::clearSubtreeSelection): Added, clears selection and returns previously selected information.
+        (WebCore::RenderView::applySubtreeSelection): Added, updates the selection status of all objects inside the selection tree, compares old and new data and repaints accordingly.
+        (WebCore::RenderView::getSelection): Renamed m_selectionStart/End to m_unsplitSelectionStart/End
+        (WebCore::RenderView::setSubtreeSelection): Deleted.
+        * rendering/RenderView.h:
+        * rendering/SelectionSubtreeRoot.cpp:
+        (WebCore::SelectionSubtreeRoot::SelectionSubtreeRoot):
+        * rendering/SelectionSubtreeRoot.h:
+        (WebCore::SelectionSubtreeRoot::OldSelectionData::OldSelectionData):
+
+2014-07-17  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Re-enqueue after a removeCodedFrames() only if the removed frames overlap what may have possibly been enqueued but undisplayed.
+        https://bugs.webkit.org/show_bug.cgi?id=135039
+
+        Reviewed by Eric Carlson.
+
+        When a client calls removeCodedFrames(), we must re-enqueue those ranges if the removed samples overlap with
+        enqueued but possibly un-displayed samples. Otherwise, replacement samples may lead to decode errors as those
+        new samples dependencies are not met. But if we re-enqueue too frequently, this may cause subtle but noticible
+        display timing glitches, so only re-enqueue when removeCodedFrames have a possiblity of removing enqueued, but
+        not yet displayed samples.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::removeCodedFrames):
+
+2014-07-17  David Kilzer  <ddkilzer@apple.com>
+
+        SECTORDER_FLAGS should be defined in target's xcconfig file, not Base.xcconfig
+        <http://webkit.org/b/135006>
+
+        Reviewed by Darin Adler.
+
+        * Configurations/Base.xcconfig: Move SECTORDER_FLAGS to
+        WebCore.xcconfig.
+        * Configurations/DebugRelease.xcconfig: Remove empty
+        SECTORDER_FLAGS definition.
+        * Configurations/WebCoreTestShim.xcconfig: Ditto.
+        * Configurations/WebCoreTestSupport.xcconfig: Ditto.
+        * Configurations/WebCore.xcconfig: Use $(CONFIGURATION) so
+        SECTORDER_FLAGS is only set on Production builds.
+
+2014-07-17  Zalan Bujtas  <zalan@apple.com>
+
+        Subpixel rendering: Embedded non-compositing rotate transform paints to wrong position.
+        https://bugs.webkit.org/show_bug.cgi?id=135028
+
+        Reviewed by Simon Fraser.
+
+        CTM always translates to where the layer's renderer() is going to paint.
+        It ensures that the pixel snapped renderer() always end up painting to (0, 0) which is
+        required to be able to position properly on transformed context.
+
+        Test: fast/layers/hidpi-transform-on-child-content-is-mispositioned.html
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::beginTransparencyLayers):
+        (WebCore::RenderLayer::clipToRect):
+        (WebCore::RenderLayer::paintLayerByApplyingTransform):
+        (WebCore::RenderLayer::paintBackgroundForFragments):
+        (WebCore::RenderLayer::paintForegroundForFragmentsWithPhase):
+        (WebCore::RenderLayer::paintOutlineForFragments):
+        (WebCore::RenderLayer::paintMaskForFragments):
+        (WebCore::RenderLayer::paintOverflowControlsForFragments):
+        (WebCore::RenderLayer::calculateClipRects):
+        * rendering/RenderLayer.h:
+
+2014-07-17  Beth Dakin  <bdakin@apple.com>
+
+        Fixed position elements are misplaced when a WK1 view has contentInsets set
+        https://bugs.webkit.org/show_bug.cgi?id=135031
+        -and corresponding-
+        <rdar://problem/17682335>
+
+        Reviewed by Tim Horton.
+
+        [NSScrollView documentVisibleRect] is not the rect that we are looking for when 
+        this function is called. WebCore is interested in the rect that does not include 
+        content that is within the inset region.
+
+        Implement contract() to avoid the awkwardness of calling expand() with negative 
+        values.
+        * platform/graphics/IntSize.h:
+        (WebCore::IntSize::contract):
+
+        Use _insetBounds instead of documentVisibleRect, and when it’s necessary to use 
+        the frame’s dimensions, extract the inset from that size.
+        * platform/mac/ScrollViewMac.mm:
+        (WebCore::ScrollView::platformVisibleContentRect):
+        (WebCore::ScrollView::platformVisibleContentSize):
+
+2014-07-17  Enrica Casucci  <enrica@apple.com>
+
+        [REGRESSION WK2]The menu bar does not show up when tapping on the caret.
+        https://bugs.webkit.org/show_bug.cgi?id=135023
+        <rdar://problem/17617282>
+
+        Reviewed by Benjamin Poulain.
+
+        Adding some exports.
+        
+        * WebCore.exp.in:
+
+2014-07-17  Timothy Hatcher  <timothy@apple.com>
+
+        Make console.profile record to the Timeline.
+
+        https://bugs.webkit.org/show_bug.cgi?id=134643
+
+        Reviewed by Joseph Pecoraro.
+
+        Passes existing profiler tests in fast/profiler.
+
+        * bindings/js/ScriptState.cpp:
+        (WebCore::domWindowFromExecState):
+        (WebCore::frameFromExecState):
+        (WebCore::scriptExecutionContextFromExecState):
+        (WebCore::mainWorldExecState):
+        (WebCore::execStateFromNode):
+        * bindings/js/ScriptState.h:
+        * inspector/InspectorController.cpp:
+        (WebCore::InspectorController::InspectorController):
+        (WebCore::InspectorController::profilerEnabled):
+        (WebCore::InspectorController::setProfilerEnabled):
+        * inspector/InspectorController.h:
+        * inspector/InspectorInstrumentation.cpp:
+        (WebCore::InspectorInstrumentation::startProfilingImpl):
+        (WebCore::InspectorInstrumentation::stopProfilingImpl):
+        * inspector/InspectorTimelineAgent.cpp:
+        (WebCore::InspectorTimelineAgent::didCreateFrontendAndBackend):
+        (WebCore::InspectorTimelineAgent::willDestroyFrontendAndBackend):
+        (WebCore::InspectorTimelineAgent::start):
+        (WebCore::InspectorTimelineAgent::stop):
+        (WebCore::startProfiling):
+        (WebCore::stopProfiling):
+        (WebCore::InspectorTimelineAgent::startFromConsole):
+        (WebCore::InspectorTimelineAgent::stopFromConsole):
+        (WebCore::InspectorTimelineAgent::didWriteHTML):
+        (WebCore::InspectorTimelineAgent::breakpointActionProbe):
+        (WebCore::toProtocol):
+        (WebCore::InspectorTimelineAgent::addRecordToTimeline):
+        (WebCore::InspectorTimelineAgent::didCompleteRecordEntry):
+        (WebCore::InspectorTimelineAgent::didCompleteCurrentRecord):
+        (WebCore::InspectorTimelineAgent::InspectorTimelineAgent):
+        (WebCore::InspectorTimelineAgent::sendEvent):
+        (WebCore::InspectorTimelineAgent::createRecordEntry):
+        (WebCore::InspectorTimelineAgent::pushCurrentRecord):
+        * inspector/InspectorTimelineAgent.h:
+        (WebCore::InspectorTimelineAgent::TimelineRecordEntry::TimelineRecordEntry):
+        (WebCore::InspectorTimelineAgent::pushCurrentRecord):
+        * inspector/InstrumentingAgents.cpp:
+        (WebCore::InstrumentingAgents::InstrumentingAgents):
+        (WebCore::InstrumentingAgents::reset):
+        * inspector/InstrumentingAgents.h:
+        (WebCore::InstrumentingAgents::persistentInspectorTimelineAgent):
+        (WebCore::InstrumentingAgents::setPersistentInspectorTimelineAgent):
+        * inspector/TimelineRecordFactory.cpp:
+        (WebCore::TimelineRecordFactory::createConsoleProfileData):
+        * inspector/TimelineRecordFactory.h:
+        * inspector/protocol/Timeline.json:
+        * page/PageConsole.cpp:
+        (WebCore::PageConsole::profileEnd):
+
+2014-07-16  Sam Weinig  <sam@webkit.org>
+
+        Don't send geolocation permission requests when the page is not visible
+        <rdar://problem/17208715>
+        https://bugs.webkit.org/show_bug.cgi?id=134989
+
+        Reviewed by Darin Adler.
+
+        Instead of eagerly requesting geolocation permission for pages that aren't visible,
+        store a set of pending requests, and send them only once the page has become visible.
+
+        * Modules/geolocation/GeolocationController.cpp:
+        (WebCore::GeolocationController::GeolocationController):
+        (WebCore::GeolocationController::~GeolocationController):
+        (WebCore::GeolocationController::requestPermission):
+        (WebCore::GeolocationController::cancelPermissionRequest):
+        (WebCore::GeolocationController::viewStateDidChange):
+        (WebCore::provideGeolocationTo):
+        * Modules/geolocation/GeolocationController.h:
+        Store pending requests to be fired once the page is visible.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        Add ViewStateChangeObserver.h
+
+        * page/Page.cpp:
+        (WebCore::Page::addViewStateChangeObserver):
+        (WebCore::Page::removeViewStateChangeObserver):
+        (WebCore::Page::setViewState):
+        * page/Page.h:
+        Add a set of registered view state observers, and notify them when the
+        view state changes.
+
+        * page/ViewStateChangeObserver.h: Added.
+        (WebCore::ViewStateChangeObserver::~ViewStateChangeObserver):
+        Add an observer that can register with the page for view state changes.
+
+2014-07-17  Jer Noble  <jer.noble@apple.com>
+
+        Enable legacy fullscreen API in media controls
+        https://bugs.webkit.org/show_bug.cgi?id=134985
+
+        Reviewed by Eric Carlson.
+
+        Allow clients who have not enabled HTML5 Fullscreen APIs to still use fullscreen mode
+        with <video> elements by using the legacy, video-element-specific fullscreen APIs in
+        the <video> media controls.
+
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller):
+        (Controller.prototype.handleReadyStateChange):
+        (Controller.prototype.isFullScreen):
+        (Controller.prototype.handlePlayButtonClicked):
+        (Controller.prototype.updateFullscreenButton):
+        (Controller.prototype.handleFullscreenButtonClicked):
+
+2014-07-17  Vineet Chaudhary  <code.vineet@gmail.com>
+
+        [GObject] StrictTypeChecking extended attribute fails for methods with sequence<T>.
+        https://bugs.webkit.org/show_bug.cgi?id=121698
+
+        Reviewed by Antonio Gomes.
+
+        GodeGenerator was including wrong heeaders as WebKitDOMlong[] for methods with
+        array parameters and StrictTypeChecking extended attribute.
+        No new tests. TestObj.idl covers the tests.
+
+        * bindings/scripts/CodeGenerator.pm:
+        (GetArrayOrSequenceType):
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GenerateFunction):
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.cpp:
+        (webkit_dom_test_obj_strict_function_with_array):
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.cpp:
+        (webkit_dom_test_typedefs_func):
+        (webkit_dom_test_typedefs_nullable_array_arg):
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.h:
+        * bindings/scripts/test/TestObj.idl:
+
+2014-07-17  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        CSS JIT: Clean up return path
+        https://bugs.webkit.org/show_bug.cgi?id=135011
+
+        Reviewed by Benjamin Poulain.
+
+        Clean up the existing CSS JIT return path before adding new early return path
+        for pseudo elements.
+
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::SelectorCodeGenerator::generateSelectorChecker):
+        * cssjit/StackAllocator.h:
+        (WebCore::StackAllocator::StackReference::StackReference):
+        (WebCore::StackAllocator::StackReference::isValid):
+        (WebCore::StackAllocator::popAndDiscard): Deleted.
+
 2014-07-16  Zalan Bujtas  <zalan@apple.com>
 
         Subpixel rendering: Adjust cliprect with devicePixelFractionFromRenderer() before painting.

@@ -1,3 +1,160 @@
+2014-07-20  Diego Pino Garcia  <dpino@igalia.com>
+
+        ES6: Implement Math.sign()
+        https://bugs.webkit.org/show_bug.cgi?id=134980
+
+        Reviewed by Darin Adler.
+
+        * runtime/MathObject.cpp:
+        (JSC::MathObject::finishCreation):
+        (JSC::mathProtoFuncSign):
+
+2014-07-18  Filip Pizlo  <fpizlo@apple.com>
+
+        Exception fuzzing should work on iOS
+        https://bugs.webkit.org/show_bug.cgi?id=135070
+
+        Reviewed by Mark Hahnenberg.
+
+        * tests/exceptionFuzz.yaml:
+
+2014-07-18  Filip Pizlo  <fpizlo@apple.com>
+
+        Fix cloop build.
+
+        * jsc.cpp:
+        (jscmain):
+
+2014-07-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Need ability to fuzz exception throwing
+        https://bugs.webkit.org/show_bug.cgi?id=134945
+        <rdar://problem/17722027>
+
+        Reviewed by Sam Weinig.
+        
+        Adds the ability to instrument exception checks, and to force some random
+        exception check to artificially throw an exception. Also adds new tests that
+        are suitable for testing this. Note that this is closely tied to the Tools
+        directory changes that are also part of this changeset.
+        
+        This also fixes an activation tear-off bug that arises if we ever throw an
+        exception from operationOptimize, or if due to some other bug it's only due
+        to the operationOptimize exception check that we realize that there is an
+        exception to be thrown.
+
+        * dfg/DFGJITCompiler.h:
+        (JSC::DFG::JITCompiler::fastExceptionCheck):
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::callCheck):
+        * interpreter/Interpreter.cpp:
+        (JSC::unwindCallFrame):
+        * jit/AssemblyHelpers.cpp:
+        (JSC::AssemblyHelpers::callExceptionFuzz):
+        (JSC::AssemblyHelpers::emitExceptionCheck):
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::emitExceptionCheck): Deleted.
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileMainPass):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_enter):
+        * jit/JITOperations.cpp:
+        (JSC::numberOfExceptionFuzzChecks):
+        * jit/JITOperations.h:
+        * jsc.cpp:
+        (jscmain):
+        * runtime/Options.h:
+        * runtime/TestRunnerUtils.h:
+        * tests/exceptionFuzz.yaml: Added.
+        * tests/exceptionFuzz: Added.
+        * tests/exceptionFuzz/3d-cube.js: Added.
+        * tests/exceptionFuzz/date-format-xparb.js: Added.
+        * tests/exceptionFuzz/earley-boyer.js: Added.
+
+2014-07-17  David Kilzer  <ddkilzer@apple.com>
+
+        SECTORDER_FLAGS should be defined in target's xcconfig file, not Base.xcconfig
+        <http://webkit.org/b/135006>
+
+        Reviewed by Darin Adler.
+
+        * Configurations/Base.xcconfig: Move SECTORDER_FLAGS to
+        JavaScriptCore.xcconfig.
+        * Configurations/CompileRuntimeToLLVMIR.xcconfig: Remove empty
+        SECTORDER_FLAGS definition.
+        * Configurations/DebugRelease.xcconfig: Ditto.
+        * Configurations/JavaScriptCore.xcconfig: Use $(CONFIGURATION)
+        so SECTORDER_FLAGS is only set on Production builds.
+
+2014-07-17  Juergen Ributzka  <juergen@apple.com>
+
+        Disable live-out calculation for stackmap intrinsics.
+        https://bugs.webkit.org/show_bug.cgi?id=134366
+
+        The live-out variables are not required for the stackmaps, because we
+        don't care about preserving the state when we perform destructive
+        patching.
+
+        Reviewed by Filip Pizlo.
+
+        * llvm/library/LLVMExports.cpp:
+        (initializeAndGetJSCLLVMAPI):
+
+2014-07-17  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Follow-up fix to r171195 to prevent ASSERT in fast/profiler/profile-with-no-title.html
+
+        Rubber-stamped by Alexey Proskuryakov.
+
+        Null / empty titles should be fine. Tests pass in release builds
+        which allowed empty titles, and it looks like the LegacyProfiler
+        stopProfiling handles empty titles as expected already.
+
+        * profiler/LegacyProfiler.cpp:
+        (JSC::LegacyProfiler::startProfiling):
+
+2014-07-16  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG Flush(SetLocal) store elimination is overzealous for captured variables in the presence of nodes that have no effects but may throw
+        https://bugs.webkit.org/show_bug.cgi?id=134988
+        <rdar://problem/17706349>
+
+        Reviewed by Oliver Hunt.
+        
+        Luckily, we also don't need this optimization to be super powerful: the only place
+        where it really matters is for getting rid of the redundancy between op_enter and
+        op_init_lazy_reg, and in that case, there is a small set of possible nodes between the
+        two things. This change updates the store eliminator to know about only that small,
+        obviously safe, set of nodes over which we can store-eliminate.
+        
+        This shouldn't have any performance impact in the DFG because this optimization kicks
+        in relatively rarely already. And once we tier up into the FTL, we get a much better
+        store elimination over LLVM IR, so this really shouldn't matter at all.
+        
+        The tricky part of this patch is that there is a close relative of this optimization,
+        for uncaptured variables that got flushed. This happens for arguments to inlined calls.
+        I make this work by splitting it into two different store eliminators.
+        
+        Note that in the process of crafting the tests, I realized that we were incorrectly
+        DCEing NewArrayWithSize. That's not cool, since that can throw an exception for
+        negative array sizes. If we ever did want to DCE this node, we'd need to lower the node
+        to a check node followed by the actual allocation.
+
+        * dfg/DFGCSEPhase.cpp:
+        (JSC::DFG::CSEPhase::uncapturedSetLocalStoreElimination):
+        (JSC::DFG::CSEPhase::capturedSetLocalStoreElimination):
+        (JSC::DFG::CSEPhase::setLocalStoreElimination):
+        (JSC::DFG::CSEPhase::performNodeCSE):
+        (JSC::DFG::CSEPhase::SetLocalStoreEliminationResult::SetLocalStoreEliminationResult): Deleted.
+        * dfg/DFGNodeType.h:
+        * tests/stress/capture-escape-and-throw.js: Added.
+        (foo.f):
+        (foo):
+        * tests/stress/new-array-with-size-throw-exception-and-tear-off-arguments.js: Added.
+        (foo):
+        (bar):
+
 2014-07-15  Benjamin Poulain  <benjamin@webkit.org>
 
         Reduce the overhead of updating the AssemblerBuffer

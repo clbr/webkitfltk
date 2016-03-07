@@ -91,7 +91,7 @@ SOFT_LINK_CONSTANT(CoreMedia, kCMTimeIndefinite, CMTime)
 @property(assign) WebVideoFullscreenModel* delegate;
 
 @property (readonly) BOOL canScanForward;
-@property (readonly) BOOL canScanBackward;
+@property BOOL canScanBackward;
 @property (readonly) BOOL canSeekToBeginning;
 @property (readonly) BOOL canSeekToEnd;
 
@@ -299,16 +299,6 @@ SOFT_LINK_CONSTANT(CoreMedia, kCMTimeIndefinite, CMTime)
     UNUSED_PARAM(sender);
     ASSERT(self.delegate);
     self.delegate->endScanning();
-}
-
-- (BOOL)canScanBackward
-{
-    return [self canPlay];
-}
-
-+ (NSSet *)keyPathsForValuesAffectingCanScanBackward
-{
-    return [NSSet setWithObject:@"canPlay"];
 }
 
 - (void)beginScanningBackward:(id)sender
@@ -678,6 +668,11 @@ void WebVideoFullscreenInterfaceAVKit::setSeekableRanges(const TimeRanges& timeR
     });
 }
 
+void WebVideoFullscreenInterfaceAVKit::setCanPlayFastReverse(bool canPlayFastReverse)
+{
+    playerController().canScanBackward = canPlayFastReverse;
+}
+
 static NSMutableArray *mediaSelectionOptions(const Vector<String>& options)
 {
     NSMutableArray *webOptions = [NSMutableArray arrayWithCapacity:options.size()];
@@ -774,15 +769,18 @@ void WebVideoFullscreenInterfaceAVKit::setupFullscreen(PlatformLayer& videoLayer
         [m_viewController addChildViewController:m_playerViewController.get()];
         [[m_viewController view] addSubview:[m_playerViewController view]];
         [m_playerViewController view].frame = initialRect;
+        [[m_playerViewController view] setBackgroundColor:[getUIColorClass() clearColor]];
         [m_playerViewController didMoveToParentViewController:m_viewController.get()];
         [[m_playerViewController view] layoutIfNeeded];
 
         [CATransaction commit];
-        
-        if (m_fullscreenChangeObserver)
-            m_fullscreenChangeObserver->didSetupFullscreen();
-        
-        protect.clear();
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (m_fullscreenChangeObserver)
+                m_fullscreenChangeObserver->didSetupFullscreen();
+            
+            protect.clear();
+        });
     });
 }
 

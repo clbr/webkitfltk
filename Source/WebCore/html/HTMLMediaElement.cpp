@@ -429,8 +429,9 @@ void HTMLMediaElement::registerWithDocument(Document& document)
 #if !PLATFORM(IOS)
     document.registerForMediaVolumeCallbacks(this);
     document.registerForPrivateBrowsingStateChangedCallbacks(this);
-    document.registerForVisibilityStateChangedCallbacks(this);
 #endif
+
+    document.registerForVisibilityStateChangedCallbacks(this);
 
 #if ENABLE(VIDEO_TRACK)
     document.registerForCaptionPreferencesChangedCallbacks(this);
@@ -452,8 +453,9 @@ void HTMLMediaElement::unregisterWithDocument(Document& document)
 #if !PLATFORM(IOS)
     document.unregisterForMediaVolumeCallbacks(this);
     document.unregisterForPrivateBrowsingStateChangedCallbacks(this);
-    document.unregisterForVisibilityStateChangedCallbacks(this);
 #endif
+
+    document.unregisterForVisibilityStateChangedCallbacks(this);
 
 #if ENABLE(VIDEO_TRACK)
     document.unregisterForCaptionPreferencesChangedCallbacks(this);
@@ -3104,6 +3106,9 @@ double HTMLMediaElement::nextScanRate()
     double rate = std::min(ScanMaximumRate, fabs(playbackRate() * 2));
     if (m_scanDirection == Backward)
         rate *= -1;
+#if PLATFORM(IOS)
+    rate = std::min(std::max(rate, minFastReverseRate()), maxFastForwardRate());
+#endif
     return rate;
 }
 
@@ -4857,6 +4862,16 @@ void HTMLMediaElement::enqueuePlaybackTargetAvailabilityChangedEvent()
 }
 #endif
 
+double HTMLMediaElement::minFastReverseRate() const
+{
+    return m_player ? m_player->minFastReverseRate() : 0;
+}
+
+double HTMLMediaElement::maxFastForwardRate() const
+{
+    return m_player ? m_player->maxFastForwardRate() : 0;
+}
+    
 bool HTMLMediaElement::isFullscreen() const
 {
     if (m_isFullscreen)
@@ -4949,10 +4964,6 @@ PlatformMedia HTMLMediaElement::platformMedia() const
 
 PlatformLayer* HTMLMediaElement::platformLayer() const
 {
-#if PLATFORM(IOS)
-    if (m_videoFullscreenLayer)
-        return nullptr;
-#endif
     return m_player ? m_player->platformLayer() : nullptr;
 }
 

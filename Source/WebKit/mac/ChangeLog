@@ -1,3 +1,52 @@
+2014-07-18  Andy Estes  <aestes@apple.com>
+
+        [iOS] Tapping "Allow Website" on a restricted page does not bring up the keypad
+        https://bugs.webkit.org/show_bug.cgi?id=135072
+        <rdar://problem/17528188>
+
+        Reviewed by David Kilzer.
+
+        * WebCoreSupport/WebFrameLoaderClient.h: Override contentFilterDidBlockLoad().
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::dispatchDidStartProvisionalLoad): Reset contentFilterForBlockedLoad to nullptr.
+        (WebFrameLoaderClient::dispatchDecidePolicyForNavigationAction): Check if this is navigation represents an
+        unblock request and ignore if so.
+        * WebView/WebFrame.mm:
+        (-[WebFrame _contentFilterDidHandleNavigationAction:]): Called ContentFilter::handleUnblockRequestAndDispatchIfSuccessful().
+        If the unblock is successful, reload the main frame.
+        * WebView/WebFrameInternal.h:
+
+2014-07-17  David Kilzer  <ddkilzer@apple.com>
+
+        SECTORDER_FLAGS should be defined in target's xcconfig file, not Base.xcconfig
+        <http://webkit.org/b/135006>
+
+        Reviewed by Darin Adler.
+
+        * Configurations/Base.xcconfig: Move SECTORDER_FLAGS to
+        WebKitLegacy.xcconfig.
+        * Configurations/DebugRelease.xcconfig: Remove empty
+        SECTORDER_FLAGS definition.
+        * Configurations/WebKit.xcconfig: Removed.  Unused.
+        * Configurations/WebKitLegacy.xcconfig: Use $(CONFIGURATION) so
+        SECTORDER_FLAGS is only set on Production builds.
+
+2014-07-17  Timothy Hatcher  <timothy@apple.com>
+
+        Make console.profile record to the Timeline.
+
+        https://bugs.webkit.org/show_bug.cgi?id=134643
+
+        Reviewed by Joseph Pecoraro.
+
+        * WebInspector/WebInspector.mm:
+        (-[WebInspector isProfilingJavaScript]):
+        (-[WebInspector toggleProfilingJavaScript:]):
+        (-[WebInspector startProfilingJavaScript:]):
+        (-[WebInspector stopProfilingJavaScript:]):
+        (-[WebInspector isJavaScriptProfilingEnabled]):
+        (-[WebInspector setJavaScriptProfilingEnabled:]):
+
 2014-07-16  David Kilzer  <ddkilzer@apple.com>
 
         [iOS] Update order file paths for WebKit and WebKit2
