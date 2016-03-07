@@ -81,7 +81,7 @@ class InspectorController;
 class MainFrame;
 class MediaCanStartListener;
 class PageActivityAssertionToken;
-class PageConsole;
+class PageConsoleClient;
 class PageDebuggable;
 class PageGroup;
 class PageThrottler;
@@ -211,7 +211,7 @@ public:
 #endif
     ValidationMessageClient* validationMessageClient() const { return m_validationMessageClient; }
 
-    ScrollingCoordinator* scrollingCoordinator();
+    WEBCORE_EXPORT ScrollingCoordinator* scrollingCoordinator();
 
     WEBCORE_EXPORT String scrollingStateTreeAsText();
     WEBCORE_EXPORT String synchronousScrollingReasonsAsText();
@@ -409,7 +409,7 @@ public:
     PageThrottler* pageThrottler() { return m_pageThrottler.get(); }
     WEBCORE_EXPORT void createPageThrottler();
 
-    PageConsole& console() { return *m_console; }
+    PageConsoleClient& console() { return *m_consoleClient; }
 
     void hiddenPageCSSAnimationSuspensionStateChanged();
 
@@ -573,7 +573,7 @@ private:
 
     bool m_scriptedAnimationsSuspended;
     std::unique_ptr<PageThrottler> m_pageThrottler;
-    const std::unique_ptr<PageConsole> m_console;
+    const std::unique_ptr<PageConsoleClient> m_consoleClient;
 
 #if ENABLE(REMOTE_INSPECTOR)
     const std::unique_ptr<PageDebuggable> m_inspectorDebuggable;

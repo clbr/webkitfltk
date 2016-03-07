@@ -305,7 +305,7 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document& docum
     , m_sentEndEvent(false)
     , m_pausedInternal(false)
     , m_sendProgressEvents(true)
-    , m_isFullscreen(false)
+    , m_isInVideoFullscreen(false)
     , m_closedCaptionsVisible(false)
     , m_webkitLegacyClosedCaptionOverride(false)
     , m_completelyLoaded(false)
@@ -682,7 +682,7 @@ void HTMLMediaElement::removedFrom(ContainerNode& insertionPoint)
             mediaControls()->hide();
         if (m_networkState > NETWORK_EMPTY)
             pause();
-        if (m_isFullscreen)
+        if (m_isInVideoFullscreen)
             exitFullscreen();
 
         if (m_player) {
@@ -4650,7 +4650,7 @@ bool HTMLMediaElement::canSuspend() const
 void HTMLMediaElement::stop()
 {
     LOG(Media, "HTMLMediaElement::stop");
-    if (m_isFullscreen)
+    if (m_isInVideoFullscreen)
         exitFullscreen();
     
     m_inActiveDocument = false;
@@ -4744,7 +4744,7 @@ void HTMLMediaElement::visibilityStateChanged()
 #if ENABLE(VIDEO_TRACK)
 bool HTMLMediaElement::requiresTextTrackRepresentation() const
 {
-    return m_isFullscreen && m_player ? m_player->requiresTextTrackRepresentation() : false;
+    return m_isInVideoFullscreen && m_player ? m_player->requiresTextTrackRepresentation() : false;
 }
 
 void HTMLMediaElement::setTextTrackRepresentation(TextTrackRepresentation* representation)
@@ -4836,7 +4836,7 @@ double HTMLMediaElement::maxFastForwardRate() const
     
 bool HTMLMediaElement::isFullscreen() const
 {
-    if (m_isFullscreen)
+    if (m_isInVideoFullscreen)
         return true;
     
 #if ENABLE(FULLSCREEN_API)
@@ -4860,7 +4860,7 @@ void HTMLMediaElement::toggleFullscreenState()
 void HTMLMediaElement::enterFullscreen()
 {
     LOG(Media, "HTMLMediaElement::enterFullscreen");
-    if (m_isFullscreen)
+    if (m_isInVideoFullscreen)
         return;
 
 #if ENABLE(FULLSCREEN_API)
@@ -4870,12 +4870,13 @@ void HTMLMediaElement::enterFullscreen()
     }
 #endif
 
-    m_isFullscreen = true;
+    m_isInVideoFullscreen = true;
     if (hasMediaControls())
         mediaControls()->enteredFullscreen();
-    if (document().page()) {
-        if (document().page()->chrome().client().supportsFullscreenForNode(this)) {
-            document().page()->chrome().client().enterFullscreenForNode(this);
+    if (document().page() && isHTMLVideoElement(this)) {
+        HTMLVideoElement* asVideo = toHTMLVideoElement(this);
+        if (document().page()->chrome().client().supportsVideoFullscreen()) {
+            document().page()->chrome().client().enterVideoFullscreenForVideoElement(asVideo);
             scheduleEvent(eventNames().webkitbeginfullscreenEvent);
         }
     }
@@ -4892,16 +4893,16 @@ void HTMLMediaElement::exitFullscreen()
         return;
     }
 #endif
-    ASSERT(m_isFullscreen);
-    m_isFullscreen = false;
+    ASSERT(m_isInVideoFullscreen);
+    m_isInVideoFullscreen = false;
     if (hasMediaControls())
         mediaControls()->exitedFullscreen();
-    if (document().page()) {
+    if (document().page() && isHTMLVideoElement(this)) {
         if (m_mediaSession->requiresFullscreenForVideoPlayback(*this))
             pauseInternal();
 
-        if (document().page()->chrome().client().supportsFullscreenForNode(this)) {
-            document().page()->chrome().client().exitFullscreenForNode(this);
+        if (document().page()->chrome().client().supportsVideoFullscreen()) {
+            document().page()->chrome().client().exitVideoFullscreen();
             scheduleEvent(eventNames().webkitendfullscreenEvent);
         }
     }

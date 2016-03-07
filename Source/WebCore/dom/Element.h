@@ -171,7 +171,7 @@ public:
     // in style attribute or one of the SVG animation attributes.
     bool hasAttributesWithoutUpdate() const;
 
-    bool hasAttribute(const AtomicString& name) const;
+    WEBCORE_EXPORT bool hasAttribute(const AtomicString& name) const;
     bool hasAttributeNS(const AtomicString& namespaceURI, const AtomicString& localName) const;
 
     WEBCORE_EXPORT const AtomicString& getAttribute(const AtomicString& name) const;
@@ -360,12 +360,10 @@ public:
     bool childrenAffectedByHover() const { return getFlag(ChildrenAffectedByHoverRulesFlag); }
     bool childrenAffectedByActive() const { return hasRareData() && rareDataChildrenAffectedByActive(); }
     bool childrenAffectedByDrag() const { return hasRareData() && rareDataChildrenAffectedByDrag(); }
-    bool childrenAffectedByPositionalRules() const { return hasRareData() && (rareDataChildrenAffectedByForwardPositionalRules() || rareDataChildrenAffectedByBackwardPositionalRules()); }
     bool childrenAffectedByFirstChildRules() const { return getFlag(ChildrenAffectedByFirstChildRulesFlag); }
     bool childrenAffectedByLastChildRules() const { return getFlag(ChildrenAffectedByLastChildRulesFlag); }
-    bool childrenAffectedByDirectAdjacentRules() const { return getFlag(ChildrenAffectedByDirectAdjacentRulesFlag); }
-    bool childrenAffectedByForwardPositionalRules() const { return hasRareData() && rareDataChildrenAffectedByForwardPositionalRules(); }
     bool childrenAffectedByBackwardPositionalRules() const { return hasRareData() && rareDataChildrenAffectedByBackwardPositionalRules(); }
+    bool affectsNextSiblingElementStyle() const { return getFlag(AffectsNextSiblingElementStyle); }
     unsigned childIndex() const { return hasRareData() ? rareDataChildIndex() : 0; }
 
     bool hasFlagsSetDuringStylingOfChildren() const;
@@ -376,10 +374,9 @@ public:
     void setChildrenAffectedByDrag();
     void setChildrenAffectedByFirstChildRules() { setFlag(ChildrenAffectedByFirstChildRulesFlag); }
     void setChildrenAffectedByLastChildRules() { setFlag(ChildrenAffectedByLastChildRulesFlag); }
-    void setChildrenAffectedByDirectAdjacentRules() { setFlag(ChildrenAffectedByDirectAdjacentRulesFlag); }
-    static void setChildrenAffectedByForwardPositionalRules(Element*);
-    void setChildrenAffectedByForwardPositionalRules() { setChildrenAffectedByForwardPositionalRules(this); }
     void setChildrenAffectedByBackwardPositionalRules();
+    void setAffectsNextSiblingElementStyle() { setFlag(AffectsNextSiblingElementStyle); }
+    void setStyleIsAffectedByPreviousSibling() { setFlag(StyleIsAffectedByPreviousSibling); }
     void setChildIndex(unsigned);
 
     void setRegionOversetState(RegionOversetState);
@@ -650,7 +647,6 @@ private:
     bool rareDataChildrenAffectedByActive() const;
     bool rareDataChildrenAffectedByDrag() const;
     bool rareDataChildrenAffectedByLastChildRules() const;
-    bool rareDataChildrenAffectedByForwardPositionalRules() const;
     bool rareDataChildrenAffectedByBackwardPositionalRules() const;
     unsigned rareDataChildIndex() const;
 

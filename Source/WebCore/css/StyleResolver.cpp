@@ -624,6 +624,8 @@ bool StyleResolver::canShareStyleWithElement(StyledElement* element) const
         return false;
     if (element->additionalPresentationAttributeStyle() != state.styledElement()->additionalPresentationAttributeStyle())
         return false;
+    if (element->affectsNextSiblingElementStyle() || element->styleIsAffectedByPreviousSibling())
+        return false;
 
     if (element->hasID() && m_ruleSets.features().idsInRules.contains(element->idForStyleResolution().impl()))
         return false;
@@ -2944,6 +2946,25 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         state.style()->setScrollSnapCoordinates(coordinates);
         return;
     }
+    case CSSPropertyWebkitInitialLetter: {
+        HANDLE_INHERIT_AND_INITIAL(initialLetter, InitialLetter)
+        if (!value->isPrimitiveValue())
+            return;
+        
+        if (primitiveValue->getValueID() == CSSValueNormal) {
+            state.style()->setInitialLetter(IntSize());
+            return;
+        }
+            
+        CSSPrimitiveValue* primitiveValue = toCSSPrimitiveValue(value);
+        Pair* pair = primitiveValue->getPairValue();
+        if (!pair || !pair->first() || !pair->second())
+            return;
+
+        state.style()->setInitialLetter(IntSize(pair->first()->getIntValue(), pair->second()->getIntValue()));
+        return;
+    }
+    
 #endif
     // These properties are aliased and DeprecatedStyleBuilder already applied the property on the prefixed version.
     case CSSPropertyTransitionDelay:

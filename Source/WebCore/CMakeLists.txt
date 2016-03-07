@@ -1806,7 +1806,6 @@ set(WebCore_SOURCES
     inspector/NetworkResourcesData.cpp
     inspector/PageConsoleAgent.cpp
     inspector/PageDebuggerAgent.cpp
-    inspector/PageProfilerAgent.cpp
     inspector/PageRuntimeAgent.cpp
     inspector/PageScriptDebugServer.cpp
     inspector/TimelineRecordFactory.cpp
@@ -1814,11 +1813,9 @@ set(WebCore_SOURCES
     inspector/WebDebuggerAgent.cpp
     inspector/WebInjectedScriptHost.cpp
     inspector/WebInjectedScriptManager.cpp
-    inspector/WebProfilerAgent.cpp
     inspector/WorkerConsoleAgent.cpp
     inspector/WorkerDebuggerAgent.cpp
     inspector/WorkerInspectorController.cpp
-    inspector/WorkerProfilerAgent.cpp
     inspector/WorkerRuntimeAgent.cpp
 
     loader/CookieJar.cpp
@@ -1941,7 +1938,7 @@ set(WebCore_SOURCES
     page/OriginAccessEntry.cpp
     page/Page.cpp
     page/PageActivityAssertionToken.cpp
-    page/PageConsole.cpp
+    page/PageConsoleClient.cpp
     page/PageGroup.cpp
     page/PageGroupLoadDeferrer.cpp
     page/PageSerializer.cpp
@@ -3528,7 +3525,6 @@ include_directories(${WebCore_INCLUDE_DIRECTORIES} ${WebCoreTestSupport_INCLUDE_
 add_library(WebCore ${WebCore_LIBRARY_TYPE} ${WebCore_SOURCES})
 set_target_properties(WebCore PROPERTIES COMPILE_DEFINITIONS "BUILDING_WebCore")
 set_target_properties(WebCore PROPERTIES FOLDER "WebCore")
-set_target_properties(WebCore PROPERTIES LINK_INTERFACE_LIBRARIES "")
 
 if (WebCore_OUTPUT_NAME)
     set_target_properties(WebCore PROPERTIES OUTPUT_NAME ${WebCore_OUTPUT_NAME})

@@ -31,7 +31,7 @@
 #include "ContextDestructionObserver.h"
 #include "ExceptionCodePlaceholder.h"
 #include "NodeList.h"
-#include "PageConsole.h"
+#include "PageConsoleClient.h"
 #include <bindings/ScriptValue.h>
 #include <runtime/ArrayBuffer.h>
 #include <runtime/Float32Array.h>
@@ -281,7 +281,7 @@ public:
 
     String getCurrentCursorInfo(ExceptionCode&);
 
-    WEBCORE_EXPORT String markerTextForListItem(Element*, ExceptionCode&);
+    String markerTextForListItem(Element*, ExceptionCode&);
 
     void forceReload(bool endToEnd);
 

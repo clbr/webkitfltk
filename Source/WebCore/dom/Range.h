@@ -45,9 +45,9 @@ class FloatQuad;
 class Node;
 class NodeWithIndex;
 class Text;
+class VisiblePosition;
 #if PLATFORM(IOS)
 class SelectionRect;
-class VisiblePosition;
 #endif
 
 class Range : public RefCounted<Range> {
@@ -56,10 +56,7 @@ public:
     WEBCORE_EXPORT static PassRefPtr<Range> create(Document&, PassRefPtr<Node> startContainer, int startOffset, PassRefPtr<Node> endContainer, int endOffset);
     WEBCORE_EXPORT static PassRefPtr<Range> create(Document&, const Position&, const Position&);
     WEBCORE_EXPORT static PassRefPtr<Range> create(ScriptExecutionContext&);
-#if PLATFORM(IOS)
-    // FIXME: Consider making this a static non-member, non-friend function.
     WEBCORE_EXPORT static PassRefPtr<Range> create(Document&, const VisiblePosition&, const VisiblePosition&);
-#endif
     WEBCORE_EXPORT ~Range();
 
     Document& ownerDocument() const { return const_cast<Document&>(m_ownerDocument.get()); }
@@ -69,10 +66,10 @@ public:
     WEBCORE_EXPORT Node* endContainer() const { return m_end.container(); }
     WEBCORE_EXPORT int endOffset() const { return m_end.offset(); }
 
-    Node* startContainer(ExceptionCode&) const;
-    int startOffset(ExceptionCode&) const;
-    Node* endContainer(ExceptionCode&) const;
-    int endOffset(ExceptionCode&) const;
+    WEBCORE_EXPORT Node* startContainer(ExceptionCode&) const;
+    WEBCORE_EXPORT int startOffset(ExceptionCode&) const;
+    WEBCORE_EXPORT Node* endContainer(ExceptionCode&) const;
+    WEBCORE_EXPORT int endOffset(ExceptionCode&) const;
     WEBCORE_EXPORT bool collapsed(ExceptionCode&) const;
 
     WEBCORE_EXPORT Node* commonAncestorContainer(ExceptionCode&) const;
@@ -129,11 +126,11 @@ public:
     };
 
     // Not transform-friendly
-    void textRects(Vector<IntRect>&, bool useSelectionHeight = false, RangeInFixedPosition* = 0) const;
+    WEBCORE_EXPORT void textRects(Vector<IntRect>&, bool useSelectionHeight = false, RangeInFixedPosition* = nullptr) const;
     WEBCORE_EXPORT IntRect boundingBox() const;
 
     // Transform-friendly
-    WEBCORE_EXPORT void textQuads(Vector<FloatQuad>&, bool useSelectionHeight = false, RangeInFixedPosition* = 0) const;
+    WEBCORE_EXPORT void textQuads(Vector<FloatQuad>&, bool useSelectionHeight = false, RangeInFixedPosition* = nullptr) const;
     void getBorderAndTextQuads(Vector<FloatQuad>&) const;
     WEBCORE_EXPORT FloatRect boundingRect() const;
 #if PLATFORM(IOS)
