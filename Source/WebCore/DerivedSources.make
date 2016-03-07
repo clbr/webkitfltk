@@ -444,7 +444,9 @@ NON_SVG_BINDING_IDLS = \
     $(WebCore)/html/canvas/WebGLLoseContext.idl \
     $(WebCore)/html/canvas/WebGLProgram.idl \
     $(WebCore)/html/canvas/WebGLRenderbuffer.idl \
+    $(WebCore)/html/canvas/WebGLRenderingContextBase.idl \
     $(WebCore)/html/canvas/WebGLRenderingContext.idl \
+    $(WebCore)/html/canvas/WebGL2RenderingContext.idl \
     $(WebCore)/html/canvas/WebGLShader.idl \
     $(WebCore)/html/canvas/WebGLShaderPrecisionFormat.idl \
     $(WebCore)/html/canvas/WebGLTexture.idl \
@@ -782,6 +784,8 @@ all : \
     SelectorPseudoClassAndCompatibilityElementMap.cpp \
     SelectorPseudoElementTypeMap.cpp \
     StyleBuilder.cpp \
+    StylePropertyShorthandFunctions.cpp \
+    StylePropertyShorthandFunctions.h \
     UserAgentStyleSheets.h \
     WebKitFontFamilyNames.cpp \
     WebKitFontFamilyNames.h \
@@ -817,7 +821,7 @@ WEBCORE_CSS_PROPERTY_NAMES := $(WebCore)/css/CSSPropertyNames.in
 WEBCORE_CSS_VALUE_KEYWORDS := $(WebCore)/css/CSSValueKeywords.in
 WEBCORE_CSS_VALUE_KEYWORDS := $(WEBCORE_CSS_VALUE_KEYWORDS) $(WebCore)/css/SVGCSSValueKeywords.in
 
-CSSPropertyNames.h StyleBuilder.cpp : $(WEBCORE_CSS_PROPERTY_NAMES) css/makeprop.pl bindings/scripts/preprocessor.pm $(PLATFORM_FEATURE_DEFINES)
+CSSPropertyNames.h StyleBuilder.cpp StylePropertyShorthandFunctions.h StylePropertyShorthandFunctions.cpp : $(WEBCORE_CSS_PROPERTY_NAMES) css/makeprop.pl bindings/scripts/preprocessor.pm $(PLATFORM_FEATURE_DEFINES)
 	$(PERL) -pe '' $(WEBCORE_CSS_PROPERTY_NAMES) > CSSPropertyNames.in
 	$(PERL) -I$(WebCore)/bindings/scripts "$(WebCore)/css/makeprop.pl" --defines "$(FEATURE_DEFINES)"
 

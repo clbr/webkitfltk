@@ -856,7 +856,6 @@ protected:
 
     void adjustRectForOutlineAndShadow(LayoutRect&) const;
 
-    void clearLayoutRootIfNeeded() const;
     virtual void willBeDestroyed();
 
     virtual void insertedIntoTree();
@@ -869,11 +868,11 @@ protected:
 
     virtual RenderFlowThread* locateFlowThreadContainingBlock() const;
     void invalidateFlowThreadContainingBlockIncludingDescendants(RenderFlowThread* = nullptr);
+    static void calculateBorderStyleColor(const EBorderStyle&, const BoxSide&, Color&);
 
 private:
     void removeFromRenderFlowThread();
     void removeFromRenderFlowThreadIncludingDescendants(bool);
-    static void calculateBorderStyleColor(const EBorderStyle&, const BoxSide&, Color&);
     Node* generatingPseudoHostElement() const;
 
     virtual bool isWBR() const { ASSERT_NOT_REACHED(); return false; }

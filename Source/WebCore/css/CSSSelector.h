@@ -296,6 +296,12 @@ namespace WebCore {
             ASSERT(m_relation == relation);
         }
 
+        void setDescendantUseDoubleChildSyntax()
+        {
+            ASSERT(relation() == Descendant);
+            m_descendantDoubleChildSyntax = true;
+        }
+
         Match match() const { return static_cast<Match>(m_match); }
         void setMatch(Match match)
         {
@@ -321,6 +327,7 @@ namespace WebCore {
         unsigned m_hasRareData           : 1;
         unsigned m_isForPage             : 1;
         unsigned m_tagIsForNamespaceRule : 1;
+        unsigned m_descendantDoubleChildSyntax : 1;
 
         unsigned simpleSelectorSpecificityForPage() const;
 
@@ -447,6 +454,7 @@ inline CSSSelector::CSSSelector()
     , m_hasRareData(false)
     , m_isForPage(false)
     , m_tagIsForNamespaceRule(false)
+    , m_descendantDoubleChildSyntax(false)
 {
 }
 
@@ -460,6 +468,7 @@ inline CSSSelector::CSSSelector(const QualifiedName& tagQName, bool tagIsForName
     , m_hasRareData(false)
     , m_isForPage(false)
     , m_tagIsForNamespaceRule(tagIsForNamespaceRule)
+    , m_descendantDoubleChildSyntax(false)
 {
     m_data.m_tagQName = tagQName.impl();
     m_data.m_tagQName->ref();
@@ -475,6 +484,7 @@ inline CSSSelector::CSSSelector(const CSSSelector& o)
     , m_hasRareData(o.m_hasRareData)
     , m_isForPage(o.m_isForPage)
     , m_tagIsForNamespaceRule(o.m_tagIsForNamespaceRule)
+    , m_descendantDoubleChildSyntax(o.m_descendantDoubleChildSyntax)
 {
     if (o.match() == Tag) {
         m_data.m_tagQName = o.m_data.m_tagQName;

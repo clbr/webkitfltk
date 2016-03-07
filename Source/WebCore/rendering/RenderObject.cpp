@@ -1865,20 +1865,6 @@ bool RenderObject::isSelectionBorder() const
         || view().selectionUnsplitEnd() == this;
 }
 
-inline void RenderObject::clearLayoutRootIfNeeded() const
-{
-    if (documentBeingDestroyed())
-        return;
-
-    if (view().frameView().layoutRoot() == this) {
-        ASSERT_NOT_REACHED();
-        // This indicates a failure to layout the child, which is why
-        // the layout root is still set to |this|. Make sure to clear it
-        // since we are getting destroyed.
-        view().frameView().clearLayoutRoot();
-    }
-}
-
 void RenderObject::willBeDestroyed()
 {
     // For accessibility management, notify the parent of the imminent change to its child set.
@@ -1901,8 +1887,6 @@ void RenderObject::willBeDestroyed()
         setHasLayer(false);
         downcast<RenderLayerModelObject>(*this).destroyLayer();
     }
-
-    clearLayoutRootIfNeeded();
 }
 
 void RenderObject::insertedIntoTree()
@@ -2458,6 +2442,7 @@ RenderFlowThread* RenderObject::locateFlowThreadContainingBlock() const
 
 void RenderObject::calculateBorderStyleColor(const EBorderStyle& style, const BoxSide& side, Color& color)
 {
+    ASSERT(style == INSET || style == OUTSET);
     // This values were derived empirically.
     const RGBA32 baseDarkColor = 0xFF202020;
     const RGBA32 baseLightColor = 0xFFEBEBEB;

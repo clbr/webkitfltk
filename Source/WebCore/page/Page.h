@@ -141,7 +141,7 @@ public:
     WEBCORE_EXPORT void setCanStartMedia(bool);
     bool canStartMedia() const { return m_canStartMedia; }
 
-    EditorClient* editorClient() const { return m_editorClient; }
+    EditorClient& editorClient() { return m_editorClient; }
     PlugInClient* plugInClient() const { return m_plugInClient; }
     ContextMenuClient* contextMenuClient() const { return m_contextMenuClient; }
 
@@ -487,7 +487,7 @@ private:
 
     RefPtr<RenderTheme> m_theme;
 
-    EditorClient* m_editorClient;
+    EditorClient& m_editorClient;
     PlugInClient* m_plugInClient;
     ContextMenuClient* m_contextMenuClient;
     ValidationMessageClient* m_validationMessageClient;

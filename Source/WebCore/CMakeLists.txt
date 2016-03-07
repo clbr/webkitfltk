@@ -555,7 +555,9 @@ set(WebCore_NON_SVG_IDL_FILES
     html/canvas/WebGLLoseContext.idl
     html/canvas/WebGLProgram.idl
     html/canvas/WebGLRenderbuffer.idl
+    html/canvas/WebGLRenderingContextBase.idl
     html/canvas/WebGLRenderingContext.idl
+    html/canvas/WebGL2RenderingContext.idl
     html/canvas/WebGLShader.idl
     html/canvas/WebGLShaderPrecisionFormat.idl
     html/canvas/WebGLTexture.idl
@@ -1145,7 +1147,9 @@ set(WebCore_SOURCES
     bindings/js/JSTreeWalkerCustom.cpp
     bindings/js/JSVideoTrackCustom.cpp
     bindings/js/JSVideoTrackListCustom.cpp
+    bindings/js/JSWebGLRenderingContextBaseCustom.cpp
     bindings/js/JSWebGLRenderingContextCustom.cpp
+    bindings/js/JSWebGL2RenderingContextCustom.cpp
     bindings/js/JSWebKitPointCustom.cpp
     bindings/js/JSWorkerCustom.cpp
     bindings/js/JSWorkerGlobalScopeBase.cpp
@@ -1688,7 +1692,9 @@ set(WebCore_SOURCES
     html/canvas/WebGLObject.cpp
     html/canvas/WebGLProgram.cpp
     html/canvas/WebGLRenderbuffer.cpp
+    html/canvas/WebGLRenderingContextBase.cpp
     html/canvas/WebGLRenderingContext.cpp
+    html/canvas/WebGL2RenderingContext.cpp
     html/canvas/WebGLShader.cpp
     html/canvas/WebGLShaderPrecisionFormat.cpp
     html/canvas/WebGLSharedObject.cpp
@@ -2785,7 +2791,9 @@ if (ENABLE_WEBGL)
         html/canvas/WebGLObject.cpp
         html/canvas/WebGLProgram.cpp
         html/canvas/WebGLRenderbuffer.cpp
+        html/canvas/WebGLRenderingContextBase.cpp
         html/canvas/WebGLRenderingContext.cpp
+        html/canvas/WebGL2RenderingContext.cpp
         html/canvas/WebGLShader.cpp
         html/canvas/WebGLShaderPrecisionFormat.cpp
         html/canvas/WebGLSharedObject.cpp
@@ -2822,7 +2830,9 @@ if (ENABLE_WEBGL)
         html/canvas/WebGLLoseContext.idl
         html/canvas/WebGLProgram.idl
         html/canvas/WebGLRenderbuffer.idl
+        html/canvas/WebGLRenderingContextBase.idl
         html/canvas/WebGLRenderingContext.idl
+        html/canvas/WebGL2RenderingContext.idl
         html/canvas/WebGLShader.idl
         html/canvas/WebGLShaderPrecisionFormat.idl
         html/canvas/WebGLTexture.idl
@@ -3224,7 +3234,7 @@ list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/HTTPHeaderNames.cpp)
 
 # Generate CSS property names
 add_custom_command(
-    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.in ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.h ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.gperf ${DERIVED_SOURCES_WEBCORE_DIR}/StyleBuilder.cpp
+    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.in ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.h ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.gperf ${DERIVED_SOURCES_WEBCORE_DIR}/StyleBuilder.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/StylePropertyShorthandFunctions.h ${DERIVED_SOURCES_WEBCORE_DIR}/StylePropertyShorthandFunctions.cpp
     MAIN_DEPENDENCY ${WEBCORE_DIR}/css/makeprop.pl
     DEPENDS ${WebCore_CSS_PROPERTY_NAMES}
     WORKING_DIRECTORY ${DERIVED_SOURCES_WEBCORE_DIR}
@@ -3233,6 +3243,7 @@ add_custom_command(
     VERBATIM)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/CSSPropertyNames.cpp)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/StyleBuilder.cpp)
+list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/StylePropertyShorthandFunctions.cpp)
 ADD_SOURCE_WEBCORE_DERIVED_DEPENDENCIES(${WEBCORE_DIR}/css/CSSParser.cpp CSSValueKeywords.h)
 ADD_SOURCE_WEBCORE_DERIVED_DEPENDENCIES(${DERIVED_SOURCES_WEBCORE_DIR}/CSSGrammar.cpp CSSPropertyNames.h)
 
