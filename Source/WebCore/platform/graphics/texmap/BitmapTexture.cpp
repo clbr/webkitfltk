@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
+ * Copyright (C) 2014 Igalia S.L.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,35 +24,30 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CacheValidation_h
-#define CacheValidation_h
+#include "config.h"
+#include "BitmapTexture.h"
+
+#include "GraphicsLayer.h"
+#include "ImageBuffer.h"
+#include "TextureMapper.h"
 
 namespace WebCore {
 
-class ResourceResponse;
+void BitmapTexture::updateContents(TextureMapper* textureMapper, GraphicsLayer* sourceLayer, const IntRect& targetRect, const IntPoint& offset, UpdateContentsFlag updateContentsFlag)
+{
+    std::unique_ptr<ImageBuffer> imageBuffer = ImageBuffer::create(targetRect.size());
+    GraphicsContext* context = imageBuffer->context();
+    context->setImageInterpolationQuality(textureMapper->imageInterpolationQuality());
+    context->setTextDrawingMode(textureMapper->textDrawingMode());
 
-struct RedirectChainCacheStatus {
-    enum Status {
-        NoRedirection,
-        NotCachedRedirection,
-        CachedRedirection
-    };
-    RedirectChainCacheStatus()
-        : status(NoRedirection)
-        , endOfValidity(std::numeric_limits<double>::max())
-    { }
-    Status status;
-    double endOfValidity;
-};
+    IntRect sourceRect(targetRect);
+    sourceRect.setLocation(offset);
+    context->translate(-offset.x(), -offset.y());
+    sourceLayer->paintGraphicsLayerContents(*context, sourceRect);
 
-WEBCORE_EXPORT double computeCurrentAge(const ResourceResponse&, double responseTimestamp);
-WEBCORE_EXPORT double computeFreshnessLifetimeForHTTPFamily(const ResourceResponse&, double responseTimestamp);
-WEBCORE_EXPORT void updateResponseHeadersAfterRevalidation(ResourceResponse&, const ResourceResponse& validatingResponse);
-WEBCORE_EXPORT void updateRedirectChainStatus(RedirectChainCacheStatus&, const ResourceResponse&);
+    RefPtr<Image> image = imageBuffer->copyImage(DontCopyBackingStore);
 
-enum ReuseExpiredRedirectionOrNot { DoNotReuseExpiredRedirection, ReuseExpiredRedirection };
-WEBCORE_EXPORT bool redirectChainAllowsReuse(RedirectChainCacheStatus, ReuseExpiredRedirectionOrNot);
-
+    updateContents(image.get(), targetRect, IntPoint(), updateContentsFlag);
 }
 
-#endif
+} // namespace

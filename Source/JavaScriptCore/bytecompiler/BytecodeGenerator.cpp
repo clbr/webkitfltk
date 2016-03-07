@@ -69,7 +69,12 @@ ParserError BytecodeGenerator::generate()
     // perform that assignment now.
     if (m_needToInitializeArguments)
         initializeVariable(variable(propertyNames().arguments), m_argumentsRegister);
-    
+
+    for (size_t i = 0; i < m_deconstructedParameters.size(); i++) {
+        auto& entry = m_deconstructedParameters[i];
+        entry.second->bindValue(*this, entry.first.get());
+    }
+
     {
         RefPtr<RegisterID> temp = newTemporary();
         for (FunctionBodyNode* functionBody : m_functionsToInitialize) {
@@ -78,11 +83,6 @@ ParserError BytecodeGenerator::generate()
         }
     }
     
-    for (size_t i = 0; i < m_deconstructedParameters.size(); i++) {
-        auto& entry = m_deconstructedParameters[i];
-        entry.second->bindValue(*this, entry.first.get());
-    }
-
     bool callingClassConstructor = constructorKind() != ConstructorKind::None && !isConstructor();
     if (!callingClassConstructor)
         m_scopeNode->emitBytecode(*this);
@@ -473,7 +473,7 @@ BytecodeGenerator::BytecodeGenerator(VM& vm, FunctionNode* functionNode, Unlinke
         if (constructorKind() == ConstructorKind::Derived) {
             m_newTargetRegister = addVar();
             emitMove(m_newTargetRegister, &m_thisRegister);
-            emitMove(&m_thisRegister, addConstantEmptyValue());
+            emitMoveEmptyValue(&m_thisRegister);
         } else
             emitCreateThis(&m_thisRegister);
     } else if (constructorKind() != ConstructorKind::None) {
@@ -992,8 +992,20 @@ unsigned BytecodeGenerator::addRegExp(RegExp* r)
     return m_codeBlock->addRegExp(r);
 }
 
+RegisterID* BytecodeGenerator::emitMoveEmptyValue(RegisterID* dst)
+{
+    RefPtr<RegisterID> emptyValue = addConstantEmptyValue();
+
+    emitOpcode(op_mov);
+    instructions().append(dst->index());
+    instructions().append(emptyValue->index());
+    return dst;
+}
+
 RegisterID* BytecodeGenerator::emitMove(RegisterID* dst, RegisterID* src)
 {
+    ASSERT(src != m_emptyValueRegister);
+
     m_staticPropertyAnalyzer.mov(dst->index(), src->index());
     emitOpcode(op_mov);
     instructions().append(dst->index());
