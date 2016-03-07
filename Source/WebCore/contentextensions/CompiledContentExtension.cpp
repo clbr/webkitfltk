@@ -23,12 +23,26 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "LaunchServicesSPI.h"
-#import "SoftLinking.h"
-#import <objc/runtime.h>
+#include "config.h"
+#include "CompiledContentExtension.h"
 
-SOFT_LINK_PRIVATE_FRAMEWORK(IconServices)
+#if ENABLE(CONTENT_EXTENSIONS)
 
-typedef UInt32 ISScale;
+namespace WebCore {
+namespace ContentExtensions {
 
-SOFT_LINK(IconServices, _ISCreateCGImageFromBindingWithSizeScaleAndOptions, CGImageRef, (LSBindingRef binding, CGSize size, ISScale scale, CFDictionaryRef options), (binding, size, scale, options))
+Ref<CompiledContentExtension> CompiledContentExtension::create(Vector<DFABytecode>&& bytecode, Vector<SerializedActionByte>&& actions)
+{
+    return WTF::adoptRef(*new CompiledContentExtension(WTF::move(bytecode), WTF::move(actions)));
+}
+
+CompiledContentExtension::CompiledContentExtension(Vector<DFABytecode>&& bytecode, Vector<SerializedActionByte>&& actions)
+    : m_bytecode(WTF::move(bytecode))
+    , m_actions(WTF::move(actions))
+{
+}
+
+} // namespace ContentExtensions
+} // namespace WebCore
+
+#endif // ENABLE(CONTENT_EXTENSIONS)

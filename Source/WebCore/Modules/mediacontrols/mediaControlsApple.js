@@ -76,7 +76,10 @@ Controller.prototype = {
         failed: 'failed',
         hidden: 'hidden',
         hiding: 'hiding',
-        hourLongTime: 'hour-long-time',
+        threeDigitTime: 'three-digit-time',
+        fourDigitTime: 'four-digit-time',
+        fiveDigitTime: 'five-digit-time',
+        sixDigitTime: 'six-digit-time',
         list: 'list',
         muteBox: 'mute-box',
         muted: 'muted',
@@ -458,9 +461,9 @@ Controller.prototype = {
 
     configureInlineControls: function()
     {
+        this.controls.panel.appendChild(this.controls.playButton);
         if (!this.isLive)
             this.controls.panel.appendChild(this.controls.rewindButton);
-        this.controls.panel.appendChild(this.controls.playButton);
         this.controls.panel.appendChild(this.controls.statusDisplay);
         if (!this.isLive) {
             this.controls.panel.appendChild(this.controls.timelineBox);
@@ -715,10 +718,15 @@ Controller.prototype = {
     handlePanelTransitionEnd: function(event)
     {
         var opacity = window.getComputedStyle(this.controls.panel).opacity;
-        if (parseInt(opacity) > 0)
+        if (parseInt(opacity) > 0) {
             this.controls.panel.classList.remove(this.ClassNames.hidden);
-        else
+            if (this.controls.panelBackground)
+                this.controls.panelBackground.classList.remove(this.ClassNames.hidden);
+        } else {
             this.controls.panel.classList.add(this.ClassNames.hidden);
+            if (this.controls.panelBackground)
+                this.controls.panelBackground.classList.add(this.ClassNames.hidden);
+        }
     },
 
     handlePanelClick: function(event)
@@ -832,6 +840,7 @@ Controller.prototype = {
         this.video.muted = !this.video.muted;
         if (this.video.muted)
             this.controls.muteButton.setAttribute('aria-label', this.UIString('Unmute'));
+        this.drawVolumeBackground();
         return true;
     },
 
@@ -965,8 +974,29 @@ Controller.prototype = {
 
         this.setIsLive(duration === Number.POSITIVE_INFINITY);
 
-        this.controls.currentTime.classList.toggle(this.ClassNames.hourLongTime, duration >= 60*60);
-        this.controls.remainingTime.classList.toggle(this.ClassNames.hourLongTime, duration >= 60*60);
+        // Reset existing style.
+        this.controls.currentTime.classList.remove(this.ClassNames.threeDigitTime);
+        this.controls.currentTime.classList.remove(this.ClassNames.fourDigitTime);
+        this.controls.currentTime.classList.remove(this.ClassNames.fiveDigitTime);
+        this.controls.currentTime.classList.remove(this.ClassNames.sixDigitTime);
+        this.controls.remainingTime.classList.remove(this.ClassNames.threeDigitTime);
+        this.controls.remainingTime.classList.remove(this.ClassNames.fourDigitTime);
+        this.controls.remainingTime.classList.remove(this.ClassNames.fiveDigitTime);
+        this.controls.remainingTime.classList.remove(this.ClassNames.sixDigitTime);
+
+        if (duration >= 60*60*10) {
+            this.controls.currentTime.classList.add(this.ClassNames.sixDigitTime);
+            this.controls.remainingTime.classList.add(this.ClassNames.sixDigitTime);
+        } else if (duration >= 60*60) {
+            this.controls.currentTime.classList.add(this.ClassNames.fiveDigitTime);
+            this.controls.remainingTime.classList.add(this.ClassNames.fiveDigitTime);
+        } else if (duration >= 60*10) {
+            this.controls.currentTime.classList.add(this.ClassNames.fourDigitTime);
+            this.controls.remainingTime.classList.add(this.ClassNames.fourDigitTime);
+        } else {
+            this.controls.currentTime.classList.add(this.ClassNames.threeDigitTime);
+            this.controls.remainingTime.classList.add(this.ClassNames.threeDigitTime);
+        }
     },
 
     progressFillStyle: function(context)
@@ -1042,7 +1072,7 @@ Controller.prototype = {
         this.addRoundedRect(ctx, scrubberPosition + 1, 8, width - scrubberPosition - borderSize , trackHeight, trackHeight / 2.0);
         ctx.closePath();
         ctx.clip("evenodd");
-        ctx.fillStyle = "rgb(30, 30, 30)";
+        ctx.fillStyle = "rgb(50, 50, 50)";
         ctx.fillRect(0, 0, width, height);
         ctx.restore();
         
@@ -1103,7 +1133,7 @@ Controller.prototype = {
         this.addRoundedRect(ctx, 1, 4, width - borderSize, trackHeight, trackHeight / 2.0);
         ctx.closePath();
         ctx.clip("evenodd");
-        ctx.fillStyle = "rgb(30, 30, 30)";
+        ctx.fillStyle = "rgb(50, 50, 50)";
         ctx.fillRect(0, 0, width, height);
         ctx.restore();
         
@@ -1159,10 +1189,14 @@ Controller.prototype = {
 
         if (!isPlaying) {
             this.controls.panel.classList.add(this.ClassNames.paused);
+            if (this.controls.panelBackground)
+                this.controls.panelBackground.classList.add(this.ClassNames.paused);
             this.controls.playButton.classList.add(this.ClassNames.paused);
             this.controls.playButton.setAttribute('aria-label', this.UIString('Play'));
         } else {
             this.controls.panel.classList.remove(this.ClassNames.paused);
+            if (this.controls.panelBackground)
+                this.controls.panelBackground.classList.remove(this.ClassNames.paused);
             this.controls.playButton.classList.remove(this.ClassNames.paused);
             this.controls.playButton.setAttribute('aria-label', this.UIString('Pause'));
             this.resetHideControlsTimer();
@@ -1179,11 +1213,18 @@ Controller.prototype = {
 
         this.controls.panel.classList.add(this.ClassNames.show);
         this.controls.panel.classList.remove(this.ClassNames.hidden);
+
+        if (this.controls.panelBackground) {
+            this.controls.panelBackground.classList.add(this.ClassNames.show);
+            this.controls.panelBackground.classList.remove(this.ClassNames.hidden);
+        }
     },
 
     hideControls: function()
     {
         this.controls.panel.classList.remove(this.ClassNames.show);
+        if (this.controls.panelBackground)
+            this.controls.panelBackground.classList.remove(this.ClassNames.show);
     },
 
     controlsAreHidden: function()
@@ -1561,6 +1602,7 @@ Controller.prototype = {
             this.controls.muteButton.classList.remove(this.ClassNames.muted);
             this.controls.volume.value = this.video.volume;
         }
+        this.drawVolumeBackground();
     },
 
     isAudio: function()

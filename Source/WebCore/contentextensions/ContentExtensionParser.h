@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,15 +23,25 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if USE(APPLE_INTERNAL_SDK)
+#ifndef ContentExtensionParser_h
+#define ContentExtensionParser_h
 
-#include <LaunchServices/LaunchServicesPriv.h>
+#if ENABLE(CONTENT_EXTENSIONS)
 
-#else
+#include <wtf/Forward.h>
+#include <wtf/Vector.h>
 
-WTF_EXTERN_C_BEGIN
-typedef struct _LSBinding* LSBindingRef;
-LSBindingRef _LSBindingCreateWithURL(CFAllocatorRef, CFURLRef);
-WTF_EXTERN_C_END
+namespace WebCore {
 
-#endif
+namespace ContentExtensions {
+
+class ContentExtensionRule;
+
+Vector<ContentExtensionRule> parseRuleList(const String& rules);
+
+} // namespace ContentExtensions
+} // namespace WebCore
+
+#endif // ENABLE(CONTENT_EXTENSIONS)
+
+#endif // ContentExtensionParser_h

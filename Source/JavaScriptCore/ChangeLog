@@ -1,3 +1,479 @@
+2015-03-05  Joseph Pecoraro  <pecoraro@apple.com>
+
+        ES6: Object Literal Extensions - Shorthand Properties (Identifiers)
+        https://bugs.webkit.org/show_bug.cgi?id=142353
+
+        Reviewed by Geoffrey Garen.
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseProperty):
+        Parsing an identifier property followed by a comma or end brace treat
+        as a shorthand property and create a property that has the same
+        property name as the identifier name and value of a variable with that
+        identifier. Otherwise, fall through to getter/setter parsing.
+
+2015-03-05  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        Confirmed with JSC that warning 4611 (interaction between '_setjmp' and C++ object
+        destruction is non-portable) should be ignored in the JavaScriptCore project.
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreCommon.props: Silence warning 4611.
+
+2015-03-05  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r173761): ASSERTION FAILED: !is8Bit() in StringImpl::characters16()
+        https://bugs.webkit.org/show_bug.cgi?id=142350
+
+        Reviewed by Michael Saboff and Benjamin Poulain.
+
+        Call WTFString::hasInfixStartingAt() / hasInfixEndingAt() now that these
+        methods have been renamed for clarity.
+
+        * runtime/StringPrototype.cpp:
+        (JSC::stringProtoFuncStartsWith):
+        (JSC::stringProtoFuncEndsWith):
+
+2015-03-05  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Implement ES6 StringIterator
+        https://bugs.webkit.org/show_bug.cgi?id=142080
+
+        Reviewed by Filip Pizlo.
+
+        This patch introduces ES6 String Iterator.
+        It enumerates code points instead of elements in String.
+        So surrogate pairs should be handled correctly.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * builtins/StringIterator.prototype.js: Added.
+        (next):
+        * runtime/CommonIdentifiers.h:
+        * runtime/JSGlobalObject.cpp:
+        * runtime/JSGlobalObject.h:
+        * runtime/JSStringIterator.cpp: Added.
+        (JSC::JSStringIterator::finishCreation):
+        * runtime/JSStringIterator.h: Added.
+        (JSC::JSStringIterator::createStructure):
+        (JSC::JSStringIterator::create):
+        (JSC::JSStringIterator::JSStringIterator):
+        * runtime/StringIteratorConstructor.cpp: Added.
+        (JSC::StringIteratorConstructor::finishCreation):
+        * runtime/StringIteratorConstructor.h: Added.
+        (JSC::StringIteratorConstructor::create):
+        (JSC::StringIteratorConstructor::createStructure):
+        (JSC::StringIteratorConstructor::StringIteratorConstructor):
+        * runtime/StringIteratorPrototype.cpp: Added.
+        (JSC::StringIteratorPrototype::finishCreation):
+        (JSC::StringIteratorPrototype::getOwnPropertySlot):
+        (JSC::stringIteratorPrototypeIterator):
+        * runtime/StringIteratorPrototype.h: Added.
+        (JSC::StringIteratorPrototype::create):
+        (JSC::StringIteratorPrototype::createStructure):
+        (JSC::StringIteratorPrototype::StringIteratorPrototype):
+        * runtime/StringPrototype.cpp:
+        (JSC::StringPrototype::finishCreation):
+        (JSC::stringProtoFuncIterator):
+        * tests/stress/string-iterators.js: Added.
+        (testSurrogatePair):
+        (increment):
+        (for):
+
+2015-03-05  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [ARM] Fix the FTL build on Aarch64 Linux after r177421
+        https://bugs.webkit.org/show_bug.cgi?id=142040
+
+        Reviewed by Mark Lam.
+
+        * llvm/library/LLVMExports.cpp:
+        (initializeAndGetJSCLLVMAPI):
+
+2015-03-05  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Upgrade ES6 Iterator interfaces
+        https://bugs.webkit.org/show_bug.cgi?id=141351
+
+        Reviewed by Filip Pizlo.
+
+        This patch upgrades the exising ES6 iterator to align the latest spec.
+        In the latest spec,
+        1. `Iterator.next` returns object that implements IteratorResult interface { value: value, done, boolean }.
+        2. `Iterator.return` is introduced. When the iteration is terminated by the abrupt completion,
+        it is called to close iterator state.
+        3. Iterator.next of Array is moved from an iterator object to `%ArrayIteratorPrototype%`.
+
+        To upgrade it, we changes the bytecode that represents for-of loops.
+        And to embody the efficient iteration with an iterator object,
+        we implemented %ArrayIteratorPrototype%.next in JavaScript and
+        it is located in builtins/ArrayIterator.prototype.js.
+        Implementing it in JavaScript encourages inlining and
+        utilizes escape analysis for an iterator result object in DFG JIT.
+        And we dropped the intrinsic version of %ArrayIteratorPrototype%.next.
+
+        And we introduced IteratorOperations that is defined in the spec.
+        It aligns the iteration in the runtime to the latest spec.
+        Currently, Promise.all and Promise.race uses an iterable object.
+        However, Promise.all and Promise.race implementation is also based on the old spec.
+        Subsequent patches will upgrade it.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * builtins/ArrayIterator.prototype.js: Copied from Source/JavaScriptCore/runtime/ArrayIteratorPrototype.h.
+        (next):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitReturn):
+        (JSC::BytecodeGenerator::emitThrowTypeError):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        (JSC::BytecodeGenerator::emitIsObject):
+        (JSC::BytecodeGenerator::emitIsUndefined):
+        * bytecompiler/BytecodeGenerator.h:
+        * jit/ThunkGenerators.cpp:
+        (JSC::arrayIteratorNextThunkGenerator): Deleted.
+        (JSC::arrayIteratorNextKeyThunkGenerator): Deleted.
+        (JSC::arrayIteratorNextValueThunkGenerator): Deleted.
+        * jit/ThunkGenerators.h:
+        * runtime/ArgumentsIteratorPrototype.cpp:
+        (JSC::ArgumentsIteratorPrototype::finishCreation):
+        (JSC::argumentsIteratorPrototypeFuncNext):
+        * runtime/ArrayIteratorPrototype.cpp:
+        (JSC::ArrayIteratorPrototype::finishCreation):
+        (JSC::ArrayIteratorPrototype::getOwnPropertySlot):
+        (JSC::arrayIteratorProtoFuncIterator):
+        (JSC::arrayIteratorPrototypeIterate): Deleted.
+        * runtime/ArrayIteratorPrototype.h:
+        * runtime/CommonIdentifiers.h:
+        * runtime/Intrinsic.h:
+        * runtime/IteratorOperations.cpp: Added.
+        (JSC::iteratorNext):
+        (JSC::iteratorValue):
+        (JSC::iteratorComplete):
+        (JSC::iteratorStep):
+        (JSC::iteratorClose):
+        (JSC::createIterResultObject):
+        * runtime/IteratorOperations.h: Copied from Source/JavaScriptCore/runtime/ArrayIteratorPrototype.cpp.
+        * runtime/JSArrayIterator.cpp:
+        (JSC::JSArrayIterator::finishCreation):
+        (JSC::JSArrayIterator::visitChildren): Deleted.
+        (JSC::createIteratorResult): Deleted.
+        (JSC::arrayIteratorNext): Deleted.
+        (JSC::arrayIteratorNextKey): Deleted.
+        (JSC::arrayIteratorNextValue): Deleted.
+        (JSC::arrayIteratorNextGeneric): Deleted.
+        * runtime/JSArrayIterator.h:
+        (JSC::JSArrayIterator::JSArrayIterator):
+        (JSC::JSArrayIterator::iterationKind): Deleted.
+        (JSC::JSArrayIterator::iteratedObject): Deleted.
+        (JSC::JSArrayIterator::nextIndex): Deleted.
+        (JSC::JSArrayIterator::setNextIndex): Deleted.
+        (JSC::JSArrayIterator::finish): Deleted.
+        (JSC::JSArrayIterator::offsetOfIterationKind): Deleted.
+        (JSC::JSArrayIterator::offsetOfIteratedObject): Deleted.
+        (JSC::JSArrayIterator::offsetOfNextIndex): Deleted.
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/JSPromiseConstructor.cpp:
+        (JSC::performPromiseRaceLoop):
+        (JSC::JSPromiseConstructorFuncRace):
+        (JSC::performPromiseAll):
+        (JSC::JSPromiseConstructorFuncAll):
+        * runtime/MapIteratorPrototype.cpp:
+        (JSC::MapIteratorPrototype::finishCreation):
+        (JSC::MapIteratorPrototypeFuncNext):
+        * runtime/SetIteratorPrototype.cpp:
+        (JSC::SetIteratorPrototype::finishCreation):
+        (JSC::SetIteratorPrototypeFuncNext):
+        * runtime/VM.cpp:
+        (JSC::thunkGeneratorForIntrinsic):
+        * tests/stress/array-iterators-next-with-call.js: Added.
+        (increment):
+        (for):
+        * tests/stress/array-iterators-next.js: Added.
+
+        Revive the older Array iterator tests that manually call 'next' method.
+
+        * tests/stress/custom-iterators.js: Added.
+        (iter.next):
+        (iter.Symbol.iterator):
+        (iter.return):
+        (iter.get next):
+        (iter.get return):
+        (iteratorInterfaceErrorTest.iter.next):
+        (iteratorInterfaceErrorTest.iter.Symbol.iterator):
+        (iteratorInterfaceErrorTest.iter.return):
+        (iteratorInterfaceErrorTest):
+        (iteratorInterfaceErrorTestReturn.iter.next):
+        (iteratorInterfaceErrorTestReturn.iter.Symbol.iterator):
+        (iteratorInterfaceErrorTestReturn.iter.return):
+        (iteratorInterfaceErrorTestReturn):
+        (iteratorInterfaceBreakTestReturn.iter.next):
+        (iteratorInterfaceBreakTestReturn.iter.Symbol.iterator):
+        (iteratorInterfaceBreakTestReturn.iter.return):
+        (iteratorInterfaceBreakTestReturn):
+
+        This tests the behavior of custom iterators.
+        'next' and 'return' of iterator work with for-of.
+
+        * tests/stress/iterators-shape.js: Added.
+        (iteratorShape):
+        (sameNextMethods):
+        (set var):
+
+        This tests the shape of iterators; iterators of Array have 'next' method in %ArrayIteratorPrototype%.
+
+        * tests/stress/map-iterators-next.js: Added.
+        (set var):
+        (.get if):
+        (otherKey):
+        * tests/stress/set-iterators-next.js: Added.
+        (otherKey):
+
+2015-03-04  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Hide Promise with runtime flags under Cocoa JSContext API
+        https://bugs.webkit.org/show_bug.cgi?id=141965
+
+        Reviewed by Filip Pizlo.
+
+        Since there's no run loop in JavaScriptCore APIs, Promises don't work currently.
+        So until they work, we hide Promise from a global object.
+        Introduce new JSC runtime flag, PromiseDisabled. When `isPromiseDisabled` is true,
+        Promise constructor is not attached to JSGlobalObject.
+
+        To make 0 as default runtime flags, we choose PromiseDisabled flag
+        instead of PromiseEnabled flag. So by default, Promise is enabled.
+
+        * API/JSCallbackObjectFunctions.h:
+        (JSC::JSCallbackObject<Parent>::JSCallbackObject):
+        * API/JSContextRef.cpp:
+        (javaScriptRuntimeFlags):
+        (JSGlobalContextCreateInGroup):
+        * API/tests/testapi.c:
+        (main):
+        * API/tests/testapi.mm:
+        (testObjectiveCAPI):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::create):
+        * runtime/RuntimeFlags.h:
+        (JSC::RuntimeFlags::createAllEnabled):
+
+2015-03-04  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Array/Collection Sizes should be visible and distinct
+        https://bugs.webkit.org/show_bug.cgi?id=142254
+
+        Reviewed by Timothy Hatcher.
+
+        * runtime/WeakMapData.h:
+        (JSC::WeakMapData::size):
+        * inspector/JSInjectedScriptHost.cpp:
+        (Inspector::JSInjectedScriptHost::weakMapSize):
+        * inspector/JSInjectedScriptHost.h:
+        * inspector/JSInjectedScriptHostPrototype.cpp:
+        (Inspector::JSInjectedScriptHostPrototype::finishCreation):
+        (Inspector::jsInjectedScriptHostPrototypeFunctionWeakMapSize):
+        Add a way to get a WeakMap's size.
+
+        * inspector/protocol/Runtime.json:
+        Include size in RemoteObject and ObjectPreview.
+
+        * inspector/InjectedScriptSource.js:
+        Set the size of RemoteObjects and previews if they
+        are array/collection types.
+
+2015-03-04  Andreas Kling  <akling@apple.com>
+
+        GC should compute stack bounds and dump registers at the earliest opportunity.
+        <https://webkit.org/b/142310>
+        <rdar://problem/20045624>
+
+        Reviewed by Geoffrey Garen.
+
+        Make Heap::collect() a wrapper function around a collectImpl() where the work is actually done.
+        The wrapper function that grabs a snapshot of the current stack boundaries and register values
+        on entry, and sanitizes the stack on exit.
+
+        This is a speculative fix for what appears to be overly conservative behavior in the garbage
+        collector following r178364 which caused a measurable regression in memory usage on Membuster.
+        The theory being that we were putting pointers to dead things on the stack before scanning it,
+        and by doing that ended up marking things that we'd otherwise discover to be garbage.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::markRoots):
+        (JSC::Heap::gatherStackRoots):
+        (JSC::Heap::collect):
+        (JSC::Heap::collectImpl):
+        * heap/Heap.h:
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::gatherFromCurrentThread):
+        (JSC::MachineThreads::gatherConservativeRoots):
+        * heap/MachineStackMarker.h:
+
+2015-03-04  Debarshi Ray  <debarshir@gnome.org>
+
+        Silence GCC's -Wstrict-prototypes
+        https://bugs.webkit.org/show_bug.cgi?id=142278
+
+        Reviewed by Alexey Proskuryakov.
+
+        * API/JSContextRef.h:
+
+2015-03-04  Benjamin Poulain  <bpoulain@apple.com>
+
+        [JSC] Add a node for Math.log()
+        https://bugs.webkit.org/show_bug.cgi?id=142126
+
+        Reviewed by Geoffrey Garen.
+
+        This patch adds the DFG node ArithLog for LogIntrinsic.
+
+        Having a direct call to log has very little value by itself, the implementation
+        in DFG and FTL is a simple function call.
+
+        What is useful in ArithLog is that we know the operation is pure.
+        This allow us to hoist it out of loops when the argument is independent
+        is an invariant of the loop.
+
+        Perf wise, this patch gives:
+        -Kraken's imaging-darkroom: definitely 1.2372x faster.
+        -AsmBench's Towers.c: definitely 1.0261x faster.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::handleIntrinsic):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        (JSC::DFG::PredictionPropagationPhase::doDoubleVoting):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileArithLog):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileArithLog):
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::doubleLog):
+        * tests/stress/math-log-basics.js: Added.
+        * tests/stress/math-log-with-constants.js: Added.
+
+2015-03-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Only Heap should be in charge of deciding how to select a subspace for a type
+        https://bugs.webkit.org/show_bug.cgi?id=142304
+
+        Reviewed by Mark Lam.
+        
+        This slightly reduces the code duplication for selecting subspace based on type, and what
+        duplication is left is at least localized in HeapInlines.h. The immediate effect is that
+        the DFG and FTL don't have to duplicate this pattern.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::emitAllocateJSObject):
+        (JSC::DFG::SpeculativeJIT::emitAllocateVariableSizedJSObject):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::allocateObject):
+        * heap/Heap.h:
+        * heap/HeapInlines.h:
+        (JSC::Heap::allocateObjectOfType):
+        (JSC::Heap::subspaceForObjectOfType):
+        (JSC::Heap::allocatorForObjectOfType):
+        * runtime/JSCellInlines.h:
+        (JSC::allocateCell):
+
+2015-03-04  Andreas Kling  <akling@apple.com>
+
+        Stale entries in WeakGCMaps are keeping tons of WeakBlocks alive unnecessarily.
+        <https://webkit.org/b/142115>
+        <rdar://problem/19992268>
+
+        Reviewed by Geoffrey Garen.
+
+        Prune stale entries from WeakGCMaps as part of every full garbage collection.
+        This frees up tons of previously-stuck WeakBlocks that were only sitting around
+        with finalized handles waiting to die.
+
+        Note that WeakGCMaps register/unregister themselves with the GC heap in their
+        ctor/dtor, so creating one now requires passing the VM.
+
+        Average time spent in the PruningStaleEntriesFromWeakGCMaps GC phase appears
+        to be between 0.01ms and 0.3ms, though I've seen a few longer ones at ~1.2ms.
+        It seems somewhat excessive to do this on every Eden collection, so it's only
+        doing work in full collections for now.
+
+        * API/JSWeakObjectMapRefInternal.h:
+        (OpaqueJSWeakObjectMap::create):
+        (OpaqueJSWeakObjectMap::OpaqueJSWeakObjectMap):
+        * API/JSWeakObjectMapRefPrivate.cpp:
+        * API/JSWrapperMap.mm:
+        (-[JSWrapperMap initWithContext:]):
+        (-[JSWrapperMap jsWrapperForObject:]): Pass VM to WeakGCMap constructor.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Add WeakGCMapInlines.h and make
+        it project-private so WebCore clients can access it.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::collect):
+        (JSC::Heap::pruneStaleEntriesFromWeakGCMaps): Added a new GC phase for pruning
+        stale entries from WeakGCMaps. This is only executed during full collections.
+
+        * heap/Heap.h:
+        * heap/HeapInlines.h:
+        (JSC::Heap::registerWeakGCMap):
+        (JSC::Heap::unregisterWeakGCMap): Added a mechanism for WeakGCMaps to register
+        themselves with the Heap and provide a pruning callback.
+
+        * runtime/PrototypeMap.h:
+        (JSC::PrototypeMap::PrototypeMap):
+        * runtime/Structure.cpp:
+        (JSC::StructureTransitionTable::add): Pass VM to WeakGCMap constructor.
+
+        * runtime/JSCInlines.h: Add "WeakGCMapInlines.h"
+
+        * runtime/JSGlobalObject.cpp: Include "WeakGCMapInlines.h" so this builds.
+
+        * runtime/VM.cpp:
+        (JSC::VM::VM): Pass VM to WeakGCMap constructor.
+
+        * runtime/WeakGCMap.h:
+        (JSC::WeakGCMap::set):
+        (JSC::WeakGCMap::add):
+        (JSC::WeakGCMap::WeakGCMap): Deleted.
+        (JSC::WeakGCMap::gcMap): Deleted.
+        (JSC::WeakGCMap::gcMapIfNeeded): Deleted.
+        * runtime/WeakGCMapInlines.h: Added.
+        (JSC::WeakGCMap::WeakGCMap):
+        (JSC::WeakGCMap::~WeakGCMap):
+        (JSC::WeakGCMap::pruneStaleEntries): Moved ctor, dtor and pruning callback
+        to WeakGCMapInlines.h to fix interdependent header issues. Removed code that
+        prunes WeakGCMap at certain growth milestones and instead rely on the GC
+        callback for housekeeping.
+
 2015-03-03  Filip Pizlo  <fpizlo@apple.com>
 
         DFG IR should refer to FunctionExecutables directly and not via the CodeBlock

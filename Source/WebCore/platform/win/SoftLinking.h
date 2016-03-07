@@ -206,18 +206,18 @@
 
 #define SOFT_LINK_CONSTANT_HEADER(functionNamespace, framework, variableName, variableType) \
     namespace functionNamespace { \
-    const variableType get_##framework##_##variableName(); \
+    variableType get_##framework##_##variableName(); \
     }
 
 #define SOFT_LINK_CONSTANT_SOURCE(functionNamespace, framework, variableName, variableType) \
     namespace functionNamespace { \
     static void init##framework##variableName(void* context) { \
         variableType* ptr = reinterpret_cast<variableType*>(SOFT_LINK_GETPROCADDRESS(framework##Library(), #variableName)); \
-        ASSERT(ptr); \
+        RELEASE_ASSERT(ptr); \
         *static_cast<variableType*>(context) = *ptr; \
     } \
-    const variableType get_##framework##_##variableName(); \
-    const variableType get_##framework##_##variableName() \
+    variableType get_##framework##_##variableName(); \
+    variableType get_##framework##_##variableName() \
     { \
         static variableType constant##framework##variableName; \
         static dispatch_once_t once; \
@@ -242,7 +242,7 @@
     static resultType __cdecl init##framework##functionName parameterDeclarations \
     { \
         softLink##framework##functionName = reinterpret_cast<resultType (__cdecl*)parameterDeclarations>(SOFT_LINK_GETPROCADDRESS(framework##Library(), #functionName)); \
-        ASSERT(softLink##framework##functionName); \
+        RELEASE_ASSERT(softLink##framework##functionName); \
         return softLink##framework##functionName parameterNames; \
     } \
     }
