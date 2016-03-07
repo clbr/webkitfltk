@@ -1254,11 +1254,6 @@ void Page::setIsVisibleInternal(bool isVisible)
     if (isVisible) {
         m_isPrerender = false;
 
-        for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
-            if (FrameView* frameView = frame->view())
-                frameView->didMoveOnscreen();
-        }
-
         resumeScriptedAnimations();
 
         if (FrameView* view = mainFrame().view())
@@ -1280,11 +1275,6 @@ void Page::setIsVisibleInternal(bool isVisible)
     if (!isVisible) {
         if (m_settings->hiddenPageCSSAnimationSuspensionEnabled())
             mainFrame().animation().suspendAnimations();
-
-        for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
-            if (FrameView* frameView = frame->view())
-                frameView->willMoveOffscreen();
-        }
 
         suspendScriptedAnimations();
 

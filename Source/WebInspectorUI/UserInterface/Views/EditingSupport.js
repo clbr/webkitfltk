@@ -79,9 +79,6 @@ WebInspector.EditingConfig = function(commitHandler, cancelHandler, context)
     this.commitHandler = commitHandler;
     this.cancelHandler = cancelHandler;
     this.context = context;
-    this.pasteHandler;
-    this.multiline;
-    this.customFinishHandler;
     this.spellcheck = false;
 };
 
@@ -105,7 +102,7 @@ WebInspector.EditingConfig.prototype = {
 WebInspector.startEditing = function(element, config)
 {
     if (!WebInspector.markBeingEdited(element, true))
-        return;
+        return null;
 
     config = config || new WebInspector.EditingConfig(function() {}, function() {});
     var committedCallback = config.commitHandler;

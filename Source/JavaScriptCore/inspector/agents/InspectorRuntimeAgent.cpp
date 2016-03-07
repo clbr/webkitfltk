@@ -221,14 +221,29 @@ void InspectorRuntimeAgent::getRuntimeTypesForVariablesAtOffsets(ErrorString* er
         int descriptor;
         String sourceIDAsString;
         int divot;
-        location->getNumber(ASCIILiteral("typeInformationDescriptor"), &descriptor);
+        location->getInteger(ASCIILiteral("typeInformationDescriptor"), &descriptor);
         location->getString(ASCIILiteral("sourceID"), &sourceIDAsString);
-        location->getNumber(ASCIILiteral("divot"), &divot);
+        location->getInteger(ASCIILiteral("divot"), &divot);
 
-        RefPtr<Inspector::Protocol::Runtime::TypeDescription> typeDescription = Inspector::Protocol::Runtime::TypeDescription::create();
         bool okay;
-        vm.typeProfiler()->getTypesForVariableAtOffsetForInspector(static_cast<TypeProfilerSearchDescriptor>(descriptor), divot, sourceIDAsString.toIntPtrStrict(&okay), typeDescription);
-        typeDescriptions->addItem(typeDescription);
+        TypeLocation* typeLocation = vm.typeProfiler()->findLocation(divot, sourceIDAsString.toIntPtrStrict(&okay), static_cast<TypeProfilerSearchDescriptor>(descriptor));
+        RefPtr<Inspector::Protocol::Runtime::TypeDescription> description = Inspector::Protocol::Runtime::TypeDescription::create()
+            .setIsValid(!!typeLocation);
+        if (typeLocation) {
+            RefPtr<TypeSet> typeSet;
+            if (typeLocation->m_globalTypeSet && typeLocation->m_globalVariableID != TypeProfilerNoGlobalIDExists)
+                typeSet = typeLocation->m_globalTypeSet;
+            else
+                typeSet = typeLocation->m_instructionTypeSet;
+
+            description->setLeastCommonAncestor(typeSet->leastCommonAncestor());
+            description->setPrimitiveTypeNames(typeSet->allPrimitiveTypeNames());
+            description->setStructures(typeSet->allStructureRepresentations());
+            description->setTypeSet(typeSet->inspectorTypeSet());
+            description->setIsTruncated(typeSet->isOverflown());
+        }
+
+        typeDescriptions->addItem(description);
     }
 
     double end = currentTimeMS();

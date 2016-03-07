@@ -280,15 +280,15 @@ static const CSSPropertyID computedProperties[] = {
 #if ENABLE(DASHBOARD_SUPPORT)
     CSSPropertyWebkitDashboardRegion,
 #endif
-    CSSPropertyWebkitAlignContent,
-    CSSPropertyWebkitAlignItems,
-    CSSPropertyWebkitAlignSelf,
-    CSSPropertyWebkitFlexBasis,
-    CSSPropertyWebkitFlexGrow,
-    CSSPropertyWebkitFlexShrink,
-    CSSPropertyWebkitFlexDirection,
-    CSSPropertyWebkitFlexWrap,
-    CSSPropertyWebkitJustifyContent,
+    CSSPropertyAlignContent,
+    CSSPropertyAlignItems,
+    CSSPropertyAlignSelf,
+    CSSPropertyFlexBasis,
+    CSSPropertyFlexGrow,
+    CSSPropertyFlexShrink,
+    CSSPropertyFlexDirection,
+    CSSPropertyFlexWrap,
+    CSSPropertyJustifyContent,
     CSSPropertyWebkitJustifySelf,
     CSSPropertyWebkitFilter,
     CSSPropertyWebkitFontKerning,
@@ -340,7 +340,7 @@ static const CSSPropertyID computedProperties[] = {
     CSSPropertyWebkitMaskSize,
     CSSPropertyWebkitMaskSourceType,
     CSSPropertyWebkitNbspMode,
-    CSSPropertyWebkitOrder,
+    CSSPropertyOrder,
 #if ENABLE(ACCELERATED_OVERFLOW_SCROLLING)
     CSSPropertyWebkitOverflowScrolling,
 #endif
@@ -350,10 +350,6 @@ static const CSSPropertyID computedProperties[] = {
     CSSPropertyWebkitRtlOrdering,
 #if PLATFORM(IOS)
     CSSPropertyWebkitTouchCallout,
-
-    // FIXME: This property shouldn't be iOS-specific. Once we fix up its usage in InlineTextBox::paintCompositionBackground()
-    // we should move it outside the PLATFORM(IOS)-guard. See <https://bugs.webkit.org/show_bug.cgi?id=126296>.
-    CSSPropertyWebkitCompositionFillColor,
 #endif
 #if ENABLE(CSS_SHAPES)
     CSSPropertyWebkitShapeOutside,
@@ -2030,11 +2026,11 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
             return cssValuePool().createValue(style->display());
         case CSSPropertyEmptyCells:
             return cssValuePool().createValue(style->emptyCells());
-        case CSSPropertyWebkitAlignContent:
+        case CSSPropertyAlignContent:
             return cssValuePool().createValue(style->alignContent());
-        case CSSPropertyWebkitAlignItems:
+        case CSSPropertyAlignItems:
             return cssValuePool().createValue(style->alignItems());
-        case CSSPropertyWebkitAlignSelf:
+        case CSSPropertyAlignSelf:
             if (style->alignSelf() == AlignAuto) {
                 Node* parent = styledNode->parentNode();
                 if (parent && parent->computedStyle())
@@ -2042,21 +2038,21 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
                 return cssValuePool().createValue(AlignStretch);
             }
             return cssValuePool().createValue(style->alignSelf());
-        case CSSPropertyWebkitFlex:
-            return getCSSPropertyValuesForShorthandProperties(webkitFlexShorthand());
-        case CSSPropertyWebkitFlexBasis:
+        case CSSPropertyFlex:
+            return getCSSPropertyValuesForShorthandProperties(flexShorthand());
+        case CSSPropertyFlexBasis:
             return cssValuePool().createValue(style->flexBasis());
-        case CSSPropertyWebkitFlexDirection:
+        case CSSPropertyFlexDirection:
             return cssValuePool().createValue(style->flexDirection());
-        case CSSPropertyWebkitFlexFlow:
-            return getCSSPropertyValuesForShorthandProperties(webkitFlexFlowShorthand());
-        case CSSPropertyWebkitFlexGrow:
+        case CSSPropertyFlexFlow:
+            return getCSSPropertyValuesForShorthandProperties(flexFlowShorthand());
+        case CSSPropertyFlexGrow:
             return cssValuePool().createValue(style->flexGrow());
-        case CSSPropertyWebkitFlexShrink:
+        case CSSPropertyFlexShrink:
             return cssValuePool().createValue(style->flexShrink());
-        case CSSPropertyWebkitFlexWrap:
+        case CSSPropertyFlexWrap:
             return cssValuePool().createValue(style->flexWrap());
-        case CSSPropertyWebkitJustifyContent:
+        case CSSPropertyJustifyContent:
             return cssValuePool().createValue(style->justifyContent());
         case CSSPropertyWebkitJustifySelf: {
             RefPtr<CSSValueList> result = CSSValueList::createSpaceSeparated();
@@ -2065,7 +2061,7 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
                 result->append(CSSPrimitiveValue::create(style->justifySelfOverflowAlignment()));
             return result.release();
         }
-        case CSSPropertyWebkitOrder:
+        case CSSPropertyOrder:
             return cssValuePool().createValue(style->order(), CSSPrimitiveValue::CSS_NUMBER);
         case CSSPropertyFloat:
             if (style->display() != NONE && style->hasOutOfFlowPosition())
@@ -2718,12 +2714,6 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
         }
         case CSSPropertyWebkitRtlOrdering:
             return cssValuePool().createIdentifierValue(style->rtlOrdering() ? CSSValueVisual : CSSValueLogical);
-#if PLATFORM(IOS)
-        // FIXME: This property shouldn't be iOS-specific. Once we fix up its usage in InlineTextBox::paintCompositionBackground()
-        // we should remove the PLATFORM(IOS)-guard. See <https://bugs.webkit.org/show_bug.cgi?id=126296>.
-        case CSSPropertyWebkitCompositionFillColor:
-            return currentColorOrValidColor(style.get(), style->compositionFillColor());
-#endif
 #if ENABLE(TOUCH_EVENTS)
         case CSSPropertyWebkitTapHighlightColor:
             return currentColorOrValidColor(style.get(), style->tapHighlightColor());

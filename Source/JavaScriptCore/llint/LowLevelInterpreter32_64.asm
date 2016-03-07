@@ -176,9 +176,8 @@ macro doVMEntry(makeCall)
         const temp4 = t4 # Same as temp2
     elsif MIPS
         const entry = a0
-        const vmTopCallFrame = a1
+        const vm = a1
         const protoCallFrame = a2
-        const topOfStack = a3
 
         const temp1 = t3
         const temp2 = t5
@@ -720,10 +719,10 @@ _llint_op_enter:
     dispatch(1)
 
 
-_llint_op_create_activation:
+_llint_op_create_lexical_environment:
     traceExecution()
     loadi 4[PC], t0
-    callSlowPath(_llint_slow_path_create_activation)
+    callSlowPath(_llint_slow_path_create_lexical_environment)
     dispatch(2)
 
 
@@ -1972,11 +1971,11 @@ macro doCall(slowPath)
 end
 
 
-_llint_op_tear_off_activation:
+_llint_op_tear_off_lexical_environment:
     traceExecution()
     loadi 4[PC], t0
     bieq TagOffset[cfr, t0, 8], EmptyValueTag, .opTearOffActivationNotCreated
-    callSlowPath(_llint_slow_path_tear_off_activation)
+    callSlowPath(_llint_slow_path_tear_off_lexical_environment)
 .opTearOffActivationNotCreated:
     dispatch(2)
 
@@ -2071,7 +2070,7 @@ macro getDeBruijnScope(deBruijinIndexOperand, scopeCheck)
     bineq CodeBlock::m_codeType[t1], FunctionCode, .loop
     btbz CodeBlock::m_needsActivation[t1], .loop
 
-    loadi CodeBlock::m_activationRegister[t1], t1
+    loadi CodeBlock::m_lexicalEnvironmentRegister[t1], t1
 
     # Need to conditionally skip over one scope.
     bieq TagOffset[cfr, t1, 8], EmptyValueTag, .noActivation
@@ -2281,7 +2280,7 @@ macro getGlobalVar()
 end
 
 macro getClosureVar()
-    loadp JSVariableObject::m_registers[t0], t0
+    loadp JSEnvironmentRecord::m_registers[t0], t0
     loadisFromInstruction(6, t3)
     loadp TagOffset[t0, t3, 8], t1
     loadp PayloadOffset[t0, t3, 8], t2
@@ -2358,7 +2357,7 @@ end
 macro putClosureVar()
     loadisFromInstruction(3, t1)
     loadConstantOrVariable(t1, t2, t3)
-    loadp JSVariableObject::m_registers[t0], t0
+    loadp JSEnvironmentRecord::m_registers[t0], t0
     loadisFromInstruction(6, t1)
     storei t2, TagOffset[t0, t1, 8]
     storei t3, PayloadOffset[t0, t1, 8]

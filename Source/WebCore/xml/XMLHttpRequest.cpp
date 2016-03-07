@@ -154,7 +154,7 @@ XMLHttpRequest::~XMLHttpRequest()
 
 Document* XMLHttpRequest::document() const
 {
-    ASSERT_WITH_SECURITY_IMPLICATION(scriptExecutionContext());
+    ASSERT(scriptExecutionContext());
     return toDocument(scriptExecutionContext());
 }
 
@@ -906,8 +906,13 @@ void XMLHttpRequest::dropProtection()
     unsetPendingActivity(this);
 }
 
-void XMLHttpRequest::overrideMimeType(const String& override)
+void XMLHttpRequest::overrideMimeType(const String& override, ExceptionCode& ec)
 {
+    if (m_state == LOADING || m_state == DONE) {
+        ec = INVALID_STATE_ERR;
+        return;
+    }
+
     m_mimeTypeOverride = override;
 }
 

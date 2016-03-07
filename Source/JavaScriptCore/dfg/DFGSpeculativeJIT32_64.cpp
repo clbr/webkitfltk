@@ -36,7 +36,7 @@
 #include "DFGSlowPathGenerator.h"
 #include "Debugger.h"
 #include "GetterSetter.h"
-#include "JSActivation.h"
+#include "JSLexicalEnvironment.h"
 #include "JSPropertyNameEnumerator.h"
 #include "ObjectPrototype.h"
 #include "JSCInlines.h"
@@ -3538,7 +3538,7 @@ void SpeculativeJIT::compile(Node* node)
         GPRReg scopeGPR = scope.gpr();
         GPRReg resultGPR = result.gpr();
 
-        m_jit.loadPtr(JITCompiler::Address(scopeGPR, JSVariableObject::offsetOfRegisters()), resultGPR);
+        m_jit.loadPtr(JITCompiler::Address(scopeGPR, JSEnvironmentRecord::offsetOfRegisters()), resultGPR);
         storageResult(resultGPR, node);
         break;
     }
@@ -4252,7 +4252,7 @@ void SpeculativeJIT::compile(Node* node)
         JITCompiler::Jump notCreated = m_jit.branch32(JITCompiler::Equal, activationValueTagGPR, TrustedImm32(JSValue::EmptyValueTag));
 
         SymbolTable* symbolTable = m_jit.symbolTableFor(node->origin.semantic);
-        int registersOffset = JSActivation::registersOffset(symbolTable);
+        int registersOffset = JSLexicalEnvironment::registersOffset(symbolTable);
 
         int bytecodeCaptureStart = symbolTable->captureStart();
         int machineCaptureStart = m_jit.graph().m_machineCaptureStart;
@@ -4273,7 +4273,7 @@ void SpeculativeJIT::compile(Node* node)
                     activationValuePayloadGPR, registersOffset + (bytecodeCaptureStart - i) * sizeof(Register) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.payload)));
         }
         m_jit.addPtr(TrustedImm32(registersOffset), activationValuePayloadGPR, scratchGPR);
-        m_jit.storePtr(scratchGPR, JITCompiler::Address(activationValuePayloadGPR, JSActivation::offsetOfRegisters()));
+        m_jit.storePtr(scratchGPR, JITCompiler::Address(activationValuePayloadGPR, JSLexicalEnvironment::offsetOfRegisters()));
         
         notCreated.link(&m_jit);
         noResult(node);

@@ -58,6 +58,9 @@ WebInspector.DOMTreeElement.EditTagBlacklist = [
     "html", "head", "body"
 ].keySet();
 
+WebInspector.DOMTreeElement.SearchHighlightStyleClassName = "search-highlight";
+WebInspector.DOMTreeElement.BouncyHighlightStyleClassName = "bouncy-highlight";
+
 WebInspector.DOMTreeElement.prototype = {
     isCloseTag: function()
     {
@@ -80,6 +83,39 @@ WebInspector.DOMTreeElement.prototype = {
     {
         delete this._searchHighlightsVisible;
         this._updateSearchHighlight(false);
+    },
+
+    emphasizeSearchHighlight: function()
+    {
+        var highlightElement = this.title.querySelector("." + WebInspector.DOMTreeElement.SearchHighlightStyleClassName);
+        console.assert(highlightElement);
+        if (!highlightElement)
+            return;
+
+        if (this._bouncyHighlightElement)
+            this._bouncyHighlightElement.remove();
+
+        this._bouncyHighlightElement = document.createElement("div");
+        this._bouncyHighlightElement.className = WebInspector.DOMTreeElement.BouncyHighlightStyleClassName;
+        this._bouncyHighlightElement.textContent = highlightElement.textContent;
+
+        // Position and show the bouncy highlight adjusting the coordinates to be inside the TreeOutline's space.
+        var highlightElementRect = highlightElement.getBoundingClientRect();
+        var treeOutlineRect = this.treeOutline.element.getBoundingClientRect();
+        this._bouncyHighlightElement.style.top = (highlightElementRect.top - treeOutlineRect.top) + "px";
+        this._bouncyHighlightElement.style.left = (highlightElementRect.left - treeOutlineRect.left) + "px";
+        this.title.appendChild(this._bouncyHighlightElement);
+
+        function animationEnded()
+        {
+            if (!this._bouncyHighlightElement)
+                return;
+
+            this._bouncyHighlightElement.remove();
+            delete this._bouncyHighlightElement;
+        }
+
+        this._bouncyHighlightElement.addEventListener("webkitAnimationEnd", animationEnded.bind(this));
     },
 
     _updateSearchHighlight: function(show)
@@ -167,8 +203,9 @@ WebInspector.DOMTreeElement.prototype = {
 
     showChild: function(index)
     {
+        console.assert(!this._elementCloseTag);
         if (this._elementCloseTag)
-            return;
+            return false;
 
         if (index >= this.expandedChildrenLimit) {
             this._expandedChildrenLimit = index + 1;
@@ -478,7 +515,10 @@ WebInspector.DOMTreeElement.prototype = {
     ondelete: function()
     {
         var startTagTreeElement = this.treeOutline.findTreeElement(this.representedObject);
-        startTagTreeElement ? startTagTreeElement.remove() : this.remove();
+        if (startTagTreeElement)
+            startTagTreeElement.remove();
+        else
+            this.remove();
         return true;
     },
 
@@ -526,7 +566,7 @@ WebInspector.DOMTreeElement.prototype = {
         else {
             var nodeName = tag.textContent.match(/^<(.*?)>$/)[1];
             tag.textContent = "";
-            tag.appendChild(document.createTextNode("<"+nodeName));
+            tag.appendChild(document.createTextNode("<" + nodeName));
             tag.appendChild(node);
             tag.appendChild(document.createTextNode(">"));
         }
@@ -537,7 +577,7 @@ WebInspector.DOMTreeElement.prototype = {
     _startEditingTarget: function(eventTarget)
     {
         if (this.treeOutline.selectedDOMNode() !== this.representedObject)
-            return;
+            return false;
 
         if (this.representedObject.nodeType() !== Node.ELEMENT_NODE && this.representedObject.nodeType() !== Node.TEXT_NODE)
             return false;
@@ -613,7 +653,7 @@ WebInspector.DOMTreeElement.prototype = {
     _startEditing: function()
     {
         if (this.treeOutline.selectedDOMNode() !== this.representedObject)
-            return;
+            return false;
 
         var listItem = this._listItemNode;
 
@@ -629,7 +669,7 @@ WebInspector.DOMTreeElement.prototype = {
             var textNode = listItem.getElementsByClassName("html-text-node")[0];
             if (textNode)
                 return this._startEditingTextNode(textNode);
-            return;
+            return false;
         }
     },
 
@@ -961,14 +1001,14 @@ WebInspector.DOMTreeElement.prototype = {
         // in the child element list.
         if (this.expanded) {
             var closers = this._childrenListNode.querySelectorAll(".close");
-            return closers[closers.length-1];
+            return closers[closers.length - 1];
         }
 
         // Remaining cases are single line non-expanded elements with a closing
         // tag, or HTML elements without a closing tag (such as <br>). Return
         // null in the case where there isn't a closing tag.
         var tags = this.listItemElement.getElementsByClassName("html-tag");
-        return (tags.length === 1 ? null : tags[tags.length-1]);
+        return (tags.length === 1 ? null : tags[tags.length - 1]);
     },
 
     updateTitle: function(onlySearchQueryChanged)
@@ -982,10 +1022,8 @@ WebInspector.DOMTreeElement.prototype = {
             if (this._highlightResult)
                 this._updateSearchHighlight(false);
         } else {
-            var highlightElement = document.createElement("span");
-            highlightElement.className = "highlight";
-            highlightElement.appendChild(this._nodeTitleInfo().titleDOM);
-            this.title = highlightElement;
+            this.title = document.createElement("span");
+            this.title.appendChild(this._nodeTitleInfo().titleDOM);
             delete this._highlightResult;
         }
 
@@ -1266,22 +1304,23 @@ WebInspector.DOMTreeElement.prototype = {
 
     _highlightSearchResults: function()
     {
-        if (!this._searchQuery || !this._searchHighlightsVisible)
+        if (!this.title || !this._searchQuery || !this._searchHighlightsVisible)
             return;
+
         if (this._highlightResult) {
             this._updateSearchHighlight(true);
             return;
         }
 
-        var text = this.listItemElement.textContent;
-        var regexObject = createPlainTextSearchRegex(this._searchQuery, "gi");
+        var text = this.title.textContent;
+        var searchRegex = new RegExp(this._searchQuery.escapeForRegExp(), "gi");
 
         var offset = 0;
-        var match = regexObject.exec(text);
+        var match = searchRegex.exec(text);
         var matchRanges = [];
         while (match) {
             matchRanges.push({ offset: match.index, length: match[0].length });
-            match = regexObject.exec(text);
+            match = searchRegex.exec(text);
         }
 
         // Fall back for XPath, etc. matches.
@@ -1289,7 +1328,7 @@ WebInspector.DOMTreeElement.prototype = {
             matchRanges.push({ offset: 0, length: text.length });
 
         this._highlightResult = [];
-        highlightSearchResults(this.listItemElement, matchRanges, this._highlightResult);
+        WebInspector.highlightRangesWithStyleClass(this.title, matchRanges, WebInspector.DOMTreeElement.SearchHighlightStyleClassName, this._highlightResult);
     },
 
     handleEvent: function(event)

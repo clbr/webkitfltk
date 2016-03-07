@@ -1,3 +1,199 @@
+2014-09-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Fix assert in QuickConsole - main frame execution context path component
+        https://bugs.webkit.org/show_bug.cgi?id=136748
+
+        Reviewed by Timothy Hatcher.
+
+        This can get called for the MainFrame on page navigations.
+        In such cases we can return a better result from this method.
+
+        * UserInterface/Views/QuickConsole.js:
+        (WebInspector.QuickConsole.prototype._insertExecutionContextPathComponentForFrame):
+
+2014-09-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Hide DOM search result highlights when find banner is not showing
+        https://bugs.webkit.org/show_bug.cgi?id=136749
+
+        Reviewed by Timothy Hatcher.
+
+        Match search highlights in TextEditor by only showing the highlight
+        when the find banner is showing.
+
+        * UserInterface/Views/DOMTreeOutline.css:
+        (.showing-find-banner .dom-tree-outline .search-result):
+        (.dom-tree-outline .search-highlight): Deleted.
+
+2014-09-11  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: DOM Tree search highlights are not appearing
+        https://bugs.webkit.org/show_bug.cgi?id=136662
+
+        Reviewed by Timothy Hatcher.
+
+        When performing a search within the DOMTreeContentView all
+        search results should immediately highlight. When moving
+        between search results, emphasize the current with a bouncy.
+        Remember to remove the highlights when the search is changed
+        or cleared.
+
+        * UserInterface/Views/DOMTreeContentView.js:
+        (WebInspector.DOMTreeContentView.prototype.performSearch.searchResultsReady):
+        (WebInspector.DOMTreeContentView.prototype.searchCleared):
+        Shor or hide highlights when searches change.
+
+        (WebInspector.DOMTreeContentView.prototype.revealResult):
+        (WebInspector.DOMTreeContentView.prototype._revealSearchResult):
+        Emphasize the highlight when moving to a new current result.
+
+        (WebInspector.DOMTreeContentView.prototype._showSearchHighlights):
+        (WebInspector.DOMTreeContentView.prototype._hideSearchHighlights):
+        On each affected DOMTreeElement show or hide search highlights.
+
+        * UserInterface/Views/DOMTreeElement.js:
+        (WebInspector.DOMTreeElement.prototype.emphasizeSearchHighlight.animationEnded):
+        (WebInspector.DOMTreeElement.prototype.emphasizeSearchHighlight):
+        Give a brief bouncy-highlight when told to emphasize the search highlight.
+
+        (WebInspector.DOMTreeElement.prototype.updateTitle):
+        Remove unused and unnecessary style class on each row.
+
+        (WebInspector.DOMTreeElement.prototype._highlightSearchResults):
+        Update the stale code to use new function names and accessors.
+
+        * UserInterface/Views/DOMTreeOutline.css:
+        (.dom-tree-outline .search-highlight):
+        Styles for the search highlight match search highlights in the sidebar.
+
+        * UserInterface/Views/Main.css:
+        (.bouncy-highlight):
+        * UserInterface/Views/TextEditor.css:
+        Move bouncy-highlight to Main.css.
+
+2014-09-10  Saam Barati  <saambarati1@gmail.com>
+
+        Web Inspector: Modify the type profiler runtime protocol to transfer some computation into the WebInspector
+        https://bugs.webkit.org/show_bug.cgi?id=136500
+
+        Reviewed by Joseph Pecoraro.
+
+        This patch maintains the same UI in the Web Inspector for displaying
+        type information, but now accounts for the new protocol for type profiling.
+        
+        The Inspector now has a TypeSet class that wraps the TypeDescription 
+        protocol object and creates a simple interface for asking protocol objects 
+        about their type.
+
+        * UserInterface/Controllers/TypeTokenAnnotator.js:
+        (WebInspector.TypeTokenAnnotator.prototype._insertTypeTokensForEachNode):
+        * UserInterface/Main.html:
+        * UserInterface/Models/TypeSet.js: Added.
+        (WebInspector.TypeSet):
+        (WebInspector.TypeSet.fromPayload):
+        (WebInspector.TypeSet.prototype.isContainedIn):
+        * UserInterface/Views/SourceCodeTextEditor.js:
+        (WebInspector.SourceCodeTextEditor.prototype._tokenTrackingControllerHighlightedJavaScriptTypeInformation.handler):
+        (WebInspector.SourceCodeTextEditor.prototype._tokenTrackingControllerHighlightedJavaScriptTypeInformation):
+        * UserInterface/Views/TypePropertiesSection.js:
+        (WebInspector.TypePropertiesSection.prototype.onpopulate):
+        (WebInspector.TypePropertyTreeElement.prototype.onpopulate):
+        * UserInterface/Views/TypeTokenView.js:
+        (WebInspector.TypeTokenView.prototype.update):
+        (WebInspector.TypeTokenView.prototype._shouldShowPopover):
+        (WebInspector.TypeTokenView.prototype._displayTypeName):
+
+2014-09-10  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Eliminate typeof "undefined" checks
+        https://bugs.webkit.org/show_bug.cgi?id=136691
+
+        Reviewed by Alexey Proskuryakov.
+
+        * UserInterface/Base/Main.js:
+        (WebInspector.linkifyURLAsNode):
+        (WebInspector.linkifyStringAsFragment):
+        * UserInterface/Protocol/InspectorBackend.js:
+        (InspectorBackend.Command.prototype._invokeWithArguments):
+        * UserInterface/Views/DataGrid.js:
+        (WebInspector.DataGrid.prototype.get resizeMethod):
+        * UserInterface/Views/NavigationBar.js:
+        (WebInspector.NavigationBar.prototype.get minimumWidth):
+
+2014-09-10  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Fix obscure ESLint warnings and skip directories
+        https://bugs.webkit.org/show_bug.cgi?id=136686
+
+        Reviewed by Timothy Hatcher.
+
+        * .eslintignore: Added.
+        Skip directories we do not want ESLint to process.
+
+        * .eslintrc:
+        Add rules we've seen and sort sections.
+
+        * UserInterface/Controllers/FormatterContentBuilder.js:
+        (FormatterContentBuilder.prototype._appendIndent):
+        * UserInterface/Models/Color.js:
+        * UserInterface/Models/DOMNodeStyles.js:
+        (WebInspector.DOMNodeStyles.prototype._parseStyleDeclarationPayload):
+        * UserInterface/Views/CSSStyleDeclarationTextEditor.js:
+        * UserInterface/Views/DOMTreeDataGridNode.js:
+        * UserInterface/Views/DOMTreeElement.js:
+        (WebInspector.DOMTreeElement.prototype.ondelete):
+        (WebInspector.DOMTreeElement.prototype._insertInLastAttributePosition):
+        (WebInspector.DOMTreeElement.prototype._distinctClosingTagElement):
+        * UserInterface/Views/EditingSupport.js:
+        (WebInspector.EditingConfig):
+        * UserInterface/Views/LayerTreeDataGridNode.js:
+        (WebInspector.LayerTreeDataGridNode.prototype._makeOutlet):
+        * UserInterface/Views/TreeOutline.js:
+        (TreeOutline.prototype.appendChild):
+        (TreeOutline.prototype.insertChild):
+        (TreeOutline.prototype.removeChildAtIndex):
+        (TreeOutline.prototype.removeChild):
+        (TreeElement.prototype.expandRecursively):
+        Fix linter issues.
+
+2014-09-10  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Fix ESLint consistent-return warnings
+        https://bugs.webkit.org/show_bug.cgi?id=136682
+
+        Reviewed by Timothy Hatcher.
+
+        * .eslintrc:
+        * UserInterface/Controllers/BranchManager.js:
+        (WebInspector.BranchManager.prototype.createBranch):
+        * UserInterface/Controllers/FrameResourceManager.js:
+        (WebInspector.FrameResourceManager.prototype._addNewResourceToFrame):
+        * UserInterface/Models/DOMNodeStyles.js:
+        (WebInspector.DOMNodeStyles.prototype._parseStyleDeclarationPayload):
+        * UserInterface/Views/BoxModelDetailsSectionRow.js:
+        (WebInspector.BoxModelDetailsSectionRow.prototype._applyUserInput):
+        * UserInterface/Views/DOMTreeElement.js:
+        (WebInspector.DOMTreeElement.prototype.showChild):
+        (WebInspector.DOMTreeElement.prototype._startEditingTarget):
+        (WebInspector.DOMTreeElement.prototype._startEditing):
+        * UserInterface/Views/EditingSupport.js:
+        * UserInterface/Views/EventListenerSectionGroup.js:
+        (WebInspector.EventListenerSectionGroup.prototype._nodeTextOrLink):
+        * UserInterface/Views/FrameContentView.js:
+        (WebInspector.FrameContentView.prototype._showContentViewForIdentifier):
+        * UserInterface/Views/NavigationBar.js:
+        (WebInspector.NavigationBar.prototype.insertNavigationItem):
+        (WebInspector.NavigationBar.prototype.removeNavigationItem):
+        * UserInterface/Views/QuickConsole.js:
+        (WebInspector.QuickConsole.prototype._insertExecutionContextPathComponentForFrame):
+        * UserInterface/Views/Sidebar.js:
+        (WebInspector.Sidebar.prototype.addSidebarPanel):
+        (WebInspector.Sidebar.prototype.removeSidebarPanel):
+        * UserInterface/Views/TextEditor.js:
+        (WebInspector.TextEditor.prototype.addStyleClassToLine):
+        (WebInspector.TextEditor.prototype.removeStyleClassFromLine):
+        (WebInspector.TextEditor.prototype.toggleStyleClassForLine):
+
 2014-09-10  Joseph Pecoraro  <pecoraro@apple.com>
 
         Web Inspector: Fix ESLint no-undef warnings
