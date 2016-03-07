@@ -5949,11 +5949,6 @@ void Document::didAddWheelEventHandler(Node& node)
 
     m_wheelEventTargets->add(&node);
 
-    if (Document* parent = parentDocument()) {
-        parent->didAddWheelEventHandler(*this);
-        return;
-    }
-
     wheelEventHandlersChanged();
 
     if (Frame* frame = this->frame())
@@ -5978,11 +5973,6 @@ void Document::didRemoveWheelEventHandler(Node& node, EventHandlerRemoval remova
 
     if (!removeHandlerFromSet(*m_wheelEventTargets, node, removal))
         return;
-
-    if (Document* parent = parentDocument()) {
-        parent->didRemoveWheelEventHandler(*this);
-        return;
-    }
 
     wheelEventHandlersChanged();
 
@@ -6571,7 +6561,6 @@ void Document::showPlaybackTargetPicker(MediaPlaybackTargetClient& client, bool 
         return;
 
     auto it = m_clientToIDMap.find(&client);
-    ASSERT(it != m_clientToIDMap.end());
     if (it == m_clientToIDMap.end())
         return;
 
@@ -6585,7 +6574,6 @@ void Document::playbackTargetPickerClientStateDidChange(MediaPlaybackTargetClien
         return;
 
     auto it = m_clientToIDMap.find(&client);
-    ASSERT(it != m_clientToIDMap.end());
     if (it == m_clientToIDMap.end())
         return;
 

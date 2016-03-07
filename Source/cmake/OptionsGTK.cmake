@@ -2,15 +2,15 @@ include(CMakePushCheckState)
 include(GNUInstallDirs)
 
 set(PROJECT_VERSION_MAJOR 2)
-set(PROJECT_VERSION_MINOR 7)
-set(PROJECT_VERSION_MICRO 4)
+set(PROJECT_VERSION_MINOR 9)
+set(PROJECT_VERSION_MICRO 0)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_MICRO})
 set(WEBKITGTK_API_VERSION 4.0)
 
 # Libtool library version, not to be confused with API version.
 # See http://www.gnu.org/software/libtool/manual/html_node/Libtool-versioning.html
-CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(WEBKIT2 42 0 5)
-CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(JAVASCRIPTCORE 19 3 1)
+CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(WEBKIT2 44 0 7)
+CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(JAVASCRIPTCORE 20 0 2)
 
 # These are shared variables, but we special case their definition so that we can use the
 # CMAKE_INSTALL_* variables that are populated by the GNUInstallDirs macro.
@@ -53,6 +53,7 @@ WEBKIT_OPTION_DEFINE(ENABLE_PLUGIN_PROCESS_GTK2 "Whether to build WebKitPluginPr
 WEBKIT_OPTION_DEFINE(ENABLE_X11_TARGET "Whether to enable support for the X11 windowing target." PUBLIC ON)
 WEBKIT_OPTION_DEFINE(ENABLE_WAYLAND_TARGET "Whether to enable support for the Wayland windowing target." PUBLIC OFF)
 WEBKIT_OPTION_DEFINE(USE_LIBNOTIFY "Whether to enable the default web notification implementation." PUBLIC ON)
+WEBKIT_OPTION_DEFINE(USE_LIBHYPHEN "Whether to enable the default automatic hyphenation implementation." PUBLIC ON)
 
 WEBKIT_OPTION_DEFINE(USE_GSTREAMER_GL "Whether to enable support for GStreamer GL" PRIVATE OFF)
 WEBKIT_OPTION_DEFINE(USE_GSTREAMER_MPEGTS "Whether to enable support for MPEG-TS" PRIVATE OFF)
@@ -351,14 +352,12 @@ if (ENABLE_VIDEO OR ENABLE_WEB_AUDIO)
         if (NOT PC_GSTREAMER_MPEGTS_FOUND)
             message(FATAL_ERROR "GStreamer MPEG-TS is needed for USE_GSTREAMER_MPEGTS.")
         endif ()
-        SET_AND_EXPOSE_TO_BUILD(WTF_USE_GSTREAMER_MPEGTS TRUE)
     endif ()
 
     if (USE_GSTREAMER_GL)
         if (NOT PC_GSTREAMER_GL_FOUND)
             message(FATAL_ERROR "GStreamerGL is needed for USE_GSTREAMER_GL.")
         endif ()
-        SET_AND_EXPOSE_TO_BUILD(WTF_USE_GSTREAMER_GL TRUE)
     endif ()
 endif ()
 
@@ -375,7 +374,13 @@ if (USE_LIBNOTIFY)
     if (NOT LIBNOTIFY_FOUND)
        message(FATAL_ERROR "libnotify is needed for USE_LIBNOTIFY.")
     endif ()
-    SET_AND_EXPOSE_TO_BUILD(WTF_USE_LIBNOTIFY TRUE)
+endif ()
+
+if (USE_LIBHYPHEN)
+    find_package(Hyphen)
+    if (NOT HYPHEN_FOUND)
+       message(FATAL_ERROR "libhyphen is needed for USE_LIBHYPHEN.")
+    endif ()
 endif ()
 
 set(DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR ${DERIVED_SOURCES_DIR}/webkitdom)

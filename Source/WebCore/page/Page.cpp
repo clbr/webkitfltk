@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2006-2015  Apple Inc. All Rights Reserved.
  * Copyright (C) 2008 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  *
  * This library is free software; you can redistribute it and/or
@@ -370,18 +370,19 @@ String Page::synchronousScrollingReasonsAsText()
     return String();
 }
 
-Ref<ClientRectList> Page::nonFastScrollableRects(const Frame& frame)
+Ref<ClientRectList> Page::nonFastScrollableRects()
 {
     if (Document* document = m_mainFrame->document())
         document->updateLayout();
 
     Vector<IntRect> rects;
     if (ScrollingCoordinator* scrollingCoordinator = this->scrollingCoordinator())
-        rects = scrollingCoordinator->computeNonFastScrollableRegion(frame, IntPoint()).rects();
+        rects = scrollingCoordinator->absoluteNonFastScrollableRegion().rects();
 
     Vector<FloatQuad> quads(rects.size());
     for (size_t i = 0; i < rects.size(); ++i)
         quads[i] = FloatRect(rects[i]);
+
     return ClientRectList::create(quads);
 }
 
@@ -1724,5 +1725,28 @@ void Page::setShouldPlayToPlaybackTarget(uint64_t clientId, bool shouldPlay)
         frame->document()->setShouldPlayToPlaybackTarget(clientId, shouldPlay);
 }
 #endif
+
+RefPtr<WheelEventTestTrigger> Page::testTrigger() const
+{
+    return m_testTrigger;
+}
+
+WheelEventTestTrigger& Page::ensureTestTrigger()
+{
+    if (!m_testTrigger)
+        m_testTrigger = adoptRef(new WheelEventTestTrigger());
+
+    return *m_testTrigger;
+}
+
+void Page::clearTrigger()
+{
+    m_testTrigger = nullptr;
+}
+
+bool Page::expectsWheelEventTriggers() const
+{
+    return !!m_testTrigger;
+}
 
 } // namespace WebCore

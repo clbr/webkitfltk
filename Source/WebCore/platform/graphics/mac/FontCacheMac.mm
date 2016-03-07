@@ -208,12 +208,12 @@ static int toAppKitFontWeight(FontWeight fontWeight)
 // we then do a search based on the family names of the installed fonts.
 static NSFont *fontWithFamily(const AtomicString& family, NSFontTraitMask desiredTraits, FontWeight weight, float size)
 {
-    if (equalIgnoringASCIICase(family.string(), String(@"-webkit-system-font")) || equalIgnoringASCIICase(family.string(), String(@"-apple-system-font"))) {
+    if (equalIgnoringASCIICase(family.string(), String(@"-webkit-system-font")) || equalIgnoringASCIICase(family.string(), String(@"-apple-system")) || equalIgnoringASCIICase(family.string(), String(@"-apple-system-font"))) {
         // We ignore italic for system font.
         return (weight >= FontWeight600) ? [NSFont boldSystemFontOfSize:size] : [NSFont systemFontOfSize:size];
     }
 
-    if (equalIgnoringASCIICase(family.string(), String(@"-apple-system-font-monospaced-numbers"))) {
+    if (equalIgnoringASCIICase(family.string(), String(@"-apple-system-monospaced-numbers"))) {
         NSArray *featureArray = @[ @{ NSFontFeatureTypeIdentifierKey : @(kNumberSpacingType),
             NSFontFeatureSelectorIdentifierKey : @(kMonospacedNumbersSelector) } ];
 
@@ -230,7 +230,7 @@ static NSFont *fontWithFamily(const AtomicString& family, NSFontTraitMask desire
 
 #if ENABLE(PLATFORM_FONT_LOOKUP)
 
-    if (family.length() > 0 && family[0] == '.')
+    if (family.length() > 0 && family.string().at(0) == '.')
         return [NSFont fontWithName:desiredFamily size:size];
     const auto& whitelist = fontWhitelist();
     if (whitelist.size() && !whitelist.contains(family.lower()))

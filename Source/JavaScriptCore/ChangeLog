@@ -1,3 +1,286 @@
+2015-04-30  Jon Davis  <jond@apple.com>
+
+        Web Inspector: console should show an icon for console.info() messages
+        https://bugs.webkit.org/show_bug.cgi?id=18530
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/ConsoleMessage.cpp:
+        (Inspector::messageLevelValue):
+        * inspector/protocol/Console.json:
+        * runtime/ConsoleClient.cpp:
+        (JSC::appendMessagePrefix):
+        * runtime/ConsolePrototype.cpp:
+        (JSC::ConsolePrototype::finishCreation):
+        (JSC::consoleProtoFuncInfo):
+        * runtime/ConsoleTypes.h:
+
+2015-04-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Move all of the branchIs<type> helpers from SpeculativeJIT into AssemblyHelpers
+        https://bugs.webkit.org/show_bug.cgi?id=144462
+
+        Reviewed by Geoffrey Garen and Mark Lam.
+        
+        At some point we started adding representation-agnostic helpers for doing common type tests.
+        We added some in SpeculativeJIT, and then some in AssemblyHelpers. Prior to this change,
+        they had overlapping powers, though SpeculativeJIT was a bit better.
+        
+        This removes SpeculativeJIT's helpers and strengthens AssemblyHelpers' helpers. This is
+        better because now all of these helpers can be used in all of the assembly-based JITs, not
+        just the DFG. It also settles on what I find to be a slightly better naming convention.
+        For example where we previously would have said branchIsString, now we say
+        branchIfString. Similarly, branchNotString becomes branchIfNotString.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileValueToInt32):
+        (JSC::DFG::SpeculativeJIT::compileInstanceOfForObject):
+        (JSC::DFG::SpeculativeJIT::compileInstanceOf):
+        (JSC::DFG::SpeculativeJIT::compileStringToUntypedEquality):
+        (JSC::DFG::SpeculativeJIT::compileStringIdentToNotStringVarEquality):
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnScopedArguments):
+        (JSC::DFG::SpeculativeJIT::compileToStringOrCallStringConstructorOnCell):
+        (JSC::DFG::SpeculativeJIT::speculateObject):
+        (JSC::DFG::SpeculativeJIT::speculateObjectOrOther):
+        (JSC::DFG::SpeculativeJIT::speculateString):
+        (JSC::DFG::SpeculativeJIT::speculateNotStringVar):
+        (JSC::DFG::SpeculativeJIT::speculateNotCell):
+        (JSC::DFG::SpeculativeJIT::speculateOther):
+        (JSC::DFG::SpeculativeJIT::emitSwitchChar):
+        (JSC::DFG::SpeculativeJIT::emitSwitchString):
+        (JSC::DFG::SpeculativeJIT::branchIsObject): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchNotObject): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchIsString): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchNotString): Deleted.
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompareNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranchNull):
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        (JSC::DFG::SpeculativeJIT::branchIsCell): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchNotCell): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchIsOther): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchNotOther): Deleted.
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompareNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranchNull):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        (JSC::DFG::SpeculativeJIT::writeBarrier):
+        (JSC::DFG::SpeculativeJIT::branchIsCell): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchNotCell): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchIsOther): Deleted.
+        (JSC::DFG::SpeculativeJIT::branchNotOther): Deleted.
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::branchIfCell):
+        (JSC::AssemblyHelpers::branchIfOther):
+        (JSC::AssemblyHelpers::branchIfNotOther):
+        (JSC::AssemblyHelpers::branchIfObject):
+        (JSC::AssemblyHelpers::branchIfNotObject):
+        (JSC::AssemblyHelpers::branchIfType):
+        (JSC::AssemblyHelpers::branchIfNotType):
+        (JSC::AssemblyHelpers::branchIfString):
+        (JSC::AssemblyHelpers::branchIfNotString):
+        (JSC::AssemblyHelpers::branchIfSymbol):
+        (JSC::AssemblyHelpers::branchIfNotSymbol):
+        (JSC::AssemblyHelpers::branchIfFunction):
+        (JSC::AssemblyHelpers::branchIfNotFunction):
+        (JSC::AssemblyHelpers::branchIfEmpty):
+        (JSC::AssemblyHelpers::branchIsEmpty): Deleted.
+        (JSC::AssemblyHelpers::branchIfCellNotObject): Deleted.
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::emitScopedArgumentsGetByVal):
+
+2015-04-30  Filip Pizlo  <fpizlo@apple.com>
+
+        js/regress/is-string-fold-tricky.html and js/regress/is-string-fold.html are crashing
+        https://bugs.webkit.org/show_bug.cgi?id=144463
+
+        Reviewed by Benjamin Poulain.
+        
+        Fixup phase was super cleverly folding an IsString(@x) when @x is predicted SpecString
+        into a Check(String:@x) followed by JSConstant(true). Then in these tests the
+        ValueAdd(IsString(@x), @stuff) would try to turn this into an integer add by cleverly
+        converting the boolean into an integer. But as part of doing that, it would try to
+        short-circuit any profiling by leveraging the fact that the IsString is now a constant,
+        and it would try to figure out if the addition might overflow. Part of that logic
+        involved checking if the immediate is either a boolean or a sufficiently small integer.
+        But: it would check if it's a sufficiently small integer before checking if it was a
+        boolean, so it would try to call asNumber() on the boolean.
+        
+        All of this cleverness was very deliberate, but apparently the @stuff + booleanConstant
+        case was previously never hit until I wrote these tests, and so we never knew that
+        calling asNumber() on a boolean was wrong.
+        
+        The fix is super simple: the expression should just check for boolean first.
+        
+        This bug was benign in release builds. JSValue::asNumber() on a boolean would return
+        garbage, and that's OK, since we'd take the boolean case anyway.
+
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::addImmediateShouldSpeculateInt32):
+
+2015-04-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, add a FIXME comment referencing https://bugs.webkit.org/show_bug.cgi?id=144458.
+
+        * jit/JITOperations.cpp:
+
+2015-04-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Add a comment clarifying the behavior and semantics of getCallData/getConstructData, in
+        particular that they cannot change their minds and may be called from compiler threads.
+
+        Rubber stamped by Geoffrey Garen.
+
+        * runtime/JSCell.h:
+
+2015-04-29  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG Is<Blah> versions of TypeOf should fold based on proven input type
+        https://bugs.webkit.org/show_bug.cgi?id=144409
+
+        Reviewed by Geoffrey Garen.
+        
+        We were missing some obvious folding opportunities here. I don't know how this affects real
+        code, but in general, we like to ensure that our constant folding is comprehensive. So this
+        is more about placating my static analysis OCD than anything else.
+        
+        I added a bunch of speed/correctness tests for this in LayoutTests/js/regress.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+
+2015-04-30  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Use the default hash value for Symbolized StringImpl
+        https://bugs.webkit.org/show_bug.cgi?id=144347
+
+        Reviewed by Darin Adler.
+
+        Before this patch, symbolized StringImpl* has a special hash value
+        to avoid the hash collision with the other normal StringImpl*.
+        I guess that it is introduced when private symbols are introduced.
+        However, it prevents using symbolized StringImpl* in the other place
+        For example, using it as WTFString cause a problem because of its special hash value.
+
+        When only using private symbols, they are not exposed to the outside of JSC,
+        so we can handle it carefully. But now, it's extended to symbols.
+        So I think storing a special hash value in StringImpl* causes an error.
+
+        To avoid this, I propose using the usual hash value in symbolized StringImpl*.
+        And to provide significantly different hash value when using it as symbol,
+        store the additional hash value in symbolized StringImpl*. It is used when
+        the hash value is required by IdentifierRepHash.
+
+        * runtime/Identifier.h:
+        (JSC::IdentifierRepHash::hash):
+        * runtime/Lookup.h:
+        (JSC::HashTable::entry):
+        * runtime/PropertyMapHashTable.h:
+        (JSC::PropertyTable::find):
+        (JSC::PropertyTable::get):
+        * runtime/Structure.cpp:
+        (JSC::PropertyTable::checkConsistency):
+
+2015-04-29  Benjamin Poulain  <bpoulain@apple.com>
+
+        [JSC] Remove RageConvert array conversion
+        https://bugs.webkit.org/show_bug.cgi?id=144433
+
+        Reviewed by Filip Pizlo.
+
+        RageConvert was causing a subtle bug that was hitting the Kraken crypto tests
+        pretty hard:
+        -The indexing types shows that the array access varies between Int32 and DoubleArray.
+        -ArrayMode::fromObserved() decided to use the most generic type: DoubleArray.
+         An Arrayify node would convert the Int32 to that type.
+        -Somewhere, a GetByVal or PutByVal would have the flag NodeBytecodeUsesAsInt. That
+         node would use RageConvert instead of Convert.
+        -The Arrayify for that GetByVal with RageConvert would not convert the array to
+         Contiguous.
+        -All the following array access that do not have the flag NodeBytecodeUsesAsInt would
+         now expect a DoubleArray and always get a Contiguous Array. The CheckStructure
+         fail systematically and we never get to run the later code.
+
+        Getting rid of RageConvert fixes the problem and does not seems to have any
+        negative side effect on other benchmarks.
+
+        The improvments on Kraken are:
+            -stanford-crypto-aes: definitely 1.0915x faster.
+            -stanford-crypto-pbkdf2: definitely 1.2446x faster.
+            -stanford-crypto-sha256-iterative: definitely 1.0544x faster.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGArrayMode.cpp:
+        (JSC::DFG::ArrayMode::refine):
+        (JSC::DFG::arrayConversionToString):
+        * dfg/DFGArrayMode.h:
+        * dfg/DFGArrayifySlowPathGenerator.h:
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGTypeCheckHoistingPhase.cpp:
+        (JSC::DFG::TypeCheckHoistingPhase::identifyRedundantStructureChecks):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileArrayifyToStructure):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::convertDoubleToContiguous):
+        (JSC::JSObject::ensureContiguousSlow):
+        (JSC::JSObject::genericConvertDoubleToContiguous): Deleted.
+        (JSC::JSObject::rageConvertDoubleToContiguous): Deleted.
+        (JSC::JSObject::rageEnsureContiguousSlow): Deleted.
+        * runtime/JSObject.h:
+        (JSC::JSObject::rageEnsureContiguous): Deleted.
+
+2015-04-29  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Gracefully handle missing auto pause key on remote inspector setup
+        https://bugs.webkit.org/show_bug.cgi?id=144411
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::receivedSetupMessage):
+
+2015-04-29  Joseph Pecoraro  <pecoraro@apple.com>
+
+        NodeList has issues with Symbol and empty string
+        https://bugs.webkit.org/show_bug.cgi?id=144310
+
+        Reviewed by Darin Adler.
+
+        * runtime/PropertyName.h:
+        (JSC::PropertyName::isSymbol):
+        Helper to check if the PropertyName is a string or symbol property.
+
+2015-04-29  Alex Christensen  <achristensen@webkit.org>
+
+        Fix non-cygwin incremental builds on Windows.
+        https://bugs.webkit.org/show_bug.cgi?id=143264
+
+        Reviewed by Brent Fulgham.
+
+        * generate-js-builtins:
+        Remove stale headers before calling os.rename to replace them.
+
 2015-04-29  Filip Pizlo  <fpizlo@apple.com>
 
         JSTypeInfo should have an inline type flag to indicate of getCallData() has been overridden

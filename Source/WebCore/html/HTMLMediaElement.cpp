@@ -3563,7 +3563,7 @@ void HTMLMediaElement::configureTextTrackGroup(const TrackGroup& group)
     LOG(Media, "HTMLMediaElement::configureTextTrackGroup(%p)", this);
 
     Page* page = document().page();
-    CaptionUserPreferences* captionPreferences = page? page->group().captionPreferences() : 0;
+    CaptionUserPreferences* captionPreferences = page ? page->group().captionPreferences() : 0;
     CaptionUserPreferences::CaptionDisplayMode displayMode = captionPreferences ? captionPreferences->captionDisplayMode() : CaptionUserPreferences::Automatic;
 
     // First, find the track in the group that should be enabled (if any).
@@ -5366,10 +5366,11 @@ void HTMLMediaElement::configureTextTrackDisplay(TextTrackVisibilityCheckType ch
     if (m_processingPreferenceChange)
         return;
 
-    LOG(Media, "HTMLMediaElement::configureTextTrackDisplay(%p)", this);
+    LOG(Media, "HTMLMediaElement::configureTextTrackDisplay(%p) - checkType = %s", this, checkType == CheckTextTrackVisibility ? "check-visibility" : "assume-visibility-changed");
 
     bool haveVisibleTextTrack = false;
     for (unsigned i = 0; i < m_textTracks->length(); ++i) {
+        LOG(Media, "     track[%i]->mode = %s", i, String(m_textTracks->item(i)->mode()).utf8().data());
         if (m_textTracks->item(i)->mode() == TextTrack::showingKeyword()) {
             haveVisibleTextTrack = true;
             break;
@@ -6197,21 +6198,29 @@ MediaProducer::MediaStateFlags HTMLMediaElement::mediaState() const
 
     MediaStateFlags state = IsNotPlaying;
 
+    bool hasActiveVideo = isVideo() && hasVideo();
+    bool hasAudio = this->hasAudio();
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
     if (isPlayingToWirelessPlaybackTarget())
         state |= IsPlayingToExternalDevice;
 
-    if (m_hasPlaybackTargetAvailabilityListeners)
-        state |= RequiresPlaybackTargetMonitoring;
+    if (!m_mediaSession->wirelessVideoPlaybackDisabled(*this)) {
+        if ((m_hasPlaybackTargetAvailabilityListeners || hasActiveVideo) && m_player->canPlayToWirelessPlaybackTarget())
+            state |= RequiresPlaybackTargetMonitoring;
+    }
+
+    if (hasActiveVideo && hasAudio && !loop())
+        state |= ExternalDeviceAutoPlayCandidate;
+
 #endif
 
     if (!isPlaying())
         return state;
 
-    if (hasAudio() && !muted())
+    if (hasAudio && !muted())
         state |= IsPlayingAudio;
 
-    if (hasVideo())
+    if (hasActiveVideo)
         state |= IsPlayingVideo;
 
     return state;
