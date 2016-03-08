@@ -45,9 +45,6 @@ using namespace WebCore;
 
 namespace WebCore {
 
-template<> struct CrossThreadCopierBase<false, false, CurlDownload*> : public CrossThreadCopierPassThrough<CurlDownload*> {
-};
-
 // CurlDownloadManager -------------------------------------------------------------------
 
 CurlDownloadManager::CurlDownloadManager()
