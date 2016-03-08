@@ -42,9 +42,7 @@ enum FormType { // KEEP IN SYNC WITH edjeGroupFromFormType()
     TextField,
     CheckBox,
     ComboBox,
-#if ENABLE(PROGRESS_ELEMENT)
     ProgressBar,
-#endif
     SearchField,
     SearchFieldResultsButton,
     SearchFieldResultsDecoration,
@@ -164,12 +162,10 @@ public:
 
     bool paintThemePart(const RenderObject&, FormType, const PaintInfo&, const IntRect&);
 
-#if ENABLE(PROGRESS_ELEMENT)
     virtual void adjustProgressBarStyle(StyleResolver*, RenderStyle*, Element*) const override;
     virtual bool paintProgressBar(const RenderObject&, const PaintInfo&, const IntRect&) override;
     virtual double animationRepeatIntervalForProgressBar(RenderProgress*) const override;
     virtual double animationDurationForProgressBar(RenderProgress*) const override;
-#endif
 
 #if ENABLE(VIDEO_TRACK)
     virtual bool supportsClosedCaptioning() const override { return true; }

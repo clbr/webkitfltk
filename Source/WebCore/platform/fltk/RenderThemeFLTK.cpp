@@ -166,13 +166,11 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 				s_combo = new Fl_Choice(0, 0, 10, 10);
 			w = s_combo;
 		break;
-#if ENABLE(PROGRESS_ELEMENT)
 		case ProgressBar:
 			if (!s_progress)
 				s_progress = new Fl_Progress(0, 0, 10, 10);
 			w = s_progress;
 		break;
-#endif
 		case SearchField:
 		break;
 		case SearchFieldResultsButton:
@@ -235,14 +233,12 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		break;
 		case ComboBox:
 		break;
-#if ENABLE(PROGRESS_ELEMENT)
 		case ProgressBar:
 		{
 			const RenderProgress * prog = toRenderProgress(&object);
 			s_progress->value(prog->position() * 100.0f);
 		}
 		break;
-#endif
 		case SearchField:
 		break;
 		case SearchFieldResultsButton:
@@ -747,7 +743,6 @@ void RenderThemeFLTK::systemFont(CSSValueID, FontDescription& fontDescription) c
     fontDescription.setItalic(false);
 }
 
-#if ENABLE(PROGRESS_ELEMENT)
 void RenderThemeFLTK::adjustProgressBarStyle(StyleResolver*, RenderStyle* style, Element*) const
 {
     style->setBoxShadow(nullptr);
@@ -770,6 +765,5 @@ bool RenderThemeFLTK::paintProgressBar(const RenderObject& object, const PaintIn
 
     return paintThemePart(object, ProgressBar, info, rect);
 }
-#endif
 
 }
