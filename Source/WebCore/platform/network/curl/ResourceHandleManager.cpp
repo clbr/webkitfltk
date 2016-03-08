@@ -675,7 +675,7 @@ size_t readCallback(void* ptr, size_t size, size_t nmemb, void* data)
     return sent;
 }
 
-void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* timer)
+void ResourceHandleManager::downloadTimerCallback()
 {
     bool again = false;
 
@@ -786,7 +786,7 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
 
     // if we had any activity, immediately select again to drain all kernel buffers
     if (again) {
-        downloadTimerCallback(timer);
+        downloadTimerCallback();
         return;
     }
 
