@@ -599,7 +599,7 @@ all: $(OBJ)
 	ar cru $(NAME) $(OBJ)
 	ranlib $(NAME)
 	$(CXX) -o jsc jsc.cpp $(CXXFLAGS) $(NAME) jsc-no-spoof.cpp \
-		../WTF/wtf/libwtf.a -pthread \
+		../WTF/wtf/libwtf.a ../bmalloc/bmalloc/libbmalloc.a -pthread \
 		$(shell icu-config --ldflags) -ldl -DSTATICALLY_LINKED_WITH_JavaScriptCore \
 		-static-libstdc++ `$(FLTKCONFIG) --ldflags`
 
