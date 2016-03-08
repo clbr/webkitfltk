@@ -12,8 +12,12 @@ SRC = API/JSBase.cpp \
     API/JSValueRef.cpp \
     API/JSWeakObjectMapRefPrivate.cpp \
     API/OpaqueJSString.cpp \
+    assembler/ARMAssembler.cpp \
+    assembler/ARMv7Assembler.cpp \
     assembler/LinkBuffer.cpp \
     assembler/MacroAssembler.cpp \
+    assembler/MacroAssemblerARM.cpp \
+    assembler/MacroAssemblerARMv7.cpp \
     assembler/MacroAssemblerX86Common.cpp \
     bindings/ScriptFunctionCall.cpp \
     bindings/ScriptObject.cpp \
@@ -22,16 +26,22 @@ SRC = API/JSBase.cpp \
     bytecode/ArrayAllocationProfile.cpp \
     bytecode/ArrayProfile.cpp \
     bytecode/BytecodeBasicBlock.cpp \
+    bytecode/BytecodeIntrinsicRegistry.cpp \
     bytecode/BytecodeLivenessAnalysis.cpp \
+    bytecode/CallEdge.cpp \
     bytecode/CallLinkInfo.cpp \
     bytecode/CallLinkStatus.cpp \
+    bytecode/CallVariant.cpp \
     bytecode/CodeBlock.cpp \
     bytecode/CodeBlockHash.cpp \
     bytecode/CodeBlockJettisoningWatchpoint.cpp \
     bytecode/CodeOrigin.cpp \
     bytecode/CodeType.cpp \
+    bytecode/ComplexGetStatus.cpp \
+    bytecode/ConstantStructureCheck.cpp \
     bytecode/DFGExitProfile.cpp \
     bytecode/DeferredCompilationCallback.cpp \
+    bytecode/DeferredSourceDump.cpp \
     bytecode/ExecutionCounter.cpp \
     bytecode/ExitKind.cpp \
     bytecode/ExitingJITType.cpp \
@@ -45,41 +55,48 @@ SRC = API/JSBase.cpp \
     bytecode/PolymorphicGetByIdList.cpp \
     bytecode/PolymorphicPutByIdList.cpp \
     bytecode/PreciseJumpTargets.cpp \
-    bytecode/ProfiledCodeBlockJettisoningWatchpoint.cpp \
     bytecode/PutByIdStatus.cpp \
     bytecode/PutByIdVariant.cpp \
     bytecode/ReduceWhitespace.cpp \
     bytecode/SamplingTool.cpp \
     bytecode/SpecialPointer.cpp \
     bytecode/SpeculatedType.cpp \
+    bytecode/StructureSet.cpp \
     bytecode/StructureStubClearingWatchpoint.cpp \
     bytecode/StructureStubInfo.cpp \
+    bytecode/ToThisStatus.cpp \
     bytecode/UnlinkedCodeBlock.cpp \
     bytecode/UnlinkedInstructionStream.cpp \
     bytecode/ValueRecovery.cpp \
+    bytecode/VariableWriteFireDetail.cpp \
+    bytecode/VirtualRegister.cpp \
     bytecode/Watchpoint.cpp \
     bytecompiler/BytecodeGenerator.cpp \
     bytecompiler/NodesCodegen.cpp \
     debugger/Debugger.cpp \
-    debugger/DebuggerActivation.cpp \
     debugger/DebuggerCallFrame.cpp \
+    debugger/DebuggerScope.cpp \
     dfg/DFGAbstractHeap.cpp \
     dfg/DFGAbstractValue.cpp \
-    dfg/DFGArgumentsSimplificationPhase.cpp \
     dfg/DFGArithMode.cpp \
+    dfg/DFGArgumentsEliminationPhase.cpp \
+    dfg/DFGArgumentsUtilities.cpp \
     dfg/DFGArrayMode.cpp \
     dfg/DFGAtTailAbstractState.cpp \
     dfg/DFGAvailability.cpp \
+    dfg/DFGAvailabilityMap.cpp \
     dfg/DFGBackwardsPropagationPhase.cpp \
     dfg/DFGBasicBlock.cpp \
-    dfg/DFGBinarySwitch.cpp \
     dfg/DFGBlockInsertionSet.cpp \
+    dfg/DFGBlockSet.cpp \
+    dfg/DFGBlockWorklist.cpp \
     dfg/DFGByteCodeParser.cpp \
     dfg/DFGCFAPhase.cpp \
     dfg/DFGCFGSimplificationPhase.cpp \
     dfg/DFGCPSRethreadingPhase.cpp \
     dfg/DFGCSEPhase.cpp \
     dfg/DFGCapabilities.cpp \
+    dfg/DFGCleanUpPhase.cpp \
     dfg/DFGClobberSet.cpp \
     dfg/DFGClobberize.cpp \
     dfg/DFGCommon.cpp \
@@ -90,24 +107,28 @@ SRC = API/JSBase.cpp \
     dfg/DFGCriticalEdgeBreakingPhase.cpp \
     dfg/DFGDCEPhase.cpp \
     dfg/DFGDesiredIdentifiers.cpp \
-    dfg/DFGDesiredStructureChains.cpp \
     dfg/DFGDesiredTransitions.cpp \
     dfg/DFGDesiredWatchpoints.cpp \
     dfg/DFGDesiredWeakReferences.cpp \
     dfg/DFGDesiredWriteBarriers.cpp \
     dfg/DFGDisassembler.cpp \
+    dfg/DFGDoesGC.cpp \
     dfg/DFGDominators.cpp \
     dfg/DFGDriver.cpp \
     dfg/DFGEdge.cpp \
+    dfg/DFGEpoch.cpp \
     dfg/DFGFailedFinalizer.cpp \
     dfg/DFGFinalizer.cpp \
     dfg/DFGFixupPhase.cpp \
     dfg/DFGFlushFormat.cpp \
     dfg/DFGFlushedAt.cpp \
+    dfg/DFGFrozenValue.cpp \
     dfg/DFGFunctionWhitelist.cpp \
     dfg/DFGGraph.cpp \
     dfg/DFGGraphSafepoint.cpp \
+    dfg/DFGHeapLocation.cpp \
     dfg/DFGInPlaceAbstractState.cpp \
+    dfg/DFGInsertOSRHintsForUpdate.cpp \
     dfg/DFGIntegerCheckCombiningPhase.cpp \
     dfg/DFGInvalidationPointInjectionPhase.cpp \
     dfg/DFGJITCode.cpp \
@@ -119,7 +140,10 @@ SRC = API/JSBase.cpp \
     dfg/DFGLivenessAnalysisPhase.cpp \
     dfg/DFGLongLivedState.cpp \
     dfg/DFGLoopPreHeaderCreationPhase.cpp \
+    dfg/DFGMayExit.cpp \
     dfg/DFGMinifiedNode.cpp \
+    dfg/DFGMovHintRemovalPhase.cpp \
+    dfg/DFGNaiveDominators.cpp \
     dfg/DFGNaturalLoops.cpp \
     dfg/DFGNode.cpp \
     dfg/DFGNodeFlags.cpp \
@@ -134,12 +158,20 @@ SRC = API/JSBase.cpp \
     dfg/DFGOSRExitCompilerCommon.cpp \
     dfg/DFGOSRExitJumpPlaceholder.cpp \
     dfg/DFGOSRExitPreparation.cpp \
+    dfg/DFGObjectAllocationSinkingPhase.cpp \
+    dfg/DFGObjectMaterializationData.cpp \
     dfg/DFGOperations.cpp \
+    dfg/DFGPhantomInsertionPhase.cpp \
     dfg/DFGPhase.cpp \
+    dfg/DFGPhiChildren.cpp \
     dfg/DFGPlan.cpp \
+    dfg/DFGPrePostNumbering.cpp \
     dfg/DFGPredictionInjectionPhase.cpp \
     dfg/DFGPredictionPropagationPhase.cpp \
-    dfg/DFGResurrectionForValidationPhase.cpp \
+    dfg/DFGPromotedHeapLocation.cpp \
+    dfg/DFGPureValue.cpp \
+    dfg/DFGPutStackSinkingPhase.cpp \
+    dfg/DFGSSACalculator.cpp \
     dfg/DFGSSAConversionPhase.cpp \
     dfg/DFGSSALoweringPhase.cpp \
     dfg/DFGSafepoint.cpp \
@@ -150,14 +182,19 @@ SRC = API/JSBase.cpp \
     dfg/DFGStaticExecutionCountEstimationPhase.cpp \
     dfg/DFGStoreBarrierElisionPhase.cpp \
     dfg/DFGStrengthReductionPhase.cpp \
+    dfg/DFGStructureAbstractValue.cpp \
+    dfg/DFGStructureRegistrationPhase.cpp \
     dfg/DFGThreadData.cpp \
     dfg/DFGThunks.cpp \
     dfg/DFGTierUpCheckInjectionPhase.cpp \
+    dfg/DFGTransition.cpp \
     dfg/DFGTypeCheckHoistingPhase.cpp \
     dfg/DFGUnificationPhase.cpp \
     dfg/DFGUseKind.cpp \
     dfg/DFGValidate.cpp \
     dfg/DFGValueSource.cpp \
+    dfg/DFGValueStrength.cpp \
+    dfg/DFGVarargsForwardingPhase.cpp \
     dfg/DFGVariableAccessData.cpp \
     dfg/DFGVariableAccessDataDump.cpp \
     dfg/DFGVariableEvent.cpp \
@@ -165,12 +202,13 @@ SRC = API/JSBase.cpp \
     dfg/DFGVirtualRegisterAllocationPhase.cpp \
     dfg/DFGWatchpointCollectionPhase.cpp \
     dfg/DFGWorklist.cpp \
+    disassembler/ARM64/A64DOpcode.cpp \
+    disassembler/ARMv7/ARMv7DOpcode.cpp \
+    disassembler/ARM64Disassembler.cpp \
     disassembler/ARMv7Disassembler.cpp \
     disassembler/Disassembler.cpp \
     disassembler/LLVMDisassembler.cpp \
-    disassembler/UDis86Disassembler.cpp \
     disassembler/X86Disassembler.cpp \
-    heap/BlockAllocator.cpp \
     heap/CodeBlockSet.cpp \
     heap/ConservativeRoots.cpp \
     heap/CopiedSpace.cpp \
@@ -187,6 +225,7 @@ SRC = API/JSBase.cpp \
     heap/Heap.cpp \
     heap/HeapStatistics.cpp \
     heap/HeapTimer.cpp \
+    heap/HeapVerifier.cpp \
     heap/IncrementalSweeper.cpp \
     heap/JITStubRoutineSet.cpp \
     heap/MachineStackMarker.cpp \
@@ -195,7 +234,6 @@ SRC = API/JSBase.cpp \
     heap/MarkedBlock.cpp \
     heap/MarkedSpace.cpp \
     heap/SlotVisitor.cpp \
-    heap/SuperRegion.cpp \
     heap/Weak.cpp \
     heap/WeakBlock.cpp \
     heap/WeakHandleOwner.cpp \
@@ -204,6 +242,7 @@ SRC = API/JSBase.cpp \
     heap/WriteBarrierSupport.cpp \
     inspector/ConsoleMessage.cpp \
     inspector/ContentSearchUtilities.cpp \
+    inspector/EventLoop.cpp \
     inspector/IdentifiersFactory.cpp \
     inspector/InjectedScript.cpp \
     inspector/InjectedScriptBase.cpp \
@@ -215,6 +254,9 @@ SRC = API/JSBase.cpp \
     inspector/InspectorValues.cpp \
     inspector/JSInjectedScriptHost.cpp \
     inspector/JSInjectedScriptHostPrototype.cpp \
+    inspector/JSGlobalObjectConsoleClient.cpp \
+    inspector/JSGlobalObjectInspectorController.cpp \
+    inspector/JSGlobalObjectScriptDebugServer.cpp \
     inspector/JSJavaScriptCallFrame.cpp \
     inspector/JSJavaScriptCallFramePrototype.cpp \
     inspector/JavaScriptCallFrame.cpp \
@@ -226,19 +268,21 @@ SRC = API/JSBase.cpp \
     inspector/agents/InspectorAgent.cpp \
     inspector/agents/InspectorConsoleAgent.cpp \
     inspector/agents/InspectorDebuggerAgent.cpp \
-    inspector/agents/InspectorProfilerAgent.cpp \
     inspector/agents/InspectorRuntimeAgent.cpp \
+    inspector/agents/JSGlobalObjectConsoleAgent.cpp \
+    inspector/agents/JSGlobalObjectDebuggerAgent.cpp \
+    inspector/agents/JSGlobalObjectRuntimeAgent.cpp \
     interpreter/AbstractPC.cpp \
     interpreter/CallFrame.cpp \
     interpreter/Interpreter.cpp \
     interpreter/JSStack.cpp \
     interpreter/ProtoCallFrame.cpp \
     interpreter/StackVisitor.cpp \
-    interpreter/VMInspector.cpp \
     jit/AccessorCallJITStubRoutine.cpp \
     jit/AssemblyHelpers.cpp \
     jit/ArityCheckFailReturnThunks.cpp \
-    jit/ClosureCallStubRoutine.cpp \
+    jit/BinarySwitch.cpp \
+    jit/ExecutableAllocationFuzz.cpp \
     jit/ExecutableAllocator.cpp \
     jit/ExecutableAllocatorFixedVMPool.cpp \
     jit/GCAwareJITStubRoutine.cpp \
@@ -261,6 +305,8 @@ SRC = API/JSBase.cpp \
     jit/JITStubs.cpp \
     jit/JITThunks.cpp \
     jit/JITToDFGDeferredCompilationCallback.cpp \
+    jit/SetupVarargsFrame.cpp \
+    jit/PolymorphicCallStubRoutine.cpp \
     jit/Reg.cpp \
     jit/RegisterPreservationWrapperGenerator.cpp \
     jit/RegisterSet.cpp \
@@ -293,9 +339,6 @@ SRC = API/JSBase.cpp \
     profiler/ProfilerOriginStack.cpp \
     profiler/ProfilerProfiledBytecodes.cpp \
     runtime/ArgList.cpp \
-    runtime/Arguments.cpp \
-    runtime/ArgumentsIteratorConstructor.cpp \
-    runtime/ArgumentsIteratorPrototype.cpp \
     runtime/ArrayBuffer.cpp \
     runtime/ArrayBufferNeuteringWatchpoint.cpp \
     runtime/ArrayBufferView.cpp \
@@ -303,10 +346,13 @@ SRC = API/JSBase.cpp \
     runtime/ArrayIteratorConstructor.cpp \
     runtime/ArrayIteratorPrototype.cpp \
     runtime/ArrayPrototype.cpp \
+    runtime/BasicBlockLocation.cpp \
     runtime/BooleanConstructor.cpp \
     runtime/BooleanObject.cpp \
     runtime/BooleanPrototype.cpp \
+    runtime/BundlePath.cpp \
     runtime/CallData.cpp \
+    runtime/ClonedArguments.cpp \
     runtime/CodeCache.cpp \
     runtime/CodeSpecializationKind.cpp \
     runtime/CommonIdentifiers.cpp \
@@ -316,32 +362,41 @@ SRC = API/JSBase.cpp \
     runtime/Completion.cpp \
     runtime/ConsoleClient.cpp \
     runtime/ConsolePrototype.cpp \
+    runtime/ConstantMode.cpp \
     runtime/ConstructData.cpp \
+    runtime/ControlFlowProfiler.cpp \
+    runtime/CustomGetterSetter.cpp \
     runtime/DataView.cpp \
     runtime/DateConstructor.cpp \
     runtime/DateConversion.cpp \
     runtime/DateInstance.cpp \
     runtime/DatePrototype.cpp \
+    runtime/DirectArguments.cpp \
+    runtime/DirectArgumentsOffset.cpp \
     runtime/DumpContext.cpp \
     runtime/Error.cpp \
     runtime/ErrorConstructor.cpp \
     runtime/ErrorHandlingScope.cpp \
     runtime/ErrorInstance.cpp \
     runtime/ErrorPrototype.cpp \
+    runtime/ExceptionFuzz.cpp \
     runtime/ExceptionHelpers.cpp \
     runtime/Executable.cpp \
     runtime/FunctionConstructor.cpp \
     runtime/FunctionExecutableDump.cpp \
+    runtime/FunctionHasExecutedCache.cpp \
     runtime/FunctionPrototype.cpp \
+    runtime/FunctionRareData.cpp \
     runtime/GetterSetter.cpp \
     runtime/Identifier.cpp \
     runtime/IndexingType.cpp \
+    runtime/InferredValue.cpp \
     runtime/InitializeThreading.cpp \
     runtime/IntendedStructureChain.cpp \
     runtime/InternalFunction.cpp \
+    runtime/IteratorOperations.cpp \
     runtime/JSAPIValueWrapper.cpp \
-    runtime/JSActivation.cpp \
-    runtime/JSArgumentsIterator.cpp \
+    runtime/JSLexicalEnvironment.cpp \
     runtime/JSArray.cpp \
     runtime/JSArrayBuffer.cpp \
     runtime/JSArrayBufferConstructor.cpp \
@@ -349,13 +404,18 @@ SRC = API/JSBase.cpp \
     runtime/JSArrayBufferView.cpp \
     runtime/JSArrayIterator.cpp \
     runtime/JSBoundFunction.cpp \
+    runtime/JSGlobalObjectDebuggable.cpp \
     runtime/JSCJSValue.cpp \
+    runtime/JSCallee.cpp \
+    runtime/JSCatchScope.cpp \
     runtime/JSCell.cpp \
     runtime/JSConsole.cpp \
     runtime/JSDataView.cpp \
     runtime/JSDataViewPrototype.cpp \
     runtime/JSDateMath.cpp \
+    runtime/JSEnvironmentRecord.cpp \
     runtime/JSFunction.cpp \
+    runtime/JSFunctionNameScope.cpp \
     runtime/JSGlobalObject.cpp \
     runtime/JSGlobalObjectFunctions.cpp \
     runtime/JSLock.cpp \
@@ -371,36 +431,36 @@ SRC = API/JSBase.cpp \
     runtime/JSPromiseFunctions.cpp \
     runtime/JSPromiseReaction.cpp \
     runtime/JSPromisePrototype.cpp \
-    runtime/JSPropertyNameIterator.cpp \
     runtime/JSProxy.cpp \
+    runtime/JSPropertyNameEnumerator.cpp \
     runtime/JSScope.cpp \
     runtime/JSSegmentedVariableObject.cpp \
     runtime/JSSet.cpp \
     runtime/JSSetIterator.cpp \
     runtime/JSString.cpp \
+    runtime/JSStringIterator.cpp \
     runtime/JSStringJoiner.cpp \
     runtime/JSSymbolTableObject.cpp \
     runtime/JSTypedArrayConstructors.cpp \
     runtime/JSTypedArrayPrototypes.cpp \
     runtime/JSTypedArrays.cpp \
-    runtime/JSVariableObject.cpp \
     runtime/JSWeakMap.cpp \
+    runtime/JSWeakSet.cpp \
     runtime/JSWithScope.cpp \
     runtime/JSWrapperObject.cpp \
     runtime/LiteralParser.cpp \
     runtime/Lookup.cpp \
     runtime/MapConstructor.cpp \
-    runtime/MapData.cpp \
     runtime/MapIteratorConstructor.cpp \
     runtime/MapIteratorPrototype.cpp \
     runtime/MapPrototype.cpp \
+    runtime/MathCommon.cpp \
     runtime/MathObject.cpp \
     runtime/MemoryStatistics.cpp \
-    runtime/NameConstructor.cpp \
-    runtime/NameInstance.cpp \
-    runtime/NamePrototype.cpp \
     runtime/NativeErrorConstructor.cpp \
     runtime/NativeErrorPrototype.cpp \
+    runtime/NullGetterFunction.cpp \
+    runtime/NullSetterFunction.cpp \
     runtime/NumberConstructor.cpp \
     runtime/NumberObject.cpp \
     runtime/NumberPrototype.cpp \
@@ -420,7 +480,11 @@ SRC = API/JSBase.cpp \
     runtime/RegExpMatchesArray.cpp \
     runtime/RegExpObject.cpp \
     runtime/RegExpPrototype.cpp \
+    runtime/RuntimeType.cpp \
     runtime/SamplingCounter.cpp \
+    runtime/ScopeOffset.cpp \
+    runtime/ScopedArguments.cpp \
+    runtime/ScopedArgumentsTable.cpp \
     runtime/SetConstructor.cpp \
     runtime/SetIteratorConstructor.cpp \
     runtime/SetIteratorPrototype.cpp \
@@ -430,6 +494,8 @@ SRC = API/JSBase.cpp \
     runtime/SparseArrayValueMap.cpp \
     runtime/StrictEvalActivation.cpp \
     runtime/StringConstructor.cpp \
+    runtime/StringIteratorConstructor.cpp \
+    runtime/StringIteratorPrototype.cpp \
     runtime/StringObject.cpp \
     runtime/StringPrototype.cpp \
     runtime/StringRecursionChecker.cpp \
@@ -437,19 +503,34 @@ SRC = API/JSBase.cpp \
     runtime/StructureChain.cpp \
     runtime/StructureIDTable.cpp \
     runtime/StructureRareData.cpp \
+    runtime/Symbol.cpp \
+    runtime/SymbolConstructor.cpp \
+    runtime/SymbolObject.cpp \
+    runtime/SymbolPrototype.cpp \
     runtime/SymbolTable.cpp \
     runtime/TestRunnerUtils.cpp \
+    runtime/TypeLocationCache.cpp \
+    runtime/TypeProfiler.cpp \
+    runtime/TypeProfilerLog.cpp \
+    runtime/TypeSet.cpp \
     runtime/TypedArrayController.cpp \
     runtime/TypedArrayType.cpp \
+    runtime/TypeofType.cpp \
     runtime/VM.cpp \
     runtime/VMEntryScope.cpp \
+    runtime/VarOffset.cpp \
     runtime/Watchdog.cpp \
     runtime/WatchdogNone.cpp \
     runtime/WeakMapConstructor.cpp \
     runtime/WeakMapData.cpp \
     runtime/WeakMapPrototype.cpp \
+    runtime/WeakSetConstructor.cpp \
+    runtime/WeakSetPrototype.cpp \
     tools/CodeProfile.cpp \
     tools/CodeProfiling.cpp \
+    tools/FunctionOverrides.cpp \
+    tools/JSDollarVM.cpp \
+    tools/JSDollarVMPrototype.cpp \
     yarr/RegularExpression.cpp \
     yarr/YarrCanonicalizeUCS2.cpp \
     yarr/YarrInterpreter.cpp \
@@ -464,9 +545,9 @@ SRC = API/JSBase.cpp \
     llint/LLIntSlowPaths.cpp \
     llint/LLIntThunks.cpp \
     llint/LowLevelInterpreter.cpp \
-    InspectorJSBackendDispatchers.cpp \
-    InspectorJSFrontendDispatchers.cpp \
-    InspectorJSTypeBuilders.cpp \
+    inspector/InspectorBackendDispatchers.cpp \
+    inspector/InspectorFrontendDispatchers.cpp \
+    inspector/InspectorProtocolObjects.cpp \
     JSCBuiltins.cpp
 
 OBJ := $(SRC:.cpp=.o)
@@ -475,6 +556,7 @@ OBJ := $(OBJ:.cc=.o)
 CXXFLAGS += -I API -I ForwardingHeaders -I assembler -I .. -I . -I ../WTF
 CXXFLAGS += -I bindings -I builtins -I bytecode -I bytecompiler -I dfg \
 		-I disassembler -I ftl -I heap -I debugger -I inspector -I inspector/agents \
+		-I inspector/augmentable -I inspector/remote \
 		-I interpreter -I jit -I llint -I llvm -I parser -I profiler -I replay \
 		-I runtime -I tools -I yarr 
 CXXFLAGS += -std=gnu++11 -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
@@ -485,7 +567,7 @@ CXXFLAGS += $(shell icu-config --cppflags)
 include ../Makefile.fltk.shared
 
 LUTS = runtime/ArrayConstructor.cpp \
-    runtime/ArrayPrototype.cpp \
+    runtime/ArrayIteratorPrototype.cpp \
     runtime/BooleanPrototype.cpp \
     runtime/DateConstructor.cpp \
     runtime/DatePrototype.cpp \
@@ -495,14 +577,16 @@ LUTS = runtime/ArrayConstructor.cpp \
     runtime/JSONObject.cpp \
     runtime/JSPromiseConstructor.cpp \
     runtime/JSPromisePrototype.cpp \
-    runtime/NamePrototype.cpp \
     runtime/NumberConstructor.cpp \
     runtime/NumberPrototype.cpp \
     runtime/ObjectConstructor.cpp \
     runtime/RegExpConstructor.cpp \
     runtime/RegExpObject.cpp \
     runtime/RegExpPrototype.cpp \
-    runtime/StringConstructor.cpp
+    runtime/StringConstructor.cpp \
+    runtime/StringIteratorPrototype.cpp \
+    runtime/SymbolConstructor.cpp \
+    runtime/SymbolPrototype.cpp
 
 OUTLUTS = $(LUTS:.cpp=.lut.h)
 
@@ -537,24 +621,33 @@ RegExpJitTables.h:
 KeywordLookup.h: parser/Keywords.table
 	$(PYTHON) ./KeywordLookupGenerator.py $< > $@
 
-JSONS = inspector/protocol/Console.json \
+JSONS = inspector/protocol/ApplicationCache.json \
+	inspector/protocol/CSS.json \
+	inspector/protocol/Console.json \
+	inspector/protocol/DOM.json \
+	inspector/protocol/DOMDebugger.json \
+	inspector/protocol/DOMStorage.json \
+	inspector/protocol/Database.json \
 	inspector/protocol/Debugger.json \
 	inspector/protocol/GenericTypes.json \
-	inspector/protocol/InspectorDomain.json \
-	inspector/protocol/Profiler.json \
-	inspector/protocol/Runtime.json
-
-BUILTINJS = $(wildcard builtins/*.js)
+	inspector/protocol/Inspector.json \
+	inspector/protocol/LayerTree.json \
+	inspector/protocol/Network.json \
+	inspector/protocol/OverlayTypes.json \
+	inspector/protocol/Page.json \
+	inspector/protocol/Runtime.json \
+	inspector/protocol/Timeline.json \
+	inspector/protocol/Worker.json
 
 InspectorJS.json: $(JSONS)
 	$(PYTHON) inspector/scripts/generate-combined-inspector-json.py $(JSONS) > $@
-	$(PYTHON) inspector/scripts/CodeGeneratorInspector.py InspectorJS.json \
-		--output_h_dir . --output_cpp_dir . --output_js_dir \
-		../WebInspectorUI/UserInterface/Protocol \
-		--output_type JavaScript --write_always
-	$(PYTHON) generate-js-builtins $(BUILTINJS) JSCBuiltins.h JSCBuiltins.cpp
+	$(PYTHON) inspector/scripts/generate-inspector-protocol-bindings.py \
+		--outputDir inspector \
+		--framework JavaScriptCore InspectorJS.json
+	$(PYTHON) generate-js-builtins --input-directory builtins --output JSCBuiltins.cpp
+	echo "//# sourceURL=__WebInspectorInjectedScript__" > InjectedScriptSource.min.js
 	$(PYTHON) inspector/scripts/jsmin.py < inspector/InjectedScriptSource.js \
-		> InjectedScriptSource.min.js
+		>> InjectedScriptSource.min.js
 	$(PERL) inspector/scripts/xxd.pl InjectedScriptSource_js InjectedScriptSource.min.js \
 		InjectedScriptSource.h
 	$(PYTHON) generate-bytecode-files --bytecodes_h Bytecodes.h bytecode/BytecodeList.json
