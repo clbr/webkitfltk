@@ -27,7 +27,6 @@
 #ifndef ResourceRequest_h
 #define ResourceRequest_h
 
-#include <CrossThreadTask.h>
 #include "ResourceRequestBase.h"
 
 typedef const struct _CFURLRequest* CFURLRequestRef;
