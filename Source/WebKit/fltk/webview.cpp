@@ -49,6 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <MainFrame.h>
 #include <markup.h>
 #include <NodeList.h>
+#include <PageConfiguration.h>
 #include <PlatformKeyboardEvent.h>
 #include <ScriptController.h>
 #include <bindings/ScriptValue.h>
@@ -95,7 +96,7 @@ webview::webview(int x, int y, int w, int h, bool noGui): Fl_Widget(x, y, w, h),
 		priv->depth = fl_visual->depth;
 	}
 
-	Page::PageClients clients;
+	PageConfiguration clients;
 	clients.chromeClient = new FlChromeClient(this);
 	#if ENABLE(CONTEXT_MENUS)
 	clients.contextMenuClient = new FlContextMenuClient(this);
@@ -136,9 +137,7 @@ webview::webview(int x, int y, int w, int h, bool noGui): Fl_Widget(x, y, w, h),
 	set.setShrinksStandaloneImagesToFit(true);
 	set.setScriptEnabled(true);
 	set.setDNSPrefetchingEnabled(true);
-	set.setDefaultMinDOMTimerInterval(0.016);
-	set.setMinDOMTimerInterval(0.016);
-	set.setHiddenPageDOMTimerAlignmentInterval(10);
+	set.setMinimumDOMTimerInterval(0.016);
 	set.setHiddenPageDOMTimerThrottlingEnabled(true);
 	set.setMinimumFontSize(8);
 	set.setDefaultFontSize(16);
