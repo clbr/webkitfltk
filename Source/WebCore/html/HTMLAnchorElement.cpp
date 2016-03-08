@@ -545,8 +545,8 @@ void HTMLAnchorElement::handleClick(Event* event)
 
     String tgt = target();
     if (event->isMouseEvent()) {
-        const MouseEvent * const ev = toMouseEvent(event);
-        if (ev->button() == 1)
+        const auto &ev = downcast<MouseEvent>(*event);
+        if (ev.button() == 1)
             tgt = "";
     }
 
