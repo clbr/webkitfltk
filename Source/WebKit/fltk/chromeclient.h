@@ -97,6 +97,8 @@ public:
 	WTF::PassRefPtr<WebCore::SearchPopupMenu> createSearchPopupMenu(WebCore::PopupMenuClient*)
 			const override;
 	void wheelEventHandlersChanged(bool) override;
+	void exceededDatabaseQuota(WebCore::Frame*, const String& databaseName, WebCore::DatabaseDetails) override;
+	void attachViewOverlayGraphicsLayer(WebCore::Frame*, WebCore::GraphicsLayer*) override;
 
 private:
 	webview *view;

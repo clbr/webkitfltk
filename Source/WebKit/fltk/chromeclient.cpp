@@ -461,3 +461,11 @@ void FlChromeClient::wheelEventHandlersChanged(bool) {
 	notImplemented();
 }
 
+void FlChromeClient::exceededDatabaseQuota(Frame*, const String& databaseName,
+						DatabaseDetails) {
+	notImplemented();
+}
+
+void FlChromeClient::attachViewOverlayGraphicsLayer(Frame*, GraphicsLayer*) {
+	notImplemented();
+}
