@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef progressclient_h
 #define progressclient_h
 
+#include <platform/PlatformExportMacros.h>
 #include <ProgressTrackerClient.h>
 #include "webview.h"
 

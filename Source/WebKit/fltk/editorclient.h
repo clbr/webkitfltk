@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef editorclient_h
 #define editorclient_h
 
+#include <platform/PlatformExportMacros.h>
 #include <EditorClient.h>
 #include <wtf/Deque.h>
 #include "webview.h"

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef chromeclient_h
 #define chromeclient_h
 
+#include <platform/PlatformExportMacros.h>
 #include <ChromeClient.h>
 #include "webview.h"
 

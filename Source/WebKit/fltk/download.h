@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef download_h
 #define download_h
 
+#include <platform/PlatformExportMacros.h>
 #include <CurlDownload.h>
 #include <ResourceRequest.h>
 

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef platformstrategy_h
 #define platformstrategy_h
 
+#include <platform/PlatformExportMacros.h>
 #include "CookiesStrategy.h"
 #include "DatabaseStrategy.h"
 #include "LoaderStrategy.h"

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef dragclient_h
 #define dragclient_h
 
+#include <platform/PlatformExportMacros.h>
 #include <DragClient.h>
 #include "webview.h"
 

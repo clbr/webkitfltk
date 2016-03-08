@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef inspectorclient_h
 #define inspectorclient_h
 
+#include <platform/PlatformExportMacros.h>
 #include <InspectorClient.h>
 #include "webview.h"
 

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef frameclient_h
 #define frameclient_h
 
+#include <platform/PlatformExportMacros.h>
 #include <FrameLoaderClient.h>
 #include "webview.h"
 
