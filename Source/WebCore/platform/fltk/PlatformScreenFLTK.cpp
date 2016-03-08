@@ -95,4 +95,8 @@ FloatRect screenAvailableRect(Widget* widget)
     return screenRect(widget);
 }
 
+bool screenHasInvertedColors() {
+    return false;
+}
+
 }
