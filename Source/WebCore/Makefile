@@ -1999,7 +1999,6 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSAudioNode.cpp \
 	JSAudioParam.cpp \
 	JSAudioProcessingEvent.cpp \
-	JSAudioStreamTrack.cpp \
 	JSBarProp.cpp \
 	JSBatteryManager.cpp \
 	JSBeforeLoadEvent.cpp \
@@ -2076,7 +2075,6 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSDataTransferItemList.cpp \
 	JSDatabase.cpp \
 	JSDatabaseCallback.cpp \
-	JSDatabaseSync.cpp \
 	JSDedicatedWorkerGlobalScope.cpp \
 	JSDelayNode.cpp \
 	JSDeviceMotionEvent.cpp \
@@ -2306,8 +2304,6 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSSQLTransaction.cpp \
 	JSSQLTransactionCallback.cpp \
 	JSSQLTransactionErrorCallback.cpp \
-	JSSQLTransactionSync.cpp \
-	JSSQLTransactionSyncCallback.cpp \
 	JSSVGAElement.cpp \
 	JSSVGAltGlyphDefElement.cpp \
 	JSSVGAltGlyphElement.cpp \
@@ -2339,8 +2335,6 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSSVGDescElement.cpp \
 	JSSVGDocument.cpp \
 	JSSVGElement.cpp \
-	JSSVGElementInstance.cpp \
-	JSSVGElementInstanceList.cpp \
 	JSSVGEllipseElement.cpp \
 	JSSVGException.cpp \
 	JSSVGExternalResourcesRequired.cpp \
@@ -2462,14 +2456,9 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSScriptProfile.cpp \
 	JSScriptProfileNode.cpp \
 	JSSecurityPolicyViolationEvent.cpp \
-	JSSharedWorker.cpp \
-	JSSharedWorkerGlobalScope.cpp \
 	JSSourceBuffer.cpp \
 	JSSourceBufferList.cpp \
 	JSSourceInfo.cpp \
-	JSSpeechInputEvent.cpp \
-	JSSpeechInputResult.cpp \
-	JSSpeechInputResultList.cpp \
 	JSStorage.cpp \
 	JSStorageEvent.cpp \
 	JSStringCallback.cpp \
@@ -2490,7 +2479,6 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSURLUtils.cpp \
 	JSValidityState.cpp \
 	JSVideoPlaybackQuality.cpp \
-	JSVideoStreamTrack.cpp \
 	JSVoidCallback.cpp \
 	JSWaveShaperNode.cpp \
 	JSWebGLActiveInfo.cpp \
@@ -2516,8 +2504,8 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSWebGLVertexArrayObjectOES.cpp \
 	JSWebKitAnimationEvent.cpp \
 	JSWebKitCSSFilterValue.cpp \
-	JSWebKitCSSKeyframeRule.cpp \
-	JSWebKitCSSKeyframesRule.cpp \
+	JSCSSKeyframeRule.cpp \
+	JSCSSKeyframesRule.cpp \
 	JSWebKitCSSMatrix.cpp \
 	JSWebKitCSSRegionRule.cpp \
 	JSWebKitCSSTransformValue.cpp \
