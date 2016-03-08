@@ -2582,6 +2582,39 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSTrackEvent.cpp \
 	JSVTTCue.cpp \
 	JSVideoTrack.cpp \
+	JSAbstractView.cpp \
+	JSAnimationEvent.cpp \
+	JSCSSUnknownRule.cpp \
+	JSDOMWindowSpeechSynthesis.cpp \
+	JSEXTBlendMinMax.cpp \
+	JSEXTFragDepth.cpp \
+	JSEXTsRGB.cpp \
+	JSHTMLAttachmentElement.cpp \
+	JSMediaDevices.cpp \
+	JSNavigatorMediaDevices.cpp \
+	JSNonDocumentTypeChildNode.cpp \
+	JSParentNode.cpp \
+	JSReadableStream.cpp \
+	JSReadableStreamController.cpp \
+	JSReadableStreamReader.cpp \
+	JSSpeechSynthesis.cpp \
+	JSSpeechSynthesisEvent.cpp \
+	JSSpeechSynthesisUtterance.cpp \
+	JSSpeechSynthesisVoice.cpp \
+	JSUIRequestEvent.cpp \
+	JSUserMessageHandler.cpp \
+	JSUserMessageHandlersNamespace.cpp \
+	JSVTTRegion.cpp \
+	JSVTTRegionList.cpp \
+	JSWebGL2RenderingContext.cpp \
+	JSWebGLQuery.cpp \
+	JSWebGLRenderingContextBase.cpp \
+	JSWebGLSampler.cpp \
+	JSWebGLSync.cpp \
+	JSWebGLTransformFeedback.cpp \
+	JSWebGLVertexArrayObject.cpp \
+	JSWebKitNamespace.cpp \
+	JSWebKitPlaybackTargetAvailabilityEvent.cpp \
 	JSVideoTrackList.cpp
 
 
