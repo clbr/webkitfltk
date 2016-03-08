@@ -444,7 +444,7 @@ int webview::handle(const int e) {
 						Fl::event_shift(), Fl::event_ctrl(),
 						Fl::event_alt(),
 						Fl::event_command(),
-						currentTime());
+						currentTime(), WebCore::ForceAtClick);
 
 			if (e == FL_PUSH) {
 				ev->handleMousePressEvent(pev);
