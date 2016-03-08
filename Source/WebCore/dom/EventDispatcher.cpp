@@ -350,8 +350,8 @@ bool EventDispatcher::dispatchEvent(Node* origin, PassRefPtr<Event> prpEvent)
         downcast<HTMLInputElement>(*node).willDispatchEvent(*event, clickHandlingState);
 
     // Middle-clicking on links does not toggle JS.
-    if (isHTMLAnchorElement(node.get()) && event->isMouseEvent() &&
-        toMouseEvent(event.get())->button() == 1)
+    if (is<HTMLAnchorElement>(*node) && event->isMouseEvent() &&
+        downcast<MouseEvent>(*event).button() == 1)
         event->stopPropagation();
 
     if (!event->propagationStopped() && !eventPath.isEmpty())
