@@ -148,7 +148,7 @@ void BitmapImage::destroyDecodedDataIfNecessary(bool destroyAll)
 #if PLATFORM(IOS)
     const unsigned largeAnimationCutoff = 2097152;
 #else
-    static const unsigned cLargeAnimationCutoff = 5242880;
+    const unsigned largeAnimationCutoff = 5242880;
     /* The GIF decoder is too buggy to handle the resize. Just use the memory for now. */
     return;
 #endif
