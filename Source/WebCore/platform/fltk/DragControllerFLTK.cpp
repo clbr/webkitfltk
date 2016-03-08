@@ -50,7 +50,7 @@ bool DragController::isCopyKeyDown(DragData&)
 
 DragOperation DragController::dragOperation(DragData& dragData)
 {
-    if (dragData.containsURL(0))
+    if (dragData.containsURL())
         return DragOperationCopy;
 
     return DragOperationNone;
