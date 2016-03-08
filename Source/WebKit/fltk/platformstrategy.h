@@ -20,19 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <platform/PlatformExportMacros.h>
 #include "CookiesStrategy.h"
-#include "DatabaseStrategy.h"
 #include "LoaderStrategy.h"
 #include "PasteboardStrategy.h"
 #include "PlatformStrategies.h"
 #include "PluginStrategy.h"
-#include "SharedWorkerStrategy.h"
-#include "StorageStrategy.h"
 
 class PlatformStrategiesFLTK: public WebCore::PlatformStrategies,
-	private WebCore::CookiesStrategy, private WebCore::DatabaseStrategy,
+	private WebCore::CookiesStrategy,
 	private WebCore::LoaderStrategy, private WebCore::PasteboardStrategy,
-	private WebCore::PluginStrategy, private WebCore::SharedWorkerStrategy,
-	private WebCore::StorageStrategy {
+	private WebCore::PluginStrategy {
 public:
 	static void initialize();
 private:
@@ -55,16 +51,14 @@ private:
 
 	// plugins
 	virtual void refreshPlugins();
-	virtual void getPluginInfo(const WebCore::Page*, WTF::Vector<WebCore::PluginInfo>&);
+	virtual void getPluginInfo(const WebCore::Page*, WTF::Vector<WebCore::PluginInfo>&) override;
+	virtual void getWebVisiblePluginInfo(const WebCore::Page*, WTF::Vector<WebCore::PluginInfo>&) override;
 
 	// creations
 	virtual CookiesStrategy* createCookiesStrategy() { return this; }
-	virtual DatabaseStrategy* createDatabaseStrategy() { return this; }
 	virtual LoaderStrategy* createLoaderStrategy() { return this; }
 	virtual PasteboardStrategy* createPasteboardStrategy() { return this; }
 	virtual PluginStrategy* createPluginStrategy() { return this; }
-	virtual SharedWorkerStrategy* createSharedWorkerStrategy() { return this; }
-	virtual StorageStrategy* createStorageStrategy() { return this; }
 };
 
 #endif

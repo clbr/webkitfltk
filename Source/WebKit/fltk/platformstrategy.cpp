@@ -75,3 +75,7 @@ void PlatformStrategiesFLTK::refreshPlugins() {
 void PlatformStrategiesFLTK::getPluginInfo(const Page *page, Vector<PluginInfo>&info) {
 
 }
+
+void PlatformStrategiesFLTK::getWebVisiblePluginInfo(const Page *page, Vector<PluginInfo>&info) {
+
+}
