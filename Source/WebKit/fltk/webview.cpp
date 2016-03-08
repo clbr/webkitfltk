@@ -848,11 +848,11 @@ void webview::next() {
 	unsigned i, t;
 
 	for (i = 0; i < max; i++) {
-		HTMLLinkElement * const e = toHTMLLinkElement(pagination->item(i));
-		if (e->href().isEmpty()) continue;
-		if (equalIgnoringCase(e->rel(), "next")) {
+		const auto &e = downcast<HTMLLinkElement>(*pagination->item(i));
+		if (e.href().isEmpty()) continue;
+		if (equalIgnoringCase(e.rel(), "next")) {
 			// Perfect match.
-			load(e->href().string().utf8().data());
+			load(e.href().string().utf8().data());
 			return;
 		}
 	}
@@ -870,15 +870,15 @@ void webview::next() {
 	std::vector<HTMLAnchorElement *> candidates;
 	candidates.reserve(100);
 	for (i = 0; i < max; i++) {
-		HTMLAnchorElement * const e = toHTMLAnchorElement(links->item(i));
-		if (!e->isLiveLink())
+		auto &e = downcast<HTMLAnchorElement>(*links->item(i));
+		if (!e.isLiveLink())
 			continue;
 
-		const String &text = e->text();
+		const String &text = e.text();
 		if (!text.contains("next", false))
 			continue;
 
-		candidates.push_back(e);
+		candidates.push_back((HTMLAnchorElement *) links->item(i));
 	}
 
 	max = candidates.size();
@@ -1195,7 +1195,7 @@ public:
 	void handleEvent(ScriptExecutionContext*, Event*) override {
 		String valuestr;
 		if (is<HTMLInputElement>(*m_elem))
-			valuestr = toHTMLInputElement(m_elem)->value();
+			valuestr = downcast<HTMLInputElement>(*m_elem).value();
 		else
 			valuestr = m_elem->getAttribute("value").string();
 
@@ -1229,7 +1229,7 @@ void webview::bindEvent(const char *element, const char *type, const char *event
 
 	for (i = 0; i < max; i++) {
 		Node *n = elem->item(i);
-		Element *e = toElement(n);
+		Element *e = downcast<Element>(n);
 
 		if (type) {
 			if (!is<HTMLInputElement>(*n))
@@ -1255,7 +1255,7 @@ const char *webview::getValue(const char *element, const char *type, const char 
 
 	for (i = 0; i < max; i++) {
 		Node *n = elem->item(i);
-		Element *e = toElement(n);
+		Element *e = downcast<Element>(n);
 
 		if (type) {
 			if (!is<HTMLInputElement>(*n))
@@ -1277,7 +1277,7 @@ const char *webview::getValue(const char *element, const char *type, const char 
 		}
 
 		if (is<HTMLInputElement>(*n))
-			return strdup(toHTMLInputElement(e)->value().utf8().data());
+			return strdup(downcast<HTMLInputElement>(e)->value().utf8().data());
 		else
 			return strdup(e->getAttribute("value").string().utf8().data());
 	}
@@ -1293,7 +1293,7 @@ void webview::emulateClick(const char *element, const char *type, const char *cs
 
 	for (i = 0; i < max; i++) {
 		Node *n = elem->item(i);
-		Element *e = toElement(n);
+		Element *e = downcast<Element>(n);
 
 		if (type) {
 			if (!is<HTMLInputElement>(*n))
@@ -1329,10 +1329,10 @@ unsigned webview::getLinkDetails(const char *cssclass, char **hrefs, char **text
 
 	for (i = 0; i < max; i++) {
 		Node *n = elem->item(i);
-		HTMLAnchorElement *e = toHTMLAnchorElement(n);
+		auto &e = downcast<HTMLAnchorElement>(*n);
 
 		if (cssclass) {
-			const CString &classstr = e->getAttribute("class").string().utf8();
+			const CString &classstr = e.getAttribute("class").string().utf8();
 			const char *hasclass = classstr.data();
 
 			if (strcmp(cssclass, hasclass))
@@ -1342,8 +1342,8 @@ unsigned webview::getLinkDetails(const char *cssclass, char **hrefs, char **text
 		if (cur >= allocated)
 			return cur;
 
-		hrefs[cur] = strdup(e->href().string().utf8().data());
-		texts[cur] = strdup(e->text().utf8().data());
+		hrefs[cur] = strdup(e.href().string().utf8().data());
+		texts[cur] = strdup(e.text().utf8().data());
 		cur++;
 	}
 
