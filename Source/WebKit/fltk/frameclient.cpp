@@ -402,19 +402,20 @@ void FlFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const Navigati
 		}
 	}
 
-	if (act.type() == NavigationTypeLinkClicked &&
+	if (act.type() == NavigationType::LinkClicked &&
 		act.event()->isMouseEvent()) {
-		const MouseEvent * const ev = toMouseEvent(act.event());
 
-		if (ev->button() == 0 && ev->shiftKey() && !ev->ctrlKey() && popupfunc) {
+		const auto &ev = downcast<MouseEvent>(*act.event());
+
+		if (ev.button() == 0 && ev.shiftKey() && !ev.ctrlKey() && popupfunc) {
 			popupfunc(act.url().string().utf8().data());
 			policyfunc(PolicyIgnore);
 			return;
-		} else if (ev->button() == 1 && bgtabfunc) {
+		} else if (ev.button() == 1 && bgtabfunc) {
 			bgtabfunc(act.url().string().utf8().data());
 			policyfunc(PolicyIgnore);
 			return;
-		} else if (ev->button() == 0 && ev->shiftKey() && ev->ctrlKey() && bgtabfunc) {
+		} else if (ev.button() == 0 && ev.shiftKey() && ev.ctrlKey() && bgtabfunc) {
 			bgtabfunc(act.url().string().utf8().data());
 			policyfunc(PolicyIgnore);
 			return;
@@ -722,8 +723,23 @@ PassRefPtr<Widget> FlFrameLoaderClient::createJavaAppletWidget(const IntSize&, H
 }
 
 ObjectContentType FlFrameLoaderClient::objectContentType(const URL &url,
-		const String& mimeType, bool preferPlugInsForImages) {
-	return FrameLoader::defaultObjectContentType(url, mimeType, preferPlugInsForImages);
+		const String& mimeTypeIn, bool preferPlugInsForImages) {
+
+	String mimeType = mimeTypeIn;
+
+	if (mimeType.isEmpty())
+		mimeType = mimeTypeFromURL(url);
+
+	if (mimeType.isEmpty())
+		return ObjectContentFrame; // Go ahead and hope that we can display the content.
+
+	if (MIMETypeRegistry::isSupportedImageMIMEType(mimeType))
+		return WebCore::ObjectContentImage;
+
+	if (MIMETypeRegistry::isSupportedNonImageMIMEType(mimeType))
+		return WebCore::ObjectContentFrame;
+
+	return WebCore::ObjectContentNone;
 }
 
 String FlFrameLoaderClient::overrideMediaType() const {
@@ -745,4 +761,8 @@ public:
 
 PassRefPtr<FrameNetworkingContext> FlFrameLoaderClient::createNetworkingContext() {
 	return adoptRef(new netctx(frame));
+}
+
+void didRequestAutocomplete(PassRefPtr<WebCore::FormState>) {
+	notImplemented();
 }

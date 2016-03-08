@@ -172,6 +172,8 @@ public:
 
 	void setFrame(WebCore::Frame *inframe);
 	WebCore::Frame *getFrame() const;
+
+	void didRequestAutocomplete(PassRefPtr<WebCore::FormState>) override;
 private:
 	webview *view;
 	WebCore::Frame *frame;
