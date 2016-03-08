@@ -763,6 +763,6 @@ PassRefPtr<FrameNetworkingContext> FlFrameLoaderClient::createNetworkingContext(
 	return adoptRef(new netctx(frame));
 }
 
-void didRequestAutocomplete(PassRefPtr<WebCore::FormState>) {
+void FlFrameLoaderClient::didRequestAutocomplete(PassRefPtr<WebCore::FormState>) {
 	notImplemented();
 }
