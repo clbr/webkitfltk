@@ -193,3 +193,8 @@ std::unique_ptr<ContextMenu> FlContextMenuClient::customizeMenu(std::unique_ptr<
 
 	return m;
 }
+
+ContextMenuItem shareMenuItem(const HitTestResult&) {
+	// We do not support sharing.
+	return ContextMenuItem();
+}

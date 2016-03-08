@@ -35,6 +35,7 @@ public:
 	bool isSpeaking() override;
 	void speak(const WTF::String&) override;
 	void stopSpeaking() override;
+	WebCore::ContextMenuItem shareMenuItem(const WebCore::HitTestResult&) override;
 
 	std::unique_ptr<WebCore::ContextMenu> customizeMenu(std::unique_ptr<WebCore::ContextMenu>) override;
 private:
