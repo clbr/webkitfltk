@@ -27,7 +27,7 @@
 #include "config.h"
 #include "MemoryPressureHandler.h"
 
-#if OS(LINUX)
+#if OS(LINUX) && !PLATFORM(FLTK)
 
 #include "Logging.h"
 

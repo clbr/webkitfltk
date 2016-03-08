@@ -135,7 +135,7 @@ private:
     void (^m_releaseMemoryBlock)();
     CFRunLoopObserverRef m_observer;
     Mutex m_observerMutex;
-#elif OS(LINUX)
+#elif OS(LINUX) && !PLATFORM(FLTK)
     int m_eventFD;
     int m_pressureLevelFD;
     WTF::ThreadIdentifier m_threadID;

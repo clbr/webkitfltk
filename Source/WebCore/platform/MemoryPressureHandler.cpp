@@ -62,7 +62,7 @@ MemoryPressureHandler::MemoryPressureHandler()
     , m_clearPressureOnMemoryRelease(true)
     , m_releaseMemoryBlock(0)
     , m_observer(0)
-#elif OS(LINUX)
+#elif OS(LINUX) && !PLATFORM(FLTK)
     , m_eventFD(0)
     , m_pressureLevelFD(0)
     , m_threadID(0)
@@ -156,7 +156,7 @@ void MemoryPressureHandler::releaseMemory(bool critical)
     }
 }
 
-#if !PLATFORM(COCOA) && !OS(LINUX)
+#if !PLATFORM(COCOA) && (!OS(LINUX) || PLATFORM(FLTK))
 void MemoryPressureHandler::install() { }
 void MemoryPressureHandler::uninstall() { }
 void MemoryPressureHandler::holdOff(unsigned) { }

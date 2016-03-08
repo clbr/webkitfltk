@@ -2543,6 +2543,7 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	platform/graphics/opentype/OpenTypeVerticalData.cpp \
 	platform/posix/FileSystemPOSIX.cpp \
 	platform/posix/SharedBufferPOSIX.cpp \
+	platform/linux/MemoryPressureHandlerLinux.cpp \
 	platform/LocalizedStrings.cpp \
 	html/track/AudioTrack.cpp \
 	html/track/AudioTrackList.cpp \
