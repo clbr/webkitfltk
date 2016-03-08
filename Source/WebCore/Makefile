@@ -2245,7 +2245,6 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSNodeFilter.cpp \
 	JSNodeIterator.cpp \
 	JSNodeList.cpp \
-	JSNotation.cpp \
 	JSNotification.cpp \
 	JSNotificationCenter.cpp \
 	JSNotificationPermissionCallback.cpp \
