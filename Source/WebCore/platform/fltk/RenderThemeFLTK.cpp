@@ -194,6 +194,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 			}
 			w = s_spinner;
 		break;
+		case FormTypeLast:
+			// Never seen
+		break;
 	}
 	Fl_Group::current(oldgroup);
 
@@ -271,6 +274,9 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 				else
 					s_spinnerdown->value(1);
 			}
+		break;
+		case FormTypeLast:
+			// Never seen
 		break;
 	}
 
