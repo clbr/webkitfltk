@@ -296,8 +296,8 @@ void MediaControlsFifthEventListener::handleEvent(ScriptExecutionContext*, Event
     if (event->type() == eventNames().clickEvent)
         m_mediaControls->handleClickEvent(event);
     else if ((event->type() == eventNames().wheelEvent || event->type() == eventNames().mousewheelEvent) && event->eventInterface() == WheelEventInterfaceType) {
-        WheelEvent* wheelEvent = toWheelEvent(event);
-        if (m_mediaControls->shouldClosedCaptionsContainerPreventPageScrolling(wheelEvent->wheelDeltaY()))
+        const auto &wheelEvent = downcast<WheelEvent>(*event);
+        if (m_mediaControls->shouldClosedCaptionsContainerPreventPageScrolling(wheelEvent.wheelDeltaY()))
             event->preventDefault();
     }
 }

@@ -100,7 +100,7 @@ public:
     void playbackProgressed() override {}
     void playbackStopped() override {}
     void refreshClosedCaptionsButtonVisibility() override {}
-    void hideFullscreenControlsTimerFired(Timer<MediaControls>&) override {}
+    void hideFullscreenControlsTimerFired() override {}
     void startHideFullscreenControlsTimer() override {}
     void stopHideFullscreenControlsTimer() override {}
 
