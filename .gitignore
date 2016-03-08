@@ -110,6 +110,14 @@ InspectorJSFrontendDispatchers.cpp
 InspectorJSFrontendDispatchers.h
 InspectorJSTypeBuilders.cpp
 InspectorJSTypeBuilders.h
+InspectorAlternateBackendDispatchers.h
+InspectorBackendCommands.js
+InspectorBackendDispatchers.cpp
+InspectorBackendDispatchers.h
+InspectorFrontendDispatchers.cpp
+InspectorFrontendDispatchers.h
+InspectorProtocolObjects.cpp
+InspectorProtocolObjects.h
 JSCBuiltins.cpp
 JSCBuiltins.h
 KeywordLookup.h
