@@ -21,6 +21,7 @@ Perl, Python 2 and Ruby are all needed as build-time dependencies. For more info
 see http://fifth-browser.sourceforge.net/downloads.html
 
 ----
+make -C Source/bmalloc/bmalloc
 make -C Source/WTF/wtf
 make -C Source/JavaScriptCore gen
 make -C Source/JavaScriptCore
