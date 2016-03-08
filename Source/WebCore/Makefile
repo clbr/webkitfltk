@@ -1065,7 +1065,6 @@ SRC = platform/fltk/SoundFLTK.cpp \
     inspector/WebDebuggerAgent.cpp \
     inspector/WebInjectedScriptHost.cpp \
     inspector/WebInjectedScriptManager.cpp \
-    inspector/WebProfilerAgent.cpp \
     inspector/WorkerConsoleAgent.cpp \
     inspector/WorkerDebuggerAgent.cpp \
     inspector/WorkerInspectorController.cpp \
