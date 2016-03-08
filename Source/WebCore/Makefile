@@ -1990,6 +1990,7 @@ SRC = platform/fltk/SoundFLTK.cpp \
 	JSAllVideoCapabilities.cpp \
 	JSAnalyserNode.cpp \
 	JSAttr.cpp \
+	JSAutocompleteErrorEvent.cpp \
 	JSAudioBuffer.cpp \
 	JSAudioBufferCallback.cpp \
 	JSAudioBufferSourceNode.cpp \
