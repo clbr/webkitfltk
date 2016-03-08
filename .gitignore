@@ -1420,6 +1420,8 @@ JSWebKitPlaybackTargetAvailabilityEvent.h
 StyleBuilder.cpp
 StylePropertyShorthandFunctions.cpp
 StylePropertyShorthandFunctions.h
+JSAutocompleteErrorEvent.cpp
+JSAutocompleteErrorEvent.h
 
 # Generated WebKit2 files
 AuthenticationManagerMessageReceiver.cpp

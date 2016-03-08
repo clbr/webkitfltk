@@ -2932,6 +2932,7 @@ IDLS = Modules/battery/BatteryManager.idl \
     css/WebKitCSSViewportRule.idl \
     dom/AnimationEvent.idl \
     dom/Attr.idl \
+    dom/AutocompleteErrorEvent.idl \
     dom/BeforeLoadEvent.idl \
     dom/BeforeUnloadEvent.idl \
     dom/CDATASection.idl \
