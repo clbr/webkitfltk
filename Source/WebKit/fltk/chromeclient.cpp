@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <FL/Fl_Tooltip.H>
 
 #include <Document.h>
+#include <DragController.h>
 #include <FileChooser.h>
 #include <Frame.h>
 #include <HitTestResult.h>
@@ -338,7 +339,9 @@ void FlChromeClient::mouseDidMoveOverElement(const HitTestResult &hit, unsigned 
 	view->priv->statusbartext = NULL;
 	view->priv->hoveringlink = false;
 
-	if (hit.isLiveLink()) {
+	const Element * const hitelem = hit.URLElement();
+
+	if (hitelem && isDraggableLink(*hitelem)) {
 		const URL &url = hit.absoluteLinkURL();
 		if (!url.isEmpty()) {
 			setStatusbarText(url.string());
