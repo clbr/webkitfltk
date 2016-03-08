@@ -33,7 +33,7 @@
 #include "XMLDocumentParserScope.h"
 #include "XSLImportRule.h"
 #include "XSLTProcessor.h"
-#include <JavaScriptCore/Profile.h>
+#include <JavaScriptCore/profiler/Profile.h>
 #include <libxml/uri.h>
 #include <libxslt/xsltutils.h>
 

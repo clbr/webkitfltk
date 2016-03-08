@@ -2723,6 +2723,7 @@ CXXFLAGS += -I Modules/battery \
 	-I ../JavaScriptCore/heap \
 	-I ../JavaScriptCore/debugger \
 	-I ../JavaScriptCore/interpreter \
+	-I ../JavaScriptCore/inspector \
 	-I ../JavaScriptCore/jit \
 	-I ../JavaScriptCore/llint \
 	-I ../JavaScriptCore/parser \

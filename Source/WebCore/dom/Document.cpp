@@ -159,7 +159,7 @@
 #include "XPathNSResolver.h"
 #include "XPathResult.h"
 #include "htmlediting.h"
-#include <JavaScriptCore/Profile.h>
+#include <JavaScriptCore/profiler/Profile.h>
 #include <inspector/ScriptCallStack.h>
 #include <wtf/CurrentTime.h>
 #include <wtf/TemporaryChange.h>

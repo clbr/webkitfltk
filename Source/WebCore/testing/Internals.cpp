@@ -114,7 +114,7 @@
 #include "WebConsoleAgent.h"
 #include "WorkerThread.h"
 #include "XMLHttpRequest.h"
-#include <JavaScriptCore/Profile.h>
+#include <JavaScriptCore/profiler/Profile.h>
 #include <bytecode/CodeBlock.h>
 #include <inspector/InspectorAgentBase.h>
 #include <inspector/InspectorValues.h>
