@@ -1,5 +1,4 @@
-SRC = plugins/PluginPackageNone.cpp \
-	platform/fltk/SoundFLTK.cpp \
+SRC = platform/fltk/SoundFLTK.cpp \
 	platform/fltk/DragDataFLTK.cpp \
 	platform/fltk/DragImageFLTK.cpp \
 	platform/fltk/DragControllerFLTK.cpp \
@@ -27,7 +26,6 @@ SRC = plugins/PluginPackageNone.cpp \
 	platform/fltk/ImageFLTK.cpp \
 	platform/fltk/PopupMenuFLTK.cpp \
 	platform/fltk/MediaPlayerFLTK.cpp \
-	plugins/PluginViewNone.cpp \
 	platform/graphics/cairo/GraphicsContextCairo.cpp \
 	platform/ScrollAnimatorNone.cpp \
 	platform/graphics/WOFFFileFormat.cpp \
@@ -36,9 +34,6 @@ SRC = plugins/PluginPackageNone.cpp \
 	platform/text/icu/UTextProvider.cpp \
 	platform/text/icu/UTextProviderLatin1.cpp \
 	platform/text/icu/UTextProviderUTF16.cpp \
-	InspectorWebBackendDispatchers.cpp \
-	InspectorWebFrontendDispatchers.cpp \
-	InspectorWebTypeBuilders.cpp \
 	platform/network/curl/CookieJarCurl.cpp \
 	platform/network/curl/CertificateInfoCurl.cpp \
 	platform/network/curl/CredentialStorageCurl.cpp \
@@ -56,7 +51,10 @@ SRC = plugins/PluginPackageNone.cpp \
 	platform/network/NetworkStorageSessionStub.cpp \
 	ColorData.cpp \
 	HTMLEntityTable.cpp \
+	HTTPHeaderNames.cpp \
 	CSSPropertyNames.cpp \
+	StyleBuilder.cpp \
+	StylePropertyShorthandFunctions.cpp \
 	CSSGrammar.cpp \
 	CSSValueKeywords.cpp \
 	SelectorPseudoClassAndCompatibilityElementMap.cpp \
@@ -77,14 +75,16 @@ SRC = plugins/PluginPackageNone.cpp \
 	XLinkNames.cpp \
 	XMLNSNames.cpp \
 	XMLNames.cpp \
+	Modules/airplay/WebKitPlaybackTargetAvailabilityEvent.cpp \
 	Modules/battery/BatteryController.cpp \
     Modules/battery/BatteryManager.cpp \
     Modules/battery/BatteryStatus.cpp \
     Modules/battery/NavigatorBattery.cpp \
-    Modules/gamepad/Gamepad.cpp \
-    Modules/gamepad/GamepadList.cpp \
-    Modules/gamepad/NavigatorGamepad.cpp \
+    Modules/gamepad/deprecated/Gamepad.cpp \
+    Modules/gamepad/deprecated/GamepadList.cpp \
+    Modules/gamepad/deprecated/NavigatorGamepad.cpp \
     Modules/geolocation/Coordinates.cpp \
+    Modules/geolocation/GeoNotifier.cpp \
     Modules/geolocation/Geolocation.cpp \
     Modules/geolocation/GeolocationController.cpp \
     Modules/geolocation/NavigatorGeolocation.cpp \
@@ -101,7 +101,6 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/indexeddb/IDBDatabaseMetadata.cpp \
     Modules/indexeddb/IDBEventDispatcher.cpp \
     Modules/indexeddb/IDBFactory.cpp \
-    Modules/indexeddb/IDBFactoryBackendInterface.cpp \
     Modules/indexeddb/IDBIndex.cpp \
     Modules/indexeddb/IDBKey.cpp \
     Modules/indexeddb/IDBKeyData.cpp \
@@ -117,15 +116,7 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/indexeddb/IDBTransactionBackendOperations.cpp \
     Modules/indexeddb/IDBTransactionCoordinator.cpp \
     Modules/indexeddb/IDBVersionChangeEvent.cpp \
-    Modules/indexeddb/PageGroupIndexedDatabase.cpp \
     Modules/indexeddb/WorkerGlobalScopeIndexedDatabase.cpp \
-    Modules/indexeddb/leveldb/IDBBackingStoreCursorLevelDB.cpp \
-    Modules/indexeddb/leveldb/IDBBackingStoreLevelDB.cpp \
-    Modules/indexeddb/leveldb/IDBBackingStoreTransactionLevelDB.cpp \
-    Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.cpp \
-    Modules/indexeddb/leveldb/IDBIndexWriterLevelDB.cpp \
-    Modules/indexeddb/leveldb/IDBLevelDBCoding.cpp \
-    Modules/indexeddb/leveldb/IDBServerConnectionLevelDB.cpp \
     Modules/mediacontrols/MediaControlsHost.cpp \
     Modules/mediasource/DOMURLMediaSource.cpp \
     Modules/mediasource/MediaSource.cpp \
@@ -134,11 +125,11 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/mediasource/SourceBuffer.cpp \
     Modules/mediasource/SourceBufferList.cpp \
     Modules/mediasource/VideoPlaybackQuality.cpp \
-    Modules/mediastream/AudioStreamTrack.cpp \
     Modules/mediastream/CapabilityRange.cpp \
     Modules/mediastream/DOMURLMediaStream.cpp \
     Modules/mediastream/HTMLMediaElementMediaStream.cpp \
     Modules/mediastream/MediaConstraintsImpl.cpp \
+    Modules/mediastream/MediaDevices.cpp \
     Modules/mediastream/MediaSourceStates.cpp \
     Modules/mediastream/MediaStream.cpp \
     Modules/mediastream/MediaStreamCapabilities.cpp \
@@ -150,6 +141,7 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/mediastream/MediaTrackConstraint.cpp \
     Modules/mediastream/MediaTrackConstraintSet.cpp \
     Modules/mediastream/MediaTrackConstraints.cpp \
+    Modules/mediastream/NavigatorMediaDevices.cpp \
     Modules/mediastream/NavigatorUserMedia.cpp \
     Modules/mediastream/NavigatorUserMediaError.cpp \
     Modules/mediastream/RTCDTMFSender.cpp \
@@ -169,7 +161,6 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/mediastream/SourceInfo.cpp \
     Modules/mediastream/UserMediaController.cpp \
     Modules/mediastream/UserMediaRequest.cpp \
-    Modules/mediastream/VideoStreamTrack.cpp \
     Modules/navigatorcontentutils/NavigatorContentUtils.cpp \
     Modules/notifications/DOMWindowNotifications.cpp \
     Modules/notifications/Notification.cpp \
@@ -178,6 +169,13 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/notifications/WorkerGlobalScopeNotifications.cpp \
     Modules/proximity/DeviceProximityController.cpp \
     Modules/proximity/DeviceProximityEvent.cpp \
+    Modules/speech/DOMWindowSpeechSynthesis.cpp \
+    Modules/speech/SpeechSynthesis.cpp \
+    Modules/speech/SpeechSynthesisEvent.cpp \
+    Modules/speech/SpeechSynthesisUtterance.cpp \
+    Modules/speech/SpeechSynthesisVoice.cpp \
+    Modules/streams/ReadableStream.cpp \
+    Modules/streams/ReadableStreamReader.cpp \
     Modules/vibration/NavigatorVibration.cpp \
     Modules/vibration/Vibration.cpp \
     Modules/webaudio/AnalyserNode.cpp \
@@ -230,13 +228,9 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/webdatabase/DatabaseAuthorizer.cpp \
     Modules/webdatabase/DatabaseBackend.cpp \
     Modules/webdatabase/DatabaseBackendBase.cpp \
-    Modules/webdatabase/DatabaseBackendContext.cpp \
-    Modules/webdatabase/DatabaseBackendSync.cpp \
-    Modules/webdatabase/DatabaseBase.cpp \
     Modules/webdatabase/DatabaseContext.cpp \
     Modules/webdatabase/DatabaseManager.cpp \
     Modules/webdatabase/DatabaseServer.cpp \
-    Modules/webdatabase/DatabaseSync.cpp \
     Modules/webdatabase/DatabaseTask.cpp \
     Modules/webdatabase/DatabaseThread.cpp \
     Modules/webdatabase/DatabaseTracker.cpp \
@@ -246,14 +240,11 @@ SRC = plugins/PluginPackageNone.cpp \
     Modules/webdatabase/SQLResultSetRowList.cpp \
     Modules/webdatabase/SQLStatement.cpp \
     Modules/webdatabase/SQLStatementBackend.cpp \
-    Modules/webdatabase/SQLStatementSync.cpp \
     Modules/webdatabase/SQLTransaction.cpp \
     Modules/webdatabase/SQLTransactionBackend.cpp \
-    Modules/webdatabase/SQLTransactionBackendSync.cpp \
     Modules/webdatabase/SQLTransactionClient.cpp \
     Modules/webdatabase/SQLTransactionCoordinator.cpp \
     Modules/webdatabase/SQLTransactionStateMachine.cpp \
-    Modules/webdatabase/SQLTransactionSync.cpp \
     Modules/websockets/ThreadableWebSocketChannel.cpp \
     Modules/websockets/ThreadableWebSocketChannelClientWrapper.cpp \
     Modules/websockets/WebSocket.cpp \
@@ -297,7 +288,6 @@ SRC = plugins/PluginPackageNone.cpp \
     bindings/generic/RuntimeEnabledFeatures.cpp \
     bindings/js/ArrayValue.cpp \
     bindings/js/CallbackFunction.cpp \
-    bindings/js/DOMObjectHashTableMap.cpp \
     bindings/js/DOMWrapperWorld.cpp \
     bindings/js/Dictionary.cpp \
     bindings/js/GCController.cpp \
@@ -384,6 +374,7 @@ SRC = plugins/PluginPackageNone.cpp \
     bindings/js/JSLazyEventListener.cpp \
     bindings/js/JSLocationCustom.cpp \
     bindings/js/JSMainThreadExecState.cpp \
+    bindings/js/JSMediaDevicesCustom.cpp \
     bindings/js/JSMediaSourceStatesCustom.cpp \
     bindings/js/JSMediaStreamCapabilitiesCustom.cpp \
     bindings/js/JSMessageChannelCustom.cpp \
@@ -407,19 +398,19 @@ SRC = plugins/PluginPackageNone.cpp \
     bindings/js/JSRTCPeerConnectionCustom.cpp \
     bindings/js/JSRTCSessionDescriptionCustom.cpp \
     bindings/js/JSRTCStatsResponseCustom.cpp \
+    bindings/js/JSReadableStreamCustom.cpp \
+    bindings/js/JSReadableStreamControllerCustom.cpp \
+    bindings/js/JSReadableStreamReaderCustom.cpp \
+    bindings/js/ReadableJSStream.cpp \
     bindings/js/JSRequestAnimationFrameCallbackCustom.cpp \
     bindings/js/JSSQLResultSetRowListCustom.cpp \
     bindings/js/JSSQLTransactionCustom.cpp \
-    bindings/js/JSSQLTransactionSyncCustom.cpp \
-    bindings/js/JSSVGElementInstanceCustom.cpp \
     bindings/js/JSSVGLengthCustom.cpp \
     bindings/js/JSSVGPathSegCustom.cpp \
-    bindings/js/JSSharedWorkerCustom.cpp \
     bindings/js/JSStorageCustom.cpp \
     bindings/js/JSStyleSheetCustom.cpp \
     bindings/js/JSStyleSheetListCustom.cpp \
     bindings/js/JSSubtleCryptoCustom.cpp \
-    bindings/js/JSSVGElementInstanceCustom.cpp \
     bindings/js/JSSVGLengthCustom.cpp \
     bindings/js/JSSVGPathSegCustom.cpp \
     bindings/js/JSTextCustom.cpp \
@@ -433,7 +424,9 @@ SRC = plugins/PluginPackageNone.cpp \
     bindings/js/JSTreeWalkerCustom.cpp \
     bindings/js/JSVideoTrackCustom.cpp \
     bindings/js/JSVideoTrackListCustom.cpp \
+    bindings/js/JSWebGLRenderingContextBaseCustom.cpp \
     bindings/js/JSWebGLRenderingContextCustom.cpp \
+    bindings/js/JSWebGL2RenderingContextCustom.cpp \
     bindings/js/JSWebKitPointCustom.cpp \
     bindings/js/JSWorkerCustom.cpp \
     bindings/js/JSWorkerGlobalScopeBase.cpp \
@@ -463,6 +456,20 @@ SRC = plugins/PluginPackageNone.cpp \
     bridge/c/c_runtime.cpp \
     bridge/c/c_utility.cpp \
     bridge/jsc/BridgeJSC.cpp \
+    contentextensions/CombinedURLFilters.cpp \
+    contentextensions/CompiledContentExtension.cpp \
+    contentextensions/ContentExtension.cpp \
+    contentextensions/ContentExtensionCompiler.cpp \
+    contentextensions/ContentExtensionError.cpp \
+    contentextensions/ContentExtensionParser.cpp \
+    contentextensions/ContentExtensionRule.cpp \
+    contentextensions/ContentExtensionsBackend.cpp \
+    contentextensions/DFA.cpp \
+    contentextensions/DFABytecodeCompiler.cpp \
+    contentextensions/DFABytecodeInterpreter.cpp \
+    contentextensions/NFA.cpp \
+    contentextensions/NFAToDFA.cpp \
+    contentextensions/URLFilterParser.cpp \
     css/BasicShapeFunctions.cpp \
     css/CSSAspectRatioValue.cpp \
     css/CSSBasicShapes.cpp \
@@ -472,6 +479,7 @@ SRC = plugins/PluginPackageNone.cpp \
     css/CSSCanvasValue.cpp \
     css/CSSCharsetRule.cpp \
     css/CSSComputedStyleDeclaration.cpp \
+    css/CSSContentDistributionValue.cpp \
     css/CSSCrossfadeValue.cpp \
     css/CSSCursorImageValue.cpp \
     css/CSSDefaultStyleSheets.cpp \
@@ -522,7 +530,6 @@ SRC = plugins/PluginPackageNone.cpp \
     css/CSSValueList.cpp \
     css/CSSValuePool.cpp \
     css/DOMWindowCSS.cpp \
-    css/DeprecatedStyleBuilder.cpp \
     css/DocumentRuleSets.cpp \
     css/ElementRuleCollector.cpp \
     css/FontLoader.cpp \
@@ -542,10 +549,9 @@ SRC = plugins/PluginPackageNone.cpp \
     css/RuleSet.cpp \
     css/SVGCSSComputedStyleDeclaration.cpp \
     css/SVGCSSParser.cpp \
-    css/SVGCSSStyleSelector.cpp \
     css/SelectorChecker.cpp \
-    css/SelectorCheckerFastPath.cpp \
     css/SelectorFilter.cpp \
+    css/SourceSizeList.cpp \
     css/StyleInvalidationAnalysis.cpp \
     css/StyleMedia.cpp \
     css/StyleProperties.cpp \
@@ -559,14 +565,16 @@ SRC = plugins/PluginPackageNone.cpp \
     css/TransformFunctions.cpp \
     css/ViewportStyleResolver.cpp \
     css/WebKitCSSFilterValue.cpp \
-    css/WebKitCSSKeyframeRule.cpp \
-    css/WebKitCSSKeyframesRule.cpp \
+    css/WebKitCSSResourceValue.cpp \
+    css/CSSKeyframeRule.cpp \
+    css/CSSKeyframesRule.cpp \
     css/WebKitCSSMatrix.cpp \
     css/WebKitCSSRegionRule.cpp \
     css/WebKitCSSTransformValue.cpp \
     css/WebKitCSSViewportRule.cpp \
     cssjit/SelectorCompiler.cpp \
     dom/ActiveDOMObject.cpp \
+    dom/AnimationEvent.cpp \
     dom/Attr.cpp \
     dom/BeforeTextInsertedEvent.cpp \
     dom/BeforeUnloadEvent.cpp \
@@ -627,7 +635,6 @@ SRC = plugins/PluginPackageNone.cpp \
     dom/ExceptionCodePlaceholder.cpp \
     dom/FocusEvent.cpp \
     dom/GenericEventQueue.cpp \
-    dom/IconURL.cpp \
     dom/IdTargetObserver.cpp \
     dom/IdTargetObserverRegistry.cpp \
     dom/InlineStyleSheetOwner.cpp \
@@ -637,6 +644,7 @@ SRC = plugins/PluginPackageNone.cpp \
     dom/MessageEvent.cpp \
     dom/MessagePort.cpp \
     dom/MessagePortChannel.cpp \
+    dom/MicroTask.cpp \
     dom/MouseEvent.cpp \
     dom/MouseRelatedEvent.cpp \
     dom/MutationEvent.cpp \
@@ -654,7 +662,6 @@ SRC = plugins/PluginPackageNone.cpp \
     dom/NodeRareData.cpp \
     dom/NodeRenderingTraversal.cpp \
     dom/NodeTraversal.cpp \
-    dom/Notation.cpp \
     dom/OverflowEvent.cpp \
     dom/PageTransitionEvent.cpp \
     dom/PendingScript.cpp \
@@ -675,6 +682,7 @@ SRC = plugins/PluginPackageNone.cpp \
     dom/ScriptableDocumentParser.cpp \
     dom/ScriptedAnimationController.cpp \
     dom/SecurityContext.cpp \
+    dom/SecurityOriginPolicy.cpp \
     dom/SelectorQuery.cpp \
     dom/ShadowRoot.cpp \
     dom/SpaceSplitString.cpp \
@@ -713,8 +721,6 @@ SRC = plugins/PluginPackageNone.cpp \
     editing/BreakBlockquoteCommand.cpp \
     editing/CompositeEditCommand.cpp \
     editing/CreateLinkCommand.cpp \
-    editing/DeleteButton.cpp \
-    editing/DeleteButtonController.cpp \
     editing/DeleteFromTextNodeCommand.cpp \
     editing/DeleteSelectionCommand.cpp \
     editing/DictationAlternative.cpp \
@@ -742,6 +748,8 @@ SRC = plugins/PluginPackageNone.cpp \
     editing/RemoveNodeCommand.cpp \
     editing/RemoveNodePreservingChildrenCommand.cpp \
     editing/RenderedPosition.cpp \
+    editing/ReplaceDeleteFromTextNodeCommand.cpp \
+    editing/ReplaceInsertIntoTextNodeCommand.cpp \
     editing/ReplaceNodeWithSpanCommand.cpp \
     editing/ReplaceSelectionCommand.cpp \
     editing/SetNodeAttributeCommand.cpp \
@@ -773,7 +781,6 @@ SRC = plugins/PluginPackageNone.cpp \
     fileapi/FileReader.cpp \
     fileapi/FileReaderLoader.cpp \
     fileapi/FileReaderSync.cpp \
-    fileapi/FileThread.cpp \
     fileapi/ThreadableBlobRegistry.cpp \
     fileapi/WebKitBlobBuilder.cpp \
     history/BackForwardController.cpp \
@@ -809,6 +816,7 @@ SRC = plugins/PluginPackageNone.cpp \
     html/HTMLAnchorElement.cpp \
     html/HTMLAppletElement.cpp \
     html/HTMLAreaElement.cpp \
+    html/HTMLAttachmentElement.cpp \
     html/HTMLAudioElement.cpp \
     html/HTMLBRElement.cpp \
     html/HTMLBaseElement.cpp \
@@ -891,6 +899,7 @@ SRC = plugins/PluginPackageNone.cpp \
     html/HTMLTrackElement.cpp \
     html/HTMLUListElement.cpp \
     html/HTMLVideoElement.cpp \
+    html/HTMLWBRElement.cpp \
     html/HiddenInputType.cpp \
     html/ImageData.cpp \
     html/ImageDocument.cpp \
@@ -911,7 +920,10 @@ SRC = plugins/PluginPackageNone.cpp \
     html/RadioInputType.cpp \
     html/RadioNodeList.cpp \
     html/RangeInputType.cpp \
+    html/RelList.cpp \
     html/ResetInputType.cpp \
+    html/RubyElement.cpp \
+    html/RubyTextElement.cpp \
     html/SearchInputType.cpp \
     html/StepRange.cpp \
     html/SubmitInputType.cpp \
@@ -934,8 +946,11 @@ SRC = plugins/PluginPackageNone.cpp \
     html/canvas/CanvasRenderingContext.cpp \
     html/canvas/CanvasRenderingContext2D.cpp \
     html/canvas/CanvasStyle.cpp \
+    html/canvas/EXTBlendMinMax.cpp \
+    html/canvas/EXTFragDepth.cpp \
     html/canvas/EXTShaderTextureLOD.cpp \
     html/canvas/EXTTextureFilterAnisotropic.cpp \
+    html/canvas/EXTsRGB.cpp \
     html/canvas/OESElementIndexUint.cpp \
     html/canvas/OESStandardDerivatives.cpp \
     html/canvas/OESTextureFloat.cpp \
@@ -961,13 +976,21 @@ SRC = plugins/PluginPackageNone.cpp \
     html/canvas/WebGLLoseContext.cpp \
     html/canvas/WebGLObject.cpp \
     html/canvas/WebGLProgram.cpp \
+    html/canvas/WebGLQuery.cpp \
     html/canvas/WebGLRenderbuffer.cpp \
+    html/canvas/WebGLRenderingContextBase.cpp \
     html/canvas/WebGLRenderingContext.cpp \
+    html/canvas/WebGL2RenderingContext.cpp \
+    html/canvas/WebGLSampler.cpp \
     html/canvas/WebGLShader.cpp \
     html/canvas/WebGLShaderPrecisionFormat.cpp \
     html/canvas/WebGLSharedObject.cpp \
+    html/canvas/WebGLSync.cpp \
     html/canvas/WebGLTexture.cpp \
+    html/canvas/WebGLTransformFeedback.cpp \
     html/canvas/WebGLUniformLocation.cpp \
+    html/canvas/WebGLVertexArrayObject.cpp \
+    html/canvas/WebGLVertexArrayObjectBase.cpp \
     html/canvas/WebGLVertexArrayObjectOES.cpp \
     html/forms/FileIconLoader.cpp \
     html/parser/CSSPreloadScanner.cpp \
@@ -991,6 +1014,7 @@ SRC = plugins/PluginPackageNone.cpp \
     html/parser/TextDocumentParser.cpp \
     html/parser/XSSAuditor.cpp \
     html/parser/XSSAuditorDelegate.cpp \
+    html/shadow/AutoFillButtonElement.cpp \
     html/shadow/ContentDistributor.cpp \
     html/shadow/DetailsMarkerControl.cpp \
     html/shadow/InsertionPoint.cpp \
@@ -1028,14 +1052,12 @@ SRC = plugins/PluginPackageNone.cpp \
     inspector/InspectorPageAgent.cpp \
     inspector/InspectorResourceAgent.cpp \
     inspector/InspectorStyleSheet.cpp \
-    inspector/InspectorStyleTextEditor.cpp \
     inspector/InspectorTimelineAgent.cpp \
     inspector/InspectorWorkerAgent.cpp \
     inspector/InstrumentingAgents.cpp \
     inspector/NetworkResourcesData.cpp \
     inspector/PageConsoleAgent.cpp \
     inspector/PageDebuggerAgent.cpp \
-    inspector/PageProfilerAgent.cpp \
     inspector/PageRuntimeAgent.cpp \
     inspector/PageScriptDebugServer.cpp \
     inspector/TimelineRecordFactory.cpp \
@@ -1047,9 +1069,9 @@ SRC = plugins/PluginPackageNone.cpp \
     inspector/WorkerConsoleAgent.cpp \
     inspector/WorkerDebuggerAgent.cpp \
     inspector/WorkerInspectorController.cpp \
-    inspector/WorkerProfilerAgent.cpp \
     inspector/WorkerRuntimeAgent.cpp \
     loader/CookieJar.cpp \
+    loader/ContentFilter.cpp \
     loader/CrossOriginAccessControl.cpp \
     loader/CrossOriginPreflightResultCache.cpp \
     loader/DocumentLoadTiming.cpp \
@@ -1067,6 +1089,7 @@ SRC = plugins/PluginPackageNone.cpp \
     loader/ImageLoader.cpp \
     loader/LinkLoader.cpp \
     loader/LoaderStrategy.cpp \
+    loader/MediaResourceLoader.cpp \
     loader/MixedContentChecker.cpp \
     loader/NavigationAction.cpp \
     loader/NavigationScheduler.cpp \
@@ -1075,7 +1098,6 @@ SRC = plugins/PluginPackageNone.cpp \
     loader/PolicyCallback.cpp \
     loader/PolicyChecker.cpp \
     loader/ProgressTracker.cpp \
-    loader/ResourceBuffer.cpp \
     loader/ResourceLoadNotifier.cpp \
     loader/ResourceLoadScheduler.cpp \
     loader/ResourceLoader.cpp \
@@ -1100,6 +1122,7 @@ SRC = plugins/PluginPackageNone.cpp \
     loader/archive/mhtml/MHTMLArchive.cpp \
     loader/archive/mhtml/MHTMLParser.cpp \
     loader/cache/CachedCSSStyleSheet.cpp \
+    loader/cache/CachedSVGFont.cpp \
     loader/cache/CachedFont.cpp \
     loader/cache/CachedImage.cpp \
     loader/cache/CachedRawResource.cpp \
@@ -1140,7 +1163,8 @@ SRC = plugins/PluginPackageNone.cpp \
     page/DOMWindow.cpp \
     page/DOMWindowExtension.cpp \
     page/DOMWindowProperty.cpp \
-    page/DefaultVisitedLinkStore.cpp \
+    page/DatabaseProvider.cpp \
+    page/DebugPageOverlays.cpp \
     page/DeviceController.cpp \
     page/DiagnosticLoggingKeys.cpp \
     page/DragController.cpp \
@@ -1152,8 +1176,6 @@ SRC = plugins/PluginPackageNone.cpp \
     page/FrameSnapshotting.cpp \
     page/FrameTree.cpp \
     page/FrameView.cpp \
-    page/GestureTapHighlighter.cpp \
-    page/GroupSettings.cpp \
     page/History.cpp \
     page/Location.cpp \
     page/MainFrame.cpp \
@@ -1162,10 +1184,12 @@ SRC = plugins/PluginPackageNone.cpp \
     page/NavigatorBase.cpp \
     page/OriginAccessEntry.cpp \
     page/Page.cpp \
-    page/PageActivityAssertionToken.cpp \
-    page/PageConsole.cpp \
+    page/PageConfiguration.cpp \
+    page/PageConsoleClient.cpp \
     page/PageGroup.cpp \
     page/PageGroupLoadDeferrer.cpp \
+    page/PageOverlay.cpp \
+    page/PageOverlayController.cpp \
     page/PageSerializer.cpp \
     page/PageThrottler.cpp \
     page/PageVisibilityState.cpp \
@@ -1182,15 +1206,13 @@ SRC = plugins/PluginPackageNone.cpp \
     page/SecurityPolicy.cpp \
     page/Settings.cpp \
     page/SpatialNavigation.cpp \
-    page/SpeechInput.cpp \
-    page/SpeechInputEvent.cpp \
-    page/SpeechInputResult.cpp \
-    page/SpeechInputResultList.cpp \
     page/SuspendableTimer.cpp \
+    page/TextIndicator.cpp \
     page/UserContentController.cpp \
     page/UserContentURLPattern.cpp \
     page/VisitedLinkStore.cpp \
     page/WheelEventDeltaTracker.cpp \
+    page/WheelEventTestTrigger.cpp \
     page/WindowFeatures.cpp \
     page/WindowFocusAllowedIndicator.cpp \
     page/WorkerNavigator.cpp \
@@ -1200,6 +1222,7 @@ SRC = plugins/PluginPackageNone.cpp \
     page/animation/CompositeAnimation.cpp \
     page/animation/ImplicitAnimation.cpp \
     page/animation/KeyframeAnimation.cpp \
+    page/scrolling/ScrollLatchingState.cpp \
     page/scrolling/ScrollingConstraints.cpp \
     page/scrolling/ScrollingCoordinator.cpp \
     page/scrolling/ScrollingStateFixedNode.cpp \
@@ -1217,7 +1240,7 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/ContextMenu.cpp \
     platform/ContextMenuItem.cpp \
     platform/CrossThreadCopier.cpp \
-    platform/DatabaseStrategy.cpp \
+    platform/Cursor.cpp \
     platform/DateComponents.cpp \
     platform/Decimal.cpp \
     platform/DisplaySleepDisabler.cpp \
@@ -1237,6 +1260,9 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/MemoryPressureHandler.cpp \
     platform/NotImplemented.cpp \
     platform/PlatformEvent.cpp \
+    platform/PlatformSpeechSynthesisUtterance.cpp \
+    platform/PlatformSpeechSynthesisVoice.cpp \
+    platform/PlatformSpeechSynthesizer.cpp \
     platform/PlatformStrategies.cpp \
     platform/RemoteCommandListener.cpp \
     platform/SystemSleepListener.cpp \
@@ -1250,6 +1276,7 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/ScrollbarThemeComposite.cpp \
     platform/SharedBuffer.cpp \
     platform/SharedBufferChunkReader.cpp \
+    platform/Theme.cpp \
     platform/ThreadGlobalData.cpp \
     platform/ThreadTimers.cpp \
     platform/Timer.cpp \
@@ -1298,6 +1325,7 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/graphics/BitmapImage.cpp \
     platform/graphics/Color.cpp \
     platform/graphics/CrossfadeGeneratedImage.cpp \
+    platform/graphics/DisplayRefreshMonitorClient.cpp \
     platform/graphics/FloatPoint.cpp \
     platform/graphics/FloatPoint3D.cpp \
     platform/graphics/FloatPolygon.cpp \
@@ -1307,20 +1335,18 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/graphics/FloatSize.cpp \
     platform/graphics/Font.cpp \
     platform/graphics/FontCache.cpp \
-    platform/graphics/FontData.cpp \
+    platform/graphics/FontCascade.cpp \
+    platform/graphics/FontCascadeFonts.cpp \
     platform/graphics/FontDescription.cpp \
-    platform/graphics/FontFastPath.cpp \
     platform/graphics/FontFeatureSettings.cpp \
     platform/graphics/FontGenericFamilies.cpp \
-    platform/graphics/FontGlyphs.cpp \
+    platform/graphics/FontRanges.cpp \
     platform/graphics/GeneratedImage.cpp \
     platform/graphics/GeometryUtilities.cpp \
-    platform/graphics/GlyphPageTreeNode.cpp \
     platform/graphics/Gradient.cpp \
     platform/graphics/GradientImage.cpp \
     platform/graphics/GraphicsContext.cpp \
     platform/graphics/GraphicsLayer.cpp \
-    platform/graphics/GraphicsLayerAnimation.cpp \
     platform/graphics/GraphicsLayerTransform.cpp \
     platform/graphics/GraphicsLayerUpdater.cpp \
     platform/graphics/GraphicsTypes.cpp \
@@ -1331,8 +1357,10 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/graphics/IntPoint.cpp \
     platform/graphics/IntRect.cpp \
     platform/graphics/IntSize.cpp \
+    platform/graphics/ISOVTTCue.cpp \
     platform/graphics/LayoutBoxExtent.cpp \
     platform/graphics/LayoutRect.cpp \
+    platform/graphics/MaskImageOperation.cpp \
     platform/graphics/MediaPlayer.cpp \
     platform/graphics/Path.cpp \
     platform/graphics/PathTraversalState.cpp \
@@ -1341,13 +1369,10 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/graphics/Region.cpp \
     platform/graphics/RoundedRect.cpp \
     platform/graphics/SVGGlyph.cpp \
-    platform/graphics/SegmentedFontData.cpp \
     platform/graphics/ShadowBlur.cpp \
-    platform/graphics/SimpleFontData.cpp \
     platform/graphics/StringTruncator.cpp \
     platform/graphics/SurrogatePairAwareTextIterator.cpp \
     platform/graphics/TextRun.cpp \
-    platform/graphics/TiledBackingStore.cpp \
     platform/graphics/WidthIterator.cpp \
     platform/graphics/cpu/arm/filters/FELightingNEON.cpp \
     platform/graphics/filters/DistantLightSource.cpp \
@@ -1377,9 +1402,9 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/graphics/filters/SpotLightSource.cpp \
     platform/graphics/opentype/OpenTypeMathData.cpp \
     platform/graphics/texmap/TextureMapper.cpp \
+    platform/graphics/texmap/TextureMapperAnimation.cpp \
     platform/graphics/texmap/TextureMapperBackingStore.cpp \
     platform/graphics/texmap/TextureMapperFPSCounter.cpp \
-    platform/graphics/texmap/TextureMapperImageBuffer.cpp \
     platform/graphics/texmap/TextureMapperLayer.cpp \
     platform/graphics/texmap/TextureMapperSurfaceBackingStore.cpp \
     platform/graphics/texmap/TextureMapperTile.cpp \
@@ -1405,14 +1430,11 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/image-decoders/jpeg/JPEGImageDecoder.cpp \
     platform/image-decoders/png/PNGImageDecoder.cpp \
     platform/image-decoders/webp/WEBPImageDecoder.cpp \
-    platform/leveldb/LevelDBDatabase.cpp \
-    platform/leveldb/LevelDBTransaction.cpp \
-    platform/leveldb/LevelDBWriteBatch.cpp \
-    platform/mediastream/MediaStreamCenter.cpp \
     platform/mediastream/MediaStreamPrivate.cpp \
     platform/mediastream/MediaStreamTrackPrivate.cpp \
-    platform/mediastream/MediaStreamSource.cpp \
-    platform/mediastream/MediaStreamSourceStates.cpp \
+    platform/mediastream/RealtimeMediaSource.cpp \
+    platform/mediastream/RealtimeMediaSourceCenter.cpp \
+    platform/mediastream/RealtimeMediaSourceStates.cpp \
     platform/mediastream/RTCIceCandidateDescriptor.cpp \
     platform/mediastream/RTCPeerConnectionHandler.cpp \
     platform/mediastream/RTCSessionDescriptionDescriptor.cpp \
@@ -1420,7 +1442,7 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/mock/DeviceOrientationClientMock.cpp \
     platform/mock/GeolocationClientMock.cpp \
     platform/mock/MediaConstraintsMock.cpp \
-    platform/mock/MockMediaStreamCenter.cpp \
+    platform/mock/MockRealtimeMediaSourceCenter.cpp \
     platform/mock/RTCDataChannelHandlerMock.cpp \
     platform/mock/RTCDTMFSenderHandlerMock.cpp \
     platform/mock/RTCNotifiersMock.cpp \
@@ -1432,7 +1454,8 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/network/BlobRegistry.cpp \
     platform/network/BlobRegistryImpl.cpp \
     platform/network/BlobResourceHandle.cpp \
-    platform/network/Credential.cpp \
+    platform/network/CacheValidation.cpp \
+    platform/network/CredentialBase.cpp \
     platform/network/CredentialStorage.cpp \
     platform/network/DNSResolveQueue.cpp \
     platform/network/DataURL.cpp \
@@ -1443,7 +1466,7 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/network/MIMEHeader.cpp \
     platform/network/NetworkStateNotifier.cpp \
     platform/network/ParsedContentType.cpp \
-    platform/network/ProtectionSpace.cpp \
+    platform/network/ProtectionSpaceBase.cpp \
     platform/network/ProxyServer.cpp \
     platform/network/ResourceErrorBase.cpp \
     platform/network/ResourceHandle.cpp \
@@ -1470,11 +1493,13 @@ SRC = plugins/PluginPackageNone.cpp \
     platform/text/TextBoundaries.cpp \
     platform/text/TextBreakIterator.cpp \
     platform/text/TextCodec.cpp \
+    platform/text/TextCodecICU.cpp \
     platform/text/TextCodecLatin1.cpp \
     platform/text/TextCodecUTF16.cpp \
     platform/text/TextCodecUTF8.cpp \
     platform/text/TextCodecUserDefined.cpp \
     platform/text/TextEncoding.cpp \
+    platform/text/TextEncodingDetectorICU.cpp \
     platform/text/TextEncodingRegistry.cpp \
     platform/text/TextStream.cpp \
     plugins/DOMMimeType.cpp \
@@ -1482,13 +1507,11 @@ SRC = plugins/PluginPackageNone.cpp \
     plugins/DOMPlugin.cpp \
     plugins/DOMPluginArray.cpp \
     plugins/PluginData.cpp \
-    plugins/PluginDatabase.cpp \
-    plugins/PluginDebug.cpp \
     plugins/PluginMainThreadScheduler.cpp \
-    plugins/PluginStream.cpp \
     rendering/AutoTableLayout.cpp \
     rendering/BidiRun.cpp \
     rendering/BorderEdge.cpp \
+    rendering/ClipRect.cpp \
     rendering/CounterNode.cpp \
     rendering/EllipsisBox.cpp \
     rendering/FilterEffectRenderer.cpp \
@@ -1502,11 +1525,13 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/InlineBox.cpp \
     rendering/InlineElementBox.cpp \
     rendering/InlineFlowBox.cpp \
+    rendering/InlineIterator.cpp \
     rendering/InlineTextBox.cpp \
     rendering/LayoutRepainter.cpp \
     rendering/LayoutState.cpp \
     rendering/OrderIterator.cpp \
     rendering/PointerEventsHitRules.cpp \
+    rendering/RenderAttachment.cpp \
     rendering/RenderBlock.cpp \
     rendering/RenderBlockFlow.cpp \
     rendering/RenderBlockLineLayout.cpp \
@@ -1535,11 +1560,11 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/RenderImageResource.cpp \
     rendering/RenderImageResourceStyleImage.cpp \
     rendering/RenderInline.cpp \
-    rendering/RenderInputSpeech.cpp \
     rendering/RenderLayer.cpp \
     rendering/RenderLayerBacking.cpp \
     rendering/RenderLayerCompositor.cpp \
     rendering/RenderLayerFilterInfo.cpp \
+    rendering/RenderLayerMaskImageInfo.cpp \
     rendering/RenderLayerModelObject.cpp \
     rendering/RenderLineBoxList.cpp \
     rendering/RenderLineBreak.cpp \
@@ -1572,6 +1597,7 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/RenderScrollbarPart.cpp \
     rendering/RenderScrollbarTheme.cpp \
     rendering/RenderSearchField.cpp \
+    rendering/RenderSelectionInfo.cpp \
     rendering/RenderSlider.cpp \
     rendering/RenderSnapshottedPlugIn.cpp \
     rendering/RenderTable.cpp \
@@ -1596,7 +1622,10 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/SelectionSubtreeRoot.cpp \
     rendering/ScrollBehavior.cpp \
     rendering/SimpleLineLayout.cpp \
+    rendering/SimpleLineLayoutFlowContents.cpp \
+    rendering/SimpleLineLayoutTextFragmentIterator.cpp \
     rendering/SimpleLineLayoutFunctions.cpp \
+    rendering/SimpleLineLayoutResolver.cpp \
     rendering/TextAutosizer.cpp \
     rendering/TextPaintStyle.cpp \
     rendering/TextPainter.cpp \
@@ -1611,6 +1640,7 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/mathml/RenderMathMLMath.cpp \
     rendering/mathml/RenderMathMLMenclose.cpp \
     rendering/mathml/RenderMathMLOperator.cpp \
+    rendering/mathml/RenderMathMLRadicalOperator.cpp \
     rendering/mathml/RenderMathMLRoot.cpp \
     rendering/mathml/RenderMathMLRow.cpp \
     rendering/mathml/RenderMathMLScripts.cpp \
@@ -1628,6 +1658,7 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/style/ContentData.cpp \
     rendering/style/CounterDirectives.cpp \
     rendering/style/FillLayer.cpp \
+    rendering/style/GridResolvedPosition.cpp \
     rendering/style/KeyframeList.cpp \
     rendering/style/NinePieceImage.cpp \
     rendering/style/QuotesData.cpp \
@@ -1635,6 +1666,7 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/style/SVGRenderStyle.cpp \
     rendering/style/SVGRenderStyleDefs.cpp \
     rendering/style/ShadowData.cpp \
+    rendering/style/ShapeValue.cpp \
     rendering/style/StyleBackgroundData.cpp \
     rendering/style/StyleBoxData.cpp \
     rendering/style/StyleCachedImage.cpp \
@@ -1650,6 +1682,7 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/style/StyleMultiColData.cpp \
     rendering/style/StyleRareInheritedData.cpp \
     rendering/style/StyleRareNonInheritedData.cpp \
+    rendering/style/StyleScrollSnapPoints.cpp \
     rendering/style/StyleSurroundData.cpp \
     rendering/style/StyleTransformData.cpp \
     rendering/style/StyleVisualData.cpp \
@@ -1706,18 +1739,12 @@ SRC = plugins/PluginPackageNone.cpp \
     rendering/svg/SVGTextRunRenderingContext.cpp \
     replay/UserInputBridge.cpp \
     storage/Storage.cpp \
-    storage/StorageAreaImpl.cpp \
-    storage/StorageAreaSync.cpp \
     storage/StorageEvent.cpp \
     storage/StorageEventDispatcher.cpp \
     storage/StorageMap.cpp \
-    storage/StorageNamespace.cpp \
-    storage/StorageNamespaceImpl.cpp \
-    storage/StorageStrategy.cpp \
-    storage/StorageSyncManager.cpp \
-    storage/StorageThread.cpp \
-    storage/StorageTracker.cpp \
+    storage/StorageNamespaceProvider.cpp \
     style/InlineTextBoxStyle.cpp \
+    style/RenderTreePosition.cpp \
     style/StyleFontSizeFunctions.cpp \
     style/StyleResolveForDocument.cpp \
     style/StyleResolveTree.cpp \
@@ -1728,6 +1755,7 @@ SRC = plugins/PluginPackageNone.cpp \
     svg/SVGAltGlyphItemElement.cpp \
     svg/SVGAngle.cpp \
     svg/SVGAnimateColorElement.cpp \
+    svg/SVGAnimateElementBase.cpp \
     svg/SVGAnimateElement.cpp \
     svg/SVGAnimateMotionElement.cpp \
     svg/SVGAnimateTransformElement.cpp \
@@ -1761,8 +1789,6 @@ SRC = plugins/PluginPackageNone.cpp \
     svg/SVGDocument.cpp \
     svg/SVGDocumentExtensions.cpp \
     svg/SVGElement.cpp \
-    svg/SVGElementInstance.cpp \
-    svg/SVGElementInstanceList.cpp \
     svg/SVGEllipseElement.cpp \
     svg/SVGException.cpp \
     svg/SVGExternalResourcesRequired.cpp \
@@ -1890,11 +1916,6 @@ SRC = plugins/PluginPackageNone.cpp \
     workers/AbstractWorker.cpp \
     workers/DedicatedWorkerGlobalScope.cpp \
     workers/DedicatedWorkerThread.cpp \
-    workers/DefaultSharedWorkerRepository.cpp \
-    workers/SharedWorker.cpp \
-    workers/SharedWorkerGlobalScope.cpp \
-    workers/SharedWorkerRepository.cpp \
-    workers/SharedWorkerThread.cpp \
     workers/Worker.cpp \
     workers/WorkerEventQueue.cpp \
     workers/WorkerGlobalScope.cpp \
@@ -2556,6 +2577,8 @@ SRC = plugins/PluginPackageNone.cpp \
 	html/track/VideoTrack.cpp \
 	html/track/VideoTrackList.cpp \
 	html/track/VTTCue.cpp \
+	html/track/VTTRegion.cpp \
+	html/track/VTTRegionList.cpp \
 	html/track/VTTScanner.cpp \
 	html/track/WebVTTElement.cpp \
 	html/track/WebVTTParser.cpp \
@@ -2585,11 +2608,12 @@ CXXFLAGS += -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
 CXXFLAGS += $(shell icu-config --cppflags)
 CXXFLAGS += $(shell pkg-config --cflags cairo libxml-2.0 harfbuzz)
 CXXFLAGS += -I Modules/battery \
+	-I Modules/airplay \
 	-I Modules/encryptedmedia \
 	-I Modules/gamepad \
+	-I Modules/gamepad/deprecated \
 	-I Modules/geolocation \
 	-I Modules/indexeddb \
-	-I Modules/indexeddb/leveldb \
 	-I Modules/indieui \
 	-I Modules/mediacontrols/ \
 	-I Modules/mediasource \
@@ -2599,6 +2623,8 @@ CXXFLAGS += -I Modules/battery \
 	-I Modules/plugins \
 	-I Modules/proximity \
 	-I Modules/quota \
+	-I Modules/speech \
+	-I Modules/streams \
 	-I Modules/vibration \
 	-I Modules/webaudio \
 	-I Modules/webdatabase \
@@ -2610,8 +2636,11 @@ CXXFLAGS += -I Modules/battery \
 	-I bridge \
 	-I bridge/c \
 	-I bridge/jsc \
+	-I contentextensions \
 	-I crypto \
+	-I crypto/algorithms \
 	-I crypto/keys \
+	-I crypto/parameters \
 	-I css \
 	-I cssjit \
 	-I dom \
@@ -2656,9 +2685,9 @@ CXXFLAGS += -I Modules/battery \
 	-I platform/image-decoders/jpeg \
 	-I platform/image-decoders/png \
 	-I platform/image-decoders/webp \
-	-I platform/leveldb \
 	-I platform/mediastream \
 	-I platform/mock \
+	-I platform/mock/mediasource \
 	-I platform/network \
 	-I platform/sql \
 	-I platform/text \
@@ -2722,7 +2751,7 @@ $(NAME): $(OBJ)
 clean:
 	rm -f $(OBJ)
 
-$(SRC): InspectorWeb.json
+$(SRC): XMLViewer.min.js
 
 INSPDOMAINS = inspector/protocol/ApplicationCache.json \
 	inspector/protocol/CSS.json \
@@ -2737,10 +2766,11 @@ INSPDOMAINS = inspector/protocol/ApplicationCache.json \
 	inspector/protocol/Worker.json
 
 IDLS = Modules/battery/BatteryManager.idl \
+    Modules/airplay/WebKitPlaybackTargetAvailabilityEvent.idl \
     Modules/battery/NavigatorBattery.idl \
-    Modules/gamepad/Gamepad.idl \
-    Modules/gamepad/GamepadList.idl \
-    Modules/gamepad/NavigatorGamepad.idl \
+    Modules/gamepad/deprecated/Gamepad.idl \
+    Modules/gamepad/deprecated/GamepadList.idl \
+    Modules/gamepad/deprecated/NavigatorGamepad.idl \
     Modules/geolocation/Coordinates.idl \
     Modules/geolocation/Geolocation.idl \
     Modules/geolocation/Geoposition.idl \
@@ -2762,6 +2792,7 @@ IDLS = Modules/battery/BatteryManager.idl \
     Modules/indexeddb/IDBTransaction.idl \
     Modules/indexeddb/IDBVersionChangeEvent.idl \
     Modules/indexeddb/WorkerGlobalScopeIndexedDatabase.idl \
+    Modules/indieui/UIRequestEvent.idl \
     Modules/mediacontrols/MediaControlsHost.idl \
     Modules/mediasource/DOMURLMediaSource.idl \
     Modules/mediasource/MediaSource.idl \
@@ -2770,10 +2801,10 @@ IDLS = Modules/battery/BatteryManager.idl \
     Modules/mediasource/VideoPlaybackQuality.idl \
     Modules/mediastream/AllAudioCapabilities.idl \
     Modules/mediastream/AllVideoCapabilities.idl \
-    Modules/mediastream/AudioStreamTrack.idl \
     Modules/mediastream/CapabilityRange.idl \
     Modules/mediastream/DOMURLMediaStream.idl \
     Modules/mediastream/HTMLMediaElementMediaStream.idl \
+    Modules/mediastream/MediaDevices.idl \
     Modules/mediastream/MediaSourceStates.idl \
     Modules/mediastream/MediaStream.idl \
     Modules/mediastream/MediaStreamCapabilities.idl \
@@ -2784,6 +2815,7 @@ IDLS = Modules/battery/BatteryManager.idl \
     Modules/mediastream/MediaTrackConstraint.idl \
     Modules/mediastream/MediaTrackConstraintSet.idl \
     Modules/mediastream/MediaTrackConstraints.idl \
+    Modules/mediastream/NavigatorMediaDevices.idl \
     Modules/mediastream/NavigatorUserMedia.idl \
     Modules/mediastream/NavigatorUserMediaError.idl \
     Modules/mediastream/NavigatorUserMediaErrorCallback.idl \
@@ -2804,7 +2836,6 @@ IDLS = Modules/battery/BatteryManager.idl \
     Modules/mediastream/RTCStatsReport.idl \
     Modules/mediastream/RTCStatsResponse.idl \
     Modules/mediastream/SourceInfo.idl \
-    Modules/mediastream/VideoStreamTrack.idl \
     Modules/navigatorcontentutils/NavigatorContentUtils.idl \
     Modules/notifications/DOMWindowNotifications.idl \
     Modules/notifications/Notification.idl \
@@ -2812,6 +2843,14 @@ IDLS = Modules/battery/BatteryManager.idl \
     Modules/notifications/NotificationPermissionCallback.idl \
     Modules/notifications/WorkerGlobalScopeNotifications.idl \
     Modules/proximity/DeviceProximityEvent.idl \
+    Modules/speech/DOMWindowSpeechSynthesis.idl \
+    Modules/speech/SpeechSynthesis.idl \
+    Modules/speech/SpeechSynthesisEvent.idl \
+    Modules/speech/SpeechSynthesisUtterance.idl \
+    Modules/speech/SpeechSynthesisVoice.idl \
+    Modules/streams/ReadableStream.idl \
+    Modules/streams/ReadableStreamController.idl \
+    Modules/streams/ReadableStreamReader.idl \
     Modules/vibration/NavigatorVibration.idl \
     Modules/webaudio/AnalyserNode.idl \
     Modules/webaudio/AudioBuffer.idl \
@@ -2843,7 +2882,6 @@ IDLS = Modules/battery/BatteryManager.idl \
     Modules/webdatabase/DOMWindowWebDatabase.idl \
     Modules/webdatabase/Database.idl \
     Modules/webdatabase/DatabaseCallback.idl \
-    Modules/webdatabase/DatabaseSync.idl \
     Modules/webdatabase/SQLError.idl \
     Modules/webdatabase/SQLException.idl \
     Modules/webdatabase/SQLResultSet.idl \
@@ -2853,8 +2891,6 @@ IDLS = Modules/battery/BatteryManager.idl \
     Modules/webdatabase/SQLTransaction.idl \
     Modules/webdatabase/SQLTransactionCallback.idl \
     Modules/webdatabase/SQLTransactionErrorCallback.idl \
-    Modules/webdatabase/SQLTransactionSync.idl \
-    Modules/webdatabase/SQLTransactionSyncCallback.idl \
     Modules/websockets/CloseEvent.idl \
     Modules/websockets/WebSocket.idl \
     crypto/CryptoKey.idl \
@@ -2873,6 +2909,7 @@ IDLS = Modules/battery/BatteryManager.idl \
     css/CSSStyleRule.idl \
     css/CSSStyleSheet.idl \
     css/CSSSupportsRule.idl \
+    css/CSSUnknownRule.idl \
     css/CSSValue.idl \
     css/CSSValueList.idl \
     css/Counter.idl \
@@ -2887,12 +2924,13 @@ IDLS = Modules/battery/BatteryManager.idl \
     css/StyleSheet.idl \
     css/StyleSheetList.idl \
     css/WebKitCSSFilterValue.idl \
-    css/WebKitCSSKeyframeRule.idl \
-    css/WebKitCSSKeyframesRule.idl \
+    css/CSSKeyframeRule.idl \
+    css/CSSKeyframesRule.idl \
     css/WebKitCSSMatrix.idl \
     css/WebKitCSSRegionRule.idl \
     css/WebKitCSSTransformValue.idl \
     css/WebKitCSSViewportRule.idl \
+    dom/AnimationEvent.idl \
     dom/Attr.idl \
     dom/BeforeLoadEvent.idl \
     dom/BeforeUnloadEvent.idl \
@@ -2940,9 +2978,10 @@ IDLS = Modules/battery/BatteryManager.idl \
     dom/NodeFilter.idl \
     dom/NodeIterator.idl \
     dom/NodeList.idl \
-    dom/Notation.idl \
+    dom/NonDocumentTypeChildNode.idl \
     dom/OverflowEvent.idl \
     dom/PageTransitionEvent.idl \
+    dom/ParentNode.idl \
     dom/PopStateEvent.idl \
     dom/ProcessingInstruction.idl \
     dom/ProgressEvent.idl \
@@ -2978,6 +3017,7 @@ IDLS = Modules/battery/BatteryManager.idl \
     html/HTMLAnchorElement.idl \
     html/HTMLAppletElement.idl \
     html/HTMLAreaElement.idl \
+    html/HTMLAttachmentElement.idl \
     html/HTMLAudioElement.idl \
     html/HTMLBRElement.idl \
     html/HTMLBaseElement.idl \
@@ -3064,8 +3104,11 @@ IDLS = Modules/battery/BatteryManager.idl \
     html/canvas/CanvasRenderingContext.idl \
     html/canvas/CanvasRenderingContext2D.idl \
     html/canvas/DOMPath.idl \
+    html/canvas/EXTBlendMinMax.idl \
+    html/canvas/EXTFragDepth.idl \
     html/canvas/EXTShaderTextureLOD.idl \
     html/canvas/EXTTextureFilterAnisotropic.idl \
+    html/canvas/EXTsRGB.idl \
     html/canvas/OESElementIndexUint.idl \
     html/canvas/OESStandardDerivatives.idl \
     html/canvas/OESTextureFloat.idl \
@@ -3087,18 +3130,39 @@ IDLS = Modules/battery/BatteryManager.idl \
     html/canvas/WebGLFramebuffer.idl \
     html/canvas/WebGLLoseContext.idl \
     html/canvas/WebGLProgram.idl \
+    html/canvas/WebGLQuery.idl \
     html/canvas/WebGLRenderbuffer.idl \
+    html/canvas/WebGLRenderingContextBase.idl \
     html/canvas/WebGLRenderingContext.idl \
+    html/canvas/WebGL2RenderingContext.idl \
+    html/canvas/WebGLSampler.idl \
     html/canvas/WebGLShader.idl \
     html/canvas/WebGLShaderPrecisionFormat.idl \
+    html/canvas/WebGLSync.idl \
     html/canvas/WebGLTexture.idl \
+    html/canvas/WebGLTransformFeedback.idl \
     html/canvas/WebGLUniformLocation.idl \
+    html/canvas/WebGLVertexArrayObject.idl \
     html/canvas/WebGLVertexArrayObjectOES.idl \
+    html/track/AudioTrack.idl \
+    html/track/AudioTrackList.idl \
+    html/track/DataCue.idl \
+    html/track/TextTrack.idl \
+    html/track/TextTrackCue.idl \
+    html/track/TextTrackCueList.idl \
+    html/track/TextTrackList.idl \
+    html/track/TrackEvent.idl \
+    html/track/VTTCue.idl \
+    html/track/VTTRegion.idl \
+    html/track/VTTRegionList.idl \
+    html/track/VideoTrack.idl \
+    html/track/VideoTrackList.idl \
     inspector/CommandLineAPIHost.idl \
     inspector/InspectorFrontendHost.idl \
     inspector/ScriptProfile.idl \
     inspector/ScriptProfileNode.idl \
     loader/appcache/DOMApplicationCache.idl \
+    page/AbstractView.idl \
     page/BarProp.idl \
     page/Crypto.idl \
     page/DOMSecurityPolicy.idl \
@@ -3117,10 +3181,10 @@ IDLS = Modules/battery/BatteryManager.idl \
     page/PerformanceResourceTiming.idl \
     page/PerformanceTiming.idl \
     page/Screen.idl \
-    page/SpeechInputEvent.idl \
-    page/SpeechInputResult.idl \
-    page/SpeechInputResultList.idl \
     page/WebKitPoint.idl \
+    page/WebKitNamespace.idl \
+    page/UserMessageHandlersNamespace.idl \
+    page/UserMessageHandler.idl \
     page/WindowBase64.idl \
     page/WindowTimers.idl \
     page/WorkerNavigator.idl \
@@ -3161,8 +3225,6 @@ IDLS = Modules/battery/BatteryManager.idl \
     svg/SVGDescElement.idl \
     svg/SVGDocument.idl \
     svg/SVGElement.idl \
-    svg/SVGElementInstance.idl \
-    svg/SVGElementInstanceList.idl \
     svg/SVGEllipseElement.idl \
     svg/SVGException.idl \
     svg/SVGExternalResourcesRequired.idl \
@@ -3281,8 +3343,6 @@ IDLS = Modules/battery/BatteryManager.idl \
     svg/SVGZoomEvent.idl \
     workers/AbstractWorker.idl \
     workers/DedicatedWorkerGlobalScope.idl \
-    workers/SharedWorker.idl \
-    workers/SharedWorkerGlobalScope.idl \
     workers/Worker.idl \
     workers/WorkerGlobalScope.idl \
     workers/WorkerLocation.idl \
@@ -3314,20 +3374,14 @@ IDLS = Modules/battery/BatteryManager.idl \
 include ../Makefile.fltk.shared
 CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)
 
-InspectorWeb.json: JSAbstractWorker.h
-	$(PYTHON) ../JavaScriptCore/inspector/scripts/generate-combined-inspector-json.py \
-		$(INSPDOMAINS) > InspectorWeb.json
-	$(PYTHON) ../JavaScriptCore/inspector/scripts/CodeGeneratorInspector.py \
-		InspectorWeb.json ../JavaScriptCore/InspectorJS.json \
-		--output_h_dir . --output_cpp_dir . \
-		--output_js_dir ../WebInspectorUI/UserInterface/Protocol/ \
-		--output_type Web --write_always
+XMLViewer.min.js: JSAbstractWorker.h
 	$(PYTHON) ../JavaScriptCore/inspector/scripts/inline-and-minify-stylesheets-and-scripts.py \
 		inspector/InspectorOverlayPage.html InspectorOverlayPage.combined.html
 	$(PERL) ../JavaScriptCore/inspector/scripts/xxd.pl InspectorOverlayPage_html \
 		InspectorOverlayPage.combined.html InspectorOverlayPage.h
+	echo "//# sourceURL=__WebInspectorCommandLineAPIModuleSource__" > CommandLineAPIModuleSource.min.js
 	$(PYTHON) ../JavaScriptCore/inspector/scripts/jsmin.py < \
-		inspector/CommandLineAPIModuleSource.js > \
+		inspector/CommandLineAPIModuleSource.js >> \
 		CommandLineAPIModuleSource.min.js
 	$(PERL) ../JavaScriptCore/inspector/scripts/xxd.pl CommandLineAPIModuleSource_js \
 		CommandLineAPIModuleSource.min.js CommandLineAPIModuleSource.h
@@ -3341,6 +3395,8 @@ InspectorWeb.json: JSAbstractWorker.h
 		XMLViewer.min.js XMLViewerJS.h
 	$(PYTHON) html/parser/create-html-entity-table -o HTMLEntityTable.cpp \
 		html/parser/HTMLEntityNames.in
+	$(PYTHON) platform/network/create-http-header-name-table \
+		platform/network/HTTPHeaderNames.in
 	$(PERL) -ne "print" css/CSSPropertyNames.in css/SVGCSSPropertyNames.in > \
 		CSSPropertyNames.in
 	$(PERL) -I bindings/scripts css/makeprop.pl \
@@ -3372,8 +3428,10 @@ InspectorWeb.json: JSAbstractWorker.h
 		--symbolsPrefix xpathyy xml/XPathGrammar.y
 
 IDLINCS = --include=Modules/battery \
+	--include=Modules/airplay \
 	--include=Modules/encryptedmedia \
     --include=Modules/gamepad \
+    --include=Modules/gamepad/deprecated \
     --include=Modules/geolocation \
     --include=Modules/indexeddb \
     --include=Modules/indieui \
@@ -3382,6 +3440,7 @@ IDLINCS = --include=Modules/battery \
     --include=Modules/proximity \
     --include=Modules/quota \
     --include=Modules/speech \
+    --include=Modules/streams \
     --include=Modules/vibration \
     --include=Modules/webaudio \
     --include=Modules/webdatabase \
@@ -3450,7 +3509,6 @@ JSAbstractWorker.h:
 		--supplementalDependencyFile supp.tmp \
 		--windowConstructorsFile DOMWindowConstructors.idl \
 		--workerGlobalScopeConstructorsFile WorkerGlobalScopeConstructors.idl \
-		--sharedWorkerGlobalScopeConstructorsFile SharedWorkerGlobalScopeConstructors.idl \
 		--dedicatedWorkerGlobalScopeConstructorsFile DedicatedWorkerGlobalScopeConstructors.idl
 	for i in $(IDLS); do \
 		$(PERL) -I bindings/scripts bindings/scripts/generate-bindings.pl \
