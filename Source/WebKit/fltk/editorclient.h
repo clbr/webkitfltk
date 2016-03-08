@@ -93,6 +93,10 @@ public:
 	void willSetInputMethodState() override;
 	void setInputMethodState(bool enabled) override;
 
+	void didChangeSelectionAndUpdateLayout() override;
+	void discardedComposition(WebCore::Frame*) override;
+	void overflowScrollPositionChanged() override;
+
 	// Support for global selections, used on platforms like the X Window System that treat
 	// selection as a type of clipboard.
 	bool supportsGlobalSelection() { return true; }

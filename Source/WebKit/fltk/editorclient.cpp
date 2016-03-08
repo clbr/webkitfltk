@@ -409,3 +409,15 @@ void FlEditorClient::willSetInputMethodState() {
 void FlEditorClient::setInputMethodState(bool enabled) {
 	notImplemented();
 }
+
+void FlEditorClient::didChangeSelectionAndUpdateLayout() {
+	notImplemented();
+}
+
+void FlEditorClient::discardedComposition(Frame*) {
+	notImplemented();
+}
+
+void FlEditorClient::overflowScrollPositionChanged() {
+	notImplemented();
+}
