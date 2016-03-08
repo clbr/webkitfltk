@@ -204,9 +204,9 @@ void TextFieldInputType::forwardEvent(Event* event)
                     }
                 }
 
-                renderTextControl->capsLockStateMayHaveChanged();
+                capsLockStateMayHaveChanged();
             } else if (event->type() == eventNames().focusEvent) {
-                renderTextControl->capsLockStateMayHaveChanged();
+                capsLockStateMayHaveChanged();
                 if (Frame* frame = element().document().frame())
                     frame->editor().textFieldDidBeginEditing(&element());
             }

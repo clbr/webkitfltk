@@ -63,7 +63,7 @@ HTMLFormElement::HTMLFormElement(const QualifiedName& tagName, Document& documen
     , m_isInResetFunction(false)
     , m_wasDemoted(false)
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-    , m_requestAutocompletetimer(*this, &HTMLFormElement::requestAutocompleteTimerFired)
+    , m_requestAutocompleteTimer(*this, &HTMLFormElement::requestAutocompleteTimerFired)
 #endif
 {
     ASSERT(hasTagName(formTag));
