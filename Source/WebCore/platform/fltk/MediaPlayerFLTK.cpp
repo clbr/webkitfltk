@@ -40,12 +40,8 @@ namespace WebCore {
 // MediaPlayer Enigne Support
 void MediaPlayerFLTK::registerMediaEngine(MediaEngineRegistrar registrar)
 {
-    registrar(create, getSupportedTypes, supportsType, 0, 0, 0, 0);
-}
-
-PassOwnPtr<MediaPlayerPrivateInterface> MediaPlayerFLTK::create(MediaPlayer* player)
-{
-    return adoptPtr(new MediaPlayerFLTK(player));
+    registrar([](MediaPlayer* player) { return std::make_unique<MediaPlayerFLTK>(player); },
+    	getSupportedTypes, supportsType, 0, 0, 0, 0);
 }
 
 static HashSet<String> mimeTypeCache()
@@ -206,9 +202,9 @@ void MediaPlayerFLTK::pause()
     m_playing = 0;
 }
 
-IntSize MediaPlayerFLTK::naturalSize() const
+FloatSize MediaPlayerFLTK::naturalSize() const
 {
-    return IntSize();
+    return FloatSize();
 }
 
 bool MediaPlayerFLTK::hasVideo() const
@@ -245,9 +241,9 @@ MediaPlayer::ReadyState MediaPlayerFLTK::readyState() const
     return m_readyState;
 }
 
-double MediaPlayerFLTK::maxTimeSeekableDouble() const
+MediaTime MediaPlayerFLTK::maxMediaTimeSeekable() const
 {
-    return m_duration.toDouble();
+    return MediaTime::createWithDouble(m_duration.toDouble());
 }
 
 std::unique_ptr<PlatformTimeRanges> MediaPlayerFLTK::buffered() const
@@ -255,7 +251,7 @@ std::unique_ptr<PlatformTimeRanges> MediaPlayerFLTK::buffered() const
 //    if (m_mediaSource)
 //        return m_mediaSource->buffered();
 
-    return PlatformTimeRanges::create();
+    return std::make_unique<PlatformTimeRanges>();
 }
 
 bool MediaPlayerFLTK::didLoadingProgress() const
@@ -267,7 +263,7 @@ void MediaPlayerFLTK::setSize(const IntSize&)
 {
 }
 
-void MediaPlayerFLTK::paint(GraphicsContext*, const IntRect&)
+void MediaPlayerFLTK::paint(GraphicsContext*, const FloatRect&)
 {
 }
 
@@ -281,7 +277,7 @@ double MediaPlayerFLTK::durationDouble() const
     return m_duration.toDouble();
 }
 
-void MediaPlayerFLTK::seekWithTolerance(double time, double negativeTolerance, double positiveTolerance)
+void MediaPlayerFLTK::seekWithTolerance(const MediaTime&, const MediaTime&, const MediaTime&)
 {
 }
 
