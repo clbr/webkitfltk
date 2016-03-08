@@ -96,7 +96,7 @@ public:
 			const override;
 	WTF::PassRefPtr<WebCore::SearchPopupMenu> createSearchPopupMenu(WebCore::PopupMenuClient*)
 			const override;
-	void numWheelEventHandlersChanged(unsigned) override;
+	void wheelEventHandlersChanged(bool) override;
 
 private:
 	webview *view;

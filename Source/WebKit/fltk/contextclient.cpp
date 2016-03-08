@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <ContextMenu.h>
 #include <ContextMenuController.h>
+#include <DragController.h>
 #include <HitTestResult.h>
 #include <NotImplemented.h>
 
@@ -51,9 +52,11 @@ void FlContextMenuClient::contextMenuItemSelected(ContextMenuItem *it,
 	const HitTestResult &hit = view->priv->page->contextMenuController().hitTestResult();
 	Frame* frame = hit.innerNonSharedNode()->document().frame();
 
+	const Element * const hitelem = hit.URLElement();
+
 	switch ((unsigned) it->action()) {
 		case ctxOpenInBGTab:
-			if (hit.isLiveLink() && bgtabfunc) {
+			if (hitelem && isDraggableLink(*hitelem) && bgtabfunc) {
 				bgtabfunc(hit.absoluteLinkURL().string().utf8().data());
 			}
 		break;
@@ -116,9 +119,8 @@ void FlContextMenuClient::stopSpeaking() {
 	notImplemented();
 }
 
-PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMenu> menu) {
+std::unique_ptr<ContextMenu> FlContextMenuClient::customizeMenu(std::unique_ptr<ContextMenu> m) {
 
-	OwnPtr<ContextMenu> m = menu;
 	Vector<ContextMenuItem> newitems;
 
 	const HitTestResult &hit = view->priv->page->contextMenuController().hitTestResult();
@@ -188,5 +190,6 @@ PassOwnPtr<ContextMenu> FlContextMenuClient::customizeMenu(PassOwnPtr<ContextMen
 	}
 
 	m->setItems(newitems);
-	return m.release();
+
+	return m;
 }

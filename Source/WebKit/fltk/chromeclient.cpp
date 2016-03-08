@@ -454,7 +454,7 @@ PassRefPtr<SearchPopupMenu>
 	return NULL;
 }
 
-void FlChromeClient::numWheelEventHandlersChanged(unsigned) {
+void FlChromeClient::wheelEventHandlersChanged(bool) {
 	notImplemented();
 }
 

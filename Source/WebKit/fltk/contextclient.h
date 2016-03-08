@@ -36,7 +36,7 @@ public:
 	void speak(const WTF::String&) override;
 	void stopSpeaking() override;
 
-	PassOwnPtr<WebCore::ContextMenu> customizeMenu(PassOwnPtr<WebCore::ContextMenu>) override;
+	std::unique_ptr<WebCore::ContextMenu> customizeMenu(std::unique_ptr<WebCore::ContextMenu>) override;
 private:
 	webview *view;
 };
