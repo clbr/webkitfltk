@@ -364,7 +364,11 @@ bool FontPlatformData::hasCompatibleCharmap()
 PassRefPtr<OpenTypeVerticalData> FontPlatformData::verticalData() const
 {
     ASSERT(hash());
+#if ENABLE(OPENTYPE_VERTICAL)
     return FontCache::singleton().getVerticalData(String::number(hash()), *this);
+#else
+    ASSERT(0);
+#endif
 }
 
 PassRefPtr<SharedBuffer> FontPlatformData::openTypeTable(uint32_t table) const
