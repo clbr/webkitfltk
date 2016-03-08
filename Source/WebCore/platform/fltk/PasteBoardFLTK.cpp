@@ -24,7 +24,6 @@
 #include "Pasteboard.h"
 
 #include "NotImplemented.h"
-#include <wtf/PassOwnPtr.h>
 #include <wtf/text/CString.h>
 
 #include <FL/Fl.H>
@@ -76,23 +75,23 @@ bool Pasteboard::canSmartReplace()
     return false;
 }
 
-PassOwnPtr<Pasteboard> Pasteboard::createForCopyAndPaste()
+std::unique_ptr<Pasteboard> Pasteboard::createForCopyAndPaste()
 {
-    return adoptPtr(new Pasteboard);
+    return std::make_unique<Pasteboard>();
 }
 
-PassOwnPtr<Pasteboard> Pasteboard::createPrivate()
+std::unique_ptr<Pasteboard> Pasteboard::createPrivate()
 {
     return createForCopyAndPaste();
 }
 
 #if ENABLE(DRAG_SUPPORT)
-PassOwnPtr<Pasteboard> Pasteboard::createForDragAndDrop()
+std::unique_ptr<Pasteboard> Pasteboard::createForDragAndDrop()
 {
     return createForCopyAndPaste();
 }
 
-PassOwnPtr<Pasteboard> Pasteboard::createForDragAndDrop(const DragData&)
+std::unique_ptr<Pasteboard> Pasteboard::createForDragAndDrop(const DragData&)
 {
     return createForCopyAndPaste();
 }
