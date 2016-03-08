@@ -38,6 +38,7 @@ CXXFLAGS += -I $(JSC)/ForwardingHeaders \
 	-I $(WEBC)/html \
 	-I $(WEBC)/html/forms \
 	-I $(WEBC)/html/shadow \
+	-I $(WEBC)/html/track \
 	-I $(WEBC)/inspector \
 	-I $(WEBC)/loader \
 	-I $(WEBC)/loader/archive \
