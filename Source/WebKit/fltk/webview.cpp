@@ -53,7 +53,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ScriptController.h>
 #include <bindings/ScriptValue.h>
 #include <Settings.h>
-#include <WidgetBackingStoreCairo.h>
 #include <WindowsKeyboardCodes.h>
 #include <wtf/CurrentTime.h>
 
@@ -1195,7 +1194,7 @@ public:
 
 	void handleEvent(ScriptExecutionContext*, Event*) override {
 		String valuestr;
-		if (isHTMLInputElement(m_elem))
+		if (is<HTMLInputElement>(*m_elem))
 			valuestr = toHTMLInputElement(m_elem)->value();
 		else
 			valuestr = m_elem->getAttribute("value").string();
@@ -1233,7 +1232,7 @@ void webview::bindEvent(const char *element, const char *type, const char *event
 		Element *e = toElement(n);
 
 		if (type) {
-			if (!isHTMLInputElement(n))
+			if (!is<HTMLInputElement>(*n))
 				continue;
 
 			const CString &typestr = e->getAttribute("type").string().utf8();
@@ -1259,7 +1258,7 @@ const char *webview::getValue(const char *element, const char *type, const char 
 		Element *e = toElement(n);
 
 		if (type) {
-			if (!isHTMLInputElement(n))
+			if (!is<HTMLInputElement>(*n))
 				continue;
 
 			const CString &typestr = e->getAttribute("type").string().utf8();
@@ -1277,7 +1276,7 @@ const char *webview::getValue(const char *element, const char *type, const char 
 				continue;
 		}
 
-		if (isHTMLInputElement(n))
+		if (is<HTMLInputElement>(*n))
 			return strdup(toHTMLInputElement(e)->value().utf8().data());
 		else
 			return strdup(e->getAttribute("value").string().utf8().data());
@@ -1297,7 +1296,7 @@ void webview::emulateClick(const char *element, const char *type, const char *cs
 		Element *e = toElement(n);
 
 		if (type) {
-			if (!isHTMLInputElement(n))
+			if (!is<HTMLInputElement>(*n))
 				continue;
 
 			const CString &typestr = e->getAttribute("type").string().utf8();
