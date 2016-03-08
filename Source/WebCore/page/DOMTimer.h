@@ -50,7 +50,7 @@ namespace WebCore {
 
         static double defaultMinimumInterval() { return 0.004; } // 4 milliseconds.
         static double defaultAlignmentInterval() { return 0; }
-        static double hiddenPageAlignmentInterval() { return 1.0; } // 1 second.
+        static double hiddenPageAlignmentInterval() { return 10.0; } // 10 seconds.
 
         // Creates a new timer owned by specified ScriptExecutionContext, starts it
         // and returns its Id.
