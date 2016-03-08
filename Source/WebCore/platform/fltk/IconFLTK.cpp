@@ -52,7 +52,7 @@ PassRefPtr<Icon> Icon::createIconForFiles(const Vector<String>&)
     return 0;
 }
 
-void Icon::paint(GraphicsContext*, const IntRect&)
+void Icon::paint(GraphicsContext&, const FloatRect&)
 {
     notImplemented();
 }
