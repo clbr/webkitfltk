@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "config.h"
+#include <platform/PlatformExportMacros.h>
+#include <runtime/JSExportMacros.h>
 
 #include <ApplicationCacheStorage.h>
 #include <CrossOriginPreflightResultCache.h>
@@ -80,7 +82,6 @@ void webkitInit() {
 
 	PlatformStrategiesFLTK::initialize();
 	atomicCanonicalTextEncodingName("UTF-8");
-	PageGroup::setShouldTrackVisitedLinks(true);
 
 	Fl::lock();
 
@@ -122,23 +123,32 @@ void wk_set_download_func(void (*func)(const char *url, const char *file)) {
 	downloadfunc = func;
 }
 
+#ifdef None
+#undef None
+// We don't want the X11 definition in this file.
+#endif
+
 void wk_drop_caches() {
 
 	// Turn the cache on and off.  Disabling the object cache will remove all
 	// resources from the cache.  They may still live on if they are referenced
 	// by some Web page though.
-	if (!WebCore::memoryCache()->disabled()) {
-		WebCore::memoryCache()->setDisabled(true);
-		WebCore::memoryCache()->setDisabled(false);
+	auto &memoryCache = WebCore::MemoryCache::singleton();
+	auto &pageCache = WebCore::PageCache::singleton();
+	auto &fontCache = WebCore::FontCache::singleton();
+
+	if (!memoryCache.disabled()) {
+		memoryCache.setDisabled(true);
+		memoryCache.setDisabled(false);
 	}
 
-	WebCore::pageCache()->pruneToCapacityNow(0);
+	pageCache.pruneToSizeNow(0, PruningReason::None);
 
 	// Invalidating the font cache and freeing all inactive font data.
-	WebCore::fontCache().invalidate();
+	fontCache.invalidate();
 
 	// Empty the Cross-Origin Preflight cache
-	WebCore::CrossOriginPreflightResultCache::shared().empty();
+	WebCore::CrossOriginPreflightResultCache::singleton().empty();
 
 	// Drop JIT compiled code from ExecutableAllocator.
 	WebCore::gcController().discardAllCompiledCode();
@@ -305,11 +315,11 @@ void wk_exit() {
 }
 
 void wk_set_cache_dir(const char *dir) {
-	cacheStorage().setCacheDirectory(dir);
+	WebCore::ApplicationCacheStorage::singleton().setCacheDirectory(dir);
 }
 
 void wk_set_cache_max(const unsigned bytes) {
-	cacheStorage().setMaximumSize(bytes);
+	WebCore::ApplicationCacheStorage::singleton().setMaximumSize(bytes);
 }
 
 void wk_set_tz_func(int (*func)()) {
