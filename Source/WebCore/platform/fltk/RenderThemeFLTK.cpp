@@ -80,30 +80,30 @@ static const double progressAnimationInterval = 0.125;
 static const int sliderThumbWidth = 29;
 static const int sliderThumbHeight = 11;
 
-void RenderThemeFLTK::adjustSizeConstraints(RenderStyle* style, FormType type) const
+void RenderThemeFLTK::adjustSizeConstraints(RenderStyle& style, FormType type) const
 {
     // These are always valid, even if no theme could be loaded.
     const ThemePartDesc* desc = m_partDescs + (size_t)type;
 
-    if (style->minWidth().isIntrinsic())
-        style->setMinWidth(desc->min.width());
-    if (style->minHeight().isIntrinsic())
-        style->setMinHeight(desc->min.height());
+    if (style.minWidth().isIntrinsic())
+        style.setMinWidth(desc->min.width());
+    if (style.minHeight().isIntrinsic())
+        style.setMinHeight(desc->min.height());
 
-    if (desc->max.width().value() > 0 && style->maxWidth().isIntrinsicOrAuto())
-        style->setMaxWidth(desc->max.width());
-    if (desc->max.height().value() > 0 && style->maxHeight().isIntrinsicOrAuto())
-        style->setMaxHeight(desc->max.height());
+    if (desc->max.width().value() > 0 && style.maxWidth().isIntrinsicOrAuto())
+        style.setMaxWidth(desc->max.width());
+    if (desc->max.height().value() > 0 && style.maxHeight().isIntrinsicOrAuto())
+        style.setMaxHeight(desc->max.height());
 
-    style->setPaddingTop(desc->padding.top());
-    style->setPaddingBottom(desc->padding.bottom());
-    style->setPaddingLeft(desc->padding.left());
-    style->setPaddingRight(desc->padding.right());
+    style.setPaddingTop(desc->padding.top());
+    style.setPaddingBottom(desc->padding.bottom());
+    style.setPaddingLeft(desc->padding.left());
+    style.setPaddingRight(desc->padding.right());
 }
 
-bool RenderThemeFLTK::isControlStyled(const RenderStyle* style, const BorderData& border, const FillLayer& background, const Color& backgroundColor) const
+bool RenderThemeFLTK::isControlStyled(const RenderStyle& style, const BorderData& border, const FillLayer& background, const Color& backgroundColor) const
 {
-    return RenderTheme::isControlStyled(style, border, background, backgroundColor) || style->appearance() == MenulistButtonPart;
+    return RenderTheme::isControlStyled(style, border, background, backgroundColor) || style.appearance() == MenulistButtonPart;
 }
 
 static Fl_Button *s_button;
@@ -235,8 +235,8 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 		break;
 		case ProgressBar:
 		{
-			const RenderProgress * prog = toRenderProgress(&object);
-			s_progress->value(prog->position() * 100.0f);
+			const auto &prog = downcast<RenderProgress>(object);
+			s_progress->value(prog.position() * 100.0f);
 		}
 		break;
 		case SearchField:
@@ -369,9 +369,9 @@ static bool supportsFocus(ControlPart appearance)
     }
 }
 
-bool RenderThemeFLTK::supportsFocusRing(const RenderStyle* style) const
+bool RenderThemeFLTK::supportsFocusRing(const RenderStyle& style) const
 {
-    return supportsFocus(style->appearance());
+    return supportsFocus(style.appearance());
 }
 
 bool RenderThemeFLTK::controlSupportsTints(const RenderObject& object) const
@@ -386,7 +386,7 @@ int RenderThemeFLTK::baselinePosition(const RenderObject& object) const
 
     if (object.style().appearance() == CheckboxPart
     ||  object.style().appearance() == RadioPart)
-        return toRenderBox(&object)->marginTop() + toRenderBox(&object)->height() - 3;
+        return downcast<RenderBox>(object).marginTop() + downcast<RenderBox>(object).height() - 3;
 
     return RenderTheme::baselinePosition(object);
 }
@@ -435,26 +435,26 @@ bool RenderThemeFLTK::paintSliderTrack(const RenderObject& object, const PaintIn
     return false;
 }
 
-void RenderThemeFLTK::adjustSliderTrackStyle(StyleResolver*, RenderStyle* style, Element*) const
+void RenderThemeFLTK::adjustSliderTrackStyle(StyleResolver&, RenderStyle& style, Element*) const
 {
-    style->setBoxShadow(nullptr);
+    style.setBoxShadow(nullptr);
 }
 
-void RenderThemeFLTK::adjustSliderThumbStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustSliderThumbStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     RenderTheme::adjustSliderThumbStyle(styleResolver, style, element);
-    style->setBoxShadow(nullptr);
+    style.setBoxShadow(nullptr);
 }
 
-void RenderThemeFLTK::adjustSliderThumbSize(RenderStyle* style, Element*) const
+void RenderThemeFLTK::adjustSliderThumbSize(RenderStyle& style, Element*) const
 {
-    ControlPart part = style->appearance();
+    ControlPart part = style.appearance();
     if (part == SliderThumbVerticalPart) {
-        style->setWidth(Length(sliderThumbHeight, Fixed));
-        style->setHeight(Length(sliderThumbWidth, Fixed));
+        style.setWidth(Length(sliderThumbHeight, Fixed));
+        style.setHeight(Length(sliderThumbWidth, Fixed));
     } else if (part == SliderThumbHorizontalPart) {
-        style->setWidth(Length(sliderThumbWidth, Fixed));
-        style->setHeight(Length(sliderThumbHeight, Fixed));
+        style.setWidth(Length(sliderThumbWidth, Fixed));
+        style.setHeight(Length(sliderThumbHeight, Fixed));
     }
 }
 
@@ -502,7 +502,7 @@ bool RenderThemeFLTK::paintSliderThumb(const RenderObject& object, const PaintIn
     return false;
 }
 
-void RenderThemeFLTK::adjustCheckboxStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustCheckboxStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustCheckboxStyle(styleResolver, style, element);
@@ -511,13 +511,13 @@ void RenderThemeFLTK::adjustCheckboxStyle(StyleResolver* styleResolver, RenderSt
 
     adjustSizeConstraints(style, CheckBox);
 
-    style->resetBorder();
+    style.resetBorder();
 
     const ThemePartDesc* desc = m_partDescs + (size_t)CheckBox;
-    if (style->width().value() < desc->min.width().value())
-        style->setWidth(desc->min.width());
-    if (style->height().value() < desc->min.height().value())
-        style->setHeight(desc->min.height());
+    if (style.width().value() < desc->min.width().value())
+        style.setWidth(desc->min.width());
+    if (style.height().value() < desc->min.height().value())
+        style.setHeight(desc->min.height());
 }
 
 bool RenderThemeFLTK::paintCheckbox(const RenderObject& object, const PaintInfo& info, const IntRect& rect)
@@ -525,7 +525,7 @@ bool RenderThemeFLTK::paintCheckbox(const RenderObject& object, const PaintInfo&
     return paintThemePart(object, CheckBox, info, rect);
 }
 
-void RenderThemeFLTK::adjustRadioStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustRadioStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustRadioStyle(styleResolver, style, element);
@@ -534,13 +534,13 @@ void RenderThemeFLTK::adjustRadioStyle(StyleResolver* styleResolver, RenderStyle
 
     adjustSizeConstraints(style, RadioButton);
 
-    style->resetBorder();
+    style.resetBorder();
 
     const ThemePartDesc* desc = m_partDescs + (size_t)RadioButton;
-    if (style->width().value() < desc->min.width().value())
-        style->setWidth(desc->min.width());
-    if (style->height().value() < desc->min.height().value())
-        style->setHeight(desc->min.height());
+    if (style.width().value() < desc->min.width().value())
+        style.setWidth(desc->min.width());
+    if (style.height().value() < desc->min.height().value())
+        style.setHeight(desc->min.height());
 }
 
 bool RenderThemeFLTK::paintRadio(const RenderObject& object, const PaintInfo& info, const IntRect& rect)
@@ -548,7 +548,7 @@ bool RenderThemeFLTK::paintRadio(const RenderObject& object, const PaintInfo& in
     return paintThemePart(object, RadioButton, info, rect);
 }
 
-void RenderThemeFLTK::adjustButtonStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustButtonStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustButtonStyle(styleResolver, style, element);
@@ -556,7 +556,7 @@ void RenderThemeFLTK::adjustButtonStyle(StyleResolver* styleResolver, RenderStyl
     }
 
     // adjustSizeConstrains can make SquareButtonPart's size wrong (by adjusting paddings), so call it only for PushButtonPart and ButtonPart
-    if (style->appearance() == PushButtonPart || style->appearance() == ButtonPart)
+    if (style.appearance() == PushButtonPart || style.appearance() == ButtonPart)
         adjustSizeConstraints(style, Button);
 }
 
@@ -565,53 +565,53 @@ bool RenderThemeFLTK::paintButton(const RenderObject& object, const PaintInfo& i
     return paintThemePart(object, Button, info, rect);
 }
 
-void RenderThemeFLTK::adjustMenuListStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustMenuListStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustMenuListStyle(styleResolver, style, element);
         return;
     }
     adjustSizeConstraints(style, ComboBox);
-    style->resetBorder();
-    style->setWhiteSpace(PRE);
+    style.resetBorder();
+    style.setWhiteSpace(PRE);
 
-    style->setLineHeight(RenderStyle::initialLineHeight());
+    style.setLineHeight(RenderStyle::initialLineHeight());
 }
 
-bool RenderThemeFLTK::paintMenuList(const RenderObject& object, const PaintInfo& info, const IntRect& rect)
+bool RenderThemeFLTK::paintMenuList(const RenderObject& object, const PaintInfo& info, const FloatRect& rect)
 {
-    return paintThemePart(object, ComboBox, info, rect);
+    return paintThemePart(object, ComboBox, info, IntRect(rect));
 }
 
-void RenderThemeFLTK::adjustMenuListButtonStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustMenuListButtonStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     // Height is locked to auto if height is not specified.
-    style->setHeight(Length(Auto));
+    style.setHeight(Length(Auto));
 
     // The <select> box must be at least 12px high for the button to render the text inside the box without clipping.
     const int dropDownBoxMinHeight = 12;
 
     // Calculate min-height of the <select> element.
-    int minHeight = style->fontMetrics().height();
+    int minHeight = style.fontMetrics().height();
     minHeight = std::max(minHeight, dropDownBoxMinHeight);
-    style->setMinHeight(Length(minHeight, Fixed));
+    style.setMinHeight(Length(minHeight, Fixed));
 
     adjustMenuListStyle(styleResolver, style, element);
 }
 
 bool RenderThemeFLTK::paintMenuListButtonDecorations(const RenderObject& object, const PaintInfo& info, const FloatRect& rect)
 {
-    return paintMenuList(object, info, IntRect(rect));
+    return paintMenuList(object, info, rect);
 }
 
-void RenderThemeFLTK::adjustTextFieldStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustTextFieldStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustTextFieldStyle(styleResolver, style, element);
         return;
     }
     adjustSizeConstraints(style, TextField);
-    style->resetBorder();
+    style.resetBorder();
 }
 
 bool RenderThemeFLTK::paintTextField(const RenderObject& object, const PaintInfo& info, const FloatRect& rect)
@@ -619,7 +619,7 @@ bool RenderThemeFLTK::paintTextField(const RenderObject& object, const PaintInfo
     return paintThemePart(object, TextField, info, IntRect(rect));
 }
 
-void RenderThemeFLTK::adjustTextAreaStyle(StyleResolver*, RenderStyle*, Element*) const
+void RenderThemeFLTK::adjustTextAreaStyle(StyleResolver&, RenderStyle&, Element*) const
 {
 }
 
@@ -628,21 +628,21 @@ bool RenderThemeFLTK::paintTextArea(const RenderObject& object, const PaintInfo&
     return paintTextField(object, info, rect);
 }
 
-void RenderThemeFLTK::adjustSearchFieldResultsButtonStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustSearchFieldResultsButtonStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustSearchFieldResultsButtonStyle(styleResolver, style, element);
         return;
     }
     adjustSizeConstraints(style, SearchFieldResultsButton);
-    style->resetBorder();
-    style->setWhiteSpace(PRE);
+    style.resetBorder();
+    style.setWhiteSpace(PRE);
 
-    float fontScale = style->fontSize() / defaultFontSize;
+    float fontScale = style.fontSize() / defaultFontSize;
     int decorationSize = lroundf(std::min(std::max(minSearchDecorationButtonSize, defaultFontSize * fontScale), maxSearchDecorationButtonSize));
 
-    style->setWidth(Length(decorationSize + searchFieldDecorationButtonOffset, Fixed));
-    style->setHeight(Length(decorationSize, Fixed));
+    style.setWidth(Length(decorationSize + searchFieldDecorationButtonOffset, Fixed));
+    style.setHeight(Length(decorationSize, Fixed));
 }
 
 bool RenderThemeFLTK::paintSearchFieldResultsButton(const RenderObject& object, const PaintInfo& info, const IntRect& rect)
@@ -650,21 +650,21 @@ bool RenderThemeFLTK::paintSearchFieldResultsButton(const RenderObject& object, 
     return paintThemePart(object, SearchFieldResultsButton, info, rect);
 }
 
-void RenderThemeFLTK::adjustSearchFieldResultsDecorationPartStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustSearchFieldResultsDecorationPartStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustSearchFieldResultsDecorationPartStyle(styleResolver, style, element);
         return;
     }
     adjustSizeConstraints(style, SearchFieldResultsDecoration);
-    style->resetBorder();
-    style->setWhiteSpace(PRE);
+    style.resetBorder();
+    style.setWhiteSpace(PRE);
 
-    float fontScale = style->fontSize() / defaultFontSize;
+    float fontScale = style.fontSize() / defaultFontSize;
     int decorationSize = lroundf(std::min(std::max(minSearchDecorationButtonSize, defaultFontSize * fontScale), maxSearchDecorationButtonSize));
 
-    style->setWidth(Length(decorationSize + searchFieldDecorationButtonOffset, Fixed));
-    style->setHeight(Length(decorationSize, Fixed));
+    style.setWidth(Length(decorationSize + searchFieldDecorationButtonOffset, Fixed));
+    style.setHeight(Length(decorationSize, Fixed));
 }
 
 bool RenderThemeFLTK::paintSearchFieldResultsDecorationPart(const RenderObject& object, const PaintInfo& info, const IntRect& rect)
@@ -672,23 +672,23 @@ bool RenderThemeFLTK::paintSearchFieldResultsDecorationPart(const RenderObject& 
     return paintThemePart(object, SearchFieldResultsDecoration, info, rect);
 }
 
-void RenderThemeFLTK::adjustSearchFieldCancelButtonStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustSearchFieldCancelButtonStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustSearchFieldCancelButtonStyle(styleResolver, style, element);
         return;
     }
     adjustSizeConstraints(style, SearchFieldCancelButton);
-    style->resetBorder();
-    style->setWhiteSpace(PRE);
+    style.resetBorder();
+    style.setWhiteSpace(PRE);
 
     // Logic taken from RenderThemeChromium.cpp.
     // Scale the button size based on the font size.
-    float fontScale = style->fontSize() / defaultFontSize;
+    float fontScale = style.fontSize() / defaultFontSize;
     int cancelButtonSize = lroundf(std::min(std::max(minCancelButtonSize, defaultFontSize * fontScale), maxCancelButtonSize));
 
-    style->setWidth(Length(cancelButtonSize, Fixed));
-    style->setHeight(Length(cancelButtonSize, Fixed));
+    style.setWidth(Length(cancelButtonSize, Fixed));
+    style.setHeight(Length(cancelButtonSize, Fixed));
 }
 
 bool RenderThemeFLTK::paintSearchFieldCancelButton(const RenderObject& object, const PaintInfo& info, const IntRect& rect)
@@ -696,15 +696,15 @@ bool RenderThemeFLTK::paintSearchFieldCancelButton(const RenderObject& object, c
     return paintThemePart(object, SearchFieldCancelButton, info, rect);
 }
 
-void RenderThemeFLTK::adjustSearchFieldStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustSearchFieldStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustSearchFieldStyle(styleResolver, style, element);
         return;
     }
     adjustSizeConstraints(style, SearchField);
-    style->resetBorder();
-    style->setWhiteSpace(PRE);
+    style.resetBorder();
+    style.setWhiteSpace(PRE);
 }
 
 bool RenderThemeFLTK::paintSearchField(const RenderObject& object, const PaintInfo& info, const IntRect& rect)
@@ -712,7 +712,7 @@ bool RenderThemeFLTK::paintSearchField(const RenderObject& object, const PaintIn
     return paintThemePart(object, SearchField, info, rect);
 }
 
-void RenderThemeFLTK::adjustInnerSpinButtonStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+void RenderThemeFLTK::adjustInnerSpinButtonStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element) const
 {
     if (!m_page && element && element->document().page()) {
         static_cast<RenderThemeFLTK&>(element->document().page()->theme()).adjustInnerSpinButtonStyle(styleResolver, style, element);
@@ -731,29 +731,28 @@ void RenderThemeFLTK::setDefaultFontSize(int size)
     defaultFontSize = size;
 }
 
-void RenderThemeFLTK::systemFont(CSSValueID, FontDescription& fontDescription) const
+void RenderThemeFLTK::updateCachedSystemFontDescription(CSSValueID, FontDescription& fontDescription) const
 {
     // It was called by RenderEmbeddedObject::paintReplaced to render alternative string.
     // To avoid cairo_error while rendering, fontDescription should be passed.
     fontDescription.setOneFamily("Sans");
     fontDescription.setSpecifiedSize(defaultFontSize);
     fontDescription.setIsAbsoluteSize(true);
-    fontDescription.setGenericFamily(FontDescription::NoFamily);
     fontDescription.setWeight(FontWeightNormal);
-    fontDescription.setItalic(false);
+    fontDescription.setItalic(FontItalicOff);
 }
 
-void RenderThemeFLTK::adjustProgressBarStyle(StyleResolver*, RenderStyle* style, Element*) const
+void RenderThemeFLTK::adjustProgressBarStyle(StyleResolver&, RenderStyle& style, Element*) const
 {
-    style->setBoxShadow(nullptr);
+    style.setBoxShadow(nullptr);
 }
 
-double RenderThemeFLTK::animationRepeatIntervalForProgressBar(RenderProgress*) const
+double RenderThemeFLTK::animationRepeatIntervalForProgressBar(RenderProgress&) const
 {
     return progressAnimationInterval;
 }
 
-double RenderThemeFLTK::animationDurationForProgressBar(RenderProgress*) const
+double RenderThemeFLTK::animationDurationForProgressBar(RenderProgress&) const
 {
     return progressAnimationInterval * progressAnimationFrames * 2; // "2" for back and forth;
 }
