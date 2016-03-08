@@ -116,13 +116,14 @@ all: $(NAME) testapp/testapp bench/webkitbench
 -include $(OBJ:.o=.d)
 
 $(NAME): $(OBJ) ../../WTF/wtf/libwtf.a ../../JavaScriptCore/libjsc.a \
-		../../WebCore/libwebcore.a
+		../../WebCore/libwebcore.a ../../bmalloc/bmalloc/libbmalloc.a
 	rm -f $(NAME)
 	ar cru $(NAME) $(OBJ)
 	ranlib $(NAME)
 	printf "CREATE tmp.a\n\
 	ADDLIB $(NAME)\n\
 	ADDLIB ../../WTF/wtf/libwtf.a\n\
+	ADDLIB ../../bmalloc/bmalloc/libbmalloc.a\n\
 	ADDLIB ../../JavaScriptCore/libjsc.a\n\
 	ADDLIB ../../WebCore/libwebcore.a\n\
 	SAVE\n\
