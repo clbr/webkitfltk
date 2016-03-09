@@ -72,5 +72,8 @@ void setSharedTimerFireInterval(double interval)
 	running = true;
 }
 
+void invalidateSharedTimer() {
+}
+
 }
 
