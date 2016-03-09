@@ -689,7 +689,7 @@ private:
         ASSERT(atEndOfPattern() || m_err);
 
         // The order of this array must match the ErrorCode enum.
-        static const char* errorMessages[NumberOfErrorCodes] = {
+        static const char* const errorMessages[NumberOfErrorCodes] = {
             0, // NoError
             REGEXP_ERROR_PREFIX "regular expression too large",
             REGEXP_ERROR_PREFIX "numbers out of order in {} quantifier",
