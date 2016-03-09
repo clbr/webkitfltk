@@ -3,7 +3,7 @@ SRC = $(wildcard *.cpp ../Storage/*.cpp)
 OBJ := $(SRC:.cpp=.o)
 OBJ := $(OBJ:.cc=.o)
 
-CXXFLAGS += -I .. -I ../.. -I . -I ../../WTF -I webkit -I WebCoreSupport
+CXXFLAGS += -I .. -I ../.. -I . -I ../../WTF -I webkit -I WebCoreSupport -I ../Storage
 CXXFLAGS += -std=gnu++11 -g -Wall
 CXXFLAGS += -DBUILDING_FLTK__
 CXXFLAGS += -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP

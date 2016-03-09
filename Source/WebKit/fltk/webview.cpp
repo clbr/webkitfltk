@@ -56,6 +56,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Settings.h>
 #include <WindowsKeyboardCodes.h>
 #include <wtf/CurrentTime.h>
+#include <WebDatabaseProvider.h>
+#include <WebStorageNamespaceProvider.h>
 
 using namespace WTF;
 using namespace WebCore;
@@ -97,6 +99,10 @@ webview::webview(int x, int y, int w, int h, bool noGui): Fl_Widget(x, y, w, h),
 	}
 
 	PageConfiguration clients;
+
+	clients.databaseProvider = &WebDatabaseProvider::singleton();
+	clients.storageNamespaceProvider = WebStorageNamespaceProvider::create(String());
+
 	clients.chromeClient = new FlChromeClient(this);
 	#if ENABLE(CONTEXT_MENUS)
 	clients.contextMenuClient = new FlContextMenuClient(this);
