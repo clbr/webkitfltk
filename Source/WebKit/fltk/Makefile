@@ -1,4 +1,4 @@
-SRC = $(wildcard *.cpp)
+SRC = $(wildcard *.cpp ../Storage/*.cpp)
 
 OBJ := $(SRC:.cpp=.o)
 OBJ := $(OBJ:.cc=.o)

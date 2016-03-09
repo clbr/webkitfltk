@@ -23,6 +23,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <PlatformExportMacros.h>
+
 #include "WebStorageNamespaceProvider.h"
 
 #include "StorageNamespaceImpl.h"
