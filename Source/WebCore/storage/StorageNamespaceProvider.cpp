@@ -60,7 +60,11 @@ void StorageNamespaceProvider::removePage(Page& page)
 
 RefPtr<StorageArea> StorageNamespaceProvider::localStorageArea(Document& document)
 {
+#if PLATFORM(FLTK)
+    auto& storageNamespace = transientLocalStorageNamespace(*document.topOrigin());
+#else
     auto& storageNamespace = document.securityOrigin()->canAccessLocalStorage(document.topOrigin()) ? localStorageNamespace() : transientLocalStorageNamespace(*document.topOrigin());
+#endif
 
     return storageNamespace.storageArea(document.securityOrigin());
 }
