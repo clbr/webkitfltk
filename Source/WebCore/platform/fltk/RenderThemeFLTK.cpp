@@ -208,7 +208,7 @@ bool RenderThemeFLTK::paintThemePart(const RenderObject& object, const FormType 
 
 	w->resize(rect.x() + x0, rect.y() + y0, rect.width(), rect.height());
 	w->set_active();
-	if (!isEnabled(object) || isReadOnlyControl(object))
+	if (!isEnabled(object) || (isReadOnlyControl(object) && type == TextField))
 		w->clear_active();
 
 	switch (type) {
