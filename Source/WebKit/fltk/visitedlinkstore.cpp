@@ -28,6 +28,7 @@
 #include "visitedlinkstore.h"
 
 #include <WebCore/history/PageCache.h>
+#include <platform/URL.h>
 #include <wtf/NeverDestroyed.h>
 
 using namespace WebCore;
@@ -37,13 +38,14 @@ static bool s_shouldTrackVisitedLinks;
 WebVisitedLinkStore& WebVisitedLinkStore::singleton()
 {
     static WebVisitedLinkStore& visitedLinkStore = *adoptRef(new WebVisitedLinkStore).leakRef();
-    
+
     return visitedLinkStore;
 }
 
 WebVisitedLinkStore::WebVisitedLinkStore()
     : m_visitedLinksPopulated(false)
 {
+    s_shouldTrackVisitedLinks = true;
 }
 
 WebVisitedLinkStore::~WebVisitedLinkStore()
