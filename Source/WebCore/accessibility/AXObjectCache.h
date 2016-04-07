@@ -28,6 +28,7 @@
 
 #include "AXTextStateChangeIntent.h"
 #include "AccessibilityObject.h"
+#include "Range.h"
 #include "Timer.h"
 #include <limits.h>
 #include <wtf/Forward.h>
@@ -294,11 +295,13 @@ class AXAttributeCacheEnabler
 public:
     explicit AXAttributeCacheEnabler(AXObjectCache *cache);
     ~AXAttributeCacheEnabler();
-    
+
+#if HAVE(ACCESSIBILITY)
 private:
     AXObjectCache* m_cache;
+#endif
 };
-    
+
 bool nodeHasRole(Node*, const String& role);
 // This will let you know if aria-hidden was explicitly set to false.
 bool isNodeAriaVisible(Node*);
@@ -356,6 +359,8 @@ inline void AXObjectCache::remove(Node*) { }
 inline void AXObjectCache::remove(Widget*) { }
 inline void AXObjectCache::selectedChildrenChanged(RenderObject*) { }
 inline void AXObjectCache::selectedChildrenChanged(Node*) { }
+inline void AXObjectCache::setIsSynchronizingSelection(bool) { }
+inline void AXObjectCache::setTextSelectionIntent(const AXTextStateChangeIntent&) { }
 #if PLATFORM(COCOA)
 inline void AXObjectCache::postTextStateChangePlatformNotification(AccessibilityObject*, const AXTextStateChangeIntent&, const VisibleSelection&) { }
 inline void AXObjectCache::postTextStateChangePlatformNotification(AccessibilityObject*, AXTextEditType, const String&, const VisiblePosition&) { }
@@ -364,6 +369,10 @@ inline void AXObjectCache::postTextReplacementPlatformNotification(Accessibility
 inline AXTextChange AXObjectCache::textChangeForEditType(AXTextEditType) { return AXTextInserted; }
 inline void AXObjectCache::nodeTextChangePlatformNotification(AccessibilityObject*, AXTextChange, unsigned, const String&) { }
 #endif
+
+inline AXAttributeCacheEnabler::AXAttributeCacheEnabler(AXObjectCache*) { }
+inline AXAttributeCacheEnabler::~AXAttributeCacheEnabler() { }
+
 #endif
 
 }
