@@ -71,8 +71,12 @@ void PopupMenuFLTK::show(const IntRect &rect, FrameView *view, int index) {
 
 	const Fl_Menu_Item *ptr = items[0].pulldown(x, y,
 							rect.width(), rect.height());
-	if (ptr)
-		m_client->valueChanged((unsigned long) ptr->user_data_);
+	if (ptr) {
+		const unsigned idx = (unsigned long) ptr->user_data_;
+
+		if (m_client->itemIsEnabled(idx))
+			m_client->valueChanged(idx);
+	}
 
 	m_client->popupDidHide();
 
