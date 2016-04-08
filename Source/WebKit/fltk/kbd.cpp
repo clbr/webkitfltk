@@ -36,6 +36,8 @@ String keyidfor(const int in) {
 			return "U+0008";
 		case XK_Return:
 			return "Enter"; // They actually string-match to this...
+		case XK_space:
+			return "U+0020";
 	}
 
 	return XKeysymToString(in);
