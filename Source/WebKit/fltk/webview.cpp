@@ -477,7 +477,8 @@ int webview::handle(const int e) {
 			PlatformWheelEvent pev(pos, gpos,
 						Fl::event_dx() * wheelspeed,
 						-Fl::event_dy() * wheelspeed,
-						1, 1, ScrollByPixelWheelEvent,
+						Fl::event_dx(), -Fl::event_dy(),
+						ScrollByPixelWheelEvent,
 						Fl::event_shift(), Fl::event_ctrl(),
 						Fl::event_alt(),
 						Fl::event_command());
