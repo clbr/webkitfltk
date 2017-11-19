@@ -23,13 +23,13 @@ CXXFLAGS += -ffunction-sections -fdata-sections
 CXXFLAGS += -fno-rtti -fno-exceptions
 CXXFLAGS += -Wall
 
-FLTKCONFIG = $(shell which fltk-config13 || which fltk-config)
+FLTKCONFIG := $(shell which fltk-config13 || which fltk-config)
 
-FLTKVER = $(shell $(FLTKCONFIG) --version)
-FLTKMINOR = $(shell echo $(FLTKVER) | cut -d. -f2)
-FLTKPATCH = $(shell echo $(FLTKVER) | cut -d. -f3)
+FLTKVER := $(shell $(FLTKCONFIG) --version)
+FLTKMINOR := $(shell echo $(FLTKVER) | cut -d. -f2)
+FLTKPATCH := $(shell echo $(FLTKVER) | cut -d. -f3)
 
-FLTKENOUGH = $(shell test "$(FLTKMINOR)" -lt 3 || test "$(FLTKPATCH)" -lt 3 || echo ok)
+FLTKENOUGH := $(shell test "$(FLTKMINOR)" -lt 3 || test "$(FLTKPATCH)" -lt 3 || echo ok)
 
 ifneq ($(FLTKENOUGH), ok)
   $(error FLTK >= 1.3.3 not found, got $(FLTKVER))
@@ -55,7 +55,7 @@ ifeq ($(shell which bison),)
   $(error bison not found)
 endif
 
-PYTHONVER = $(shell $(PYTHON) --version 2>&1 | cut -d. -f1 | cut -d' ' -f2-)
+PYTHONVER := $(shell $(PYTHON) --version 2>&1 | cut -d. -f1 | cut -d' ' -f2-)
 ifneq ($(PYTHONVER), 2)
   $(error Python 2 is required, 3 won't work.)
 endif
