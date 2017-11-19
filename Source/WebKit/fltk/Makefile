@@ -99,7 +99,7 @@ CXXFLAGS += -I $(JSC)/ForwardingHeaders \
 include ../../Makefile.fltk.shared
 CXXFLAGS += $(shell $(FLTKCONFIG) --cxxflags)
 
-.PHONY: all clean install
+.PHONY: all clean install library tests
 
 # /tmp tends to be in RAM. When building on a HD, this saves several seconds.
 NAME = /tmp/libwebkitfltk.a
@@ -111,7 +111,11 @@ LIBS = -lz -pthread -lxslt -lxml2 -ldl -lsqlite3 \
 	`$(FLTKCONFIG) --ldflags --use-images` \
 	-static-libgcc -static-libstdc++
 
-all: $(NAME) testapp/testapp bench/webkitbench
+all: library tests
+
+library: $(NAME)
+
+tests: testapp/testapp bench/webkitbench
 
 -include $(OBJ:.o=.d)
 
@@ -147,7 +151,7 @@ clean:
 
 PREFIX ?= /usr
 
-install: all
+install: library
 	mkdir -p $(DESTDIR)/$(PREFIX)/lib/pkgconfig
 	mkdir -p $(DESTDIR)/$(PREFIX)/include/webkitfltk
 	install -m644 $(NAME) $(DESTDIR)/$(PREFIX)/lib
