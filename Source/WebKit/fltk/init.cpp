@@ -47,6 +47,7 @@ using namespace WebCore;
 
 const char * (*uafunc)(const char *) = NULL;
 int (*urlblockfunc)(const char *) = NULL;
+int (*inlineblockfunc)(const char *, const char *) = NULL;
 const char * (*uploaddirfunc)() = NULL;
 const char * (*downloaddirfunc)() = NULL;
 const char * (*aboutpagefunc)(const char *) = NULL;
@@ -101,6 +102,10 @@ void wk_set_useragent_func(const char * (*func)(const char *)) {
 
 void wk_set_urlblock_func(int (*func)(const char *)) {
 	urlblockfunc = func;
+}
+
+void wk_set_inlineblock_func(int (*func)(const char *, const char *)) {
+	inlineblockfunc = func;
 }
 
 void wk_set_uploaddir_func(const char * (*func)()) {

@@ -53,6 +53,8 @@
 #include <wtf/text/StringBuilder.h>
 #include <wtf/text/StringHash.h>
 
+extern int (*inlineblockfunc)(const char *, const char *);
+
 namespace WebCore {
 
 ScriptElement::ScriptElement(Element& element, bool parserInserted, bool alreadyStarted)
@@ -279,6 +281,10 @@ void ScriptElement::executeScript(const ScriptSourceCode& sourceCode)
 
     if (sourceCode.isEmpty())
         return;
+
+    if (!m_isExternalScript && inlineblockfunc &&
+        inlineblockfunc(sourceCode.url().string().utf8().data(), sourceCode.source().utf8().data()))
+    	return;
 
     if (!m_isExternalScript && !m_element.document().contentSecurityPolicy()->allowInlineScript(m_element.document().url(), m_startLineNumber))
         return;
