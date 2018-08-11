@@ -79,10 +79,15 @@ void SocketStreamHandle::platformClose()
 
     ASSERT(isMainThread());
 
+    if (m_state == Closed)
+        return;
+
     stopThread();
 
     if (m_client)
         m_client->didCloseSocketStream(this);
+
+    m_state = Closed;
 }
 
 bool SocketStreamHandle::readData(CURL* curlHandle)
@@ -281,8 +286,10 @@ void SocketStreamHandle::didReceiveData()
         if (socketData.size > 0) {
             if (m_client && state() == Open)
                 m_client->didReceiveSocketStreamData(this, socketData.data.get(), socketData.size);
-        } else
+        } else {
             platformClose();
+            break;
+        }
     }
 }
 
