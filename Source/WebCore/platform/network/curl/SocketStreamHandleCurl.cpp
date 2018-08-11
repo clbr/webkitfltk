@@ -207,14 +207,20 @@ void SocketStreamHandle::runThread(void *data)
     const unsigned short port = obj->m_url.hasPort() ? obj->m_url.port() :
                                 (isWSS ? 443 : 80);
 
-    curl_easy_setopt(curlHandle, CURLOPT_URL, obj->m_url.host().utf8().data());
+    URL tmpUrl = obj->m_url;
+    tmpUrl.removeFragmentIdentifier();
+
+    if (isWSS) {
+        curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYHOST, 2L);
+
+        tmpUrl.setProtocol("https");
+    }
+
+    curl_easy_setopt(curlHandle, CURLOPT_URL, tmpUrl.string().utf8().data());
     curl_easy_setopt(curlHandle, CURLOPT_PORT, port);
     curl_easy_setopt(curlHandle, CURLOPT_CONNECT_ONLY, 1);
     curl_easy_setopt(curlHandle, CURLOPT_CONNECTTIMEOUT_MS, 500);
-
-    if (isWSS) {
-        curl_easy_setopt(curlHandle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
-    }
 
     if (debug) {
         curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 1);
