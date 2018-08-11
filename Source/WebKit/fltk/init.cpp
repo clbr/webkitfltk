@@ -116,7 +116,7 @@ void webkitInit() {
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 	// OpenSSL < 1.1 needs thread protection
 	const unsigned num_locks = CRYPTO_num_locks();
-	mutexes = (pthread_mutex_t *) calloc(num_locks, sizeof(void *));
+	mutexes = (pthread_mutex_t *) calloc(num_locks, sizeof(pthread_mutex_t));
 	unsigned i;
 	for (i = 0; i < num_locks; i++) {
 		pthread_mutex_init(&mutexes[i], NULL);
