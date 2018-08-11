@@ -42,6 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <wtf/spoofing.h>
 
 #include <cairo.h>
+#include <openssl/crypto.h>
 
 using namespace WebCore;
 
@@ -67,6 +68,23 @@ const char *(*spoofedLanguage)(const char *) = NULL;
 const char *wk_stream_exec = NULL;
 const char *wk_cookiepath = NULL;
 int wheelspeed = 100;
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+
+static pthread_mutex_t *mutexes;
+
+static unsigned long openssl_id_cb(void) {
+	return (unsigned long) pthread_self();
+}
+
+static void openssl_lock_cb(int mode, int n, const char *file, int line) {
+	if (mode & CRYPTO_LOCK)
+		pthread_mutex_lock(&mutexes[n]);
+	else
+		pthread_mutex_unlock(&mutexes[n]);
+}
+
+#endif
 
 void webkitInit() {
 	static bool init = false;
@@ -94,6 +112,18 @@ void webkitInit() {
 			runtime, required);
 		exit(1);
 	}
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+	// OpenSSL < 1.1 needs thread protection
+	const unsigned num_locks = CRYPTO_num_locks();
+	mutexes = (pthread_mutex_t *) calloc(num_locks, sizeof(void *));
+	unsigned i;
+	for (i = 0; i < num_locks; i++) {
+		pthread_mutex_init(&mutexes[i], NULL);
+	}
+	CRYPTO_set_id_callback(openssl_id_cb);
+	CRYPTO_set_locking_callback(openssl_lock_cb);
+#endif
 }
 
 void wk_set_useragent_func(const char * (*func)(const char *)) {
