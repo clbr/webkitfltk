@@ -254,15 +254,15 @@ void FlFrameLoaderClient::dispatchDidFailLoad(const ResourceError &err) {
 		return;
 	}
 
+	if (err.domain().contains("about:blank") ||
+		err.failingURL().contains("about:blank"))
+		return;
+
 	char *instructions = NULL;
 	if (err.errorCode() == CURLE_COULDNT_RESOLVE_HOST ||
 		err.errorCode() == CURLE_COULDNT_CONNECT ||
 		err.errorCode() == CURLE_REMOTE_ACCESS_DENIED ||
 		err.errorCode() == CURLE_OPERATION_TIMEDOUT) {
-
-		if (err.domain().contains("about:blank") ||
-			err.failingURL().contains("about:blank"))
-			return;
 
 		asprintf(&instructions,
 			"This issue could be caused by either end. "
