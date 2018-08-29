@@ -215,6 +215,8 @@ void SocketStreamHandle::runThread(void *data)
         curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYHOST, 2L);
 
         tmpUrl.setProtocol("https");
+    } else {
+        tmpUrl.setProtocol("http");
     }
 
     curl_easy_setopt(curlHandle, CURLOPT_URL, tmpUrl.string().utf8().data());
