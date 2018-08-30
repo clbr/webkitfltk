@@ -81,13 +81,12 @@ void SocketStreamHandle::platformClose()
 
     if (m_state == Closed)
         return;
+    m_state = Closed;
 
     stopThread();
 
     if (m_client)
         m_client->didCloseSocketStream(this);
-
-    m_state = Closed;
 }
 
 bool SocketStreamHandle::readData(CURL* curlHandle)
