@@ -1187,17 +1187,14 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
                 headerString.append(value);
             }
             CString headerLatin1 = headerString.latin1();
+
+            if (spoofedAccept && !strncmp(headerLatin1.data(), "Accept: text/html", 17)) {
+                headerString = "Accept: ";
+                headerString.append(spoofedAccept(url.host().utf8().data()));
+                headerLatin1 = headerString.latin1();
+            }
             headers = curl_slist_append(headers, headerLatin1.data());
         }
-    }
-
-    if (spoofedAccept) {
-        String str = "Accept: ";
-        str.append(spoofedAccept(url.host().utf8().data()));
-        headers = curl_slist_append(headers, str.latin1().data());
-
-        str = "Accept-encoding: gzip, deflate";
-        headers = curl_slist_append(headers, str.latin1().data());
     }
 
     if (spoofedLanguage) {
