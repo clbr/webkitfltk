@@ -80,6 +80,8 @@ static String formatLocalizedString(String format, ...)
         return out;
     }
 
+    notImplemented();
+    return format;
 #else
     notImplemented();
     return format;
@@ -858,7 +860,7 @@ String imageTitle(const String& filename, const IntSize& size)
 
     return formatLocalizedString(WEB_UI_STRING("%@ %@×%@ pixels", "window title for a standalone image (uses multiplication symbol, not x)"), filename.createCFString().get(), widthString.get(), heightString.get());
 #else
-    return formatLocalizedString(WEB_UI_STRING("<filename> %d×%d pixels", "window title for a standalone image (uses multiplication symbol, not x)"), size.width(), size.height()).replace("<filename>", filename);
+    return formatLocalizedString(WEB_UI_STRING("<filename> %dx%d pixels", "window title for a standalone image"), size.width(), size.height()).replace("<filename>", filename);
 #endif
 }
 
