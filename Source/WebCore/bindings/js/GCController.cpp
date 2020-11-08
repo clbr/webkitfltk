@@ -91,7 +91,7 @@ void GCController::garbageCollectNow()
 
 void GCController::garbageCollectOnAlternateThreadForDebugging(bool waitUntilDone)
 {
-    ThreadIdentifier threadID = createThread(collect, 0, "WebCore: GCController");
+    ThreadIdentifier threadID = createThread(collect, 0, "WC: GCController");
 
     if (waitUntilDone) {
         waitForThreadCompletion(threadID);

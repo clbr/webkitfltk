@@ -80,7 +80,7 @@ void ScrollingThread::createThreadIfNeeded()
     {
         std::unique_lock<std::mutex> lock(m_initializeRunLoopMutex);
 
-        m_threadIdentifier = createThread(threadCallback, this, "WebCore: Scrolling");
+        m_threadIdentifier = createThread(threadCallback, this, "WC: Scrolling");
         
 #if PLATFORM(COCOA)
         m_initializeRunLoopConditionVariable.wait(lock, [this]{ return m_threadRunLoop; });

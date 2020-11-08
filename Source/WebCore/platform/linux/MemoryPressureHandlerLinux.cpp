@@ -152,7 +152,7 @@ void MemoryPressureHandler::install()
     }
     close(fd);
 
-    m_threadID = createThread(waitForMemoryPressureEvent, this, "WebCore: MemoryPressureHandler");
+    m_threadID = createThread(waitForMemoryPressureEvent, this, "WC: MemoryPressureHandler");
     if (!m_threadID) {
         logErrorAndCloseFDs("Failed to create a thread for MemoryPressureHandler");
         return;

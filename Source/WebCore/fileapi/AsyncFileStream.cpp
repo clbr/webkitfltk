@@ -72,7 +72,7 @@ static void callOnFileThread(std::function<void()>&& function)
 
     static std::once_flag createFileThreadOnce;
     std::call_once(createFileThreadOnce, [] {
-        createThread("WebCore: AsyncFileStream", [] {
+        createThread("WC: AsyncFileStream", [] {
             for (;;) {
                 AutodrainedPool pool;
 

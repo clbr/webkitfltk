@@ -140,7 +140,7 @@ bool IconDatabase::open(const String& directory, const String& filename)
     // Lock here as well as first thing in the thread so the thread doesn't actually commence until the createThread() call 
     // completes and m_syncThreadRunning is properly set
     m_syncLock.lock();
-    m_syncThread = createThread(IconDatabase::iconDatabaseSyncThreadStart, this, "WebCore: IconDatabase");
+    m_syncThread = createThread(IconDatabase::iconDatabaseSyncThreadStart, this, "WC: IconDatabase");
     m_syncThreadRunning = m_syncThread;
     m_syncLock.unlock();
     if (!m_syncThread)
