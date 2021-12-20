@@ -308,7 +308,7 @@ void TextCodecICU::createICUConverter() const
     m_converterICU = ucnv_open(m_canonicalConverterName, &err);
     ASSERT(U_SUCCESS(err));
     if (m_converterICU)
-        ucnv_setFallback(m_converterICU, TRUE);
+        ucnv_setFallback(m_converterICU, true);
 }
 
 int TextCodecICU::decodeToBuffer(UChar* target, UChar* targetLimit, const char*& source, const char* sourceLimit, int32_t* offsets, bool flush, UErrorCode& err)

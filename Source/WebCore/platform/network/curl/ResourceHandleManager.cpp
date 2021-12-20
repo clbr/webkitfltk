@@ -901,7 +901,7 @@ static void setupFormData(ResourceHandle* job, CURLoption sizeOption, struct cur
 void ResourceHandleManager::setupPUT(ResourceHandle* job, struct curl_slist** headers)
 {
     ResourceHandleInternal* d = job->getInternal();
-    curl_easy_setopt(d->m_handle, CURLOPT_UPLOAD, TRUE);
+    curl_easy_setopt(d->m_handle, CURLOPT_UPLOAD, true);
     curl_easy_setopt(d->m_handle, CURLOPT_INFILESIZE, 0);
 
     // Disable the Expect: 100 continue header
@@ -917,7 +917,7 @@ void ResourceHandleManager::setupPUT(ResourceHandle* job, struct curl_slist** he
 void ResourceHandleManager::setupPOST(ResourceHandle* job, struct curl_slist** headers)
 {
     ResourceHandleInternal* d = job->getInternal();
-    curl_easy_setopt(d->m_handle, CURLOPT_POST, TRUE);
+    curl_easy_setopt(d->m_handle, CURLOPT_POST, true);
     curl_easy_setopt(d->m_handle, CURLOPT_POSTFIELDSIZE, 0);
 
     size_t numElements = getFormElementsCount(job);
@@ -1205,13 +1205,13 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
 
     String method = job->firstRequest().httpMethod();
     if ("GET" == method)
-        curl_easy_setopt(d->m_handle, CURLOPT_HTTPGET, TRUE);
+        curl_easy_setopt(d->m_handle, CURLOPT_HTTPGET, true);
     else if ("POST" == method)
         setupPOST(job, &headers);
     else if ("PUT" == method)
         setupPUT(job, &headers);
     else if ("HEAD" == method)
-        curl_easy_setopt(d->m_handle, CURLOPT_NOBODY, TRUE);
+        curl_easy_setopt(d->m_handle, CURLOPT_NOBODY, true);
     else {
         curl_easy_setopt(d->m_handle, CURLOPT_CUSTOMREQUEST, method.ascii().data());
         setupPUT(job, &headers);
