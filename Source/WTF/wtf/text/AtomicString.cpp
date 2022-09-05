@@ -586,13 +586,13 @@ AtomicStringImpl* AtomicString::findInternal(const UChar* characters, unsigned l
     return nullptr;
 }
 
-#if !ASSERT_DISABLED
+//#if !ASSERT_DISABLED
 bool AtomicString::isInAtomicStringTable(StringImpl* string)
 {
     AtomicStringTableLocker locker;
     return stringTable().contains(string);
 }
-#endif
+//#endif
 
 #ifndef NDEBUG
 void AtomicString::show() const
