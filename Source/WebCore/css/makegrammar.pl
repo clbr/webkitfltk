@@ -93,3 +93,6 @@ close HEADER;
 unlink("$fileBase.cpp.h");
 unlink("$fileBase.hpp");
 
+# This is a temporarily solution
+# In unknown place script generates in include extension hpp instead h what causes compiler error
+system("sed \"s\\hpp\\h\\g\" -i $fileBase.cpp"); # remove after find good solution
