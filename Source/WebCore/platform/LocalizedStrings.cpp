@@ -33,6 +33,7 @@
 #include <wtf/MathExtras.h>
 #include <wtf/text/CString.h>
 #include <wtf/unicode/CharacterNames.h>
+#include <stdio.h> // vasprintf()
 
 #if USE(CF)
 #include <wtf/RetainPtr.h>
