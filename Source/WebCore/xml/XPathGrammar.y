@@ -47,7 +47,9 @@ using namespace XPath;
 
 %}
 
-%pure-parser
+%define api.pure
+%define api.header.include {"XPathGrammar.h"}
+
 %lex-param { parser }
 %parse-param { Parser& parser }
 

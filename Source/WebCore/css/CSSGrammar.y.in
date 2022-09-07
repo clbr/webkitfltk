@@ -21,7 +21,8 @@
  *
  */
 
-%pure-parser
+%define api.pure
+%define api.header.include {"CSSGrammar.h"}
 
 %parse-param { CSSParser* parser }
 %lex-param { CSSParser* parser }
