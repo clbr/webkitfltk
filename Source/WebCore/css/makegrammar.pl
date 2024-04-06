@@ -73,23 +73,14 @@ if ($suffix eq ".y.in") {
 }
 
 my $fileBase = File::Spec->join($outputDir, $filename);
-system("$bison -d -p $symbolsPrefix $grammarFilePath -o $fileBase.cpp");
+system("$bison -d -p $symbolsPrefix $grammarFilePath -o $fileBase.c");
 
-open HEADER, ">$fileBase.h" or die;
-print HEADER << "EOF";
-#ifndef CSSGRAMMAR_H
-#define CSSGRAMMAR_H
-EOF
-
-open HPP, "<$fileBase.cpp.h" or open HPP, "<$fileBase.hpp" or die;
-while (<HPP>) {
-    print HEADER;
+open SOURCE, ">$fileBase.cpp" or die;
+open C, "<$fileBase.c" or die;
+while (<C>) {
+    print SOURCE;
 }
-close HPP;
 
-print HEADER "#endif\n";
-close HEADER;
-
-unlink("$fileBase.cpp.h");
-unlink("$fileBase.hpp");
-
+close C;
+close SOURCE;
+unlink("$fileBase.c");
